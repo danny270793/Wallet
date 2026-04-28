@@ -408,6 +408,13 @@ class AppLocalizationsEn extends AppLocalizations {
       'Enter a valid number (optional minus sign and decimals)';
 
   @override
+  String get transactionAmountMustBeNonZero => 'Amount cannot be zero';
+
+  @override
+  String get transferAmountMustBePositive =>
+      'Enter an amount greater than zero';
+
+  @override
   String get transactionPercentage => 'Percentage';
 
   @override
