@@ -88,6 +88,8 @@ class ShellScaffold extends StatelessWidget {
   final Widget? bottomNavigationBar;
   final Widget? floatingActionButton;
   final FloatingActionButtonLocation? floatingActionButtonLocation;
+  /// Shown before the settings action (e.g. search on transactions).
+  final List<Widget>? appBarActionsBeforeSettings;
 
   const ShellScaffold({
     super.key,
@@ -98,6 +100,7 @@ class ShellScaffold extends StatelessWidget {
     this.bottomNavigationBar,
     this.floatingActionButton,
     this.floatingActionButtonLocation,
+    this.appBarActionsBeforeSettings,
   });
 
   @override
@@ -114,6 +117,7 @@ class ShellScaffold extends StatelessWidget {
         title: Text(title),
         bottom: appBarBottom,
         actions: [
+          ...?appBarActionsBeforeSettings,
           IconButton(
             icon: const Icon(Icons.settings),
             onPressed: () => context.push('/settings'),
