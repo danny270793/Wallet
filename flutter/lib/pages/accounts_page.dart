@@ -61,21 +61,28 @@ class _AccountsView extends StatelessWidget {
         }
       },
       builder: (context, state) {
+        final accounts = switch (state) {
+          AccountsLoaded(:final accounts) => accounts,
+          AccountsActionError(:final accounts) => accounts,
+          _ => <AccountEntity>[],
+        };
+        final showTotalBar = accounts.isNotEmpty;
+        final totalBalance =
+            showTotalBar ? accounts.fold<double>(0, (s, a) => s + a.balance) : 0.0;
+
         return ShellScaffold(
           title: l10n.accounts,
-          body: Stack(
-            children: [
-              _body(context, state, l10n),
-              Positioned(
-                right: 16,
-                bottom: 16,
-                child: FloatingActionButton(
-                  onPressed: () => _showAccountBottomSheet(context, l10n),
-                  child: const Icon(Icons.add),
-                ),
-              ),
-            ],
+          floatingActionButton: FloatingActionButton(
+            onPressed: () => _showAccountBottomSheet(context, l10n),
+            child: const Icon(Icons.add),
           ),
+          bottomNavigationBar: showTotalBar
+              ? WalletListBalanceTotalBar(
+                  l10n: l10n,
+                  total: totalBalance,
+                )
+              : null,
+          body: _body(context, state, l10n),
         );
       },
     );
@@ -148,25 +155,13 @@ class _AccountsView extends StatelessWidget {
       );
     }
 
-    final totalWeighted = accounts.fold<double>(0, (s, a) => s + a.balanceWeighted);
-    final totalCounted = accounts.fold<double>(0, (s, a) => s + a.balanceCounted);
-
     return RefreshIndicator(
       onRefresh: refresh,
       child: ListView.builder(
         physics: const AlwaysScrollableScrollPhysics(),
-        padding: const EdgeInsets.only(bottom: 88),
-        itemCount: accounts.length + 1,
-        itemBuilder: (context, index) {
-          if (index == accounts.length) {
-            return WalletDualBalanceListFooter(
-              l10n: l10n,
-              totalWeighted: totalWeighted,
-              totalCounted: totalCounted,
-            );
-          }
-          return _AccountTile(account: accounts[index]);
-        },
+        padding: const EdgeInsets.only(bottom: 8),
+        itemCount: accounts.length,
+        itemBuilder: (context, index) => _AccountTile(account: accounts[index]),
       ),
     );
   }
@@ -204,10 +199,9 @@ class _AccountTile extends StatelessWidget {
       subtitle: account.description != null
           ? Text(account.description!, maxLines: 2, overflow: TextOverflow.ellipsis)
           : null,
-      trailing: WalletDualBalanceTrailing(
+      trailing: WalletListBalanceAmount(
         l10n: l10n,
-        balanceWeighted: account.balanceWeighted,
-        balanceCounted: account.balanceCounted,
+        balance: account.balance,
       ),
       onTap: openTransactions,
       onEdit: openEdit,
