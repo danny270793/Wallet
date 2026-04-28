@@ -3,6 +3,7 @@ import '../../domain/entities/user_entity.dart';
 
 abstract class AuthRemoteDatasource {
   Future<UserEntity> signIn({required String email, required String password});
+  Future<void> signOut();
 }
 
 class AuthSupabaseDatasource implements AuthRemoteDatasource {
@@ -23,4 +24,7 @@ class AuthSupabaseDatasource implements AuthRemoteDatasource {
     if (user == null) throw Exception();
     return UserEntity(id: user.id, email: user.email ?? '');
   }
+
+  @override
+  Future<void> signOut() => _client.auth.signOut();
 }
