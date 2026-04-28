@@ -134,11 +134,17 @@ abstract class AppLocalizations {
   /// **'An unexpected error occurred'**
   String get unexpectedError;
 
-  /// No description provided for @dashboard.
+  /// No description provided for @monthlyDashboard.
   ///
   /// In en, this message translates to:
-  /// **'Dashboard'**
-  String get dashboard;
+  /// **'Monthly dashboard'**
+  String get monthlyDashboard;
+
+  /// No description provided for @yearlyDashboard.
+  ///
+  /// In en, this message translates to:
+  /// **'Yearly dashboard'**
+  String get yearlyDashboard;
 
   /// No description provided for @settings.
   ///
@@ -637,6 +643,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Next year'**
   String get transactionsPickNextYear;
+
+  /// No description provided for @yearlyPickYear.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose year'**
+  String get yearlyPickYear;
 
   /// No description provided for @year.
   ///
