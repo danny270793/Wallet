@@ -158,6 +158,8 @@
   "transactionTag": "Tag",
   "transactionAmount": "Amount",
   "transactionAmountInvalidNumber": "Enter a valid number (optional minus sign and decimals)",
+  "transactionAmountMustBeNonZero": "Amount cannot be zero",
+  "transferAmountMustBePositive": "Enter an amount greater than zero",
   "transactionPercentage": "Percentage",
   "transactionPercentageInvalidRange": "Enter a number from 0 to 100",
   "transactionIgnore": "Ignore",
