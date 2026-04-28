@@ -3,6 +3,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'pages/splash_page.dart';
 import 'features/auth/presentation/pages/login_page.dart';
 import 'pages/dashboard_page.dart';
+import 'pages/settings_page.dart';
 
 final router = GoRouter(
   initialLocation: '/',
@@ -24,5 +25,6 @@ final router = GoRouter(
     GoRoute(path: '/', builder: (context, state) => const SplashPage()),
     GoRoute(path: '/login', builder: (context, state) => const LoginPage()),
     GoRoute(path: '/dashboard', builder: (context, state) => const DashboardPage()),
+    GoRoute(path: '/settings', builder: (context, state) => const SettingsPage()),
   ],
 );

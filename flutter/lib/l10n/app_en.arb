@@ -6,5 +6,7 @@
   "password": "Password",
   "fieldRequired": "Required",
   "unexpectedError": "An unexpected error occurred",
-  "dashboard": "Dashboard"
+  "dashboard": "Dashboard",
+  "settings": "Settings",
+  "signOut": "Sign out"
 }

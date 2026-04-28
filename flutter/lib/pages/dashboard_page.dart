@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:wallet/l10n/app_localizations.dart';
 
 class DashboardPage extends StatelessWidget {
@@ -6,8 +7,19 @@ class DashboardPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+
     return Scaffold(
-      body: Center(child: Text(AppLocalizations.of(context)!.dashboard)),
+      appBar: AppBar(
+        title: Text(l10n.dashboard),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.settings),
+            onPressed: () => context.push('/settings'),
+          ),
+        ],
+      ),
+      body: const Center(child: Text('Dashboard')),
     );
   }
 }
