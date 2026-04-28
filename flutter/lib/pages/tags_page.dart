@@ -5,6 +5,7 @@ import '../core/di/injection.dart';
 import '../features/tags/domain/entities/tag_entity.dart';
 import '../features/tags/presentation/cubit/tags_cubit.dart';
 import '../features/tags/presentation/cubit/tags_state.dart';
+import '../widgets/shell_scaffold.dart';
 import '../widgets/swipeable_list_tile.dart';
 
 class TagsPage extends StatelessWidget {
@@ -35,18 +36,21 @@ class _TagsView extends StatelessWidget {
         }
       },
       builder: (context, state) {
-        return Stack(
-          children: [
-            _body(context, state, l10n),
-            Positioned(
-              right: 16,
-              bottom: 16,
-              child: FloatingActionButton(
-                onPressed: () => _showTagDialog(context, l10n),
-                child: const Icon(Icons.add),
+        return ShellScaffold(
+          title: l10n.tags,
+          body: Stack(
+            children: [
+              _body(context, state, l10n),
+              Positioned(
+                right: 16,
+                bottom: 16,
+                child: FloatingActionButton(
+                  onPressed: () => _showTagDialog(context, l10n),
+                  child: const Icon(Icons.add),
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         );
       },
     );
