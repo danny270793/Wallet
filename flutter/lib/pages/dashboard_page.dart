@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:wallet/l10n/app_localizations.dart';
@@ -6,6 +7,9 @@ import '../core/di/injection.dart';
 import '../features/transactions/domain/entities/transaction_entity.dart';
 import '../features/transactions/presentation/cubit/transactions_cubit.dart';
 import '../features/transactions/presentation/cubit/transactions_state.dart';
+import '../widgets/dashboard_month_transactions_list.dart';
+import '../widgets/monthly_category_expense_pie_chart.dart';
+import '../widgets/monthly_tag_pie_chart.dart';
 import '../widgets/shell_scaffold.dart';
 import '../widgets/transaction_month_totals.dart';
 import '../widgets/transactions_month_scope.dart';
@@ -38,12 +42,27 @@ class _MonthlyDashboardViewState extends State<_MonthlyDashboardView> {
   /// When true, ignored rows count toward income/outcome/balance (matches transactions totals default).
   bool _includeIgnored = true;
 
+  /// Same semantics as [MonthlyTagPieChart.tagKeysFilter]: null = all tags.
+  Set<String>? _tagKeysFilter;
+
   List<TransactionEntity> _monthTransactions(TransactionsState state) {
     return switch (state) {
       TransactionsLoaded(:final transactions) => transactions,
       TransactionsActionError(:final transactions) => transactions,
       _ => <TransactionEntity>[],
     };
+  }
+
+  List<TransactionEntity> _transactionsForTagList(
+    List<TransactionEntity> txs,
+    Set<String>? tagKeysFilter,
+  ) {
+    if (tagKeysFilter == null) return txs;
+    return txs.where((t) {
+      if (!_includeIgnored && t.ignore) return false;
+      final id = t.tagId;
+      return id != null && id.isNotEmpty && tagKeysFilter.contains(id);
+    }).toList();
   }
 
   @override
@@ -64,6 +83,14 @@ class _MonthlyDashboardViewState extends State<_MonthlyDashboardView> {
       },
       builder: (context, state) {
         final txs = _monthTransactions(state);
+        final tagFilter = pruneTagKeysFilter(txs, _includeIgnored, _tagKeysFilter);
+        if (!setEquals(tagFilter, _tagKeysFilter)) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (!mounted) return;
+            setState(() => _tagKeysFilter = tagFilter);
+          });
+        }
+        final listTxs = _transactionsForTagList(txs, tagFilter);
         final showBar = state is TransactionsLoaded || state is TransactionsActionError;
 
         double weighted(TransactionEntity t) => t.value * t.percentage / 100.0;
@@ -87,7 +114,15 @@ class _MonthlyDashboardViewState extends State<_MonthlyDashboardView> {
                   balance: totals.balance,
                 )
               : null,
-          body: _body(context, state, l10n, refresh),
+          body: _body(
+            context,
+            state,
+            l10n,
+            refresh,
+            monthNotifier.value,
+            tagFilter,
+            listTxs,
+          ),
         );
       },
     );
@@ -98,6 +133,9 @@ class _MonthlyDashboardViewState extends State<_MonthlyDashboardView> {
     TransactionsState state,
     AppLocalizations l10n,
     Future<void> Function() refresh,
+    DateTime visibleMonth,
+    Set<String>? tagKeysFilter,
+    List<TransactionEntity> listTransactions,
   ) {
     if (state is TransactionsLoading || state is TransactionsInitial) {
       return RefreshIndicator(
@@ -162,6 +200,23 @@ class _MonthlyDashboardViewState extends State<_MonthlyDashboardView> {
                     ),
               ),
             ),
+          MonthlyTagPieChart(
+            l10n: l10n,
+            transactions: _monthTransactions(state),
+            includeIgnored: _includeIgnored,
+            tagKeysFilter: tagKeysFilter,
+            onTagKeysFilterChanged: (v) => setState(() => _tagKeysFilter = v),
+          ),
+          MonthlyCategoryExpensePieChart(
+            l10n: l10n,
+            transactions: listTransactions,
+            includeIgnored: _includeIgnored,
+          ),
+          DashboardMonthTransactionsList(
+            l10n: l10n,
+            transactions: listTransactions,
+            visibleMonth: visibleMonth,
+          ),
         ],
       ),
     );
