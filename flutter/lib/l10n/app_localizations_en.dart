@@ -195,6 +195,15 @@ class AppLocalizationsEn extends AppLocalizations {
       'Add at least two accounts to transfer money between them';
 
   @override
+  String get transferAccountSearch => 'Search by name';
+
+  @override
+  String get transferAccountSearchHint => 'Filter by account name';
+
+  @override
+  String get transferAccountSearchNoResults => 'No accounts match your search';
+
+  @override
   String get editTransaction => 'Edit transaction';
 
   @override
