@@ -15,38 +15,7 @@
   "accountName": "Name",
   "accountDescription": "Description",
   "accountBalance": "Balance",
-  "listBalanceWeightedLine": "Weighted {amount}",
-  "@listBalanceWeightedLine": {
-    "placeholders": {
-      "amount": {
-        "type": "String"
-      }
-    }
-  },
-  "listBalanceCountedLine": "Counted {amount}",
-  "@listBalanceCountedLine": {
-    "placeholders": {
-      "amount": {
-        "type": "String"
-      }
-    }
-  },
-  "listBalanceTotalWeightedLine": "Total weighted {amount}",
-  "@listBalanceTotalWeightedLine": {
-    "placeholders": {
-      "amount": {
-        "type": "String"
-      }
-    }
-  },
-  "listBalanceTotalCountedLine": "Total counted {amount}",
-  "@listBalanceTotalCountedLine": {
-    "placeholders": {
-      "amount": {
-        "type": "String"
-      }
-    }
-  },
+  "listBalanceTotalLabel": "Total",
   "editAccount": "Edit account",
   "accountSubmitCreate": "Create",
   "deleteAccount": "Delete account",
