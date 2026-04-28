@@ -324,10 +324,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get transferSheetTitle => 'Transfer';
 
   @override
-  String get transferSourceAccount => 'Source';
+  String get transferSourceAccount => 'Source payment method';
 
   @override
-  String get transferTargetAccount => 'Target';
+  String get transferTargetAccount => 'Target payment method';
 
   @override
   String get transferDateLabel => 'Date';
