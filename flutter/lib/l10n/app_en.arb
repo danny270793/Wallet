@@ -14,6 +14,7 @@
   "newAccount": "New account",
   "accountName": "Name",
   "accountDescription": "Description",
+  "accountBalance": "Balance",
   "editAccount": "Edit account",
   "accountSubmitCreate": "Create",
   "deleteAccount": "Delete account",
