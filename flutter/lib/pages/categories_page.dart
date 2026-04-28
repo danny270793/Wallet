@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 import 'package:wallet/l10n/app_localizations.dart';
 import '../core/di/injection.dart';
 import '../features/categories/domain/entities/category_entity.dart';
@@ -162,12 +163,25 @@ class _CategoryTile extends StatelessWidget {
       );
     }
 
+    void openTransactions() {
+      context.push(
+        Uri(
+          path: '/transactions',
+          queryParameters: {
+            'categoryId': category.id,
+            'categoryName': category.name,
+          },
+        ).toString(),
+      );
+    }
+
     return SwipeableListTile(
       itemKey: category.id,
       title: Text(category.name),
       subtitle: category.description != null
           ? Text(category.description!, maxLines: 2, overflow: TextOverflow.ellipsis)
           : null,
+      onTap: openTransactions,
       onEdit: openEdit,
       confirmDelete: () async {
         final ok = await showDialog<bool>(
