@@ -137,6 +137,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get noTransactions => 'No transactions yet';
 
   @override
+  String noTransactionsInMonth(String monthYear) {
+    return 'No transactions in $monthYear';
+  }
+
+  @override
   String get newTransaction => 'New transaction';
 
   @override
