@@ -14,6 +14,7 @@ import '../features/tags/domain/entities/tag_entity.dart';
 import '../features/transactions/domain/entities/transaction_entity.dart';
 import '../features/transactions/presentation/cubit/transactions_cubit.dart';
 import '../features/transactions/presentation/cubit/transactions_state.dart';
+import '../widgets/account_editor_sheet.dart';
 import '../widgets/shell_scaffold.dart';
 import '../widgets/swipeable_list_tile.dart';
 import '../widgets/transactions_month_scope.dart';
@@ -312,48 +313,132 @@ class _AccountTransferBottomSheetState extends State<_AccountTransferBottomSheet
 
   Future<void> _pickAccount({required bool source}) async {
     final l10n = widget.l10n;
-    final id = await showModalBottomSheet<String>(
-      context: context,
-      showDragHandle: true,
-      isScrollControlled: true,
-      builder: (sheetContext) {
-        final maxH = MediaQuery.sizeOf(sheetContext).height * 0.55;
-        return SafeArea(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Padding(
-                padding: const EdgeInsets.fromLTRB(20, 12, 20, 8),
-                child: Text(
-                  source ? l10n.transferSourceAccount : l10n.transferTargetAccount,
-                  style: Theme.of(sheetContext).textTheme.titleMedium,
-                ),
-              ),
-              SizedBox(
-                height: maxH,
-                child: ListView.builder(
-                  itemCount: _accounts.length,
-                  itemBuilder: (context, index) {
-                    final a = _accounts[index];
-                    return ListTile(
-                      title: Text(a.name),
-                      onTap: () => Navigator.of(sheetContext).pop(a.id),
-                    );
-                  },
-                ),
-              ),
-            ],
-          ),
-        );
-      },
-    );
-    if (id == null || !mounted) return;
+    var pickerAccounts = List<AccountEntity>.from(_accounts);
+    var showSearchField = false;
+    final searchController = TextEditingController();
+
+    var selectedId = '';
+    try {
+      selectedId = await showModalBottomSheet<String>(
+            context: context,
+            showDragHandle: true,
+            isScrollControlled: true,
+            builder: (sheetContext) {
+              final maxH = MediaQuery.sizeOf(sheetContext).height * 0.55;
+
+              List<AccountEntity> visibleAccounts() {
+                final q = searchController.text.trim().toLowerCase();
+                if (q.isEmpty) return pickerAccounts;
+                return pickerAccounts
+                    .where((a) => a.name.toLowerCase().contains(q))
+                    .toList();
+              }
+
+              return StatefulBuilder(
+                builder: (context, setPickerState) {
+                  Future<void> refreshPickerAccounts() async {
+                    final fresh = await getIt<GetAccountsUsecase>()();
+                    pickerAccounts = fresh;
+                    setPickerState(() {});
+                    if (!mounted) return;
+                    setState(() {
+                      _accounts = fresh;
+                      if (fresh.length >= 2) {
+                        _sourceId ??= fresh.first.id;
+                        _targetId ??= fresh[1].id;
+                      }
+                      _syncAccountDisplayControllers();
+                    });
+                  }
+
+                  final visible = visibleAccounts();
+
+                  return SafeArea(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(12, 12, 4, 8),
+                          child: Row(
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  source ? l10n.transferSourceAccount : l10n.transferTargetAccount,
+                                  style: Theme.of(sheetContext).textTheme.titleMedium,
+                                ),
+                              ),
+                              IconButton(
+                                tooltip: l10n.transferAccountSearch,
+                                icon: Icon(showSearchField ? Icons.search_off_outlined : Icons.search),
+                                onPressed: () {
+                                  setPickerState(() {
+                                    showSearchField = !showSearchField;
+                                    if (!showSearchField) searchController.clear();
+                                  });
+                                },
+                              ),
+                              IconButton(
+                                tooltip: l10n.newAccount,
+                                icon: const Icon(Icons.add_circle_outline),
+                                onPressed: () async {
+                                  await showAccountEditorBottomSheet(sheetContext, l10n);
+                                  await refreshPickerAccounts();
+                                },
+                              ),
+                            ],
+                          ),
+                        ),
+                        if (showSearchField)
+                          Padding(
+                            padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+                            child: TextField(
+                              controller: searchController,
+                              decoration: InputDecoration(
+                                hintText: l10n.transferAccountSearchHint,
+                                prefixIcon: const Icon(Icons.search, size: 22),
+                                isDense: true,
+                                border: const OutlineInputBorder(),
+                              ),
+                              textInputAction: TextInputAction.search,
+                              onChanged: (_) => setPickerState(() {}),
+                            ),
+                          ),
+                        SizedBox(
+                          height: maxH,
+                          child: pickerAccounts.isEmpty
+                              ? Center(child: Text(l10n.noAccounts))
+                              : visible.isEmpty
+                                  ? Center(child: Text(l10n.transferAccountSearchNoResults))
+                                  : ListView.builder(
+                                      itemCount: visible.length,
+                                      itemBuilder: (context, index) {
+                                        final a = visible[index];
+                                        return ListTile(
+                                          title: Text(a.name),
+                                          onTap: () => Navigator.of(sheetContext).pop(a.id),
+                                        );
+                                      },
+                                    ),
+                        ),
+                      ],
+                    ),
+                  );
+                },
+              );
+            },
+          ) ??
+          '';
+    } finally {
+      searchController.dispose();
+    }
+
+    if (selectedId.isEmpty || !mounted) return;
     setState(() {
       if (source) {
-        _sourceId = id;
+        _sourceId = selectedId;
       } else {
-        _targetId = id;
+        _targetId = selectedId;
       }
     });
     _syncAccountDisplayControllers();
