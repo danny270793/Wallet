@@ -127,7 +127,23 @@ class _TransactionTile extends StatelessWidget {
   Widget build(BuildContext context) {
     return ListTile(
       title: Text(l10n.transactionAmountValue(transaction.value.toString())),
-      subtitle: Text(dateFmt.format(transaction.transactedAt.toLocal())),
+      subtitle: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (transaction.description != null && transaction.description!.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 4),
+              child: Text(
+                transaction.description!,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: Theme.of(context).textTheme.bodyMedium,
+              ),
+            ),
+          Text(dateFmt.format(transaction.transactedAt.toLocal())),
+        ],
+      ),
       trailing: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -194,6 +210,7 @@ class _TransactionDialogState extends State<_TransactionDialog> {
   late DateTime _transactedAt;
   late final TextEditingController _valueController;
   late final TextEditingController _percentageController;
+  late final TextEditingController _descriptionController;
   bool _ignore = false;
   bool _loading = false;
   bool _loadingLookups = true;
@@ -215,6 +232,7 @@ class _TransactionDialogState extends State<_TransactionDialog> {
     _transactedAt = t?.transactedAt.toLocal() ?? DateTime.now();
     _valueController = TextEditingController(text: t != null ? t.value.toString() : '0');
     _percentageController = TextEditingController(text: t != null ? t.percentage.toString() : '0');
+    _descriptionController = TextEditingController(text: t?.description ?? '');
     _ignore = t?.ignore ?? false;
     _accountId = t?.accountId;
     _cardId = t?.cardId;
@@ -253,6 +271,7 @@ class _TransactionDialogState extends State<_TransactionDialog> {
   void dispose() {
     _valueController.dispose();
     _percentageController.dispose();
+    _descriptionController.dispose();
     super.dispose();
   }
 
@@ -279,6 +298,7 @@ class _TransactionDialogState extends State<_TransactionDialog> {
     final value = double.tryParse(_valueController.text.trim());
     final pct = double.tryParse(_percentageController.text.trim());
     if (value == null || pct == null) return;
+    final desc = _descriptionController.text.trim().isEmpty ? null : _descriptionController.text.trim();
     setState(() => _loading = true);
     try {
       if (widget.transaction == null) {
@@ -287,6 +307,7 @@ class _TransactionDialogState extends State<_TransactionDialog> {
           cardId: _cardId,
           categoryId: _categoryId,
           tagId: _tagId,
+          description: desc,
           transactedAt: _transactedAt,
           value: value,
           ignore: _ignore,
@@ -299,6 +320,7 @@ class _TransactionDialogState extends State<_TransactionDialog> {
           cardId: _cardId,
           categoryId: _categoryId,
           tagId: _tagId,
+          description: desc,
           transactedAt: _transactedAt,
           value: value,
           ignore: _ignore,
@@ -375,6 +397,11 @@ class _TransactionDialogState extends State<_TransactionDialog> {
                         ..._tags.map((t) => DropdownMenuItem(value: t.id, child: Text(t.name))),
                       ],
                       onChanged: (v) => setState(() => _tagId = v),
+                    ),
+                    TextFormField(
+                      controller: _descriptionController,
+                      decoration: InputDecoration(labelText: l10n.accountDescription),
+                      maxLines: 3,
                     ),
                     TextFormField(
                       controller: _valueController,
