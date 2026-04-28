@@ -164,7 +164,6 @@ class _CategoryTile extends StatelessWidget {
 
     return SwipeableListTile(
       itemKey: category.id,
-      leading: initialsAvatar(context, category.name),
       title: Text(category.name),
       subtitle: category.description != null
           ? Text(category.description!, maxLines: 2, overflow: TextOverflow.ellipsis)
