@@ -21,6 +21,7 @@ class TransactionsRepositoryImpl implements TransactionsRepository {
     required double value,
     required bool ignore,
     required double percentage,
+    String? transactionGroupId,
   }) =>
       _datasource.createTransaction(
         accountId: accountId,
@@ -32,6 +33,7 @@ class TransactionsRepositoryImpl implements TransactionsRepository {
         value: value,
         ignore: ignore,
         percentage: percentage,
+        transactionGroupId: transactionGroupId,
       );
 
   @override
@@ -46,6 +48,7 @@ class TransactionsRepositoryImpl implements TransactionsRepository {
     required double value,
     required bool ignore,
     required double percentage,
+    String? transactionGroupId,
   }) =>
       _datasource.updateTransaction(
         id: id,
@@ -58,6 +61,7 @@ class TransactionsRepositoryImpl implements TransactionsRepository {
         value: value,
         ignore: ignore,
         percentage: percentage,
+        transactionGroupId: transactionGroupId,
       );
 
   @override
