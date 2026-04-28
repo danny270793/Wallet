@@ -23,6 +23,7 @@ import '../../features/cards/domain/usecases/get_cards_usecase.dart';
 import '../../features/cards/domain/usecases/create_card_usecase.dart';
 import '../../features/cards/domain/usecases/update_card_usecase.dart';
 import '../../features/cards/domain/usecases/delete_card_usecase.dart';
+import '../../features/cards/domain/usecases/adjust_card_balance_via_transaction_usecase.dart';
 import '../../features/cards/presentation/cubit/cards_cubit.dart';
 import '../../features/categories/data/datasources/categories_remote_datasource.dart';
 import '../../features/categories/data/repositories/categories_repository_impl.dart';
@@ -105,12 +106,22 @@ void setupDi() {
   getIt.registerFactory<CreateCardUsecase>(() => CreateCardUsecase(getIt()));
   getIt.registerFactory<UpdateCardUsecase>(() => UpdateCardUsecase(getIt()));
   getIt.registerFactory<DeleteCardUsecase>(() => DeleteCardUsecase(getIt()));
+  getIt.registerFactory<AdjustCardBalanceViaTransactionUsecase>(
+    () => AdjustCardBalanceViaTransactionUsecase(
+      getCategories: getIt(),
+      createCategory: getIt(),
+      getTags: getIt(),
+      createTag: getIt(),
+      createTransaction: getIt(),
+    ),
+  );
   getIt.registerFactory<CardsCubit>(
     () => CardsCubit(
       getCards: getIt(),
       createCard: getIt(),
       updateCard: getIt(),
       deleteCard: getIt(),
+      adjustBalanceViaTransaction: getIt(),
     ),
   );
 
