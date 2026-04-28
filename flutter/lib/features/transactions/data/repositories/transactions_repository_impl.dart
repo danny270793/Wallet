@@ -7,7 +7,8 @@ class TransactionsRepositoryImpl implements TransactionsRepository {
   const TransactionsRepositoryImpl(this._datasource);
 
   @override
-  Future<List<TransactionEntity>> getTransactions() => _datasource.getTransactions();
+  Future<List<TransactionEntity>> getTransactionsForMonth(DateTime monthStartLocal) =>
+      _datasource.getTransactionsForMonth(monthStartLocal);
 
   @override
   Future<TransactionEntity> createTransaction({
