@@ -7,6 +7,10 @@ class TransactionEntity extends Equatable {
   final String? cardId;
   final String? categoryId;
   final String? tagId;
+  final String? accountName;
+  final String? cardName;
+  final String? categoryName;
+  final String? tagName;
   final String? description;
   final DateTime transactedAt;
   final double value;
@@ -22,6 +26,10 @@ class TransactionEntity extends Equatable {
     this.cardId,
     this.categoryId,
     this.tagId,
+    this.accountName,
+    this.cardName,
+    this.categoryName,
+    this.tagName,
     this.description,
     required this.transactedAt,
     required this.value,
@@ -41,6 +49,10 @@ class TransactionEntity extends Equatable {
       cardId: json['cardId'] as String?,
       categoryId: json['categoryId'] as String?,
       tagId: json['tagId'] as String?,
+      accountName: _embeddedRelationName(json, 'wallet_accounts'),
+      cardName: _embeddedRelationName(json, 'wallet_cards'),
+      categoryName: _embeddedRelationName(json, 'wallet_categories'),
+      tagName: _embeddedRelationName(json, 'wallet_tags'),
       description: json['description'] as String?,
       transactedAt: DateTime.parse(json['transactedAt'] as String),
       value: asDouble(json['value']),
@@ -51,6 +63,17 @@ class TransactionEntity extends Equatable {
     );
   }
 
+  /// Reads `name` from a PostgREST embedded row, e.g. `wallet_accounts: { name: "…" }`.
+  static String? _embeddedRelationName(Map<String, dynamic> json, String key) {
+    final rel = json[key];
+    if (rel == null) return null;
+    if (rel is Map<String, dynamic>) return rel['name'] as String?;
+    if (rel is List && rel.isNotEmpty && rel.first is Map<String, dynamic>) {
+      return (rel.first as Map<String, dynamic>)['name'] as String?;
+    }
+    return null;
+  }
+
   @override
   List<Object?> get props => [
     id,
@@ -59,6 +82,10 @@ class TransactionEntity extends Equatable {
     cardId,
     categoryId,
     tagId,
+    accountName,
+    cardName,
+    categoryName,
+    tagName,
     description,
     transactedAt,
     value,
