@@ -1053,7 +1053,7 @@ class _TransactionsViewState extends State<_TransactionsView> {
     String? preferredCategoryId,
     String? preferredTagId,
   ]) {
-    _showTransactionEditorSheet(
+    showTransactionEditorBottomSheet(
       context,
       l10n: l10n,
       cubit: context.read<TransactionsCubit>(),
@@ -1066,7 +1066,7 @@ class _TransactionsViewState extends State<_TransactionsView> {
   }
 }
 
-void _showTransactionEditorSheet(
+void showTransactionEditorBottomSheet(
   BuildContext context, {
   required AppLocalizations l10n,
   required TransactionsCubit cubit,
@@ -1089,6 +1089,26 @@ void _showTransactionEditorSheet(
       preferredCardId: preferredCardId,
       preferredCategoryId: preferredCategoryId,
       preferredTagId: preferredTagId,
+    ),
+  );
+}
+
+void showAccountTransferEditorBottomSheet(
+  BuildContext context, {
+  required AppLocalizations l10n,
+  required TransactionEntity editingSource,
+  required TransactionEntity editingTarget,
+}) {
+  final cubit = context.read<TransactionsCubit>();
+  showModalBottomSheet<void>(
+    context: context,
+    isScrollControlled: true,
+    showDragHandle: true,
+    builder: (_) => _AccountTransferBottomSheet(
+      cubit: cubit,
+      l10n: l10n,
+      editingSource: editingSource,
+      editingTarget: editingTarget,
     ),
   );
 }
@@ -1342,7 +1362,7 @@ Widget _transactionSearchResultsList(
   return Column(
     crossAxisAlignment: CrossAxisAlignment.stretch,
     children: [
-      if (top != null) top,
+      ?top,
       Expanded(
         child: ListView.builder(
           itemCount: list.length,
@@ -1460,16 +1480,11 @@ class _TransferPairTile extends StatelessWidget {
     );
 
     void openEdit() {
-      showModalBottomSheet<void>(
-        context: context,
-        isScrollControlled: true,
-        showDragHandle: true,
-        builder: (_) => _AccountTransferBottomSheet(
-          cubit: cubit,
-          l10n: l10n,
-          editingSource: source,
-          editingTarget: target,
-        ),
+      showAccountTransferEditorBottomSheet(
+        context,
+        l10n: l10n,
+        editingSource: source,
+        editingTarget: target,
       );
     }
 
@@ -1656,7 +1671,7 @@ class _TransactionTile extends StatelessWidget {
     );
 
     void openEdit() {
-      _showTransactionEditorSheet(
+      showTransactionEditorBottomSheet(
         context,
         l10n: l10n,
         cubit: cubit,
