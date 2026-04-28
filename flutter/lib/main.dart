@@ -6,6 +6,7 @@ import 'package:wallet/l10n/app_localizations.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'core/di/injection.dart';
 import 'core/locale/app_locale_controller.dart';
+import 'core/theme/app_theme_controller.dart';
 import 'core/logger/app_logger.dart';
 import 'core/wallet_actions/wallet_actions_reporter.dart';
 import 'router.dart';
@@ -23,6 +24,7 @@ Future<void> main() async {
   setupDi();
   AppLogger.info('DI setup complete');
   await getIt<AppLocaleController>().load();
+  await getIt<AppThemeController>().load();
   _bindGlobalErrorReporting();
 
   runApp(const App());
@@ -54,9 +56,11 @@ class App extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final appLocale = getIt<AppLocaleController>();
+    final appTheme = getIt<AppThemeController>();
     return ListenableBuilder(
-      listenable: appLocale,
+      listenable: Listenable.merge([appLocale, appTheme]),
       builder: (context, _) {
+        final seed = Colors.deepPurple;
         return MaterialApp.router(
           onGenerateTitle: (context) => AppLocalizations.of(context)!.appTitle,
           localizationsDelegates: AppLocalizations.localizationsDelegates,
@@ -64,8 +68,17 @@ class App extends StatelessWidget {
           locale: appLocale.materialAppLocale,
           localeResolutionCallback: _resolveDeviceLocale,
           theme: ThemeData(
-            colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+            colorScheme: ColorScheme.fromSeed(seedColor: seed),
+            useMaterial3: true,
           ),
+          darkTheme: ThemeData(
+            colorScheme: ColorScheme.fromSeed(
+              seedColor: seed,
+              brightness: Brightness.dark,
+            ),
+            useMaterial3: true,
+          ),
+          themeMode: appTheme.themeMode,
           routerConfig: router,
         );
       },
