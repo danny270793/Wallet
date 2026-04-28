@@ -466,6 +466,12 @@ abstract class AppLocalizations {
   /// **'Ignore'**
   String get transactionIgnore;
 
+  /// No description provided for @transactionIgnoredBadge.
+  ///
+  /// In en, this message translates to:
+  /// **'Ignored'**
+  String get transactionIgnoredBadge;
+
   /// No description provided for @transactionAmountValue.
   ///
   /// In en, this message translates to:
@@ -489,6 +495,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Balance'**
   String get transactionsTotalBalance;
+
+  /// No description provided for @transactionsTotalsExcludingIgnoredHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Excluding ignored transactions'**
+  String get transactionsTotalsExcludingIgnoredHint;
 }
 
 class _AppLocalizationsDelegate
