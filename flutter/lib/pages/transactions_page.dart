@@ -14,6 +14,7 @@ import '../features/tags/domain/entities/tag_entity.dart';
 import '../features/transactions/domain/entities/transaction_entity.dart';
 import '../features/transactions/presentation/cubit/transactions_cubit.dart';
 import '../features/transactions/presentation/cubit/transactions_state.dart';
+import '../widgets/swipeable_list_tile.dart';
 
 class TransactionsPage extends StatelessWidget {
   const TransactionsPage({super.key});
@@ -166,9 +167,29 @@ class _TransactionTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cubit = context.read<TransactionsCubit>();
     final relationNames = _relationNames(transaction);
-    return ListTile(
-      title: Text(l10n.transactionAmountValue(transaction.value.toString())),
+    final theme = Theme.of(context);
+
+    void openEdit() {
+      showDialog<void>(
+        context: context,
+        builder: (_) => _TransactionDialog(cubit: cubit, l10n: l10n, transaction: transaction),
+      );
+    }
+
+    return SwipeableListTile(
+      itemKey: transaction.id,
+      leading: CircleAvatar(
+        radius: 20,
+        backgroundColor: theme.colorScheme.tertiaryContainer,
+        foregroundColor: theme.colorScheme.onTertiaryContainer,
+        child: const Icon(Icons.payments_rounded, size: 22),
+      ),
+      title: Text(
+        l10n.transactionAmountValue(transaction.value.toString()),
+        style: const TextStyle(fontWeight: FontWeight.w600),
+      ),
       subtitle: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
@@ -180,7 +201,7 @@ class _TransactionTile extends StatelessWidget {
                 transaction.description!,
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
-                style: Theme.of(context).textTheme.bodyMedium,
+                style: theme.textTheme.bodyMedium,
               ),
             ),
           if (relationNames.isNotEmpty)
@@ -190,35 +211,47 @@ class _TransactionTile extends StatelessWidget {
                 relationNames.join(' · '),
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
                 ),
               ),
             ),
           Text(dateFmt.format(transaction.transactedAt.toLocal())),
         ],
       ),
-      trailing: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          if (transaction.ignore) Icon(Icons.visibility_off, size: 20, color: Theme.of(context).colorScheme.outline),
-          IconButton(
-            icon: const Icon(Icons.edit_outlined),
-            onPressed: () => showDialog<void>(
-              context: context,
-              builder: (_) => _TransactionDialog(
-                cubit: context.read<TransactionsCubit>(),
-                l10n: l10n,
-                transaction: transaction,
+      trailing: transaction.ignore
+          ? Tooltip(
+              message: l10n.transactionIgnore,
+              child: Icon(
+                Icons.visibility_off_rounded,
+                size: 22,
+                color: theme.colorScheme.outline,
               ),
-            ),
+            )
+          : null,
+      onEdit: openEdit,
+      confirmDelete: () async {
+        final ok = await showDialog<bool>(
+          context: context,
+          builder: (dialogContext) => AlertDialog(
+            title: Text(l10n.deleteTransaction),
+            content: Text(l10n.confirmDeleteTransaction),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(dialogContext).pop(false),
+                child: Text(l10n.cancel),
+              ),
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+                onPressed: () => Navigator.of(dialogContext).pop(true),
+                child: Text(l10n.delete, style: const TextStyle(color: Colors.white)),
+              ),
+            ],
           ),
-          IconButton(
-            icon: const Icon(Icons.delete_outlined),
-            onPressed: () => _confirmDelete(context),
-          ),
-        ],
-      ),
+        );
+        return ok ?? false;
+      },
+      onDeleted: () => cubit.delete(id: transaction.id),
     );
   }
 
@@ -230,30 +263,6 @@ class _TransactionTile extends StatelessWidget {
         if (t.tagName?.isNotEmpty == true) t.tagName!,
       ];
 
-  Future<void> _confirmDelete(BuildContext context) async {
-    final cubit = context.read<TransactionsCubit>();
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: Text(l10n.deleteTransaction),
-        content: Text(l10n.confirmDeleteTransaction),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(dialogContext).pop(false),
-            child: Text(l10n.cancel),
-          ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-            onPressed: () => Navigator.of(dialogContext).pop(true),
-            child: Text(l10n.delete, style: const TextStyle(color: Colors.white)),
-          ),
-        ],
-      ),
-    );
-    if (confirmed == true) {
-      cubit.delete(id: transaction.id);
-    }
-  }
 }
 
 class _TransactionDialog extends StatefulWidget {
