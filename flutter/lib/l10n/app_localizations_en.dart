@@ -51,6 +51,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get accountDescription => 'Description';
 
   @override
+  String get accountBalance => 'Balance';
+
+  @override
   String get editAccount => 'Edit account';
 
   @override
