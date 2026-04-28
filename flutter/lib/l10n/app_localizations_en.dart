@@ -72,19 +72,104 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsPrivacyPolicy => 'Privacy policy';
 
   @override
+  String get settingsPrivacyTagline => 'How this app treats your information.';
+
+  @override
+  String get settingsPrivacyDataTitle => 'What you store';
+
+  @override
+  String get settingsPrivacyDataBody =>
+      'Wallet keeps the financial details you enter—accounts, cards, transactions, categories, tags, and transfers—so you can see balances and history. The app does not collect data you never saved while signed in.';
+
+  @override
+  String get settingsPrivacyInfraTitle => 'Where it lives';
+
+  @override
+  String get settingsPrivacyInfraBody =>
+      'Your records are stored in the backend you configure (for example Supabase) and the authentication you use. Security, backups, and who can access data depend on that provider and your project settings. Use strong passwords and protect API keys.';
+
+  @override
+  String get settingsPrivacySharingTitle => 'Sharing and ads';
+
+  @override
+  String get settingsPrivacySharingBody =>
+      'We do not sell your personal information or use your ledger to target ads. Apart from your chosen backend and sign-in service, this app is not designed to send your data to brokers or advertisers.';
+
+  @override
+  String get settingsPrivacyNoticeTitle => 'Before you ship';
+
+  @override
+  String get settingsPrivacyNoticeBody =>
+      'This text is a simple placeholder, not legal advice. Before production or an app store release, publish a privacy policy that matches your jurisdiction, your organization, and how you actually process data.';
+
+  @override
   String get settingsTermsOfUse => 'Terms of use';
 
   @override
-  String get settingsAboutBody =>
-      'Wallet helps you track accounts, cards, categories, tags, and transactions in one place. Data is stored in your own backend (for example Supabase) and tied to your sign-in. This app is provided as-is for personal use.';
+  String get settingsTermsTagline => 'Rules for using this app.';
 
   @override
-  String get settingsPrivacyBody =>
-      'The app sends and stores only the information you enter to provide budgeting and ledger features. We do not sell your data. Technical operations (hosting, authentication, database) are handled by the services you configure. For questions about processing, contact whoever operates your project or account. Replace this text with a policy that matches your deployment before production use.';
+  String get settingsTermsAcceptanceTitle => 'Acceptance';
 
   @override
-  String get settingsTermsBody =>
-      'By using Wallet you agree to use the app at your own risk. Nothing here is financial, legal, or tax advice. The authors are not liable for losses or decisions based on the app. You are responsible for securing your credentials and complying with laws that apply to you. Replace this text with your real terms before publishing.';
+  String get settingsTermsAcceptanceBody =>
+      'By accessing or using Wallet, you agree to these terms. If you do not agree, do not use the app.';
+
+  @override
+  String get settingsTermsDisclaimerTitle => 'Not professional advice';
+
+  @override
+  String get settingsTermsDisclaimerBody =>
+      'Wallet is a tool for organizing your own records. Nothing in the app or these terms is financial, legal, accounting, or tax advice. You use the app and any information in it at your own risk when making decisions.';
+
+  @override
+  String get settingsTermsLiabilityTitle => 'Limitation of liability';
+
+  @override
+  String get settingsTermsLiabilityBody =>
+      'To the fullest extent permitted by law, the authors and contributors are not liable for any indirect, incidental, or consequential damages, or for losses or decisions you make based on the app. The app is provided as-is without warranties of any kind.';
+
+  @override
+  String get settingsTermsResponsibilitiesTitle => 'Your responsibilities';
+
+  @override
+  String get settingsTermsResponsibilitiesBody =>
+      'You are responsible for protecting your account, credentials, API keys, and devices. You must comply with laws and regulations that apply to you, including those governing financial record-keeping and taxes in your jurisdiction.';
+
+  @override
+  String get settingsTermsNoticeTitle => 'Changes and before you ship';
+
+  @override
+  String get settingsTermsNoticeBody =>
+      'These terms may be updated from time to time. If you continue to use the app after changes are posted, that indicates your acceptance of the updated terms. This text is a simple placeholder, not legal advice. Before production or an app store release, publish terms that match your jurisdiction, your organization, and your service.';
+
+  @override
+  String get settingsAboutTagline => 'Personal finance in one place.';
+
+  @override
+  String get settingsAboutVersionLabel => 'Version';
+
+  @override
+  String get settingsAboutFeaturesHeading => 'What you can do';
+
+  @override
+  String get settingsAboutBulletAccounts =>
+      'Connect accounts and cards to mirror your balances in the app.';
+
+  @override
+  String get settingsAboutBulletLedger =>
+      'Log transactions, transfers, categories, and tags in a clear ledger.';
+
+  @override
+  String get settingsAboutBulletMonth =>
+      'Review each month and search your history when you need answers.';
+
+  @override
+  String get settingsAboutDataHeading => 'Your data';
+
+  @override
+  String get settingsAboutDataBody =>
+      'What you save is stored in the backend you configure (for example Supabase) and is tied to your sign-in. This build is intended for personal use.';
 
   @override
   String get accounts => 'Accounts';
@@ -236,7 +321,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get transactionsFabTransfer => 'Transfer';
 
   @override
-  String get transferSheetTitle => 'Transfer between accounts';
+  String get transferSheetTitle => 'Transfer';
 
   @override
   String get transferSourceAccount => 'Source';
@@ -252,11 +337,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get transferAccountsMustDiffer =>
-      'Source and target must be different accounts';
+      'Source and target must be different';
 
   @override
   String get transferNeedTwoAccounts =>
-      'Add at least two accounts to transfer money between them';
+      'Add at least two accounts or cards to transfer money between them';
 
   @override
   String get transferAccountSearch => 'Search by name';
@@ -301,6 +386,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get transactionPaymentMethod => 'Payment method';
+
+  @override
+  String get paymentMethodAddChoiceTitle => 'Add account or card';
 
   @override
   String get transactionPaymentMethodSearchNoResults =>
