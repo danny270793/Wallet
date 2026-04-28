@@ -8,6 +8,7 @@ import '../features/accounts/presentation/cubit/accounts_cubit.dart';
 import '../features/accounts/presentation/cubit/accounts_state.dart';
 import '../widgets/shell_scaffold.dart';
 import '../widgets/swipeable_list_tile.dart';
+import '../widgets/wallet_dual_balance_trailing.dart';
 
 void _showAccountBottomSheet(
   BuildContext context,
@@ -167,15 +168,7 @@ class _AccountTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final theme = Theme.of(context);
     final cubit = context.read<AccountsCubit>();
-    final balance = account.balance;
-
-    Color balanceColor() {
-      if (balance > 0) return const Color(0xFF1B8736);
-      if (balance < 0) return theme.colorScheme.error;
-      return theme.colorScheme.onSurface;
-    }
 
     void openEdit() {
       _showAccountBottomSheet(context, l10n, account: account);
@@ -199,9 +192,10 @@ class _AccountTile extends StatelessWidget {
       subtitle: account.description != null
           ? Text(account.description!, maxLines: 2, overflow: TextOverflow.ellipsis)
           : null,
-      trailing: Text(
-        l10n.transactionAmountValue(balance.toStringAsFixed(2)),
-        style: TextStyle(fontWeight: FontWeight.w600, color: balanceColor()),
+      trailing: WalletDualBalanceTrailing(
+        l10n: l10n,
+        balanceWeighted: account.balanceWeighted,
+        balanceCounted: account.balanceCounted,
       ),
       onTap: openTransactions,
       onEdit: openEdit,
