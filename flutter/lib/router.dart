@@ -9,7 +9,6 @@ import 'pages/categories_page.dart';
 import 'pages/tags_page.dart';
 import 'pages/transactions_page.dart';
 import 'pages/settings_page.dart';
-import 'widgets/transactions_month_scope.dart';
 
 final router = GoRouter(
   initialLocation: '/',
@@ -32,19 +31,24 @@ final router = GoRouter(
     GoRoute(path: '/login', builder: (context, state) => const LoginPage()),
     GoRoute(path: '/settings', builder: (context, state) => const SettingsPage()),
     ShellRoute(
-      builder: (context, state, child) {
-        if (state.matchedLocation.startsWith('/transactions')) {
-          return TransactionsMonthHost(child: child);
-        }
-        return child;
-      },
+      builder: (context, state, child) => child,
       routes: [
         GoRoute(path: '/dashboard', builder: (context, state) => const DashboardPage()),
         GoRoute(path: '/accounts', builder: (context, state) => const AccountsPage()),
         GoRoute(path: '/cards', builder: (context, state) => const CardsPage()),
         GoRoute(path: '/categories', builder: (context, state) => const CategoriesPage()),
         GoRoute(path: '/tags', builder: (context, state) => const TagsPage()),
-        GoRoute(path: '/transactions', builder: (context, state) => const TransactionsPage()),
+        GoRoute(
+          path: '/transactions',
+          builder: (context, state) {
+            final id = state.uri.queryParameters['accountId'];
+            final name = state.uri.queryParameters['accountName'];
+            return TransactionsPage(
+              accountIdFilter: (id == null || id.isEmpty) ? null : id,
+              accountNameFilter: (name == null || name.isEmpty) ? null : name,
+            );
+          },
+        ),
       ],
     ),
   ],
