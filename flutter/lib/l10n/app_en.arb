@@ -31,6 +31,22 @@
       }
     }
   },
+  "listBalanceTotalWeightedLine": "Total weighted {amount}",
+  "@listBalanceTotalWeightedLine": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "listBalanceTotalCountedLine": "Total counted {amount}",
+  "@listBalanceTotalCountedLine": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
   "editAccount": "Edit account",
   "accountSubmitCreate": "Create",
   "deleteAccount": "Delete account",
