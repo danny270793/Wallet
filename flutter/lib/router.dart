@@ -45,11 +45,19 @@ final router = GoRouter(
             final accountName = state.uri.queryParameters['accountName'];
             final cardId = state.uri.queryParameters['cardId'];
             final cardName = state.uri.queryParameters['cardName'];
+            final categoryId = state.uri.queryParameters['categoryId'];
+            final categoryName = state.uri.queryParameters['categoryName'];
+            final tagId = state.uri.queryParameters['tagId'];
+            final tagName = state.uri.queryParameters['tagName'];
             return TransactionsPage(
               accountIdFilter: (accountId == null || accountId.isEmpty) ? null : accountId,
               accountNameFilter: (accountName == null || accountName.isEmpty) ? null : accountName,
               cardIdFilter: (cardId == null || cardId.isEmpty) ? null : cardId,
               cardNameFilter: (cardName == null || cardName.isEmpty) ? null : cardName,
+              categoryIdFilter: (categoryId == null || categoryId.isEmpty) ? null : categoryId,
+              categoryNameFilter: (categoryName == null || categoryName.isEmpty) ? null : categoryName,
+              tagIdFilter: (tagId == null || tagId.isEmpty) ? null : tagId,
+              tagNameFilter: (tagName == null || tagName.isEmpty) ? null : tagName,
             );
           },
         ),
