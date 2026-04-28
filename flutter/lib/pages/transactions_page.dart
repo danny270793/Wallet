@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
@@ -20,6 +22,10 @@ import '../widgets/shell_scaffold.dart';
 import '../widgets/swipeable_list_tile.dart';
 import '../widgets/transactions_month_scope.dart';
 import '../widgets/transactions_totals_bar.dart';
+
+/// Encodes account vs card in unified payment-method picker sheet results.
+const _paymentMethodPickAccountPrefix = 'a:';
+const _paymentMethodPickCardPrefix = 'c:';
 
 /// Local calendar day (midnight) used as a group key for [transactedAt].
 DateTime _calendarDayLocal(DateTime utcOrLocal) {
@@ -500,6 +506,7 @@ class _AccountTransferBottomSheetState extends State<_AccountTransferBottomSheet
   }
 
   Future<void> _submit() async {
+    if (_loadingAccounts || _accounts.length < 2) return;
     if (!_formKey.currentState!.validate()) return;
     if (_sourceId == null || _targetId == null) return;
     if (_sourceId == _targetId) {
@@ -552,55 +559,91 @@ class _AccountTransferBottomSheetState extends State<_AccountTransferBottomSheet
                 style: Theme.of(context).textTheme.titleLarge,
               ),
               const SizedBox(height: 16),
-              if (_loadingAccounts)
-                const Padding(
-                  padding: EdgeInsets.all(24),
-                  child: Center(child: CircularProgressIndicator()),
-                )
-              else if (_accounts.length < 2)
-                Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 24),
-                  child: Text(l10n.transferNeedTwoAccounts, textAlign: TextAlign.center),
-                )
-              else
-                Form(
-                  key: _formKey,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
+              Form(
+                key: _formKey,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Expanded(
+                          child: TextFormField(
+                            readOnly: true,
+                            enableInteractiveSelection: false,
+                            showCursor: false,
+                            controller: _dateDisplayController,
+                            decoration: InputDecoration(
+                              labelText: l10n.transferDateLabel,
+                              suffixIcon: const Icon(Icons.calendar_today_outlined, size: 20),
+                            ),
+                            onTap: _pickDate,
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: TextFormField(
+                            readOnly: true,
+                            enableInteractiveSelection: false,
+                            showCursor: false,
+                            controller: _timeDisplayController,
+                            decoration: InputDecoration(
+                              labelText: l10n.transferTimeLabel,
+                              suffixIcon: const Icon(Icons.schedule, size: 20),
+                            ),
+                            onTap: _pickTime,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    if (_loadingAccounts)
                       Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Expanded(
-                            child: TextFormField(
-                              readOnly: true,
-                              enableInteractiveSelection: false,
-                              showCursor: false,
-                              controller: _dateDisplayController,
+                            child: InputDecorator(
                               decoration: InputDecoration(
-                                labelText: l10n.transferDateLabel,
-                                suffixIcon: const Icon(Icons.calendar_today_outlined, size: 20),
+                                labelText: l10n.transferSourceAccount,
                               ),
-                              onTap: _pickDate,
+                              child: const SizedBox(
+                                height: 40,
+                                child: Center(
+                                  child: SizedBox(
+                                    width: 22,
+                                    height: 22,
+                                    child: CircularProgressIndicator(strokeWidth: 2),
+                                  ),
+                                ),
+                              ),
                             ),
                           ),
                           const SizedBox(width: 12),
                           Expanded(
-                            child: TextFormField(
-                              readOnly: true,
-                              enableInteractiveSelection: false,
-                              showCursor: false,
-                              controller: _timeDisplayController,
+                            child: InputDecorator(
                               decoration: InputDecoration(
-                                labelText: l10n.transferTimeLabel,
-                                suffixIcon: const Icon(Icons.schedule, size: 20),
+                                labelText: l10n.transferTargetAccount,
                               ),
-                              onTap: _pickTime,
+                              child: const SizedBox(
+                                height: 40,
+                                child: Center(
+                                  child: SizedBox(
+                                    width: 22,
+                                    height: 22,
+                                    child: CircularProgressIndicator(strokeWidth: 2),
+                                  ),
+                                ),
+                              ),
                             ),
                           ),
                         ],
-                      ),
-                      const SizedBox(height: 16),
+                      )
+                    else if (_accounts.length < 2)
+                      Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 8),
+                        child: Text(l10n.transferNeedTwoAccounts, textAlign: TextAlign.center),
+                      )
+                    else
                       Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -635,32 +678,32 @@ class _AccountTransferBottomSheetState extends State<_AccountTransferBottomSheet
                           ),
                         ],
                       ),
-                      const SizedBox(height: 16),
-                      TextFormField(
-                        controller: _valueController,
-                        decoration: InputDecoration(labelText: l10n.transactionAmount),
-                        keyboardType: const TextInputType.numberWithOptions(decimal: true, signed: false),
-                        validator: (v) {
-                          if (v == null || v.trim().isEmpty) return l10n.fieldRequired;
-                          final n = double.tryParse(v.trim());
-                          if (n == null || n <= 0) return l10n.fieldRequired;
-                          return null;
-                        },
-                      ),
-                      const SizedBox(height: 24),
-                      FilledButton(
-                        onPressed: _submitting ? null : _submit,
-                        child: _submitting
-                            ? const SizedBox(
-                                height: 20,
-                                width: 20,
-                                child: CircularProgressIndicator(strokeWidth: 2),
-                              )
-                            : Text(l10n.save),
-                      ),
-                    ],
-                  ),
+                    const SizedBox(height: 16),
+                    TextFormField(
+                      controller: _valueController,
+                      decoration: InputDecoration(labelText: l10n.transactionAmount),
+                      keyboardType: const TextInputType.numberWithOptions(decimal: true, signed: false),
+                      validator: (v) {
+                        if (v == null || v.trim().isEmpty) return l10n.fieldRequired;
+                        final n = double.tryParse(v.trim());
+                        if (n == null || n <= 0) return l10n.fieldRequired;
+                        return null;
+                      },
+                    ),
+                    const SizedBox(height: 24),
+                    FilledButton(
+                      onPressed: _submitting || _loadingAccounts || _accounts.length < 2 ? null : _submit,
+                      child: _submitting
+                          ? const SizedBox(
+                              height: 20,
+                              width: 20,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
+                          : Text(l10n.save),
+                    ),
+                  ],
                 ),
+              ),
             ],
           ),
         ),
@@ -847,6 +890,7 @@ class _TransactionsViewState extends State<_TransactionsView> {
                       delegate: _TransactionSearchDelegate(
                         l10n: l10n,
                         search: getIt<SearchTransactionsByDescriptionUsecase>(),
+                        localTransactions: filtered,
                       ),
                     );
                     if (!context.mounted || tx == null) return;
@@ -1043,29 +1087,57 @@ class _TransactionsViewState extends State<_TransactionsView> {
     String? preferredCategoryId,
     String? preferredTagId,
   ]) {
-    showDialog<void>(
-      context: context,
-      builder: (_) => _TransactionDialog(
-        cubit: context.read<TransactionsCubit>(),
-        l10n: l10n,
-        transaction: tx,
-        preferredAccountId: preferredAccountId,
-        preferredCardId: preferredCardId,
-        preferredCategoryId: preferredCategoryId,
-        preferredTagId: preferredTagId,
-      ),
+    _showTransactionEditorSheet(
+      context,
+      l10n: l10n,
+      cubit: context.read<TransactionsCubit>(),
+      transaction: tx,
+      preferredAccountId: preferredAccountId,
+      preferredCardId: preferredCardId,
+      preferredCategoryId: preferredCategoryId,
+      preferredTagId: preferredTagId,
     );
   }
+}
+
+void _showTransactionEditorSheet(
+  BuildContext context, {
+  required AppLocalizations l10n,
+  required TransactionsCubit cubit,
+  TransactionEntity? transaction,
+  String? preferredAccountId,
+  String? preferredCardId,
+  String? preferredCategoryId,
+  String? preferredTagId,
+}) {
+  showModalBottomSheet<void>(
+    context: context,
+    isScrollControlled: true,
+    useSafeArea: true,
+    showDragHandle: true,
+    builder: (_) => _TransactionDialog(
+      cubit: cubit,
+      l10n: l10n,
+      transaction: transaction,
+      preferredAccountId: preferredAccountId,
+      preferredCardId: preferredCardId,
+      preferredCategoryId: preferredCategoryId,
+      preferredTagId: preferredTagId,
+    ),
+  );
 }
 
 class _TransactionSearchDelegate extends SearchDelegate<TransactionEntity?> {
   _TransactionSearchDelegate({
     required this.l10n,
     required this.search,
+    required this.localTransactions,
   });
 
   final AppLocalizations l10n;
   final SearchTransactionsByDescriptionUsecase search;
+  /// Already-loaded list for the visible month (and scoped filters), for instant local search.
+  final List<TransactionEntity> localTransactions;
 
   @override
   String get searchFieldLabel => l10n.transactionsSearchHint;
@@ -1093,19 +1165,113 @@ class _TransactionSearchDelegate extends SearchDelegate<TransactionEntity?> {
   }
 
   @override
-  Widget buildResults(BuildContext context) => _results(context);
+  Widget buildResults(BuildContext context) => _searchBody(context);
 
   @override
-  Widget buildSuggestions(BuildContext context) => _results(context);
+  Widget buildSuggestions(BuildContext context) => _searchBody(context);
 
-  Widget _results(BuildContext context) {
-    final q = query.trim();
+  Widget _searchBody(BuildContext context) {
+    return _TransactionSearchBody(
+      l10n: l10n,
+      query: query,
+      localTransactions: localTransactions,
+      search: search,
+      onSelect: (t) => close(context, t),
+    );
+  }
+}
+
+List<TransactionEntity> _localTransactionsMatchingDescription(
+  List<TransactionEntity> transactions,
+  String query,
+) {
+  final needle = query.trim().toLowerCase();
+  if (needle.isEmpty) return [];
+  return transactions
+      .where((t) => (t.description ?? '').toLowerCase().contains(needle))
+      .toList();
+}
+
+class _TransactionSearchBody extends StatefulWidget {
+  const _TransactionSearchBody({
+    required this.l10n,
+    required this.query,
+    required this.localTransactions,
+    required this.search,
+    required this.onSelect,
+  });
+
+  final AppLocalizations l10n;
+  final String query;
+  final List<TransactionEntity> localTransactions;
+  final SearchTransactionsByDescriptionUsecase search;
+  final void Function(TransactionEntity t) onSelect;
+
+  @override
+  State<_TransactionSearchBody> createState() => _TransactionSearchBodyState();
+}
+
+class _TransactionSearchBodyState extends State<_TransactionSearchBody> {
+  static const _debounceMs = 450;
+
+  Timer? _debounce;
+  Future<List<TransactionEntity>>? _remoteFuture;
+  String? _remoteForQuery;
+
+  @override
+  void initState() {
+    super.initState();
+    _onQueryChanged();
+  }
+
+  @override
+  void didUpdateWidget(covariant _TransactionSearchBody oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.query != widget.query) {
+      _onQueryChanged();
+    }
+  }
+
+  void _onQueryChanged() {
+    _debounce?.cancel();
+    final q = widget.query.trim();
+    if (q.isEmpty) {
+      setState(() {
+        _remoteFuture = null;
+        _remoteForQuery = null;
+      });
+      return;
+    }
+    setState(() {
+      _remoteFuture = null;
+      _remoteForQuery = null;
+    });
+    _debounce = Timer(const Duration(milliseconds: _debounceMs), () {
+      if (!mounted) return;
+      final trimmed = widget.query.trim();
+      if (trimmed.isEmpty) return;
+      setState(() {
+        _remoteFuture = widget.search(trimmed);
+        _remoteForQuery = trimmed;
+      });
+    });
+  }
+
+  @override
+  void dispose() {
+    _debounce?.cancel();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final q = widget.query.trim();
     if (q.isEmpty) {
       return Center(
         child: Padding(
           padding: const EdgeInsets.all(24),
           child: Text(
-            l10n.transactionsSearchTypeQuery,
+            widget.l10n.transactionsSearchTypeQuery,
             textAlign: TextAlign.center,
             style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                   color: Theme.of(context).colorScheme.onSurfaceVariant,
@@ -1114,23 +1280,105 @@ class _TransactionSearchDelegate extends SearchDelegate<TransactionEntity?> {
         ),
       );
     }
+
+    final local = _localTransactionsMatchingDescription(widget.localTransactions, q);
+
+    if (_remoteFuture == null) {
+      if (local.isEmpty) {
+        return const Center(child: CircularProgressIndicator());
+      }
+      return _transactionSearchResultsList(
+        context,
+        l10n: widget.l10n,
+        list: local,
+        onSelect: widget.onSelect,
+        top: null,
+      );
+    }
+
     return FutureBuilder<List<TransactionEntity>>(
-      key: ValueKey(q),
-      future: search(q),
+      key: ValueKey(_remoteForQuery),
+      future: _remoteFuture,
       builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(child: CircularProgressIndicator());
+        final forQuery = widget.query.trim();
+        final staleRemote = _remoteForQuery != null && _remoteForQuery != forQuery;
+
+        if (snapshot.connectionState == ConnectionState.waiting && !staleRemote) {
+          if (local.isEmpty) {
+            return const Center(child: CircularProgressIndicator());
+          }
+          return _transactionSearchResultsList(
+            context,
+            l10n: widget.l10n,
+            list: local,
+            onSelect: widget.onSelect,
+            top: const LinearProgressIndicator(minHeight: 2),
+          );
         }
-        if (snapshot.hasError) {
-          return Center(child: Text(l10n.unexpectedError));
+
+        if (snapshot.hasError && !staleRemote) {
+          if (local.isNotEmpty) {
+            return _transactionSearchResultsList(
+              context,
+              l10n: widget.l10n,
+              list: local,
+              onSelect: widget.onSelect,
+              top: Padding(
+                padding: const EdgeInsets.all(12),
+                child: Text(
+                  widget.l10n.unexpectedError,
+                  style: TextStyle(color: Theme.of(context).colorScheme.error),
+                ),
+              ),
+            );
+          }
+          return Center(child: Text(widget.l10n.unexpectedError));
         }
-        final list = snapshot.data ?? [];
+
+        if (staleRemote || !snapshot.hasData) {
+          return _transactionSearchResultsList(
+            context,
+            l10n: widget.l10n,
+            list: local,
+            onSelect: widget.onSelect,
+            top: null,
+          );
+        }
+
+        final list = snapshot.data!;
         if (list.isEmpty) {
-          return Center(child: Text(l10n.transactionsSearchNoResults));
+          return Center(child: Text(widget.l10n.transactionsSearchNoResults));
         }
-        final locale = Localizations.localeOf(context).toString();
-        final dateFmt = DateFormat.yMMMd(locale).add_Hm();
-        return ListView.builder(
+        return _transactionSearchResultsList(
+          context,
+          l10n: widget.l10n,
+          list: list,
+          onSelect: widget.onSelect,
+          top: null,
+        );
+      },
+    );
+  }
+}
+
+Widget _transactionSearchResultsList(
+  BuildContext context, {
+  required AppLocalizations l10n,
+  required List<TransactionEntity> list,
+  required void Function(TransactionEntity t) onSelect,
+  required Widget? top,
+}) {
+  if (list.isEmpty) {
+    return Center(child: Text(l10n.transactionsSearchNoResults));
+  }
+  final locale = Localizations.localeOf(context).toString();
+  final dateFmt = DateFormat.yMMMd(locale).add_Hm();
+  return Column(
+    crossAxisAlignment: CrossAxisAlignment.stretch,
+    children: [
+      if (top != null) top,
+      Expanded(
+        child: ListView.builder(
           itemCount: list.length,
           itemBuilder: (context, i) {
             final t = list[i];
@@ -1148,13 +1396,13 @@ class _TransactionSearchDelegate extends SearchDelegate<TransactionEntity?> {
                       fontFeatures: const [FontFeature.tabularFigures()],
                     ),
               ),
-              onTap: () => close(context, t),
+              onTap: () => onSelect(t),
             );
           },
-        );
-      },
-    );
-  }
+        ),
+      ),
+    ],
+  );
 }
 
 class _TransactionDayHeader extends StatelessWidget {
@@ -1448,9 +1696,11 @@ class _TransactionTile extends StatelessWidget {
     );
 
     void openEdit() {
-      showDialog<void>(
-        context: context,
-        builder: (_) => _TransactionDialog(cubit: cubit, l10n: l10n, transaction: transaction),
+      _showTransactionEditorSheet(
+        context,
+        l10n: l10n,
+        cubit: cubit,
+        transaction: transaction,
       );
     }
 
@@ -1501,6 +1751,111 @@ class _TransactionTile extends StatelessWidget {
 
 }
 
+/// Picks an id from a searchable list. Returns `null` if dismissed, `''` if [allowNone] and user cleared.
+Future<String?> _showSearchableIdPickerSheet(
+  BuildContext context, {
+  required AppLocalizations l10n,
+  required String title,
+  required String searchHint,
+  required String noResultsMessage,
+  required String emptyMessage,
+  required bool allowNone,
+  required List<({String id, String name})> initialItems,
+}) {
+  return showModalBottomSheet<String?>(
+    context: context,
+    showDragHandle: true,
+    isScrollControlled: true,
+    builder: (sheetContext) {
+      final maxH = MediaQuery.sizeOf(sheetContext).height * 0.55;
+      var items = List<({String id, String name})>.from(initialItems);
+      var showSearchField = false;
+      var searchFilter = '';
+
+      List<({String id, String name})> visible() {
+        final q = searchFilter.trim().toLowerCase();
+        if (q.isEmpty) return items;
+        return items.where((e) => e.name.toLowerCase().contains(q)).toList();
+      }
+
+      return StatefulBuilder(
+        builder: (context, setPickerState) {
+          final list = visible();
+
+          return SafeArea(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(12, 12, 4, 8),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          title,
+                          style: Theme.of(sheetContext).textTheme.titleMedium,
+                        ),
+                      ),
+                      IconButton(
+                        tooltip: l10n.transferAccountSearch,
+                        icon: Icon(showSearchField ? Icons.search_off_outlined : Icons.search),
+                        onPressed: () {
+                          setPickerState(() {
+                            showSearchField = !showSearchField;
+                            if (!showSearchField) searchFilter = '';
+                          });
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+                if (allowNone)
+                  ListTile(
+                    title: Text(l10n.none),
+                    leading: const Icon(Icons.clear),
+                    onTap: () => Navigator.of(sheetContext).pop(''),
+                  ),
+                if (showSearchField)
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+                    child: TextField(
+                      decoration: InputDecoration(
+                        hintText: searchHint,
+                        prefixIcon: const Icon(Icons.search, size: 22),
+                        isDense: true,
+                        border: const OutlineInputBorder(),
+                      ),
+                      textInputAction: TextInputAction.search,
+                      onChanged: (v) => setPickerState(() => searchFilter = v),
+                    ),
+                  ),
+                SizedBox(
+                  height: maxH,
+                  child: items.isEmpty
+                      ? Center(child: Text(emptyMessage))
+                      : list.isEmpty
+                          ? Center(child: Text(noResultsMessage))
+                          : ListView.builder(
+                              itemCount: list.length,
+                              itemBuilder: (context, index) {
+                                final e = list[index];
+                                return ListTile(
+                                  title: Text(e.name),
+                                  onTap: () => Navigator.of(sheetContext).pop(e.id),
+                                );
+                              },
+                            ),
+                ),
+              ],
+            ),
+          );
+        },
+      );
+    },
+  );
+}
+
 class _TransactionDialog extends StatefulWidget {
   final TransactionsCubit cubit;
   final AppLocalizations l10n;
@@ -1530,6 +1885,11 @@ class _TransactionDialogState extends State<_TransactionDialog> {
   late final TextEditingController _valueController;
   late final TextEditingController _percentageController;
   late final TextEditingController _descriptionController;
+  late final TextEditingController _dateDisplayController;
+  late final TextEditingController _timeDisplayController;
+  late final TextEditingController _paymentMethodDisplayController;
+  late final TextEditingController _categoryDisplayController;
+  late final TextEditingController _tagDisplayController;
   bool _ignore = false;
   bool _loading = false;
   bool _loadingLookups = true;
@@ -1554,12 +1914,20 @@ class _TransactionDialogState extends State<_TransactionDialog> {
     );
     _percentageController = TextEditingController(text: t != null ? t.percentage.toString() : '0');
     _descriptionController = TextEditingController(text: t?.description ?? '');
+    _dateDisplayController = TextEditingController();
+    _timeDisplayController = TextEditingController();
+    _paymentMethodDisplayController = TextEditingController();
+    _categoryDisplayController = TextEditingController();
+    _tagDisplayController = TextEditingController();
     _ignore = t?.ignore ?? false;
     _accountId = t?.accountId ?? widget.preferredAccountId;
     _cardId = t?.cardId ?? widget.preferredCardId;
     _categoryId = t?.categoryId ?? widget.preferredCategoryId;
     _tagId = t?.tagId ?? widget.preferredTagId;
     _loadLookups();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _syncDateTimeDisplay();
+    });
   }
 
   Future<void> _loadLookups() async {
@@ -1576,9 +1944,11 @@ class _TransactionDialogState extends State<_TransactionDialog> {
           _tags = tags;
           if (_accountId != null && !_accounts.any((a) => a.id == _accountId)) _accountId = null;
           if (_cardId != null && !_cards.any((c) => c.id == _cardId)) _cardId = null;
+          if (_accountId != null && _cardId != null) _cardId = null;
           if (_categoryId != null && !_categories.any((c) => c.id == _categoryId)) _categoryId = null;
           if (_tagId != null && !_tags.any((t) => t.id == _tagId)) _tagId = null;
           _loadingLookups = false;
+          _syncRelationDisplays();
         });
       }
     } catch (_) {
@@ -1588,15 +1958,65 @@ class _TransactionDialogState extends State<_TransactionDialog> {
     }
   }
 
+  void _syncDateTimeDisplay() {
+    final locale = Localizations.localeOf(context).toString();
+    _dateDisplayController.text = DateFormat.yMd(locale).format(_transactedAt);
+    _timeDisplayController.text = DateFormat.Hm(locale).format(_transactedAt);
+  }
+
+  void _syncRelationDisplays() {
+    String? accountName(String? id) {
+      if (id == null) return null;
+      for (final a in _accounts) {
+        if (a.id == id) return a.name;
+      }
+      return null;
+    }
+
+    String? cardName(String? id) {
+      if (id == null) return null;
+      for (final c in _cards) {
+        if (c.id == id) return c.name;
+      }
+      return null;
+    }
+
+    String? categoryName(String? id) {
+      if (id == null) return null;
+      for (final c in _categories) {
+        if (c.id == id) return c.name;
+      }
+      return null;
+    }
+
+    String? tagName(String? id) {
+      if (id == null) return null;
+      for (final t in _tags) {
+        if (t.id == id) return t.name;
+      }
+      return null;
+    }
+
+    final payName = accountName(_accountId) ?? cardName(_cardId);
+    _paymentMethodDisplayController.text = payName ?? '';
+    _categoryDisplayController.text = categoryName(_categoryId) ?? '';
+    _tagDisplayController.text = tagName(_tagId) ?? '';
+  }
+
   @override
   void dispose() {
     _valueController.dispose();
     _percentageController.dispose();
     _descriptionController.dispose();
+    _dateDisplayController.dispose();
+    _timeDisplayController.dispose();
+    _paymentMethodDisplayController.dispose();
+    _categoryDisplayController.dispose();
+    _tagDisplayController.dispose();
     super.dispose();
   }
 
-  Future<void> _pickDateTime() async {
+  Future<void> _pickDate() async {
     final d = await showDatePicker(
       context: context,
       initialDate: _transactedAt,
@@ -1604,17 +2024,266 @@ class _TransactionDialogState extends State<_TransactionDialog> {
       lastDate: DateTime(2100),
     );
     if (d == null || !mounted) return;
+    setState(() {
+      _transactedAt = DateTime(d.year, d.month, d.day, _transactedAt.hour, _transactedAt.minute);
+    });
+    _syncDateTimeDisplay();
+  }
+
+  Future<void> _pickTime() async {
     final time = await showTimePicker(
       context: context,
       initialTime: TimeOfDay.fromDateTime(_transactedAt),
     );
     if (time == null || !mounted) return;
     setState(() {
-      _transactedAt = DateTime(d.year, d.month, d.day, time.hour, time.minute);
+      _transactedAt = DateTime(
+        _transactedAt.year,
+        _transactedAt.month,
+        _transactedAt.day,
+        time.hour,
+        time.minute,
+      );
     });
+    _syncDateTimeDisplay();
+  }
+
+  Future<void> _pickPaymentMethod() async {
+    if (_loadingLookups) return;
+    final l10n = widget.l10n;
+    var pickerAccounts = List<AccountEntity>.from(_accounts);
+    var pickerCards = List<CardEntity>.from(_cards);
+    var showSearchField = false;
+    var searchFilter = '';
+
+    final raw = await showModalBottomSheet<String?>(
+      context: context,
+      showDragHandle: true,
+      isScrollControlled: true,
+      builder: (sheetContext) {
+        final maxH = MediaQuery.sizeOf(sheetContext).height * 0.55;
+
+        return StatefulBuilder(
+          builder: (context, setPickerState) {
+            Future<void> refreshPicker() async {
+              final accounts = await getIt<GetAccountsUsecase>()();
+              final cards = await getIt<GetCardsUsecase>()();
+              pickerAccounts = accounts;
+              pickerCards = cards;
+              setPickerState(() {});
+              if (!mounted) return;
+              setState(() {
+                _accounts = accounts;
+                _cards = cards;
+                if (_accountId != null && !_accounts.any((a) => a.id == _accountId)) {
+                  _accountId = null;
+                }
+                if (_cardId != null && !_cards.any((c) => c.id == _cardId)) {
+                  _cardId = null;
+                }
+                if (_accountId != null && _cardId != null) _cardId = null;
+                _syncRelationDisplays();
+              });
+            }
+
+            List<AccountEntity> visibleAccounts() {
+              final q = searchFilter.trim().toLowerCase();
+              if (q.isEmpty) return pickerAccounts;
+              return pickerAccounts.where((a) => a.name.toLowerCase().contains(q)).toList();
+            }
+
+            List<CardEntity> visibleCards() {
+              final q = searchFilter.trim().toLowerCase();
+              if (q.isEmpty) return pickerCards;
+              return pickerCards.where((c) => c.name.toLowerCase().contains(q)).toList();
+            }
+
+            final vAccounts = visibleAccounts();
+            final vCards = visibleCards();
+            final hasAny = pickerAccounts.isNotEmpty || pickerCards.isNotEmpty;
+            final filteredEmpty = vAccounts.isEmpty && vCards.isEmpty;
+
+            return SafeArea(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(12, 12, 4, 8),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            l10n.transactionPaymentMethod,
+                            style: Theme.of(sheetContext).textTheme.titleMedium,
+                          ),
+                        ),
+                        IconButton(
+                          tooltip: l10n.transferAccountSearch,
+                          icon: Icon(showSearchField ? Icons.search_off_outlined : Icons.search),
+                          onPressed: () {
+                            setPickerState(() {
+                              showSearchField = !showSearchField;
+                              if (!showSearchField) searchFilter = '';
+                            });
+                          },
+                        ),
+                        IconButton(
+                          tooltip: l10n.newAccount,
+                          icon: const Icon(Icons.add_circle_outline),
+                          onPressed: () async {
+                            await showAccountEditorBottomSheet(sheetContext, l10n);
+                            await refreshPicker();
+                          },
+                        ),
+                      ],
+                    ),
+                  ),
+                  ListTile(
+                    title: Text(l10n.none),
+                    leading: const Icon(Icons.clear),
+                    onTap: () => Navigator.of(sheetContext).pop(''),
+                  ),
+                  if (showSearchField)
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+                      child: TextField(
+                        decoration: InputDecoration(
+                          hintText: l10n.transferAccountSearchHint,
+                          prefixIcon: const Icon(Icons.search, size: 22),
+                          isDense: true,
+                          border: const OutlineInputBorder(),
+                        ),
+                        textInputAction: TextInputAction.search,
+                        onChanged: (v) => setPickerState(() => searchFilter = v),
+                      ),
+                    ),
+                  SizedBox(
+                    height: maxH,
+                    child: !hasAny
+                        ? Center(
+                            child: Padding(
+                              padding: const EdgeInsets.all(16),
+                              child: Text(
+                                '${l10n.noAccounts}\n${l10n.noCards}',
+                                textAlign: TextAlign.center,
+                              ),
+                            ),
+                          )
+                        : filteredEmpty
+                            ? Center(child: Text(l10n.transactionPaymentMethodSearchNoResults))
+                            : ListView(
+                                padding: EdgeInsets.zero,
+                                children: [
+                                  if (vAccounts.isNotEmpty) ...[
+                                    Padding(
+                                      padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
+                                      child: Text(
+                                        l10n.accounts,
+                                        style: Theme.of(sheetContext).textTheme.titleSmall?.copyWith(
+                                              color: Theme.of(sheetContext).colorScheme.primary,
+                                            ),
+                                      ),
+                                    ),
+                                    ...vAccounts.map(
+                                      (a) => ListTile(
+                                        leading: const Icon(Icons.account_balance_wallet_outlined),
+                                        title: Text(a.name),
+                                        onTap: () => Navigator.of(sheetContext).pop(
+                                          '$_paymentMethodPickAccountPrefix${a.id}',
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                  if (vCards.isNotEmpty) ...[
+                                    Padding(
+                                      padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
+                                      child: Text(
+                                        l10n.cards,
+                                        style: Theme.of(sheetContext).textTheme.titleSmall?.copyWith(
+                                              color: Theme.of(sheetContext).colorScheme.primary,
+                                            ),
+                                      ),
+                                    ),
+                                    ...vCards.map(
+                                      (c) => ListTile(
+                                        leading: const Icon(Icons.credit_card_outlined),
+                                        title: Text(c.name),
+                                        onTap: () => Navigator.of(sheetContext).pop(
+                                          '$_paymentMethodPickCardPrefix${c.id}',
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ],
+                              ),
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+
+    if (!mounted || raw == null) return;
+    setState(() {
+      if (raw.isEmpty) {
+        _accountId = null;
+        _cardId = null;
+      } else if (raw.startsWith(_paymentMethodPickAccountPrefix)) {
+        _accountId = raw.substring(_paymentMethodPickAccountPrefix.length);
+        _cardId = null;
+      } else if (raw.startsWith(_paymentMethodPickCardPrefix)) {
+        _cardId = raw.substring(_paymentMethodPickCardPrefix.length);
+        _accountId = null;
+      }
+    });
+    _syncRelationDisplays();
+  }
+
+  Future<void> _pickCategory() async {
+    if (_loadingLookups) return;
+    final l10n = widget.l10n;
+    final selectedId = await _showSearchableIdPickerSheet(
+      context,
+      l10n: l10n,
+      title: l10n.transactionCategory,
+      searchHint: l10n.transferAccountSearchHint,
+      noResultsMessage: l10n.transferAccountSearchNoResults,
+      emptyMessage: l10n.noCategories,
+      allowNone: true,
+      initialItems: _categories.map((c) => (id: c.id, name: c.name)).toList(),
+    );
+    if (!mounted || selectedId == null) return;
+    setState(() {
+      _categoryId = selectedId.isEmpty ? null : selectedId;
+    });
+    _syncRelationDisplays();
+  }
+
+  Future<void> _pickTag() async {
+    if (_loadingLookups) return;
+    final l10n = widget.l10n;
+    final selectedId = await _showSearchableIdPickerSheet(
+      context,
+      l10n: l10n,
+      title: l10n.transactionTag,
+      searchHint: l10n.transferAccountSearchHint,
+      noResultsMessage: l10n.transferAccountSearchNoResults,
+      emptyMessage: l10n.noTags,
+      allowNone: true,
+      initialItems: _tags.map((t) => (id: t.id, name: t.name)).toList(),
+    );
+    if (!mounted || selectedId == null) return;
+    setState(() {
+      _tagId = selectedId.isEmpty ? null : selectedId;
+    });
+    _syncRelationDisplays();
   }
 
   Future<void> _submit() async {
+    if (_loadingLookups) return;
     if (!_formKey.currentState!.validate()) return;
     final value = double.tryParse(_valueController.text.trim());
     final pct = double.tryParse(_percentageController.text.trim());
@@ -1658,115 +2327,229 @@ class _TransactionDialogState extends State<_TransactionDialog> {
   Widget build(BuildContext context) {
     final l10n = widget.l10n;
     final isEdit = widget.transaction != null;
-    final fmt = DateFormat.yMd().add_Hm();
+    final theme = Theme.of(context);
+    final bottomInset = MediaQuery.viewInsetsOf(context).bottom;
 
-    return AlertDialog(
-      title: Text(isEdit ? l10n.editTransaction : l10n.newTransaction),
-      content: _loadingLookups
-          ? const SizedBox(
-              width: 280,
-              height: 120,
-              child: Center(child: CircularProgressIndicator()),
-            )
-          : SingleChildScrollView(
-              child: Form(
-                key: _formKey,
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
+    return SingleChildScrollView(
+      padding: EdgeInsets.only(left: 20, right: 20, top: 4, bottom: bottomInset + 24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            isEdit ? l10n.editTransaction : l10n.newTransaction,
+            style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w600),
+          ),
+          const SizedBox(height: 12),
+          Form(
+            key: _formKey,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    ListTile(
-                      contentPadding: EdgeInsets.zero,
-                      title: Text(l10n.transactionDateTime),
-                      subtitle: Text(fmt.format(_transactedAt)),
-                      trailing: IconButton(
-                        icon: const Icon(Icons.edit_calendar_outlined),
-                        onPressed: _pickDateTime,
+                    Expanded(
+                      child: TextFormField(
+                        readOnly: true,
+                        enableInteractiveSelection: false,
+                        showCursor: false,
+                        controller: _dateDisplayController,
+                        decoration: InputDecoration(
+                          labelText: l10n.transferDateLabel,
+                          suffixIcon: const Icon(Icons.calendar_today_outlined, size: 20),
+                        ),
+                        onTap: _pickDate,
                       ),
                     ),
-                    DropdownButtonFormField<String?>(
-                      initialValue: _accountId,
-                      decoration: InputDecoration(labelText: l10n.transactionAccount),
-                      items: [
-                        DropdownMenuItem(value: null, child: Text(l10n.none)),
-                        ..._accounts.map((a) => DropdownMenuItem(value: a.id, child: Text(a.name))),
-                      ],
-                      onChanged: (v) => setState(() => _accountId = v),
-                    ),
-                    DropdownButtonFormField<String?>(
-                      initialValue: _cardId,
-                      decoration: InputDecoration(labelText: l10n.transactionCard),
-                      items: [
-                        DropdownMenuItem(value: null, child: Text(l10n.none)),
-                        ..._cards.map((c) => DropdownMenuItem(value: c.id, child: Text(c.name))),
-                      ],
-                      onChanged: (v) => setState(() => _cardId = v),
-                    ),
-                    DropdownButtonFormField<String?>(
-                      initialValue: _categoryId,
-                      decoration: InputDecoration(labelText: l10n.transactionCategory),
-                      items: [
-                        DropdownMenuItem(value: null, child: Text(l10n.none)),
-                        ..._categories.map((c) => DropdownMenuItem(value: c.id, child: Text(c.name))),
-                      ],
-                      onChanged: (v) => setState(() => _categoryId = v),
-                    ),
-                    DropdownButtonFormField<String?>(
-                      initialValue: _tagId,
-                      decoration: InputDecoration(labelText: l10n.transactionTag),
-                      items: [
-                        DropdownMenuItem(value: null, child: Text(l10n.none)),
-                        ..._tags.map((t) => DropdownMenuItem(value: t.id, child: Text(t.name))),
-                      ],
-                      onChanged: (v) => setState(() => _tagId = v),
-                    ),
-                    TextFormField(
-                      controller: _descriptionController,
-                      decoration: InputDecoration(labelText: l10n.accountDescription),
-                      maxLines: 3,
-                    ),
-                    TextFormField(
-                      controller: _valueController,
-                      decoration: InputDecoration(labelText: l10n.transactionAmount),
-                      keyboardType: const TextInputType.numberWithOptions(decimal: true, signed: true),
-                      validator: (v) {
-                        if (v == null || v.trim().isEmpty) return l10n.fieldRequired;
-                        if (double.tryParse(v.trim()) == null) return l10n.fieldRequired;
-                        return null;
-                      },
-                    ),
-                    TextFormField(
-                      controller: _percentageController,
-                      decoration: InputDecoration(labelText: l10n.transactionPercentage),
-                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                      validator: (v) {
-                        if (v == null || v.trim().isEmpty) return l10n.fieldRequired;
-                        if (double.tryParse(v.trim()) == null) return l10n.fieldRequired;
-                        return null;
-                      },
-                    ),
-                    SwitchListTile(
-                      contentPadding: EdgeInsets.zero,
-                      title: Text(l10n.transactionIgnore),
-                      value: _ignore,
-                      onChanged: (v) => setState(() => _ignore = v),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: TextFormField(
+                        readOnly: true,
+                        enableInteractiveSelection: false,
+                        showCursor: false,
+                        controller: _timeDisplayController,
+                        decoration: InputDecoration(
+                          labelText: l10n.transferTimeLabel,
+                          suffixIcon: const Icon(Icons.schedule, size: 20),
+                        ),
+                        onTap: _pickTime,
+                      ),
                     ),
                   ],
                 ),
-              ),
+                const SizedBox(height: 16),
+                TextFormField(
+                  controller: _descriptionController,
+                  decoration: InputDecoration(labelText: l10n.accountDescription),
+                  maxLines: 1,
+                  textInputAction: TextInputAction.next,
+                ),
+                const SizedBox(height: 16),
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      child: TextFormField(
+                        controller: _valueController,
+                        decoration: InputDecoration(labelText: l10n.transactionAmount),
+                        keyboardType: const TextInputType.numberWithOptions(decimal: true, signed: true),
+                        validator: (v) {
+                          if (v == null || v.trim().isEmpty) return l10n.fieldRequired;
+                          if (double.tryParse(v.trim()) == null) return l10n.fieldRequired;
+                          return null;
+                        },
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: _loadingLookups
+                          ? InputDecorator(
+                              decoration: InputDecoration(labelText: l10n.transactionPaymentMethod),
+                              child: const SizedBox(
+                                height: 40,
+                                child: Center(
+                                  child: SizedBox(
+                                    width: 22,
+                                    height: 22,
+                                    child: CircularProgressIndicator(strokeWidth: 2),
+                                  ),
+                                ),
+                              ),
+                            )
+                          : TextFormField(
+                              readOnly: true,
+                              enableInteractiveSelection: false,
+                              showCursor: false,
+                              controller: _paymentMethodDisplayController,
+                              decoration: InputDecoration(
+                                labelText: l10n.transactionPaymentMethod,
+                                suffixIcon: const Icon(Icons.expand_more_rounded, size: 22),
+                              ),
+                              onTap: _pickPaymentMethod,
+                            ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      child: _loadingLookups
+                          ? InputDecorator(
+                              decoration: InputDecoration(labelText: l10n.transactionCategory),
+                              child: const SizedBox(
+                                height: 40,
+                                child: Center(
+                                  child: SizedBox(
+                                    width: 22,
+                                    height: 22,
+                                    child: CircularProgressIndicator(strokeWidth: 2),
+                                  ),
+                                ),
+                              ),
+                            )
+                          : TextFormField(
+                              readOnly: true,
+                              enableInteractiveSelection: false,
+                              showCursor: false,
+                              controller: _categoryDisplayController,
+                              decoration: InputDecoration(
+                                labelText: l10n.transactionCategory,
+                                suffixIcon: const Icon(Icons.expand_more_rounded, size: 22),
+                              ),
+                              onTap: _pickCategory,
+                            ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: _loadingLookups
+                          ? InputDecorator(
+                              decoration: InputDecoration(labelText: l10n.transactionTag),
+                              child: const SizedBox(
+                                height: 40,
+                                child: Center(
+                                  child: SizedBox(
+                                    width: 22,
+                                    height: 22,
+                                    child: CircularProgressIndicator(strokeWidth: 2),
+                                  ),
+                                ),
+                              ),
+                            )
+                          : TextFormField(
+                              readOnly: true,
+                              enableInteractiveSelection: false,
+                              showCursor: false,
+                              controller: _tagDisplayController,
+                              decoration: InputDecoration(
+                                labelText: l10n.transactionTag,
+                                suffixIcon: const Icon(Icons.expand_more_rounded, size: 22),
+                              ),
+                              onTap: _pickTag,
+                            ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Expanded(
+                      child: TextFormField(
+                        controller: _percentageController,
+                        decoration: InputDecoration(labelText: l10n.transactionPercentage),
+                        keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                        validator: (v) {
+                          if (v == null || v.trim().isEmpty) return l10n.fieldRequired;
+                          if (double.tryParse(v.trim()) == null) return l10n.fieldRequired;
+                          return null;
+                        },
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              l10n.transactionIgnore,
+                              style: theme.textTheme.bodyLarge,
+                            ),
+                          ),
+                          Switch(
+                            value: _ignore,
+                            onChanged: (v) => setState(() => _ignore = v),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ],
             ),
-      actions: [
-        TextButton(
-          onPressed: _loading || _loadingLookups ? null : () => Navigator.of(context).pop(),
-          child: Text(l10n.cancel),
-        ),
-        ElevatedButton(
-          onPressed: _loading || _loadingLookups ? null : _submit,
-          child: _loading
-              ? const SizedBox(height: 16, width: 16, child: CircularProgressIndicator(strokeWidth: 2))
-              : Text(l10n.save),
-        ),
-      ],
+          ),
+          const SizedBox(height: 16),
+          SizedBox(
+            width: double.infinity,
+            child: FilledButton(
+              onPressed: _loading || _loadingLookups ? null : _submit,
+              child: _loading
+                  ? SizedBox(
+                      height: 20,
+                      width: 20,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Theme.of(context).colorScheme.onPrimary,
+                      ),
+                    )
+                  : Text(l10n.save),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
