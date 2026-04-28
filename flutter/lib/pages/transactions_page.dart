@@ -66,6 +66,10 @@ class TransactionsPage extends StatelessWidget {
     this.accountNameFilter,
     this.cardIdFilter,
     this.cardNameFilter,
+    this.categoryIdFilter,
+    this.categoryNameFilter,
+    this.tagIdFilter,
+    this.tagNameFilter,
   });
 
   /// When set, only transactions for this account are shown (current month still applies).
@@ -73,6 +77,10 @@ class TransactionsPage extends StatelessWidget {
   final String? accountNameFilter;
   final String? cardIdFilter;
   final String? cardNameFilter;
+  final String? categoryIdFilter;
+  final String? categoryNameFilter;
+  final String? tagIdFilter;
+  final String? tagNameFilter;
 
   @override
   Widget build(BuildContext context) {
@@ -85,6 +93,10 @@ class TransactionsPage extends StatelessWidget {
             accountNameFilter: accountNameFilter,
             cardIdFilter: cardIdFilter,
             cardNameFilter: cardNameFilter,
+            categoryIdFilter: categoryIdFilter,
+            categoryNameFilter: categoryNameFilter,
+            tagIdFilter: tagIdFilter,
+            tagNameFilter: tagNameFilter,
           ),
         ),
       ),
@@ -141,12 +153,20 @@ class _TransactionsView extends StatelessWidget {
     this.accountNameFilter,
     this.cardIdFilter,
     this.cardNameFilter,
+    this.categoryIdFilter,
+    this.categoryNameFilter,
+    this.tagIdFilter,
+    this.tagNameFilter,
   });
 
   final String? accountIdFilter;
   final String? accountNameFilter;
   final String? cardIdFilter;
   final String? cardNameFilter;
+  final String? categoryIdFilter;
+  final String? categoryNameFilter;
+  final String? tagIdFilter;
+  final String? tagNameFilter;
 
   @override
   Widget build(BuildContext context) {
@@ -157,12 +177,18 @@ class _TransactionsView extends StatelessWidget {
       title = '${accountNameFilter!} · ${l10n.transactions}';
     } else if (cardNameFilter != null && cardNameFilter!.isNotEmpty) {
       title = '${cardNameFilter!} · ${l10n.transactions}';
+    } else if (categoryNameFilter != null && categoryNameFilter!.isNotEmpty) {
+      title = '${categoryNameFilter!} · ${l10n.transactions}';
+    } else if (tagNameFilter != null && tagNameFilter!.isNotEmpty) {
+      title = '${tagNameFilter!} · ${l10n.transactions}';
     } else {
       title = l10n.transactions;
     }
 
     final isScoped = (accountIdFilter != null && accountIdFilter!.isNotEmpty) ||
-        (cardIdFilter != null && cardIdFilter!.isNotEmpty);
+        (cardIdFilter != null && cardIdFilter!.isNotEmpty) ||
+        (categoryIdFilter != null && categoryIdFilter!.isNotEmpty) ||
+        (tagIdFilter != null && tagIdFilter!.isNotEmpty);
 
     return ShellScaffold(
       title: title,
@@ -193,6 +219,8 @@ class _TransactionsView extends StatelessWidget {
                         null,
                         accountIdFilter,
                         cardIdFilter,
+                        categoryIdFilter,
+                        tagIdFilter,
                       ),
                       child: const Icon(Icons.add),
                     ),
@@ -271,6 +299,12 @@ class _TransactionsView extends StatelessWidget {
     if (cardIdFilter != null && cardIdFilter!.isNotEmpty) {
       list = list.where((t) => t.cardId == cardIdFilter).toList();
     }
+    if (categoryIdFilter != null && categoryIdFilter!.isNotEmpty) {
+      list = list.where((t) => t.categoryId == categoryIdFilter).toList();
+    }
+    if (tagIdFilter != null && tagIdFilter!.isNotEmpty) {
+      list = list.where((t) => t.tagId == tagIdFilter).toList();
+    }
 
     return _monthListBody(context, l10n, visibleMonth, list, refresh);
   }
@@ -324,6 +358,8 @@ class _TransactionsView extends StatelessWidget {
     TransactionEntity? tx,
     String? preferredAccountId,
     String? preferredCardId,
+    String? preferredCategoryId,
+    String? preferredTagId,
   ]) {
     showDialog<void>(
       context: context,
@@ -333,6 +369,8 @@ class _TransactionsView extends StatelessWidget {
         transaction: tx,
         preferredAccountId: preferredAccountId,
         preferredCardId: preferredCardId,
+        preferredCategoryId: preferredCategoryId,
+        preferredTagId: preferredTagId,
       ),
     );
   }
@@ -515,6 +553,8 @@ class _TransactionDialog extends StatefulWidget {
   final TransactionEntity? transaction;
   final String? preferredAccountId;
   final String? preferredCardId;
+  final String? preferredCategoryId;
+  final String? preferredTagId;
 
   const _TransactionDialog({
     required this.cubit,
@@ -522,6 +562,8 @@ class _TransactionDialog extends StatefulWidget {
     this.transaction,
     this.preferredAccountId,
     this.preferredCardId,
+    this.preferredCategoryId,
+    this.preferredTagId,
   });
 
   @override
@@ -559,8 +601,8 @@ class _TransactionDialogState extends State<_TransactionDialog> {
     _ignore = t?.ignore ?? false;
     _accountId = t?.accountId ?? widget.preferredAccountId;
     _cardId = t?.cardId ?? widget.preferredCardId;
-    _categoryId = t?.categoryId;
-    _tagId = t?.tagId;
+    _categoryId = t?.categoryId ?? widget.preferredCategoryId;
+    _tagId = t?.tagId ?? widget.preferredTagId;
     _loadLookups();
   }
 
