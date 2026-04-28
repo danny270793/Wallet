@@ -24,6 +24,7 @@ import '../widgets/category_editor_sheet.dart';
 import '../widgets/tag_editor_sheet.dart';
 import '../widgets/shell_scaffold.dart';
 import '../widgets/swipeable_list_tile.dart';
+import '../widgets/transaction_month_totals.dart';
 import '../widgets/transactions_month_scope.dart';
 import '../widgets/transactions_totals_bar.dart';
 
@@ -177,27 +178,6 @@ List<_GroupedTxRow> _groupTransactionsByDay(List<TransactionEntity> list) {
   return entries;
 }
 
-({double income, double outcome, double balance}) _transactionTotalsBreakdown(
-  Iterable<TransactionEntity> txs, {
-  required bool Function(TransactionEntity) include,
-  required double Function(TransactionEntity) amount,
-}) {
-  var income = 0.0;
-  var outcome = 0.0;
-  var balance = 0.0;
-  for (final t in txs) {
-    if (!include(t)) continue;
-    final v = amount(t);
-    balance += v;
-    if (v > 0) {
-      income += v;
-    } else if (v < 0) {
-      outcome += -v;
-    }
-  }
-  return (income: income, outcome: outcome, balance: balance);
-}
-
 class _TransactionsTotalsBarHost extends StatefulWidget {
   const _TransactionsTotalsBarHost({
     required this.l10n,
@@ -219,12 +199,12 @@ class _TransactionsTotalsBarHostState extends State<_TransactionsTotalsBarHost> 
     final txs = widget.transactions;
     double weighted(TransactionEntity t) => t.value * t.percentage / 100.0;
 
-    final weightedAll = _transactionTotalsBreakdown(
+    final weightedAll = transactionMonthTotalsBreakdown(
       txs,
       include: (_) => true,
       amount: weighted,
     );
-    final weightedExcludingIgnored = _transactionTotalsBreakdown(
+    final weightedExcludingIgnored = transactionMonthTotalsBreakdown(
       txs,
       include: (t) => !t.ignore,
       amount: weighted,
@@ -779,7 +759,7 @@ class TransactionsPage extends StatelessWidget {
     return BlocProvider(
       create: (_) => getIt<TransactionsCubit>(),
       child: TransactionsMonthHost(
-        child: _TransactionsMonthLoadSync(
+        child: TransactionsMonthCubitSync(
           child: _TransactionsView(
             accountIdFilter: accountIdFilter,
             accountNameFilter: accountNameFilter,
@@ -794,49 +774,6 @@ class TransactionsPage extends StatelessWidget {
       ),
     );
   }
-}
-
-class _TransactionsMonthLoadSync extends StatefulWidget {
-  const _TransactionsMonthLoadSync({required this.child});
-
-  final Widget child;
-
-  @override
-  State<_TransactionsMonthLoadSync> createState() =>
-      _TransactionsMonthLoadSyncState();
-}
-
-class _TransactionsMonthLoadSyncState extends State<_TransactionsMonthLoadSync> {
-  ValueNotifier<DateTime>? _notifier;
-  VoidCallback? _listener;
-
-  @override
-  void dispose() {
-    if (_notifier != null && _listener != null) {
-      _notifier!.removeListener(_listener!);
-    }
-    super.dispose();
-  }
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    final notifier = TransactionsMonthScope.of(context);
-    if (_notifier != notifier) {
-      if (_notifier != null && _listener != null) {
-        _notifier!.removeListener(_listener!);
-      }
-      _notifier = notifier;
-      _listener = () {
-        context.read<TransactionsCubit>().loadForMonth(notifier.value);
-      };
-      notifier.addListener(_listener!);
-      context.read<TransactionsCubit>().loadForMonth(notifier.value);
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) => widget.child;
 }
 
 class _TransactionsView extends StatefulWidget {
