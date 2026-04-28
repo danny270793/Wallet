@@ -552,9 +552,11 @@ class _TransactionTile extends StatelessWidget {
     final locale = Localizations.localeOf(context);
     final localTime = transaction.transactedAt.toLocal();
 
-    Color valueColor() {
-      if (transaction.value > 0) return const Color(0xFF1B8736);
-      if (transaction.value < 0) return theme.colorScheme.error;
+    final weightedValue = transaction.value * transaction.percentage / 100.0;
+
+    Color weightedColor() {
+      if (weightedValue > 0) return const Color(0xFF1B8736);
+      if (weightedValue < 0) return theme.colorScheme.error;
       return theme.colorScheme.onSurfaceVariant;
     }
 
@@ -598,11 +600,22 @@ class _TransactionTile extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.end,
       children: [
         Text(
-          l10n.transactionAmountValue(transaction.value.toStringAsFixed(2)),
+          l10n.transactionAmountValue(weightedValue.toStringAsFixed(2)),
           style: theme.textTheme.titleMedium?.copyWith(
             fontWeight: FontWeight.w700,
-            color: valueColor(),
+            color: weightedColor(),
             height: 1.2,
+          ),
+        ),
+        const SizedBox(height: 2),
+        Text(
+          l10n.transactionAmountValue(transaction.value.toStringAsFixed(2)),
+          style: theme.textTheme.bodySmall?.copyWith(
+            color: theme.colorScheme.onSurfaceVariant,
+            height: 1.1,
+            decoration: TextDecoration.lineThrough,
+            decorationColor: theme.colorScheme.onSurfaceVariant,
+            fontFeatures: const [FontFeature.tabularFigures()],
           ),
         ),
         const SizedBox(height: 4),
@@ -629,7 +642,7 @@ class _TransactionTile extends StatelessWidget {
         message: '${l10n.transactionPercentage}: ${_transactionPctLabel(transaction.percentage)}%',
         child: _TransactionPercentageRing(
           percentage: transaction.percentage,
-          accentColor: valueColor(),
+          accentColor: weightedColor(),
           muted: transaction.ignore,
         ),
       ),
