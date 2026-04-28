@@ -20,7 +20,7 @@ class AuthSupabaseDatasource implements AuthRemoteDatasource {
       password: password,
     );
     final user = response.user;
-    if (user == null) throw const AuthException('Sign in failed');
+    if (user == null) throw Exception();
     return UserEntity(id: user.id, email: user.email ?? '');
   }
 }

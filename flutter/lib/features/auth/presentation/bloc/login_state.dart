@@ -20,7 +20,7 @@ class LoginSuccess extends LoginState {
 }
 
 class LoginFailure extends LoginState {
-  final String message;
+  final String? message;
 
   const LoginFailure(this.message);
 

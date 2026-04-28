@@ -24,7 +24,7 @@ class LoginBloc extends Bloc<LoginEvent, LoginState> {
     } on AuthException catch (e) {
       emit(LoginFailure(e.message));
     } catch (_) {
-      emit(const LoginFailure('An unexpected error occurred'));
+      emit(const LoginFailure(null));
     }
   }
 }
