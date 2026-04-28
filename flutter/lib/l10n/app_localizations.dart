@@ -683,13 +683,13 @@ abstract class AppLocalizations {
   /// No description provided for @transferSourceAccount.
   ///
   /// In en, this message translates to:
-  /// **'Source payment method'**
+  /// **'Source'**
   String get transferSourceAccount;
 
   /// No description provided for @transferTargetAccount.
   ///
   /// In en, this message translates to:
-  /// **'Target payment method'**
+  /// **'Target'**
   String get transferTargetAccount;
 
   /// No description provided for @transferDateLabel.
