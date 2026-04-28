@@ -1,0 +1,52 @@
+import 'package:flutter_bloc/flutter_bloc.dart';
+
+import '../../../../core/logger/app_logger.dart';
+import '../../domain/entities/transaction_entity.dart';
+import '../../domain/usecases/get_transactions_for_year_usecase.dart';
+
+sealed class YearlyDashboardState {
+  const YearlyDashboardState();
+}
+
+final class YearlyDashboardInitial extends YearlyDashboardState {
+  const YearlyDashboardInitial();
+}
+
+final class YearlyDashboardLoading extends YearlyDashboardState {
+  const YearlyDashboardLoading();
+}
+
+final class YearlyDashboardLoaded extends YearlyDashboardState {
+  const YearlyDashboardLoaded(this.transactions);
+  final List<TransactionEntity> transactions;
+}
+
+final class YearlyDashboardError extends YearlyDashboardState {
+  const YearlyDashboardError(this.message);
+  final String? message;
+}
+
+class YearlyDashboardCubit extends Cubit<YearlyDashboardState> {
+  YearlyDashboardCubit(this._getYear) : super(const YearlyDashboardInitial());
+
+  final GetTransactionsForYearUsecase _getYear;
+  int _generation = 0;
+
+  Future<void> loadYear(DateTime yearStartLocal) async {
+    final year = DateTime(yearStartLocal.year, 1, 1);
+    final gen = ++_generation;
+    emit(const YearlyDashboardLoading());
+    try {
+      final list = await _getYear(year);
+      if (gen != _generation) return;
+      if (isClosed) return;
+      AppLogger.info('yearly dashboard loaded ${year.year}: ${list.length}');
+      emit(YearlyDashboardLoaded(list));
+    } catch (e, s) {
+      if (gen != _generation) return;
+      if (isClosed) return;
+      AppLogger.error('yearly dashboard load failed', e, s);
+      emit(YearlyDashboardError(e.toString()));
+    }
+  }
+}
