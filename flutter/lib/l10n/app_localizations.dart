@@ -224,29 +224,179 @@ abstract class AppLocalizations {
   /// **'Privacy policy'**
   String get settingsPrivacyPolicy;
 
+  /// No description provided for @settingsPrivacyTagline.
+  ///
+  /// In en, this message translates to:
+  /// **'How this app treats your information.'**
+  String get settingsPrivacyTagline;
+
+  /// No description provided for @settingsPrivacyDataTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'What you store'**
+  String get settingsPrivacyDataTitle;
+
+  /// No description provided for @settingsPrivacyDataBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Wallet keeps the financial details you enter—accounts, cards, transactions, categories, tags, and transfers—so you can see balances and history. The app does not collect data you never saved while signed in.'**
+  String get settingsPrivacyDataBody;
+
+  /// No description provided for @settingsPrivacyInfraTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Where it lives'**
+  String get settingsPrivacyInfraTitle;
+
+  /// No description provided for @settingsPrivacyInfraBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Your records are stored in the backend you configure (for example Supabase) and the authentication you use. Security, backups, and who can access data depend on that provider and your project settings. Use strong passwords and protect API keys.'**
+  String get settingsPrivacyInfraBody;
+
+  /// No description provided for @settingsPrivacySharingTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Sharing and ads'**
+  String get settingsPrivacySharingTitle;
+
+  /// No description provided for @settingsPrivacySharingBody.
+  ///
+  /// In en, this message translates to:
+  /// **'We do not sell your personal information or use your ledger to target ads. Apart from your chosen backend and sign-in service, this app is not designed to send your data to brokers or advertisers.'**
+  String get settingsPrivacySharingBody;
+
+  /// No description provided for @settingsPrivacyNoticeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Before you ship'**
+  String get settingsPrivacyNoticeTitle;
+
+  /// No description provided for @settingsPrivacyNoticeBody.
+  ///
+  /// In en, this message translates to:
+  /// **'This text is a simple placeholder, not legal advice. Before production or an app store release, publish a privacy policy that matches your jurisdiction, your organization, and how you actually process data.'**
+  String get settingsPrivacyNoticeBody;
+
   /// No description provided for @settingsTermsOfUse.
   ///
   /// In en, this message translates to:
   /// **'Terms of use'**
   String get settingsTermsOfUse;
 
-  /// No description provided for @settingsAboutBody.
+  /// No description provided for @settingsTermsTagline.
   ///
   /// In en, this message translates to:
-  /// **'Wallet helps you track accounts, cards, categories, tags, and transactions in one place. Data is stored in your own backend (for example Supabase) and tied to your sign-in. This app is provided as-is for personal use.'**
-  String get settingsAboutBody;
+  /// **'Rules for using this app.'**
+  String get settingsTermsTagline;
 
-  /// No description provided for @settingsPrivacyBody.
+  /// No description provided for @settingsTermsAcceptanceTitle.
   ///
   /// In en, this message translates to:
-  /// **'The app sends and stores only the information you enter to provide budgeting and ledger features. We do not sell your data. Technical operations (hosting, authentication, database) are handled by the services you configure. For questions about processing, contact whoever operates your project or account. Replace this text with a policy that matches your deployment before production use.'**
-  String get settingsPrivacyBody;
+  /// **'Acceptance'**
+  String get settingsTermsAcceptanceTitle;
 
-  /// No description provided for @settingsTermsBody.
+  /// No description provided for @settingsTermsAcceptanceBody.
   ///
   /// In en, this message translates to:
-  /// **'By using Wallet you agree to use the app at your own risk. Nothing here is financial, legal, or tax advice. The authors are not liable for losses or decisions based on the app. You are responsible for securing your credentials and complying with laws that apply to you. Replace this text with your real terms before publishing.'**
-  String get settingsTermsBody;
+  /// **'By accessing or using Wallet, you agree to these terms. If you do not agree, do not use the app.'**
+  String get settingsTermsAcceptanceBody;
+
+  /// No description provided for @settingsTermsDisclaimerTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Not professional advice'**
+  String get settingsTermsDisclaimerTitle;
+
+  /// No description provided for @settingsTermsDisclaimerBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Wallet is a tool for organizing your own records. Nothing in the app or these terms is financial, legal, accounting, or tax advice. You use the app and any information in it at your own risk when making decisions.'**
+  String get settingsTermsDisclaimerBody;
+
+  /// No description provided for @settingsTermsLiabilityTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Limitation of liability'**
+  String get settingsTermsLiabilityTitle;
+
+  /// No description provided for @settingsTermsLiabilityBody.
+  ///
+  /// In en, this message translates to:
+  /// **'To the fullest extent permitted by law, the authors and contributors are not liable for any indirect, incidental, or consequential damages, or for losses or decisions you make based on the app. The app is provided as-is without warranties of any kind.'**
+  String get settingsTermsLiabilityBody;
+
+  /// No description provided for @settingsTermsResponsibilitiesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Your responsibilities'**
+  String get settingsTermsResponsibilitiesTitle;
+
+  /// No description provided for @settingsTermsResponsibilitiesBody.
+  ///
+  /// In en, this message translates to:
+  /// **'You are responsible for protecting your account, credentials, API keys, and devices. You must comply with laws and regulations that apply to you, including those governing financial record-keeping and taxes in your jurisdiction.'**
+  String get settingsTermsResponsibilitiesBody;
+
+  /// No description provided for @settingsTermsNoticeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Changes and before you ship'**
+  String get settingsTermsNoticeTitle;
+
+  /// No description provided for @settingsTermsNoticeBody.
+  ///
+  /// In en, this message translates to:
+  /// **'These terms may be updated from time to time. If you continue to use the app after changes are posted, that indicates your acceptance of the updated terms. This text is a simple placeholder, not legal advice. Before production or an app store release, publish terms that match your jurisdiction, your organization, and your service.'**
+  String get settingsTermsNoticeBody;
+
+  /// No description provided for @settingsAboutTagline.
+  ///
+  /// In en, this message translates to:
+  /// **'Personal finance in one place.'**
+  String get settingsAboutTagline;
+
+  /// No description provided for @settingsAboutVersionLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Version'**
+  String get settingsAboutVersionLabel;
+
+  /// No description provided for @settingsAboutFeaturesHeading.
+  ///
+  /// In en, this message translates to:
+  /// **'What you can do'**
+  String get settingsAboutFeaturesHeading;
+
+  /// No description provided for @settingsAboutBulletAccounts.
+  ///
+  /// In en, this message translates to:
+  /// **'Connect accounts and cards to mirror your balances in the app.'**
+  String get settingsAboutBulletAccounts;
+
+  /// No description provided for @settingsAboutBulletLedger.
+  ///
+  /// In en, this message translates to:
+  /// **'Log transactions, transfers, categories, and tags in a clear ledger.'**
+  String get settingsAboutBulletLedger;
+
+  /// No description provided for @settingsAboutBulletMonth.
+  ///
+  /// In en, this message translates to:
+  /// **'Review each month and search your history when you need answers.'**
+  String get settingsAboutBulletMonth;
+
+  /// No description provided for @settingsAboutDataHeading.
+  ///
+  /// In en, this message translates to:
+  /// **'Your data'**
+  String get settingsAboutDataHeading;
+
+  /// No description provided for @settingsAboutDataBody.
+  ///
+  /// In en, this message translates to:
+  /// **'What you save is stored in the backend you configure (for example Supabase) and is tied to your sign-in. This build is intended for personal use.'**
+  String get settingsAboutDataBody;
 
   /// No description provided for @accounts.
   ///
@@ -527,7 +677,7 @@ abstract class AppLocalizations {
   /// No description provided for @transferSheetTitle.
   ///
   /// In en, this message translates to:
-  /// **'Transfer between accounts'**
+  /// **'Transfer'**
   String get transferSheetTitle;
 
   /// No description provided for @transferSourceAccount.
@@ -557,13 +707,13 @@ abstract class AppLocalizations {
   /// No description provided for @transferAccountsMustDiffer.
   ///
   /// In en, this message translates to:
-  /// **'Source and target must be different accounts'**
+  /// **'Source and target must be different'**
   String get transferAccountsMustDiffer;
 
   /// No description provided for @transferNeedTwoAccounts.
   ///
   /// In en, this message translates to:
-  /// **'Add at least two accounts to transfer money between them'**
+  /// **'Add at least two accounts or cards to transfer money between them'**
   String get transferNeedTwoAccounts;
 
   /// No description provided for @transferAccountSearch.
@@ -649,6 +799,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Payment method'**
   String get transactionPaymentMethod;
+
+  /// No description provided for @paymentMethodAddChoiceTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Add account or card'**
+  String get paymentMethodAddChoiceTitle;
 
   /// No description provided for @transactionPaymentMethodSearchNoResults.
   ///
