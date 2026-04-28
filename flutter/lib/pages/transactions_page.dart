@@ -40,6 +40,12 @@ final class _TxMarker extends _GroupedTxRow {
   final TransactionEntity transaction;
 }
 
+final class _TransferPairMarker extends _GroupedTxRow {
+  const _TransferPairMarker({required this.source, required this.target});
+  final TransactionEntity source;
+  final TransactionEntity target;
+}
+
 List<_GroupedTxRow> _groupTransactionsByDay(List<TransactionEntity> list) {
   final byDay = <DateTime, List<TransactionEntity>>{};
   for (final t in list) {
@@ -54,7 +60,39 @@ List<_GroupedTxRow> _groupTransactionsByDay(List<TransactionEntity> list) {
   final entries = <_GroupedTxRow>[];
   for (final d in days) {
     entries.add(_DayMarker(d));
-    for (final t in byDay[d]!) {
+    final dayList = byDay[d]!;
+    final byGroup = <String, List<TransactionEntity>>{};
+    for (final t in dayList) {
+      final g = t.transactionGroupId;
+      if (g != null && g.isNotEmpty) {
+        byGroup.putIfAbsent(g, () => []).add(t);
+      }
+    }
+    final usedIds = <String>{};
+    for (final t in dayList) {
+      final gid = t.transactionGroupId;
+      if (gid == null || gid.isEmpty) {
+        entries.add(_TxMarker(t));
+        continue;
+      }
+      if (usedIds.contains(t.id)) continue;
+      final peers = byGroup[gid]!;
+      if (peers.length == 2) {
+        TransactionEntity? src;
+        TransactionEntity? tgt;
+        for (final p in peers) {
+          if (p.value < 0) src = p;
+          if (p.value > 0) tgt = p;
+        }
+        if (src != null &&
+            tgt != null &&
+            (src.value.abs() - tgt.value.abs()).abs() < 0.0001) {
+          entries.add(_TransferPairMarker(source: src, target: tgt));
+          usedIds.add(src.id);
+          usedIds.add(tgt.id);
+          continue;
+        }
+      }
       entries.add(_TxMarker(t));
     }
   }
@@ -927,6 +965,8 @@ class _TransactionsViewState extends State<_TransactionsView> {
             _DayMarker(:final day) => _TransactionDayHeader(day: day),
             _TxMarker(:final transaction) =>
               _TransactionTile(transaction: transaction, l10n: l10n),
+            _TransferPairMarker(:final source, :final target) =>
+              _TransferPairTile(source: source, target: target, l10n: l10n),
           };
         },
       ),
@@ -979,6 +1019,125 @@ class _TransactionDayHeader extends StatelessWidget {
         ),
       ),
     );
+  }
+}
+
+class _TransferPairTile extends StatelessWidget {
+  const _TransferPairTile({
+    required this.source,
+    required this.target,
+    required this.l10n,
+  });
+
+  final TransactionEntity source;
+  final TransactionEntity target;
+  final AppLocalizations l10n;
+
+  @override
+  Widget build(BuildContext context) {
+    final cubit = context.read<TransactionsCubit>();
+    final theme = Theme.of(context);
+    final locale = Localizations.localeOf(context);
+    final timeLocal = source.transactedAt.toLocal();
+    final timeStr = DateFormat.Hm(locale.toString()).format(timeLocal);
+    final amountStr = l10n.transactionAmountValue(target.value.toStringAsFixed(2));
+    final gid = source.transactionGroupId;
+
+    final title = Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Row(
+          children: [
+            Expanded(
+              child: Text(
+                target.accountName ?? '—',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: theme.textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w500),
+              ),
+            ),
+            Text(
+              amountStr,
+              style: theme.textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.w700,
+                color: const Color(0xFF1B8736),
+                height: 1.2,
+                fontFeatures: const [FontFeature.tabularFigures()],
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 4),
+        Row(
+          children: [
+            Expanded(
+              child: Text(
+                source.accountName ?? '—',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+              ),
+            ),
+            Text(
+              timeStr,
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+                fontFeatures: const [FontFeature.tabularFigures()],
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+
+    void openEdit() {
+      showDialog<void>(
+        context: context,
+        builder: (_) => _TransactionDialog(cubit: cubit, l10n: l10n, transaction: target),
+      );
+    }
+
+    Widget tile = SwipeableListTile(
+      itemKey: gid != null && gid.isNotEmpty ? 'pair_$gid' : '${source.id}|${target.id}',
+      leading: Icon(
+        Icons.swap_vert_rounded,
+        size: 26,
+        color: theme.colorScheme.onSurfaceVariant,
+      ),
+      title: title,
+      onEdit: openEdit,
+      confirmDelete: () async {
+        final ok = await showDialog<bool>(
+          context: context,
+          builder: (dialogContext) => AlertDialog(
+            title: Text(l10n.deleteTransaction),
+            content: Text(l10n.confirmDeleteTransaction),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(dialogContext).pop(false),
+                child: Text(l10n.cancel),
+              ),
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+                onPressed: () => Navigator.of(dialogContext).pop(true),
+                child: Text(l10n.delete, style: const TextStyle(color: Colors.white)),
+              ),
+            ],
+          ),
+        );
+        return ok ?? false;
+      },
+      onDeleted: () => cubit.deleteMany([source.id, target.id]),
+    );
+
+    if (source.ignore || target.ignore) {
+      tile = Opacity(opacity: 0.52, child: tile);
+      tile = Tooltip(message: l10n.transactionIgnoredBadge, child: tile);
+    }
+    return tile;
   }
 }
 
