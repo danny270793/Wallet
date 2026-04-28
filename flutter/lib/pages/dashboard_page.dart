@@ -14,6 +14,11 @@ import '../widgets/shell_scaffold.dart';
 import '../widgets/transaction_month_totals.dart';
 import '../widgets/transactions_month_scope.dart';
 import '../widgets/transactions_totals_bar.dart';
+import 'transactions_page.dart'
+    show
+        TransactionsExpandableFab,
+        showAccountTransferCreateBottomSheet,
+        showTransactionEditorBottomSheet;
 
 class DashboardPage extends StatelessWidget {
   const DashboardPage({super.key});
@@ -42,8 +47,13 @@ class _MonthlyDashboardViewState extends State<_MonthlyDashboardView> {
   /// When true, ignored rows count toward income/outcome/balance.
   bool _includeIgnored = false;
 
+  bool _fabMenuOpen = false;
+
   /// Same semantics as [MonthlyTagPieChart.tagKeysFilter]: null = all tags.
   Set<String>? _tagKeysFilter;
+
+  /// Same semantics as [MonthlyCategoryExpensePieChart.categoryKeysFilter]: null = all categories.
+  Set<String>? _categoryKeysFilter;
 
   List<TransactionEntity> _monthTransactions(TransactionsState state) {
     return switch (state) {
@@ -53,15 +63,46 @@ class _MonthlyDashboardViewState extends State<_MonthlyDashboardView> {
     };
   }
 
-  List<TransactionEntity> _transactionsForTagList(
+  List<TransactionEntity> _filterByTag(
     List<TransactionEntity> txs,
     Set<String>? tagKeysFilter,
   ) {
     if (tagKeysFilter == null) return txs;
     return txs.where((t) {
-      if (!_includeIgnored && t.ignore) return false;
       final id = t.tagId;
       return id != null && id.isNotEmpty && tagKeysFilter.contains(id);
+    }).toList();
+  }
+
+  List<TransactionEntity> _filterByCategory(
+    List<TransactionEntity> txs,
+    Set<String>? categoryKeysFilter,
+  ) {
+    if (categoryKeysFilter == null) return txs;
+    return txs.where((t) {
+      final id = t.categoryId;
+      return id != null && id.isNotEmpty && categoryKeysFilter.contains(id);
+    }).toList();
+  }
+
+  /// When either filter is active, excluded ignored rows respect [_includeIgnored].
+  List<TransactionEntity> _transactionsForDashboardList(
+    List<TransactionEntity> txs,
+    Set<String>? tagKeysFilter,
+    Set<String>? categoryKeysFilter,
+  ) {
+    if (tagKeysFilter == null && categoryKeysFilter == null) return txs;
+    return txs.where((t) {
+      if (!_includeIgnored && t.ignore) return false;
+      if (tagKeysFilter != null) {
+        final tid = t.tagId;
+        if (tid == null || tid.isEmpty || !tagKeysFilter.contains(tid)) return false;
+      }
+      if (categoryKeysFilter != null) {
+        final cid = t.categoryId;
+        if (cid == null || cid.isEmpty || !categoryKeysFilter.contains(cid)) return false;
+      }
+      return true;
     }).toList();
   }
 
@@ -83,15 +124,23 @@ class _MonthlyDashboardViewState extends State<_MonthlyDashboardView> {
       },
       builder: (context, state) {
         final txs = _monthTransactions(state);
-        // Pies always aggregate tagged/categorized expenses including ignored rows so all slices show by default.
-        final tagFilter = pruneTagKeysFilter(txs, true, _tagKeysFilter);
-        if (!setEquals(tagFilter, _tagKeysFilter)) {
+        // Pies always aggregate expenses including ignored rows; prune filters together so tag/category stay valid.
+        var categoryFilter = pruneCategoryKeysFilter(txs, true, _categoryKeysFilter);
+        var tagFilter = pruneTagKeysFilter(_filterByCategory(txs, categoryFilter), true, _tagKeysFilter);
+        categoryFilter = pruneCategoryKeysFilter(_filterByTag(txs, tagFilter), true, _categoryKeysFilter);
+        tagFilter = pruneTagKeysFilter(_filterByCategory(txs, categoryFilter), true, _tagKeysFilter);
+        if (!setEquals(tagFilter, _tagKeysFilter) || !setEquals(categoryFilter, _categoryKeysFilter)) {
           WidgetsBinding.instance.addPostFrameCallback((_) {
             if (!mounted) return;
-            setState(() => _tagKeysFilter = tagFilter);
+            setState(() {
+              _tagKeysFilter = tagFilter;
+              _categoryKeysFilter = categoryFilter;
+            });
           });
         }
-        final listTxs = _transactionsForTagList(txs, tagFilter);
+        final tagPieTxs = _filterByCategory(txs, categoryFilter);
+        final categoryPieTxs = _filterByTag(txs, tagFilter);
+        final listTxs = _transactionsForDashboardList(txs, tagFilter, categoryFilter);
         final showBar = state is TransactionsLoaded || state is TransactionsActionError;
 
         double weighted(TransactionEntity t) => t.value * t.percentage / 100.0;
@@ -104,6 +153,13 @@ class _MonthlyDashboardViewState extends State<_MonthlyDashboardView> {
         Future<void> refresh() =>
             context.read<TransactionsCubit>().loadForMonth(monthNotifier.value);
 
+        final preferredTagId =
+            tagFilter != null && tagFilter.length == 1 ? tagFilter.first : null;
+        final preferredCategoryId = categoryFilter != null && categoryFilter.length == 1
+            ? categoryFilter.first
+            : null;
+        final cubit = context.read<TransactionsCubit>();
+
         return ShellScaffold(
           title: l10n.monthlyDashboard,
           appBarBottom: TransactionsMonthAppBarBottom(notifier: monthNotifier),
@@ -115,6 +171,24 @@ class _MonthlyDashboardViewState extends State<_MonthlyDashboardView> {
                   balance: totals.balance,
                 )
               : null,
+          floatingActionButton: showBar
+              ? TransactionsExpandableFab(
+                  l10n: l10n,
+                  isOpen: _fabMenuOpen,
+                  onOpenChanged: (v) => setState(() => _fabMenuOpen = v),
+                  transferHeroTag: 'dashboard_fab_transfer',
+                  newTransactionHeroTag: 'dashboard_fab_new',
+                  toggleHeroTag: 'dashboard_fab_toggle',
+                  onNewTransaction: () => showTransactionEditorBottomSheet(
+                    context,
+                    l10n: l10n,
+                    cubit: cubit,
+                    preferredCategoryId: preferredCategoryId,
+                    preferredTagId: preferredTagId,
+                  ),
+                  onTransfer: () => showAccountTransferCreateBottomSheet(context, l10n: l10n),
+                )
+              : null,
           body: _body(
             context,
             state,
@@ -122,6 +196,9 @@ class _MonthlyDashboardViewState extends State<_MonthlyDashboardView> {
             refresh,
             monthNotifier.value,
             tagFilter,
+            categoryFilter,
+            tagPieTxs,
+            categoryPieTxs,
             listTxs,
           ),
         );
@@ -136,6 +213,9 @@ class _MonthlyDashboardViewState extends State<_MonthlyDashboardView> {
     Future<void> Function() refresh,
     DateTime visibleMonth,
     Set<String>? tagKeysFilter,
+    Set<String>? categoryKeysFilter,
+    List<TransactionEntity> tagPieTransactions,
+    List<TransactionEntity> categoryPieTransactions,
     List<TransactionEntity> listTransactions,
   ) {
     if (state is TransactionsLoading || state is TransactionsInitial) {
@@ -182,42 +262,57 @@ class _MonthlyDashboardViewState extends State<_MonthlyDashboardView> {
 
     return RefreshIndicator(
       onRefresh: refresh,
-      child: ListView(
-        physics: const AlwaysScrollableScrollPhysics(),
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+      child: Stack(
+        fit: StackFit.expand,
         children: [
-          SwitchListTile(
-            title: Text(l10n.dashboardIncludeIgnoredInTotals),
-            value: _includeIgnored,
-            onChanged: (v) => setState(() => _includeIgnored = v),
+          ListView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+            children: [
+              SwitchListTile(
+                title: Text(l10n.dashboardIncludeIgnoredInTotals),
+                value: _includeIgnored,
+                onChanged: (v) => setState(() => _includeIgnored = v),
+              ),
+              if (!_includeIgnored)
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+                  child: Text(
+                    l10n.transactionsTotalsExcludingIgnoredHint,
+                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        ),
+                  ),
+                ),
+              MonthlyTagPieChart(
+                l10n: l10n,
+                transactions: tagPieTransactions,
+                includeIgnored: true,
+                tagKeysFilter: tagKeysFilter,
+                onTagKeysFilterChanged: (v) => setState(() => _tagKeysFilter = v),
+              ),
+              MonthlyCategoryExpensePieChart(
+                l10n: l10n,
+                transactions: categoryPieTransactions,
+                includeIgnored: true,
+                categoryKeysFilter: categoryKeysFilter,
+                onCategoryKeysFilterChanged: (v) => setState(() => _categoryKeysFilter = v),
+              ),
+              DashboardMonthTransactionsList(
+                l10n: l10n,
+                transactions: listTransactions,
+                visibleMonth: visibleMonth,
+              ),
+            ],
           ),
-          if (!_includeIgnored)
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
-              child: Text(
-                l10n.transactionsTotalsExcludingIgnoredHint,
-                style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
-                    ),
+          if (_fabMenuOpen)
+            Positioned.fill(
+              child: GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onTap: () => setState(() => _fabMenuOpen = false),
+                child: const SizedBox.expand(),
               ),
             ),
-          MonthlyTagPieChart(
-            l10n: l10n,
-            transactions: _monthTransactions(state),
-            includeIgnored: true,
-            tagKeysFilter: tagKeysFilter,
-            onTagKeysFilterChanged: (v) => setState(() => _tagKeysFilter = v),
-          ),
-          MonthlyCategoryExpensePieChart(
-            l10n: l10n,
-            transactions: listTransactions,
-            includeIgnored: true,
-          ),
-          DashboardMonthTransactionsList(
-            l10n: l10n,
-            transactions: listTransactions,
-            visibleMonth: visibleMonth,
-          ),
         ],
       ),
     );
