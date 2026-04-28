@@ -1440,37 +1440,34 @@ class _TransferPairTile extends StatelessWidget {
     final gid = source.transactionGroupId;
     String payLabel(TransactionEntity t) => t.accountName ?? t.cardName ?? '—';
 
-    final heading = (source.description ?? target.description)?.trim();
-    final titleLine = heading != null && heading.isNotEmpty ? heading : l10n.transferSheetTitle;
+    final title = Text(
+      payLabel(target),
+      maxLines: 1,
+      overflow: TextOverflow.ellipsis,
+      style: theme.textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w500),
+    );
 
-    final title = Column(
+    final subtitle = Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
       children: [
         Text(
-          titleLine,
+          payLabel(source),
           maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-          style: theme.textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w500),
-        ),
-        const SizedBox(height: 4),
-        Text(
-          '${payLabel(source)} → ${payLabel(target)}',
-          maxLines: 2,
           overflow: TextOverflow.ellipsis,
           style: theme.textTheme.bodySmall?.copyWith(
             color: theme.colorScheme.onSurfaceVariant,
           ),
         ),
+        const SizedBox(height: 2),
+        Text(
+          timeStr,
+          style: theme.textTheme.bodySmall?.copyWith(
+            color: theme.colorScheme.onSurfaceVariant,
+            fontFeatures: const [FontFeature.tabularFigures()],
+          ),
+        ),
       ],
-    );
-
-    final subtitle = Text(
-      timeStr,
-      style: theme.textTheme.bodySmall?.copyWith(
-        color: theme.colorScheme.onSurfaceVariant,
-        fontFeatures: const [FontFeature.tabularFigures()],
-      ),
     );
 
     final trailing = Text(
