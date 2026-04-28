@@ -83,12 +83,15 @@ class ShellScaffold extends StatelessWidget {
   final String title;
   final PreferredSizeWidget? appBarBottom;
   final Widget body;
+  /// When false, no navigation drawer is shown and the app bar uses a back control if the route can pop.
+  final bool useDrawer;
 
   const ShellScaffold({
     super.key,
     required this.title,
     this.appBarBottom,
     required this.body,
+    this.useDrawer = true,
   });
 
   @override
@@ -96,9 +99,11 @@ class ShellScaffold extends StatelessWidget {
     final location = GoRouterState.of(context).matchedLocation;
 
     return Scaffold(
-      drawer: WalletNavigationDrawer(
-        selectedIndex: walletDrawerSelectedIndex(location),
-      ),
+      drawer: useDrawer
+          ? WalletNavigationDrawer(
+              selectedIndex: walletDrawerSelectedIndex(location),
+            )
+          : null,
       appBar: AppBar(
         title: Text(title),
         bottom: appBarBottom,
