@@ -129,4 +129,55 @@ class AppLocalizationsEn extends AppLocalizations {
   String confirmDeleteTag(String name) {
     return 'Are you sure you want to delete \"$name\"?';
   }
+
+  @override
+  String get transactions => 'Transactions';
+
+  @override
+  String get noTransactions => 'No transactions yet';
+
+  @override
+  String get newTransaction => 'New transaction';
+
+  @override
+  String get editTransaction => 'Edit transaction';
+
+  @override
+  String get deleteTransaction => 'Delete transaction';
+
+  @override
+  String get confirmDeleteTransaction =>
+      'Are you sure you want to delete this transaction?';
+
+  @override
+  String get none => 'None';
+
+  @override
+  String get transactionDateTime => 'When';
+
+  @override
+  String get transactionAccount => 'Account';
+
+  @override
+  String get transactionCard => 'Card';
+
+  @override
+  String get transactionCategory => 'Category';
+
+  @override
+  String get transactionTag => 'Tag';
+
+  @override
+  String get transactionAmount => 'Amount';
+
+  @override
+  String get transactionPercentage => 'Percentage';
+
+  @override
+  String get transactionIgnore => 'Ignore';
+
+  @override
+  String transactionAmountValue(String amount) {
+    return '$amount';
+  }
 }
