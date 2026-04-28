@@ -5,6 +5,9 @@ import '../../domain/entities/transaction_entity.dart';
 abstract class TransactionsRemoteDatasource {
   /// [monthStartLocal] normalized to local calendar day 1; range is \[start local, next month local).
   Future<List<TransactionEntity>> getTransactionsForMonth(DateTime monthStartLocal);
+
+  /// All-time search on [description] (case-insensitive substring). RLS limits to current user.
+  Future<List<TransactionEntity>> searchTransactionsByDescription(String query, {int limit = 200});
   Future<TransactionEntity> createTransaction({
     String? accountId,
     String? cardId,
@@ -62,6 +65,23 @@ wallet_tags(name)
         .gte('transactedAt', startUtc)
         .lt('transactedAt', endUtc)
         .order('transactedAt', ascending: false);
+    return (data as List).map((e) => TransactionEntity.fromJson(e as Map<String, dynamic>)).toList();
+  }
+
+  @override
+  Future<List<TransactionEntity>> searchTransactionsByDescription(String query, {int limit = 200}) async {
+    final q = query.trim();
+    if (q.isEmpty) return [];
+    final escaped = q.replaceAll('\\', r'\\').replaceAll('%', r'\%').replaceAll('_', r'\_');
+    final pattern = '%$escaped%';
+    AppLogger.debug('searchTransactionsByDescription: ${q.length} chars');
+    final data = await _client
+        .from('wallet_transactions')
+        .select(_transactionSelectEmbedded)
+        .isFilter('deletedAt', null)
+        .ilike('description', pattern)
+        .order('transactedAt', ascending: false)
+        .limit(limit);
     return (data as List).map((e) => TransactionEntity.fromJson(e as Map<String, dynamic>)).toList();
   }
 
