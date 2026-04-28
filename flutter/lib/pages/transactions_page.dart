@@ -23,11 +23,6 @@ DateTime _calendarDayLocal(DateTime utcOrLocal) {
   return DateTime(l.year, l.month, l.day);
 }
 
-bool _transactionInLocalMonth(TransactionEntity t, DateTime monthStart) {
-  final l = t.transactedAt.toLocal();
-  return l.year == monthStart.year && l.month == monthStart.month;
-}
-
 sealed class _GroupedTxRow {
   const _GroupedTxRow();
 }
@@ -69,10 +64,55 @@ class TransactionsPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (_) => getIt<TransactionsCubit>()..load(),
-      child: const _TransactionsView(),
+      create: (_) => getIt<TransactionsCubit>(),
+      child: const _TransactionsMonthLoadSync(
+        child: _TransactionsView(),
+      ),
     );
   }
+}
+
+class _TransactionsMonthLoadSync extends StatefulWidget {
+  const _TransactionsMonthLoadSync({required this.child});
+
+  final Widget child;
+
+  @override
+  State<_TransactionsMonthLoadSync> createState() =>
+      _TransactionsMonthLoadSyncState();
+}
+
+class _TransactionsMonthLoadSyncState extends State<_TransactionsMonthLoadSync> {
+  ValueNotifier<DateTime>? _notifier;
+  VoidCallback? _listener;
+
+  @override
+  void dispose() {
+    if (_notifier != null && _listener != null) {
+      _notifier!.removeListener(_listener!);
+    }
+    super.dispose();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final notifier = TransactionsMonthScope.of(context);
+    if (_notifier != notifier) {
+      if (_notifier != null && _listener != null) {
+        _notifier!.removeListener(_listener!);
+      }
+      _notifier = notifier;
+      _listener = () {
+        context.read<TransactionsCubit>().loadForMonth(notifier.value);
+      };
+      notifier.addListener(_listener!);
+      context.read<TransactionsCubit>().loadForMonth(notifier.value);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) => widget.child;
 }
 
 class _TransactionsView extends StatelessWidget {
@@ -97,7 +137,7 @@ class _TransactionsView extends StatelessWidget {
           builder: (context, visibleMonth, _) {
             return Stack(
               children: [
-                _body(context, state, l10n, visibleMonth),
+                _body(context, state, l10n, visibleMonth, monthNotifier),
                 Positioned(
                   right: 16,
                   bottom: 16,
@@ -119,8 +159,10 @@ class _TransactionsView extends StatelessWidget {
     TransactionsState state,
     AppLocalizations l10n,
     DateTime visibleMonth,
+    ValueNotifier<DateTime> monthNotifier,
   ) {
-    Future<void> refresh() => context.read<TransactionsCubit>().load();
+    Future<void> refresh() =>
+        context.read<TransactionsCubit>().loadForMonth(monthNotifier.value);
 
     if (state is TransactionsLoading || state is TransactionsInitial) {
       return RefreshIndicator(
@@ -170,36 +212,17 @@ class _TransactionsView extends StatelessWidget {
       _ => <TransactionEntity>[],
     };
 
-    final filtered = list.where((t) => _transactionInLocalMonth(t, visibleMonth)).toList();
-
-    return _monthListBody(context, l10n, visibleMonth, list, filtered, refresh);
+    return _monthListBody(context, l10n, visibleMonth, list, refresh);
   }
 
   Widget _monthListBody(
     BuildContext context,
     AppLocalizations l10n,
     DateTime visibleMonth,
-    List<TransactionEntity> all,
-    List<TransactionEntity> filtered,
+    List<TransactionEntity> monthTransactions,
     Future<void> Function() refresh,
   ) {
-    if (all.isEmpty) {
-      return RefreshIndicator(
-        onRefresh: refresh,
-        child: ListView(
-          physics: const AlwaysScrollableScrollPhysics(),
-          padding: const EdgeInsets.only(bottom: 88),
-          children: [
-            SizedBox(
-              height: MediaQuery.sizeOf(context).height * 0.3,
-              child: Center(child: Text(l10n.noTransactions)),
-            ),
-          ],
-        ),
-      );
-    }
-
-    if (filtered.isEmpty) {
+    if (monthTransactions.isEmpty) {
       final locale = Localizations.localeOf(context);
       final monthYear = DateFormat.yMMMM(locale.toString()).format(visibleMonth);
       return RefreshIndicator(
@@ -217,7 +240,7 @@ class _TransactionsView extends StatelessWidget {
       );
     }
 
-    final rows = _groupTransactionsByDay(filtered);
+    final rows = _groupTransactionsByDay(monthTransactions);
     return RefreshIndicator(
       onRefresh: refresh,
       child: ListView.builder(
