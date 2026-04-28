@@ -16,6 +16,47 @@ import '../features/transactions/presentation/cubit/transactions_cubit.dart';
 import '../features/transactions/presentation/cubit/transactions_state.dart';
 import '../widgets/swipeable_list_tile.dart';
 
+/// Local calendar day (midnight) used as a group key for [transactedAt].
+DateTime _calendarDayLocal(DateTime utcOrLocal) {
+  final l = utcOrLocal.toLocal();
+  return DateTime(l.year, l.month, l.day);
+}
+
+sealed class _GroupedTxRow {
+  const _GroupedTxRow();
+}
+
+final class _DayMarker extends _GroupedTxRow {
+  const _DayMarker(this.day);
+  final DateTime day;
+}
+
+final class _TxMarker extends _GroupedTxRow {
+  const _TxMarker(this.transaction);
+  final TransactionEntity transaction;
+}
+
+List<_GroupedTxRow> _groupTransactionsByDay(List<TransactionEntity> list) {
+  final byDay = <DateTime, List<TransactionEntity>>{};
+  for (final t in list) {
+    final k = _calendarDayLocal(t.transactedAt);
+    byDay.putIfAbsent(k, () => []).add(t);
+  }
+  final days = byDay.keys.toList()..sort((a, b) => b.compareTo(a));
+  for (final d in days) {
+    byDay[d]!.sort((a, b) => b.transactedAt.compareTo(a.transactedAt));
+  }
+
+  final entries = <_GroupedTxRow>[];
+  for (final d in days) {
+    entries.add(_DayMarker(d));
+    for (final t in byDay[d]!) {
+      entries.add(_TxMarker(t));
+    }
+  }
+  return entries;
+}
+
 class TransactionsPage extends StatelessWidget {
   const TransactionsPage({super.key});
 
@@ -128,13 +169,21 @@ class _TransactionsView extends StatelessWidget {
       );
     }
 
+    final rows = _groupTransactionsByDay(list);
+
     return RefreshIndicator(
       onRefresh: refresh,
       child: ListView.builder(
         physics: const AlwaysScrollableScrollPhysics(),
         padding: const EdgeInsets.only(bottom: 88),
-        itemCount: list.length,
-        itemBuilder: (context, index) => _TransactionTile(transaction: list[index], l10n: l10n),
+        itemCount: rows.length,
+        itemBuilder: (context, index) {
+          return switch (rows[index]) {
+            _DayMarker(:final day) => _TransactionDayHeader(day: day),
+            _TxMarker(:final transaction) =>
+              _TransactionTile(transaction: transaction, l10n: l10n),
+          };
+        },
       ),
     );
   }
@@ -146,6 +195,31 @@ class _TransactionsView extends StatelessWidget {
         cubit: context.read<TransactionsCubit>(),
         l10n: l10n,
         transaction: tx,
+      ),
+    );
+  }
+}
+
+class _TransactionDayHeader extends StatelessWidget {
+  const _TransactionDayHeader({required this.day});
+
+  final DateTime day;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final text = DateFormat('yyyy-MM-dd').format(day);
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 6),
+      child: Align(
+        alignment: Alignment.centerLeft,
+        child: Text(
+          text,
+          style: theme.textTheme.titleSmall?.copyWith(
+            color: theme.colorScheme.onSurfaceVariant,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
       ),
     );
   }
@@ -167,7 +241,6 @@ class _TransactionTile extends StatelessWidget {
     final theme = Theme.of(context);
     final locale = Localizations.localeOf(context);
     final localTime = transaction.transactedAt.toLocal();
-    final dateLine = DateFormat.yMMMd(locale.toString()).format(localTime);
 
     Color valueColor() {
       if (transaction.value > 0) return const Color(0xFF1B8736);
@@ -243,15 +316,6 @@ class _TransactionTile extends StatelessWidget {
     return SwipeableListTile(
       itemKey: transaction.id,
       title: titleSection(),
-      subtitle: Padding(
-        padding: const EdgeInsets.only(top: 4),
-        child: Text(
-          dateLine,
-          style: theme.textTheme.bodySmall?.copyWith(
-            color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.9),
-          ),
-        ),
-      ),
       trailing: Row(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.center,
