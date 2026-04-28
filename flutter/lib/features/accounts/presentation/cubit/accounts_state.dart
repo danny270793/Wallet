@@ -19,10 +19,9 @@ class AccountsLoading extends AccountsState {
 
 class AccountsLoaded extends AccountsState {
   final List<AccountEntity> accounts;
-  final Map<String, double> balancesByAccountId;
-  const AccountsLoaded(this.accounts, {this.balancesByAccountId = const {}});
+  const AccountsLoaded(this.accounts);
   @override
-  List<Object?> get props => [accounts, balancesByAccountId];
+  List<Object?> get props => [accounts];
 }
 
 class AccountsError extends AccountsState {
@@ -35,9 +34,8 @@ class AccountsError extends AccountsState {
 // Emitted when a CRUD action fails; retains the current list so the UI stays rendered.
 class AccountsActionError extends AccountsState {
   final List<AccountEntity> accounts;
-  final Map<String, double> balancesByAccountId;
   final String? message;
-  const AccountsActionError(this.accounts, {this.balancesByAccountId = const {}, this.message});
+  const AccountsActionError(this.accounts, {this.message});
   @override
-  List<Object?> get props => [accounts, balancesByAccountId, message];
+  List<Object?> get props => [accounts, message];
 }
