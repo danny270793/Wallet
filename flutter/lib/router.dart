@@ -10,6 +10,7 @@ import 'pages/tags_page.dart';
 import 'pages/transactions_page.dart';
 import 'pages/settings_page.dart';
 import 'widgets/app_shell.dart';
+import 'widgets/transactions_month_scope.dart';
 
 final router = GoRouter(
   initialLocation: '/',
@@ -32,7 +33,12 @@ final router = GoRouter(
     GoRoute(path: '/login', builder: (context, state) => const LoginPage()),
     GoRoute(path: '/settings', builder: (context, state) => const SettingsPage()),
     ShellRoute(
-      builder: (context, state, child) => AppShell(child: child),
+      builder: (context, state, child) {
+        if (state.matchedLocation.startsWith('/transactions')) {
+          return TransactionsMonthHost(child: AppShell(child: child));
+        }
+        return AppShell(child: child);
+      },
       routes: [
         GoRoute(path: '/dashboard', builder: (context, state) => const DashboardPage()),
         GoRoute(path: '/accounts', builder: (context, state) => const AccountsPage()),
