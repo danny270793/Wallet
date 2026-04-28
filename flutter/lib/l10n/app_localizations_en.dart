@@ -54,6 +54,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get accountBalance => 'Balance';
 
   @override
+  String listBalanceWeightedLine(String amount) {
+    return 'Weighted $amount';
+  }
+
+  @override
+  String listBalanceCountedLine(String amount) {
+    return 'Counted $amount';
+  }
+
+  @override
   String get editAccount => 'Edit account';
 
   @override
