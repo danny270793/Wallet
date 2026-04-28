@@ -182,6 +182,24 @@ class TransactionsCubit extends Cubit<TransactionsState> {
     }
   }
 
+  /// Deletes several rows then refetches once (e.g. paired transfer legs).
+  Future<void> deleteMany(List<String> ids) async {
+    final current = _currentTransactions();
+    if (ids.isEmpty) return;
+    final unique = ids.toSet().toList();
+    AppLogger.debug('deleting transactions: $unique');
+    try {
+      for (final id in unique) {
+        await _deleteTransaction(id: id);
+      }
+      AppLogger.info('transactions deleted: $unique');
+      await _refetchCurrentMonthQuietly();
+    } catch (e, s) {
+      AppLogger.error('failed to delete transactions', e, s);
+      emit(TransactionsActionError(current));
+    }
+  }
+
   List<TransactionEntity> _currentTransactions() => switch (state) {
     TransactionsLoaded(:final transactions) => transactions,
     TransactionsActionError(:final transactions) => transactions,
