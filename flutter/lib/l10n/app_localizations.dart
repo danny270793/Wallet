@@ -194,6 +194,24 @@ abstract class AppLocalizations {
   /// **'Select at least one tag'**
   String get dashboardTagPieNeedOneTag;
 
+  /// No description provided for @dashboardCategoryPieFilterCategories.
+  ///
+  /// In en, this message translates to:
+  /// **'Filter categories'**
+  String get dashboardCategoryPieFilterCategories;
+
+  /// No description provided for @dashboardCategoryPieFilterDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose which categories are included in the chart.'**
+  String get dashboardCategoryPieFilterDescription;
+
+  /// No description provided for @dashboardCategoryPieNeedOneCategory.
+  ///
+  /// In en, this message translates to:
+  /// **'Select at least one category'**
+  String get dashboardCategoryPieNeedOneCategory;
+
   /// No description provided for @yearlyDashboard.
   ///
   /// In en, this message translates to:
