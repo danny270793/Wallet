@@ -9,5 +9,22 @@
   "dashboard": "Dashboard",
   "settings": "Settings",
   "signOut": "Sign out",
-  "accounts": "Accounts"
+  "accounts": "Accounts",
+  "noAccounts": "No accounts yet",
+  "newAccount": "New account",
+  "accountName": "Name",
+  "accountDescription": "Description",
+  "editAccount": "Edit account",
+  "deleteAccount": "Delete account",
+  "confirmDeleteAccount": "Are you sure you want to delete \"{name}\"?",
+  "@confirmDeleteAccount": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "cancel": "Cancel",
+  "save": "Save",
+  "delete": "Delete"
 }
