@@ -5,6 +5,7 @@ import '../core/di/injection.dart';
 import '../features/tags/domain/entities/tag_entity.dart';
 import '../features/tags/presentation/cubit/tags_cubit.dart';
 import '../features/tags/presentation/cubit/tags_state.dart';
+import '../widgets/swipeable_list_tile.dart';
 
 class TagsPage extends StatelessWidget {
   const TagsPage({super.key});
@@ -148,56 +149,46 @@ class _TagTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-
-    return ListTile(
-      title: Text(tag.name),
-      subtitle: tag.description != null ? Text(tag.description!, maxLines: 2, overflow: TextOverflow.ellipsis) : null,
-      trailing: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          IconButton(
-            icon: const Icon(Icons.edit_outlined),
-            onPressed: () => showDialog<void>(
-              context: context,
-              builder: (_) => _TagDialog(
-                cubit: context.read<TagsCubit>(),
-                l10n: l10n,
-                tag: tag,
-              ),
-            ),
-          ),
-          IconButton(
-            icon: const Icon(Icons.delete_outlined),
-            onPressed: () => _confirmDelete(context, l10n),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Future<void> _confirmDelete(BuildContext context, AppLocalizations l10n) async {
     final cubit = context.read<TagsCubit>();
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: Text(l10n.deleteTag),
-        content: Text(l10n.confirmDeleteTag(tag.name)),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(dialogContext).pop(false),
-            child: Text(l10n.cancel),
-          ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-            onPressed: () => Navigator.of(dialogContext).pop(true),
-            child: Text(l10n.delete, style: const TextStyle(color: Colors.white)),
-          ),
-        ],
-      ),
-    );
-    if (confirmed == true) {
-      cubit.delete(id: tag.id);
+
+    void openEdit() {
+      showDialog<void>(
+        context: context,
+        builder: (_) => _TagDialog(cubit: cubit, l10n: l10n, tag: tag),
+      );
     }
+
+    return SwipeableListTile(
+      itemKey: tag.id,
+      leading: initialsAvatar(context, tag.name),
+      title: Text(tag.name),
+      subtitle: tag.description != null
+          ? Text(tag.description!, maxLines: 2, overflow: TextOverflow.ellipsis)
+          : null,
+      onEdit: openEdit,
+      confirmDelete: () async {
+        final ok = await showDialog<bool>(
+          context: context,
+          builder: (dialogContext) => AlertDialog(
+            title: Text(l10n.deleteTag),
+            content: Text(l10n.confirmDeleteTag(tag.name)),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(dialogContext).pop(false),
+                child: Text(l10n.cancel),
+              ),
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+                onPressed: () => Navigator.of(dialogContext).pop(true),
+                child: Text(l10n.delete, style: const TextStyle(color: Colors.white)),
+              ),
+            ],
+          ),
+        );
+        return ok ?? false;
+      },
+      onDeleted: () => cubit.delete(id: tag.id),
+    );
   }
 }
 
