@@ -125,13 +125,25 @@ class _CardsView extends StatelessWidget {
       );
     }
 
+    final totalWeighted = cards.fold<double>(0, (s, c) => s + c.balanceWeighted);
+    final totalCounted = cards.fold<double>(0, (s, c) => s + c.balanceCounted);
+
     return RefreshIndicator(
       onRefresh: refresh,
       child: ListView.builder(
         physics: const AlwaysScrollableScrollPhysics(),
         padding: const EdgeInsets.only(bottom: 88),
-        itemCount: cards.length,
-        itemBuilder: (context, index) => _CardTile(card: cards[index]),
+        itemCount: cards.length + 1,
+        itemBuilder: (context, index) {
+          if (index == cards.length) {
+            return WalletDualBalanceListFooter(
+              l10n: l10n,
+              totalWeighted: totalWeighted,
+              totalCounted: totalCounted,
+            );
+          }
+          return _CardTile(card: cards[index]);
+        },
       ),
     );
   }
