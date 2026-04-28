@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:wallet/l10n/app_localizations.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/di/injection.dart';
 import '../bloc/login_bloc.dart';
@@ -37,6 +38,8 @@ class _LoginPageState extends State<LoginPage> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+
     return BlocProvider(
       create: (_) => getIt<LoginBloc>(),
       child: BlocConsumer<LoginBloc, LoginState>(
@@ -45,7 +48,7 @@ class _LoginPageState extends State<LoginPage> {
             context.go('/dashboard');
           } else if (state is LoginFailure) {
             ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(state.message)),
+              SnackBar(content: Text(state.message ?? l10n.unexpectedError)),
             );
           }
         },
@@ -61,24 +64,23 @@ class _LoginPageState extends State<LoginPage> {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Text(
-                          'Sign in',
+                          l10n.signIn,
                           style: Theme.of(context).textTheme.headlineMedium,
                         ),
                         const SizedBox(height: 32),
                         TextFormField(
                           controller: _emailController,
-                          decoration:
-                              const InputDecoration(labelText: 'Email'),
+                          decoration: InputDecoration(labelText: l10n.email),
                           keyboardType: TextInputType.emailAddress,
                           textInputAction: TextInputAction.next,
                           validator: (v) =>
-                              v == null || v.isEmpty ? 'Required' : null,
+                              v == null || v.isEmpty ? l10n.fieldRequired : null,
                         ),
                         const SizedBox(height: 16),
                         TextFormField(
                           controller: _passwordController,
                           decoration: InputDecoration(
-                            labelText: 'Password',
+                            labelText: l10n.password,
                             suffixIcon: IconButton(
                               icon: Icon(_obscurePassword
                                   ? Icons.visibility_off
@@ -91,7 +93,7 @@ class _LoginPageState extends State<LoginPage> {
                           textInputAction: TextInputAction.done,
                           onFieldSubmitted: (_) => _submit(context),
                           validator: (v) =>
-                              v == null || v.isEmpty ? 'Required' : null,
+                              v == null || v.isEmpty ? l10n.fieldRequired : null,
                         ),
                         const SizedBox(height: 24),
                         SizedBox(
@@ -107,7 +109,7 @@ class _LoginPageState extends State<LoginPage> {
                                     child: CircularProgressIndicator(
                                         strokeWidth: 2),
                                   )
-                                : const Text('Sign in'),
+                                : Text(l10n.signIn),
                           ),
                         ),
                       ],
