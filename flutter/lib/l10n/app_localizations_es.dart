@@ -407,7 +407,15 @@ class AppLocalizationsEs extends AppLocalizations {
   String get transactionAmount => 'Importe';
 
   @override
+  String get transactionAmountInvalidNumber =>
+      'Introduce un número válido (signo y decimales opcionales)';
+
+  @override
   String get transactionPercentage => 'Porcentaje';
+
+  @override
+  String get transactionPercentageInvalidRange =>
+      'Introduce un número entre 0 y 100';
 
   @override
   String get transactionIgnore => 'Ignorar';
