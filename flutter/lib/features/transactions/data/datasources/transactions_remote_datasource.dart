@@ -34,12 +34,21 @@ class TransactionsSupabaseDatasource implements TransactionsRemoteDatasource {
   final SupabaseClient _client;
   const TransactionsSupabaseDatasource(this._client);
 
+  /// Embeds FK `name` fields for list display (PostgREST nested select).
+  static const _transactionSelectEmbedded = '''
+*,
+wallet_accounts(name),
+wallet_cards(name),
+wallet_categories(name),
+wallet_tags(name)
+''';
+
   @override
   Future<List<TransactionEntity>> getTransactions() async {
     AppLogger.debug('getTransactions called');
     final data = await _client
         .from('wallet_transactions')
-        .select()
+        .select(_transactionSelectEmbedded)
         .isFilter('deletedAt', null)
         .order('transactedAt', ascending: false);
     return (data as List).map((e) => TransactionEntity.fromJson(e as Map<String, dynamic>)).toList();
@@ -70,7 +79,7 @@ class TransactionsSupabaseDatasource implements TransactionsRemoteDatasource {
       if (tagId != null) 'tagId': tagId,
       if (description != null) 'description': description,
     };
-    final data = await _client.from('wallet_transactions').insert(row).select().single();
+    final data = await _client.from('wallet_transactions').insert(row).select(_transactionSelectEmbedded).single();
     return TransactionEntity.fromJson(data);
   }
 
@@ -102,7 +111,7 @@ class TransactionsSupabaseDatasource implements TransactionsRemoteDatasource {
           'percentage': percentage,
         })
         .eq('id', id)
-        .select()
+        .select(_transactionSelectEmbedded)
         .single();
     return TransactionEntity.fromJson(data);
   }
