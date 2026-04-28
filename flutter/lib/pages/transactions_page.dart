@@ -60,14 +60,23 @@ List<_GroupedTxRow> _groupTransactionsByDay(List<TransactionEntity> list) {
 }
 
 class TransactionsPage extends StatelessWidget {
-  const TransactionsPage({super.key});
+  const TransactionsPage({super.key, this.accountIdFilter, this.accountNameFilter});
+
+  /// When set, only transactions for this account are shown (current month still applies).
+  final String? accountIdFilter;
+  final String? accountNameFilter;
 
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
       create: (_) => getIt<TransactionsCubit>(),
-      child: const _TransactionsMonthLoadSync(
-        child: _TransactionsView(),
+      child: TransactionsMonthHost(
+        child: _TransactionsMonthLoadSync(
+          child: _TransactionsView(
+            accountIdFilter: accountIdFilter,
+            accountNameFilter: accountNameFilter,
+          ),
+        ),
       ),
     );
   }
@@ -117,15 +126,24 @@ class _TransactionsMonthLoadSyncState extends State<_TransactionsMonthLoadSync> 
 }
 
 class _TransactionsView extends StatelessWidget {
-  const _TransactionsView();
+  const _TransactionsView({this.accountIdFilter, this.accountNameFilter});
+
+  final String? accountIdFilter;
+  final String? accountNameFilter;
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final monthNotifier = TransactionsMonthScope.of(context);
+    final title = (accountNameFilter != null && accountNameFilter!.isNotEmpty)
+        ? '${accountNameFilter!} · ${l10n.transactions}'
+        : l10n.transactions;
+
+    final isAccountScoped = accountIdFilter != null && accountIdFilter!.isNotEmpty;
 
     return ShellScaffold(
-      title: l10n.transactions,
+      title: title,
+      useDrawer: !isAccountScoped,
       appBarBottom: TransactionsMonthAppBarBottom(notifier: monthNotifier),
       body: BlocConsumer<TransactionsCubit, TransactionsState>(
         listener: (context, state) {
@@ -146,7 +164,7 @@ class _TransactionsView extends StatelessWidget {
                     right: 16,
                     bottom: 16,
                     child: FloatingActionButton(
-                      onPressed: () => _showTxDialog(context, l10n),
+                      onPressed: () => _showTxDialog(context, l10n, null, accountIdFilter),
                       child: const Icon(Icons.add),
                     ),
                   ),
@@ -211,11 +229,15 @@ class _TransactionsView extends StatelessWidget {
       );
     }
 
-    final list = switch (state) {
+    final rawList = switch (state) {
       TransactionsLoaded(:final transactions) => transactions,
       TransactionsActionError(:final transactions) => transactions,
       _ => <TransactionEntity>[],
     };
+
+    final list = accountIdFilter == null
+        ? rawList
+        : rawList.where((t) => t.accountId == accountIdFilter).toList();
 
     return _monthListBody(context, l10n, visibleMonth, list, refresh);
   }
@@ -263,13 +285,19 @@ class _TransactionsView extends StatelessWidget {
     );
   }
 
-  void _showTxDialog(BuildContext context, AppLocalizations l10n, [TransactionEntity? tx]) {
+  void _showTxDialog(
+    BuildContext context,
+    AppLocalizations l10n, [
+    TransactionEntity? tx,
+    String? preferredAccountId,
+  ]) {
     showDialog<void>(
       context: context,
       builder: (_) => _TransactionDialog(
         cubit: context.read<TransactionsCubit>(),
         l10n: l10n,
         transaction: tx,
+        preferredAccountId: preferredAccountId,
       ),
     );
   }
@@ -450,8 +478,14 @@ class _TransactionDialog extends StatefulWidget {
   final TransactionsCubit cubit;
   final AppLocalizations l10n;
   final TransactionEntity? transaction;
+  final String? preferredAccountId;
 
-  const _TransactionDialog({required this.cubit, required this.l10n, this.transaction});
+  const _TransactionDialog({
+    required this.cubit,
+    required this.l10n,
+    this.transaction,
+    this.preferredAccountId,
+  });
 
   @override
   State<_TransactionDialog> createState() => _TransactionDialogState();
@@ -486,7 +520,7 @@ class _TransactionDialogState extends State<_TransactionDialog> {
     _percentageController = TextEditingController(text: t != null ? t.percentage.toString() : '0');
     _descriptionController = TextEditingController(text: t?.description ?? '');
     _ignore = t?.ignore ?? false;
-    _accountId = t?.accountId;
+    _accountId = t?.accountId ?? widget.preferredAccountId;
     _cardId = t?.cardId;
     _categoryId = t?.categoryId;
     _tagId = t?.tagId;
