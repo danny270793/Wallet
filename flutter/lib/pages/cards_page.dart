@@ -38,21 +38,28 @@ class _CardsView extends StatelessWidget {
         }
       },
       builder: (context, state) {
+        final cards = switch (state) {
+          CardsLoaded(:final cards) => cards,
+          CardsActionError(:final cards) => cards,
+          _ => <CardEntity>[],
+        };
+        final showTotalBar = cards.isNotEmpty;
+        final totalBalance =
+            showTotalBar ? cards.fold<double>(0, (s, c) => s + c.balance) : 0.0;
+
         return ShellScaffold(
           title: l10n.cards,
-          body: Stack(
-            children: [
-              _body(context, state, l10n),
-              Positioned(
-                right: 16,
-                bottom: 16,
-                child: FloatingActionButton(
-                  onPressed: () => _showCardDialog(context, l10n),
-                  child: const Icon(Icons.add),
-                ),
-              ),
-            ],
+          floatingActionButton: FloatingActionButton(
+            onPressed: () => _showCardDialog(context, l10n),
+            child: const Icon(Icons.add),
           ),
+          bottomNavigationBar: showTotalBar
+              ? WalletListBalanceTotalBar(
+                  l10n: l10n,
+                  total: totalBalance,
+                )
+              : null,
+          body: _body(context, state, l10n),
         );
       },
     );
@@ -125,25 +132,13 @@ class _CardsView extends StatelessWidget {
       );
     }
 
-    final totalWeighted = cards.fold<double>(0, (s, c) => s + c.balanceWeighted);
-    final totalCounted = cards.fold<double>(0, (s, c) => s + c.balanceCounted);
-
     return RefreshIndicator(
       onRefresh: refresh,
       child: ListView.builder(
         physics: const AlwaysScrollableScrollPhysics(),
-        padding: const EdgeInsets.only(bottom: 88),
-        itemCount: cards.length + 1,
-        itemBuilder: (context, index) {
-          if (index == cards.length) {
-            return WalletDualBalanceListFooter(
-              l10n: l10n,
-              totalWeighted: totalWeighted,
-              totalCounted: totalCounted,
-            );
-          }
-          return _CardTile(card: cards[index]);
-        },
+        padding: const EdgeInsets.only(bottom: 8),
+        itemCount: cards.length,
+        itemBuilder: (context, index) => _CardTile(card: cards[index]),
       ),
     );
   }
@@ -194,10 +189,9 @@ class _CardTile extends StatelessWidget {
       subtitle: card.description != null
           ? Text(card.description!, maxLines: 2, overflow: TextOverflow.ellipsis)
           : null,
-      trailing: WalletDualBalanceTrailing(
+      trailing: WalletListBalanceAmount(
         l10n: l10n,
-        balanceWeighted: card.balanceWeighted,
-        balanceCounted: card.balanceCounted,
+        balance: card.balance,
       ),
       onTap: openTransactions,
       onEdit: openEdit,
