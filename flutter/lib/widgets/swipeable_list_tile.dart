@@ -12,6 +12,7 @@ class SwipeableListTile extends StatelessWidget {
     this.subtitle,
     this.leading,
     this.trailing,
+    this.onTap,
     required this.onEdit,
     required this.confirmDelete,
     required this.onDeleted,
@@ -22,6 +23,7 @@ class SwipeableListTile extends StatelessWidget {
   final Widget? subtitle;
   final Widget? leading;
   final Widget? trailing;
+  final VoidCallback? onTap;
   final VoidCallback onEdit;
   /// Return true to allow delete dismiss after user confirms in dialog.
   final Future<bool> Function() confirmDelete;
@@ -37,6 +39,7 @@ class SwipeableListTile extends StatelessWidget {
         title: title,
         subtitle: subtitle,
         trailing: trailing,
+        onTap: onTap,
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
         shape: RoundedRectangleBorder(borderRadius: radius),
       );
