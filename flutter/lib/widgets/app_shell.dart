@@ -32,6 +32,10 @@ class AppShell extends StatelessWidget {
                 drawerContext.go('/dashboard');
               case 1:
                 drawerContext.go('/accounts');
+              case 2:
+                drawerContext.go('/categories');
+              case 3:
+                drawerContext.go('/tags');
             }
           },
           children: [
@@ -45,6 +49,16 @@ class AppShell extends StatelessWidget {
               selectedIcon: const Icon(Icons.account_balance_wallet),
               label: Text(l10n.accounts),
             ),
+            NavigationDrawerDestination(
+              icon: const Icon(Icons.category_outlined),
+              selectedIcon: const Icon(Icons.category),
+              label: Text(l10n.categories),
+            ),
+            NavigationDrawerDestination(
+              icon: const Icon(Icons.label_outline),
+              selectedIcon: const Icon(Icons.label),
+              label: Text(l10n.tags),
+            ),
           ],
         ),
       ),
@@ -54,11 +68,15 @@ class AppShell extends StatelessWidget {
 
   int _selectedIndex(String location) {
     if (location.startsWith('/accounts')) return 1;
+    if (location.startsWith('/categories')) return 2;
+    if (location.startsWith('/tags')) return 3;
     return 0;
   }
 
   String _title(String location, AppLocalizations l10n) {
     if (location.startsWith('/accounts')) return l10n.accounts;
+    if (location.startsWith('/categories')) return l10n.categories;
+    if (location.startsWith('/tags')) return l10n.tags;
     return l10n.dashboard;
   }
 }
