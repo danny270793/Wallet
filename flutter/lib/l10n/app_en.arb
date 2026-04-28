@@ -15,6 +15,7 @@
   "accountName": "Name",
   "accountDescription": "Description",
   "editAccount": "Edit account",
+  "accountSubmitCreate": "Create",
   "deleteAccount": "Delete account",
   "confirmDeleteAccount": "Are you sure you want to delete \"{name}\"?",
   "@confirmDeleteAccount": {
