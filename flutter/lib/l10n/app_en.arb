@@ -1,0 +1,10 @@
+{
+  "@@locale": "en",
+  "appTitle": "Wallet",
+  "signIn": "Sign in",
+  "email": "Email",
+  "password": "Password",
+  "fieldRequired": "Required",
+  "unexpectedError": "An unexpected error occurred",
+  "dashboard": "Dashboard"
+}
