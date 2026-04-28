@@ -6,6 +6,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:intl/intl.dart' as intl;
 
 import 'app_localizations_en.dart';
+import 'app_localizations_es.dart';
 
 // ignore_for_file: type=lint
 
@@ -92,7 +93,10 @@ abstract class AppLocalizations {
       ];
 
   /// A list of this localizations delegate's supported locales.
-  static const List<Locale> supportedLocales = <Locale>[Locale('en')];
+  static const List<Locale> supportedLocales = <Locale>[
+    Locale('en'),
+    Locale('es'),
+  ];
 
   /// No description provided for @appTitle.
   ///
@@ -141,6 +145,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Settings'**
   String get settings;
+
+  /// No description provided for @settingsAppearance.
+  ///
+  /// In en, this message translates to:
+  /// **'Appearance'**
+  String get settingsAppearance;
+
+  /// No description provided for @settingsLanguage.
+  ///
+  /// In en, this message translates to:
+  /// **'Language'**
+  String get settingsLanguage;
+
+  /// No description provided for @settingsLanguageSystem.
+  ///
+  /// In en, this message translates to:
+  /// **'System default'**
+  String get settingsLanguageSystem;
+
+  /// No description provided for @settingsLanguageEnglish.
+  ///
+  /// In en, this message translates to:
+  /// **'English'**
+  String get settingsLanguageEnglish;
+
+  /// No description provided for @settingsLanguageSpanish.
+  ///
+  /// In en, this message translates to:
+  /// **'Spanish'**
+  String get settingsLanguageSpanish;
 
   /// No description provided for @signOut.
   ///
@@ -346,6 +380,30 @@ abstract class AppLocalizations {
   /// **'Transactions'**
   String get transactions;
 
+  /// No description provided for @transactionsSearchTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Search transactions'**
+  String get transactionsSearchTooltip;
+
+  /// No description provided for @transactionsSearchHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Search by description'**
+  String get transactionsSearchHint;
+
+  /// No description provided for @transactionsSearchTypeQuery.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter text to search all your transactions'**
+  String get transactionsSearchTypeQuery;
+
+  /// No description provided for @transactionsSearchNoResults.
+  ///
+  /// In en, this message translates to:
+  /// **'No matching transactions'**
+  String get transactionsSearchNoResults;
+
   /// No description provided for @transactionsPickMonth.
   ///
   /// In en, this message translates to:
@@ -460,6 +518,12 @@ abstract class AppLocalizations {
   /// **'No accounts match your search'**
   String get transferAccountSearchNoResults;
 
+  /// No description provided for @editTransferTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit transfer'**
+  String get editTransferTitle;
+
   /// No description provided for @editTransaction.
   ///
   /// In en, this message translates to:
@@ -477,6 +541,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Are you sure you want to delete this transaction?'**
   String get confirmDeleteTransaction;
+
+  /// No description provided for @deleteTransferPair.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete transfer'**
+  String get deleteTransferPair;
+
+  /// No description provided for @confirmDeleteTransferPair.
+  ///
+  /// In en, this message translates to:
+  /// **'This removes both sides of the transfer from the ledger.'**
+  String get confirmDeleteTransferPair;
 
   /// No description provided for @none.
   ///
@@ -580,7 +656,7 @@ class _AppLocalizationsDelegate
 
   @override
   bool isSupported(Locale locale) =>
-      <String>['en'].contains(locale.languageCode);
+      <String>['en', 'es'].contains(locale.languageCode);
 
   @override
   bool shouldReload(_AppLocalizationsDelegate old) => false;
@@ -591,6 +667,8 @@ AppLocalizations lookupAppLocalizations(Locale locale) {
   switch (locale.languageCode) {
     case 'en':
       return AppLocalizationsEn();
+    case 'es':
+      return AppLocalizationsEs();
   }
 
   throw FlutterError(
