@@ -1,0 +1,136 @@
+{
+  "@@locale": "es",
+  "appTitle": "Cartera",
+  "signIn": "Iniciar sesión",
+  "email": "Correo electrónico",
+  "password": "Contraseña",
+  "fieldRequired": "Obligatorio",
+  "unexpectedError": "Ocurrió un error inesperado",
+  "dashboard": "Inicio",
+  "settings": "Ajustes",
+  "settingsAppearance": "Apariencia",
+  "settingsLanguage": "Idioma",
+  "settingsLanguageSystem": "Predeterminado del sistema",
+  "settingsLanguageEnglish": "Inglés",
+  "settingsLanguageSpanish": "Español",
+  "signOut": "Cerrar sesión",
+  "accounts": "Cuentas",
+  "noAccounts": "No hay cuentas aún",
+  "newAccount": "Nueva cuenta",
+  "accountName": "Nombre",
+  "accountDescription": "Descripción",
+  "accountBalance": "Saldo",
+  "listBalanceTotalLabel": "Total",
+  "editAccount": "Editar cuenta",
+  "accountSubmitCreate": "Crear",
+  "deleteAccount": "Eliminar cuenta",
+  "confirmDeleteAccount": "¿Seguro que quieres eliminar «{name}»?",
+  "@confirmDeleteAccount": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "cards": "Tarjetas",
+  "noCards": "No hay tarjetas aún",
+  "newCard": "Nueva tarjeta",
+  "editCard": "Editar tarjeta",
+  "deleteCard": "Eliminar tarjeta",
+  "confirmDeleteCard": "¿Seguro que quieres eliminar «{name}»?",
+  "@confirmDeleteCard": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "cancel": "Cancelar",
+  "save": "Guardar",
+  "delete": "Eliminar",
+  "categories": "Categorías",
+  "noCategories": "No hay categorías aún",
+  "newCategory": "Nueva categoría",
+  "editCategory": "Editar categoría",
+  "deleteCategory": "Eliminar categoría",
+  "confirmDeleteCategory": "¿Seguro que quieres eliminar «{name}»?",
+  "@confirmDeleteCategory": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "tags": "Etiquetas",
+  "noTags": "No hay etiquetas aún",
+  "newTag": "Nueva etiqueta",
+  "editTag": "Editar etiqueta",
+  "deleteTag": "Eliminar etiqueta",
+  "confirmDeleteTag": "¿Seguro que quieres eliminar «{name}»?",
+  "@confirmDeleteTag": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "transactions": "Transacciones",
+  "transactionsSearchTooltip": "Buscar transacciones",
+  "transactionsSearchHint": "Buscar por descripción",
+  "transactionsSearchTypeQuery": "Escribe texto para buscar en todas tus transacciones",
+  "transactionsSearchNoResults": "No hay transacciones que coincidan",
+  "transactionsPickMonth": "Elegir mes",
+  "transactionsPickPreviousYear": "Año anterior",
+  "transactionsPickNextYear": "Año siguiente",
+  "year": "Año",
+  "month": "Mes",
+  "noTransactions": "No hay transacciones aún",
+  "noTransactionsInMonth": "No hay transacciones en {monthYear}",
+  "@noTransactionsInMonth": {
+    "placeholders": {
+      "monthYear": {
+        "type": "String"
+      }
+    }
+  },
+  "newTransaction": "Nueva transacción",
+  "transactionsFabTransfer": "Transferir",
+  "transferSheetTitle": "Transferir entre cuentas",
+  "transferSourceAccount": "Origen",
+  "transferTargetAccount": "Destino",
+  "transferDateLabel": "Fecha",
+  "transferTimeLabel": "Hora",
+  "transferAccountsMustDiffer": "El origen y el destino deben ser cuentas distintas",
+  "transferNeedTwoAccounts": "Añade al menos dos cuentas para transferir dinero entre ellas",
+  "transferAccountSearch": "Buscar por nombre",
+  "transferAccountSearchHint": "Filtrar por nombre de cuenta",
+  "transferAccountSearchNoResults": "Ninguna cuenta coincide con tu búsqueda",
+  "editTransferTitle": "Editar transferencia",
+  "editTransaction": "Editar transacción",
+  "deleteTransaction": "Eliminar transacción",
+  "confirmDeleteTransaction": "¿Seguro que quieres eliminar esta transacción?",
+  "deleteTransferPair": "Eliminar transferencia",
+  "confirmDeleteTransferPair": "Esto eliminará ambos apuntes de la transferencia del registro.",
+  "none": "Ninguno",
+  "transactionDateTime": "Cuándo",
+  "transactionAccount": "Cuenta",
+  "transactionCard": "Tarjeta",
+  "transactionCategory": "Categoría",
+  "transactionTag": "Etiqueta",
+  "transactionAmount": "Importe",
+  "transactionPercentage": "Porcentaje",
+  "transactionIgnore": "Ignorar",
+  "transactionIgnoredBadge": "Ignorado",
+  "transactionAmountValue": "{amount}",
+  "@transactionAmountValue": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "transactionsTotalIncome": "Ingresos",
+  "transactionsTotalOutcome": "Gastos",
+  "transactionsTotalBalance": "Saldo",
+  "transactionsTotalsExcludingIgnoredHint": "Excluyendo transacciones ignoradas"
+}
