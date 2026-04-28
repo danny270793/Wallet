@@ -33,6 +33,21 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settings => 'Settings';
 
   @override
+  String get settingsAppearance => 'Appearance';
+
+  @override
+  String get settingsLanguage => 'Language';
+
+  @override
+  String get settingsLanguageSystem => 'System default';
+
+  @override
+  String get settingsLanguageEnglish => 'English';
+
+  @override
+  String get settingsLanguageSpanish => 'Spanish';
+
+  @override
   String get signOut => 'Sign out';
 
   @override
@@ -143,6 +158,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String get transactions => 'Transactions';
 
   @override
+  String get transactionsSearchTooltip => 'Search transactions';
+
+  @override
+  String get transactionsSearchHint => 'Search by description';
+
+  @override
+  String get transactionsSearchTypeQuery =>
+      'Enter text to search all your transactions';
+
+  @override
+  String get transactionsSearchNoResults => 'No matching transactions';
+
+  @override
   String get transactionsPickMonth => 'Choose month';
 
   @override
@@ -204,6 +232,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get transferAccountSearchNoResults => 'No accounts match your search';
 
   @override
+  String get editTransferTitle => 'Edit transfer';
+
+  @override
   String get editTransaction => 'Edit transaction';
 
   @override
@@ -212,6 +243,13 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get confirmDeleteTransaction =>
       'Are you sure you want to delete this transaction?';
+
+  @override
+  String get deleteTransferPair => 'Delete transfer';
+
+  @override
+  String get confirmDeleteTransferPair =>
+      'This removes both sides of the transfer from the ledger.';
 
   @override
   String get none => 'None';
