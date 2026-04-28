@@ -140,11 +140,59 @@ abstract class AppLocalizations {
   /// **'Monthly dashboard'**
   String get monthlyDashboard;
 
+  /// No description provided for @monthlyDashboardTransactionsListTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Transactions'**
+  String get monthlyDashboardTransactionsListTitle;
+
   /// No description provided for @dashboardIncludeIgnoredInTotals.
   ///
   /// In en, this message translates to:
-  /// **'Include ignored transactions in totals'**
+  /// **'Include ignored transactions'**
   String get dashboardIncludeIgnoredInTotals;
+
+  /// No description provided for @monthlyDashboardTagPieTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Expenses by tag'**
+  String get monthlyDashboardTagPieTitle;
+
+  /// No description provided for @monthlyDashboardCategoryPieTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Expenses by category'**
+  String get monthlyDashboardCategoryPieTitle;
+
+  /// No description provided for @dashboardCategoryPieNoData.
+  ///
+  /// In en, this message translates to:
+  /// **'No categorized expenses to show for this month with the current filter.'**
+  String get dashboardCategoryPieNoData;
+
+  /// No description provided for @dashboardTagPieNoData.
+  ///
+  /// In en, this message translates to:
+  /// **'No amounts to show for this month with the current filter.'**
+  String get dashboardTagPieNoData;
+
+  /// No description provided for @dashboardTagPieFilterTags.
+  ///
+  /// In en, this message translates to:
+  /// **'Filter tags'**
+  String get dashboardTagPieFilterTags;
+
+  /// No description provided for @dashboardTagPieFilterDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose which tags are included in the chart.'**
+  String get dashboardTagPieFilterDescription;
+
+  /// No description provided for @dashboardTagPieNeedOneTag.
+  ///
+  /// In en, this message translates to:
+  /// **'Select at least one tag'**
+  String get dashboardTagPieNeedOneTag;
 
   /// No description provided for @yearlyDashboard.
   ///
