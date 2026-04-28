@@ -1,5 +1,6 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/logger/app_logger.dart';
+import '../../../../core/sort_by_name.dart';
 import '../../domain/entities/account_entity.dart';
 import '../../domain/usecases/get_accounts_usecase.dart';
 import '../../domain/usecases/create_account_usecase.dart';
@@ -32,7 +33,7 @@ class AccountsCubit extends Cubit<AccountsState> {
     AppLogger.debug('loading accounts');
     emit(const AccountsLoading());
     try {
-      final accounts = await _getAccounts();
+      final accounts = sortedByName(await _getAccounts(), (a) => a.name);
       AppLogger.info('accounts loaded: ${accounts.length}');
       emit(AccountsLoaded(accounts));
     } catch (e, s) {
@@ -47,7 +48,7 @@ class AccountsCubit extends Cubit<AccountsState> {
     try {
       await _createAccount(name: name, description: description);
       AppLogger.info('account created');
-      final accounts = await _getAccounts();
+      final accounts = sortedByName(await _getAccounts(), (a) => a.name);
       emit(AccountsLoaded(accounts));
     } catch (e, s) {
       AppLogger.error('failed to create account', e, s);
@@ -70,13 +71,13 @@ class AccountsCubit extends Cubit<AccountsState> {
       if (delta.abs() >= 1e-9) {
         await _adjustBalanceViaTransaction(accountId: id, delta: delta);
       }
-      final accounts = await _getAccounts();
+      final accounts = sortedByName(await _getAccounts(), (a) => a.name);
       AppLogger.info('account updated: $id');
       emit(AccountsLoaded(accounts));
     } catch (e, s) {
       AppLogger.error('failed to update account', e, s);
       try {
-        final reloaded = await _getAccounts();
+        final reloaded = sortedByName(await _getAccounts(), (a) => a.name);
         emit(AccountsActionError(reloaded));
       } catch (_) {
         emit(AccountsActionError(current));
@@ -84,16 +85,20 @@ class AccountsCubit extends Cubit<AccountsState> {
     }
   }
 
-  Future<void> delete({required String id}) async {
+  Future<bool> delete({required String id}) async {
     final current = _currentAccounts();
     AppLogger.debug('deleting account: $id');
     try {
       await _deleteAccount(id: id);
       AppLogger.info('account deleted: $id');
-      emit(AccountsLoaded(current.where((a) => a.id != id).toList()));
+      emit(AccountsLoaded(
+        sortedByName(current.where((a) => a.id != id).toList(), (a) => a.name),
+      ));
+      return true;
     } catch (e, s) {
       AppLogger.error('failed to delete account', e, s);
       emit(AccountsActionError(current));
+      return false;
     }
   }
 
