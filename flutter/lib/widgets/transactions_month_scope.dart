@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 import 'package:wallet/l10n/app_localizations.dart';
+
+import '../features/transactions/presentation/cubit/transactions_cubit.dart';
 
 /// Holds the visible month for the transactions route so [TransactionsMonthAppBarBottom] shares state with the list.
 class TransactionsMonthHost extends StatefulWidget {
@@ -346,4 +349,47 @@ class TransactionsMonthAppBarBottom extends StatelessWidget implements Preferred
       },
     );
   }
+}
+
+/// Loads [TransactionsCubit] for the visible month whenever [TransactionsMonthScope] changes.
+class TransactionsMonthCubitSync extends StatefulWidget {
+  const TransactionsMonthCubitSync({super.key, required this.child});
+
+  final Widget child;
+
+  @override
+  State<TransactionsMonthCubitSync> createState() => _TransactionsMonthCubitSyncState();
+}
+
+class _TransactionsMonthCubitSyncState extends State<TransactionsMonthCubitSync> {
+  ValueNotifier<DateTime>? _notifier;
+  VoidCallback? _listener;
+
+  @override
+  void dispose() {
+    if (_notifier != null && _listener != null) {
+      _notifier!.removeListener(_listener!);
+    }
+    super.dispose();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final notifier = TransactionsMonthScope.of(context);
+    if (_notifier != notifier) {
+      if (_notifier != null && _listener != null) {
+        _notifier!.removeListener(_listener!);
+      }
+      _notifier = notifier;
+      _listener = () {
+        context.read<TransactionsCubit>().loadForMonth(notifier.value);
+      };
+      notifier.addListener(_listener!);
+      context.read<TransactionsCubit>().loadForMonth(notifier.value);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) => widget.child;
 }
