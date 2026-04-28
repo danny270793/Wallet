@@ -41,9 +41,10 @@ class CardsCubit extends Cubit<CardsState> {
     final current = _currentCards();
     AppLogger.debug('creating card: $name');
     try {
-      final card = await _createCard(name: name, description: description);
-      AppLogger.info('card created: ${card.id}');
-      emit(CardsLoaded([...current, card]));
+      await _createCard(name: name, description: description);
+      AppLogger.info('card created');
+      final cards = await _getCards();
+      emit(CardsLoaded(cards));
     } catch (e, s) {
       AppLogger.error('failed to create card', e, s);
       emit(CardsActionError(current));
@@ -54,12 +55,18 @@ class CardsCubit extends Cubit<CardsState> {
     final current = _currentCards();
     AppLogger.debug('updating card: $id');
     try {
-      final updated = await _updateCard(id: id, name: name, description: description);
-      AppLogger.info('card updated: ${updated.id}');
-      emit(CardsLoaded(current.map((a) => a.id == id ? updated : a).toList()));
+      await _updateCard(id: id, name: name, description: description);
+      AppLogger.info('card updated: $id');
+      final cards = await _getCards();
+      emit(CardsLoaded(cards));
     } catch (e, s) {
       AppLogger.error('failed to update card', e, s);
-      emit(CardsActionError(current));
+      try {
+        final reloaded = await _getCards();
+        emit(CardsActionError(reloaded));
+      } catch (_) {
+        emit(CardsActionError(current));
+      }
     }
   }
 
