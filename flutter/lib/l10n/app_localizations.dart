@@ -196,6 +196,42 @@ abstract class AppLocalizations {
   /// **'Are you sure you want to delete \"{name}\"?'**
   String confirmDeleteAccount(String name);
 
+  /// No description provided for @cards.
+  ///
+  /// In en, this message translates to:
+  /// **'Cards'**
+  String get cards;
+
+  /// No description provided for @noCards.
+  ///
+  /// In en, this message translates to:
+  /// **'No cards yet'**
+  String get noCards;
+
+  /// No description provided for @newCard.
+  ///
+  /// In en, this message translates to:
+  /// **'New card'**
+  String get newCard;
+
+  /// No description provided for @editCard.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit card'**
+  String get editCard;
+
+  /// No description provided for @deleteCard.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete card'**
+  String get deleteCard;
+
+  /// No description provided for @confirmDeleteCard.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to delete \"{name}\"?'**
+  String confirmDeleteCard(String name);
+
   /// No description provided for @cancel.
   ///
   /// In en, this message translates to:
