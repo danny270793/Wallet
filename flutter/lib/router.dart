@@ -18,7 +18,7 @@ final router = GoRouter(
     final loc = state.matchedLocation;
 
     if (loc == '/') {
-      return session != null ? '/dashboard' : '/login';
+      return session != null ? '/transactions' : '/login';
     }
 
     if (session == null && loc != '/login') {
