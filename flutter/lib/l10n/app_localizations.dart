@@ -400,6 +400,48 @@ abstract class AppLocalizations {
   /// **'Transfer'**
   String get transactionsFabTransfer;
 
+  /// No description provided for @transferSheetTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Transfer between accounts'**
+  String get transferSheetTitle;
+
+  /// No description provided for @transferSourceAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Source'**
+  String get transferSourceAccount;
+
+  /// No description provided for @transferTargetAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Target'**
+  String get transferTargetAccount;
+
+  /// No description provided for @transferDateLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Date'**
+  String get transferDateLabel;
+
+  /// No description provided for @transferTimeLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Time'**
+  String get transferTimeLabel;
+
+  /// No description provided for @transferAccountsMustDiffer.
+  ///
+  /// In en, this message translates to:
+  /// **'Source and target must be different accounts'**
+  String get transferAccountsMustDiffer;
+
+  /// No description provided for @transferNeedTwoAccounts.
+  ///
+  /// In en, this message translates to:
+  /// **'Add at least two accounts to transfer money between them'**
+  String get transferNeedTwoAccounts;
+
   /// No description provided for @editTransaction.
   ///
   /// In en, this message translates to:
