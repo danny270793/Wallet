@@ -15,6 +15,14 @@ import '../../features/accounts/domain/usecases/create_account_usecase.dart';
 import '../../features/accounts/domain/usecases/update_account_usecase.dart';
 import '../../features/accounts/domain/usecases/delete_account_usecase.dart';
 import '../../features/accounts/presentation/cubit/accounts_cubit.dart';
+import '../../features/cards/data/datasources/cards_remote_datasource.dart';
+import '../../features/cards/data/repositories/cards_repository_impl.dart';
+import '../../features/cards/domain/repositories/cards_repository.dart';
+import '../../features/cards/domain/usecases/get_cards_usecase.dart';
+import '../../features/cards/domain/usecases/create_card_usecase.dart';
+import '../../features/cards/domain/usecases/update_card_usecase.dart';
+import '../../features/cards/domain/usecases/delete_card_usecase.dart';
+import '../../features/cards/presentation/cubit/cards_cubit.dart';
 import '../../features/categories/data/datasources/categories_remote_datasource.dart';
 import '../../features/categories/data/repositories/categories_repository_impl.dart';
 import '../../features/categories/domain/repositories/categories_repository.dart';
@@ -64,6 +72,26 @@ void setupDi() {
       createAccount: getIt(),
       updateAccount: getIt(),
       deleteAccount: getIt(),
+    ),
+  );
+
+  // cards
+  getIt.registerLazySingleton<CardsRemoteDatasource>(
+    () => CardsSupabaseDatasource(Supabase.instance.client),
+  );
+  getIt.registerLazySingleton<CardsRepository>(
+    () => CardsRepositoryImpl(getIt()),
+  );
+  getIt.registerFactory<GetCardsUsecase>(() => GetCardsUsecase(getIt()));
+  getIt.registerFactory<CreateCardUsecase>(() => CreateCardUsecase(getIt()));
+  getIt.registerFactory<UpdateCardUsecase>(() => UpdateCardUsecase(getIt()));
+  getIt.registerFactory<DeleteCardUsecase>(() => DeleteCardUsecase(getIt()));
+  getIt.registerFactory<CardsCubit>(
+    () => CardsCubit(
+      getCards: getIt(),
+      createCard: getIt(),
+      updateCard: getIt(),
+      deleteCard: getIt(),
     ),
   );
 
