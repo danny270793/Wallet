@@ -114,13 +114,7 @@ class _YearlyDashboardViewState extends State<_YearlyDashboardView> {
                                   ),
                             ),
                           ),
-                        YearlyWeightedIncomeBarChart(
-                          l10n: l10n,
-                          year: y,
-                          transactions: transactions,
-                          includeIgnored: _includeIgnored,
-                        ),
-                        YearlyWeightedOutcomeBarChart(
+                        YearlyCumulativeNetBarChart(
                           l10n: l10n,
                           year: y,
                           transactions: transactions,
@@ -132,7 +126,13 @@ class _YearlyDashboardViewState extends State<_YearlyDashboardView> {
                           transactions: transactions,
                           includeIgnored: _includeIgnored,
                         ),
-                        YearlyCumulativeNetBarChart(
+                        YearlyWeightedIncomeBarChart(
+                          l10n: l10n,
+                          year: y,
+                          transactions: transactions,
+                          includeIgnored: _includeIgnored,
+                        ),
+                        YearlyWeightedOutcomeBarChart(
                           l10n: l10n,
                           year: y,
                           transactions: transactions,
