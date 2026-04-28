@@ -334,6 +334,12 @@ abstract class AppLocalizations {
   /// **'No transactions yet'**
   String get noTransactions;
 
+  /// No description provided for @noTransactionsInMonth.
+  ///
+  /// In en, this message translates to:
+  /// **'No transactions in {monthYear}'**
+  String noTransactionsInMonth(String monthYear);
+
   /// No description provided for @newTransaction.
   ///
   /// In en, this message translates to:
