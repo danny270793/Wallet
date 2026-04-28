@@ -46,6 +46,7 @@ import '../../features/transactions/data/repositories/transactions_repository_im
 import '../../features/transactions/domain/repositories/transactions_repository.dart';
 import '../../features/transactions/domain/usecases/get_transactions_usecase.dart';
 import '../../features/transactions/domain/usecases/create_transaction_usecase.dart';
+import '../../features/transactions/domain/usecases/create_account_transfer_usecase.dart';
 import '../../features/transactions/domain/usecases/update_transaction_usecase.dart';
 import '../../features/transactions/domain/usecases/delete_transaction_usecase.dart';
 import '../../features/transactions/presentation/cubit/transactions_cubit.dart';
@@ -174,6 +175,7 @@ void setupDi() {
   );
   getIt.registerFactory<GetTransactionsUsecase>(() => GetTransactionsUsecase(getIt()));
   getIt.registerFactory<CreateTransactionUsecase>(() => CreateTransactionUsecase(getIt()));
+  getIt.registerFactory<CreateAccountTransferUsecase>(() => CreateAccountTransferUsecase(getIt()));
   getIt.registerFactory<UpdateTransactionUsecase>(() => UpdateTransactionUsecase(getIt()));
   getIt.registerFactory<DeleteTransactionUsecase>(() => DeleteTransactionUsecase(getIt()));
   getIt.registerFactory<TransactionsCubit>(
@@ -182,6 +184,7 @@ void setupDi() {
       createTransaction: getIt(),
       updateTransaction: getIt(),
       deleteTransaction: getIt(),
+      createAccountTransfer: getIt(),
     ),
   );
 }
