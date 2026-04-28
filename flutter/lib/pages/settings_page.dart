@@ -147,6 +147,10 @@ class SettingsPage extends StatelessWidget {
                     final ctrl = getIt<AppLocaleController>();
                     return ListTile(
                       contentPadding: EdgeInsets.zero,
+                      leading: Icon(
+                        Icons.language_outlined,
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
                       title: Text(l10n.settingsLanguage),
                       subtitle: Text(
                         _languageOptionLabel(l10n, ctrl.preference),
@@ -162,6 +166,10 @@ class SettingsPage extends StatelessWidget {
                     final ctrl = getIt<AppThemeController>();
                     return ListTile(
                       contentPadding: EdgeInsets.zero,
+                      leading: Icon(
+                        Icons.palette_outlined,
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
                       title: Text(l10n.settingsTheme),
                       subtitle: Text(
                         _themeOptionLabel(l10n, ctrl.preference),
@@ -171,7 +179,10 @@ class SettingsPage extends StatelessWidget {
                     );
                   },
                 ),
-                const SizedBox(height: 24),
+                const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 16),
+                  child: Divider(height: 1),
+                ),
                 Text(
                   l10n.settingsAboutSection,
                   style: theme.textTheme.titleMedium?.copyWith(
@@ -181,47 +192,66 @@ class SettingsPage extends StatelessWidget {
                 const SizedBox(height: 12),
                 ListTile(
                   contentPadding: EdgeInsets.zero,
+                  leading: Icon(
+                    Icons.info_outline_rounded,
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
                   title: Text(l10n.settingsAboutApp),
                   trailing: const Icon(Icons.chevron_right),
                   onTap: () => context.push('/settings/about'),
                 ),
                 ListTile(
                   contentPadding: EdgeInsets.zero,
+                  leading: Icon(
+                    Icons.privacy_tip_outlined,
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
                   title: Text(l10n.settingsPrivacyPolicy),
                   trailing: const Icon(Icons.chevron_right),
                   onTap: () => context.push('/settings/privacy'),
                 ),
                 ListTile(
                   contentPadding: EdgeInsets.zero,
+                  leading: Icon(
+                    Icons.description_outlined,
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
                   title: Text(l10n.settingsTermsOfUse),
                   trailing: const Icon(Icons.chevron_right),
                   onTap: () => context.push('/settings/terms'),
                 ),
-                const SizedBox(height: 24),
+                const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 16),
+                  child: Divider(height: 1),
+                ),
                 BlocBuilder<SettingsCubit, SettingsState>(
                   builder: (context, state) {
+                    final signOutStyle = FilledButton.styleFrom(
+                      backgroundColor: theme.colorScheme.error,
+                      foregroundColor: theme.colorScheme.onError,
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                    );
                     return SizedBox(
                       width: double.infinity,
-                      child: FilledButton(
-                        style: FilledButton.styleFrom(
-                          backgroundColor: theme.colorScheme.error,
-                          foregroundColor: theme.colorScheme.onError,
-                          padding: const EdgeInsets.symmetric(vertical: 14),
-                        ),
-                        onPressed: state is SettingsLoading
-                            ? null
-                            : () => context.read<SettingsCubit>().signOut(),
-                        child: state is SettingsLoading
-                            ? SizedBox(
+                      child: state is SettingsLoading
+                          ? FilledButton(
+                              style: signOutStyle,
+                              onPressed: null,
+                              child: SizedBox(
                                 height: 20,
                                 width: 20,
                                 child: CircularProgressIndicator(
                                   strokeWidth: 2,
                                   color: theme.colorScheme.onError,
                                 ),
-                              )
-                            : Text(l10n.signOut),
-                      ),
+                              ),
+                            )
+                          : FilledButton.icon(
+                              style: signOutStyle,
+                              onPressed: () => context.read<SettingsCubit>().signOut(),
+                              icon: const Icon(Icons.logout_rounded),
+                              label: Text(l10n.signOut),
+                            ),
                     );
                   },
                 ),
