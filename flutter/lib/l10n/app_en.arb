@@ -8,5 +8,6 @@
   "unexpectedError": "An unexpected error occurred",
   "dashboard": "Dashboard",
   "settings": "Settings",
-  "signOut": "Sign out"
+  "signOut": "Sign out",
+  "accounts": "Accounts"
 }
