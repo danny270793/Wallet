@@ -328,6 +328,36 @@ abstract class AppLocalizations {
   /// **'Transactions'**
   String get transactions;
 
+  /// No description provided for @transactionsPickMonth.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose month'**
+  String get transactionsPickMonth;
+
+  /// No description provided for @transactionsPickPreviousYear.
+  ///
+  /// In en, this message translates to:
+  /// **'Previous year'**
+  String get transactionsPickPreviousYear;
+
+  /// No description provided for @transactionsPickNextYear.
+  ///
+  /// In en, this message translates to:
+  /// **'Next year'**
+  String get transactionsPickNextYear;
+
+  /// No description provided for @year.
+  ///
+  /// In en, this message translates to:
+  /// **'Year'**
+  String get year;
+
+  /// No description provided for @month.
+  ///
+  /// In en, this message translates to:
+  /// **'Month'**
+  String get month;
+
   /// No description provided for @noTransactions.
   ///
   /// In en, this message translates to:
