@@ -60,11 +60,19 @@ List<_GroupedTxRow> _groupTransactionsByDay(List<TransactionEntity> list) {
 }
 
 class TransactionsPage extends StatelessWidget {
-  const TransactionsPage({super.key, this.accountIdFilter, this.accountNameFilter});
+  const TransactionsPage({
+    super.key,
+    this.accountIdFilter,
+    this.accountNameFilter,
+    this.cardIdFilter,
+    this.cardNameFilter,
+  });
 
   /// When set, only transactions for this account are shown (current month still applies).
   final String? accountIdFilter;
   final String? accountNameFilter;
+  final String? cardIdFilter;
+  final String? cardNameFilter;
 
   @override
   Widget build(BuildContext context) {
@@ -75,6 +83,8 @@ class TransactionsPage extends StatelessWidget {
           child: _TransactionsView(
             accountIdFilter: accountIdFilter,
             accountNameFilter: accountNameFilter,
+            cardIdFilter: cardIdFilter,
+            cardNameFilter: cardNameFilter,
           ),
         ),
       ),
@@ -126,24 +136,37 @@ class _TransactionsMonthLoadSyncState extends State<_TransactionsMonthLoadSync> 
 }
 
 class _TransactionsView extends StatelessWidget {
-  const _TransactionsView({this.accountIdFilter, this.accountNameFilter});
+  const _TransactionsView({
+    this.accountIdFilter,
+    this.accountNameFilter,
+    this.cardIdFilter,
+    this.cardNameFilter,
+  });
 
   final String? accountIdFilter;
   final String? accountNameFilter;
+  final String? cardIdFilter;
+  final String? cardNameFilter;
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final monthNotifier = TransactionsMonthScope.of(context);
-    final title = (accountNameFilter != null && accountNameFilter!.isNotEmpty)
-        ? '${accountNameFilter!} · ${l10n.transactions}'
-        : l10n.transactions;
+    final String title;
+    if (accountNameFilter != null && accountNameFilter!.isNotEmpty) {
+      title = '${accountNameFilter!} · ${l10n.transactions}';
+    } else if (cardNameFilter != null && cardNameFilter!.isNotEmpty) {
+      title = '${cardNameFilter!} · ${l10n.transactions}';
+    } else {
+      title = l10n.transactions;
+    }
 
-    final isAccountScoped = accountIdFilter != null && accountIdFilter!.isNotEmpty;
+    final isScoped = (accountIdFilter != null && accountIdFilter!.isNotEmpty) ||
+        (cardIdFilter != null && cardIdFilter!.isNotEmpty);
 
     return ShellScaffold(
       title: title,
-      useDrawer: !isAccountScoped,
+      useDrawer: !isScoped,
       appBarBottom: TransactionsMonthAppBarBottom(notifier: monthNotifier),
       body: BlocConsumer<TransactionsCubit, TransactionsState>(
         listener: (context, state) {
@@ -164,7 +187,13 @@ class _TransactionsView extends StatelessWidget {
                     right: 16,
                     bottom: 16,
                     child: FloatingActionButton(
-                      onPressed: () => _showTxDialog(context, l10n, null, accountIdFilter),
+                      onPressed: () => _showTxDialog(
+                        context,
+                        l10n,
+                        null,
+                        accountIdFilter,
+                        cardIdFilter,
+                      ),
                       child: const Icon(Icons.add),
                     ),
                   ),
@@ -235,9 +264,13 @@ class _TransactionsView extends StatelessWidget {
       _ => <TransactionEntity>[],
     };
 
-    final list = accountIdFilter == null
-        ? rawList
-        : rawList.where((t) => t.accountId == accountIdFilter).toList();
+    var list = rawList;
+    if (accountIdFilter != null && accountIdFilter!.isNotEmpty) {
+      list = list.where((t) => t.accountId == accountIdFilter).toList();
+    }
+    if (cardIdFilter != null && cardIdFilter!.isNotEmpty) {
+      list = list.where((t) => t.cardId == cardIdFilter).toList();
+    }
 
     return _monthListBody(context, l10n, visibleMonth, list, refresh);
   }
@@ -290,6 +323,7 @@ class _TransactionsView extends StatelessWidget {
     AppLocalizations l10n, [
     TransactionEntity? tx,
     String? preferredAccountId,
+    String? preferredCardId,
   ]) {
     showDialog<void>(
       context: context,
@@ -298,6 +332,7 @@ class _TransactionsView extends StatelessWidget {
         l10n: l10n,
         transaction: tx,
         preferredAccountId: preferredAccountId,
+        preferredCardId: preferredCardId,
       ),
     );
   }
@@ -479,12 +514,14 @@ class _TransactionDialog extends StatefulWidget {
   final AppLocalizations l10n;
   final TransactionEntity? transaction;
   final String? preferredAccountId;
+  final String? preferredCardId;
 
   const _TransactionDialog({
     required this.cubit,
     required this.l10n,
     this.transaction,
     this.preferredAccountId,
+    this.preferredCardId,
   });
 
   @override
@@ -521,7 +558,7 @@ class _TransactionDialogState extends State<_TransactionDialog> {
     _descriptionController = TextEditingController(text: t?.description ?? '');
     _ignore = t?.ignore ?? false;
     _accountId = t?.accountId ?? widget.preferredAccountId;
-    _cardId = t?.cardId;
+    _cardId = t?.cardId ?? widget.preferredCardId;
     _categoryId = t?.categoryId;
     _tagId = t?.tagId;
     _loadLookups();
