@@ -30,6 +30,10 @@ class AppLocalizationsEs extends AppLocalizations {
   String get monthlyDashboard => 'Panel mensual';
 
   @override
+  String get dashboardIncludeIgnoredInTotals =>
+      'Incluir transacciones ignoradas en los totales';
+
+  @override
   String get yearlyDashboard => 'Panel anual';
 
   @override
