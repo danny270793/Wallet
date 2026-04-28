@@ -2,6 +2,7 @@ import '../entities/transaction_entity.dart';
 
 abstract class TransactionsRepository {
   Future<List<TransactionEntity>> getTransactionsForMonth(DateTime monthStartLocal);
+  Future<Map<String, double>> sumTransactionValuesByAccountId();
   Future<TransactionEntity> createTransaction({
     String? accountId,
     String? cardId,
