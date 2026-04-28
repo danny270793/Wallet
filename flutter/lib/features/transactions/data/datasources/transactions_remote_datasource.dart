@@ -3,7 +3,8 @@ import '../../../../core/logger/app_logger.dart';
 import '../../domain/entities/transaction_entity.dart';
 
 abstract class TransactionsRemoteDatasource {
-  Future<List<TransactionEntity>> getTransactions();
+  /// [monthStartLocal] normalized to local calendar day 1; range is \[start local, next month local).
+  Future<List<TransactionEntity>> getTransactionsForMonth(DateTime monthStartLocal);
   Future<TransactionEntity> createTransaction({
     String? accountId,
     String? cardId,
@@ -44,12 +45,20 @@ wallet_tags(name)
 ''';
 
   @override
-  Future<List<TransactionEntity>> getTransactions() async {
-    AppLogger.debug('getTransactions called');
+  Future<List<TransactionEntity>> getTransactionsForMonth(DateTime monthStartLocal) async {
+    final y = monthStartLocal.year;
+    final m = monthStartLocal.month;
+    final startLocal = DateTime(y, m, 1);
+    final endExclusiveLocal = DateTime(y, m + 1, 1);
+    final startUtc = startLocal.toUtc().toIso8601String();
+    final endUtc = endExclusiveLocal.toUtc().toIso8601String();
+    AppLogger.debug('getTransactionsForMonth utc: $startUtc .. $endUtc');
     final data = await _client
         .from('wallet_transactions')
         .select(_transactionSelectEmbedded)
         .isFilter('deletedAt', null)
+        .gte('transactedAt', startUtc)
+        .lt('transactedAt', endUtc)
         .order('transactedAt', ascending: false);
     return (data as List).map((e) => TransactionEntity.fromJson(e as Map<String, dynamic>)).toList();
   }
