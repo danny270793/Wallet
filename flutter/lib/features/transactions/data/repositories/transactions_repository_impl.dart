@@ -11,6 +11,10 @@ class TransactionsRepositoryImpl implements TransactionsRepository {
       _datasource.getTransactionsForMonth(monthStartLocal);
 
   @override
+  Future<Map<String, double>> sumTransactionValuesByAccountId() =>
+      _datasource.sumTransactionValuesByAccountId();
+
+  @override
   Future<TransactionEntity> createTransaction({
     String? accountId,
     String? cardId,
