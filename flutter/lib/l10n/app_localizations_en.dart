@@ -69,4 +69,44 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get delete => 'Delete';
+
+  @override
+  String get categories => 'Categories';
+
+  @override
+  String get noCategories => 'No categories yet';
+
+  @override
+  String get newCategory => 'New category';
+
+  @override
+  String get editCategory => 'Edit category';
+
+  @override
+  String get deleteCategory => 'Delete category';
+
+  @override
+  String confirmDeleteCategory(String name) {
+    return 'Are you sure you want to delete \"$name\"?';
+  }
+
+  @override
+  String get tags => 'Tags';
+
+  @override
+  String get noTags => 'No tags yet';
+
+  @override
+  String get newTag => 'New tag';
+
+  @override
+  String get editTag => 'Edit tag';
+
+  @override
+  String get deleteTag => 'Delete tag';
+
+  @override
+  String confirmDeleteTag(String name) {
+    return 'Are you sure you want to delete \"$name\"?';
+  }
 }
