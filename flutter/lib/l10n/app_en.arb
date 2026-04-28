@@ -65,5 +65,28 @@
         "type": "String"
       }
     }
+  },
+  "transactions": "Transactions",
+  "noTransactions": "No transactions yet",
+  "newTransaction": "New transaction",
+  "editTransaction": "Edit transaction",
+  "deleteTransaction": "Delete transaction",
+  "confirmDeleteTransaction": "Are you sure you want to delete this transaction?",
+  "none": "None",
+  "transactionDateTime": "When",
+  "transactionAccount": "Account",
+  "transactionCard": "Card",
+  "transactionCategory": "Category",
+  "transactionTag": "Tag",
+  "transactionAmount": "Amount",
+  "transactionPercentage": "Percentage",
+  "transactionIgnore": "Ignore",
+  "transactionAmountValue": "{amount}",
+  "@transactionAmountValue": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
   }
 }

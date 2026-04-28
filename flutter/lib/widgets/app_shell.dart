@@ -38,6 +38,8 @@ class AppShell extends StatelessWidget {
                 drawerContext.go('/categories');
               case 4:
                 drawerContext.go('/tags');
+              case 5:
+                drawerContext.go('/transactions');
             }
           },
           children: [
@@ -66,6 +68,11 @@ class AppShell extends StatelessWidget {
               selectedIcon: const Icon(Icons.label),
               label: Text(l10n.tags),
             ),
+            NavigationDrawerDestination(
+              icon: const Icon(Icons.receipt_long_outlined),
+              selectedIcon: const Icon(Icons.receipt_long),
+              label: Text(l10n.transactions),
+            ),
           ],
         ),
       ),
@@ -78,6 +85,7 @@ class AppShell extends StatelessWidget {
     if (location.startsWith('/cards')) return 2;
     if (location.startsWith('/categories')) return 3;
     if (location.startsWith('/tags')) return 4;
+    if (location.startsWith('/transactions')) return 5;
     return 0;
   }
 
@@ -86,6 +94,7 @@ class AppShell extends StatelessWidget {
     if (location.startsWith('/cards')) return l10n.cards;
     if (location.startsWith('/categories')) return l10n.categories;
     if (location.startsWith('/tags')) return l10n.tags;
+    if (location.startsWith('/transactions')) return l10n.transactions;
     return l10n.dashboard;
   }
 }

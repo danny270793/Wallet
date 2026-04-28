@@ -7,6 +7,7 @@ import 'pages/accounts_page.dart';
 import 'pages/cards_page.dart';
 import 'pages/categories_page.dart';
 import 'pages/tags_page.dart';
+import 'pages/transactions_page.dart';
 import 'pages/settings_page.dart';
 import 'widgets/app_shell.dart';
 
@@ -38,6 +39,7 @@ final router = GoRouter(
         GoRoute(path: '/cards', builder: (context, state) => const CardsPage()),
         GoRoute(path: '/categories', builder: (context, state) => const CategoriesPage()),
         GoRoute(path: '/tags', builder: (context, state) => const TagsPage()),
+        GoRoute(path: '/transactions', builder: (context, state) => const TransactionsPage()),
       ],
     ),
   ],

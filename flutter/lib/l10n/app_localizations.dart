@@ -321,6 +321,102 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Are you sure you want to delete \"{name}\"?'**
   String confirmDeleteTag(String name);
+
+  /// No description provided for @transactions.
+  ///
+  /// In en, this message translates to:
+  /// **'Transactions'**
+  String get transactions;
+
+  /// No description provided for @noTransactions.
+  ///
+  /// In en, this message translates to:
+  /// **'No transactions yet'**
+  String get noTransactions;
+
+  /// No description provided for @newTransaction.
+  ///
+  /// In en, this message translates to:
+  /// **'New transaction'**
+  String get newTransaction;
+
+  /// No description provided for @editTransaction.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit transaction'**
+  String get editTransaction;
+
+  /// No description provided for @deleteTransaction.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete transaction'**
+  String get deleteTransaction;
+
+  /// No description provided for @confirmDeleteTransaction.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to delete this transaction?'**
+  String get confirmDeleteTransaction;
+
+  /// No description provided for @none.
+  ///
+  /// In en, this message translates to:
+  /// **'None'**
+  String get none;
+
+  /// No description provided for @transactionDateTime.
+  ///
+  /// In en, this message translates to:
+  /// **'When'**
+  String get transactionDateTime;
+
+  /// No description provided for @transactionAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Account'**
+  String get transactionAccount;
+
+  /// No description provided for @transactionCard.
+  ///
+  /// In en, this message translates to:
+  /// **'Card'**
+  String get transactionCard;
+
+  /// No description provided for @transactionCategory.
+  ///
+  /// In en, this message translates to:
+  /// **'Category'**
+  String get transactionCategory;
+
+  /// No description provided for @transactionTag.
+  ///
+  /// In en, this message translates to:
+  /// **'Tag'**
+  String get transactionTag;
+
+  /// No description provided for @transactionAmount.
+  ///
+  /// In en, this message translates to:
+  /// **'Amount'**
+  String get transactionAmount;
+
+  /// No description provided for @transactionPercentage.
+  ///
+  /// In en, this message translates to:
+  /// **'Percentage'**
+  String get transactionPercentage;
+
+  /// No description provided for @transactionIgnore.
+  ///
+  /// In en, this message translates to:
+  /// **'Ignore'**
+  String get transactionIgnore;
+
+  /// No description provided for @transactionAmountValue.
+  ///
+  /// In en, this message translates to:
+  /// **'{amount}'**
+  String transactionAmountValue(String amount);
 }
 
 class _AppLocalizationsDelegate

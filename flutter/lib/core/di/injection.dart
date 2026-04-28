@@ -39,6 +39,14 @@ import '../../features/tags/domain/usecases/create_tag_usecase.dart';
 import '../../features/tags/domain/usecases/update_tag_usecase.dart';
 import '../../features/tags/domain/usecases/delete_tag_usecase.dart';
 import '../../features/tags/presentation/cubit/tags_cubit.dart';
+import '../../features/transactions/data/datasources/transactions_remote_datasource.dart';
+import '../../features/transactions/data/repositories/transactions_repository_impl.dart';
+import '../../features/transactions/domain/repositories/transactions_repository.dart';
+import '../../features/transactions/domain/usecases/get_transactions_usecase.dart';
+import '../../features/transactions/domain/usecases/create_transaction_usecase.dart';
+import '../../features/transactions/domain/usecases/update_transaction_usecase.dart';
+import '../../features/transactions/domain/usecases/delete_transaction_usecase.dart';
+import '../../features/transactions/presentation/cubit/transactions_cubit.dart';
 
 final getIt = GetIt.instance;
 
@@ -132,6 +140,26 @@ void setupDi() {
       createTag: getIt(),
       updateTag: getIt(),
       deleteTag: getIt(),
+    ),
+  );
+
+  // transactions
+  getIt.registerLazySingleton<TransactionsRemoteDatasource>(
+    () => TransactionsSupabaseDatasource(Supabase.instance.client),
+  );
+  getIt.registerLazySingleton<TransactionsRepository>(
+    () => TransactionsRepositoryImpl(getIt()),
+  );
+  getIt.registerFactory<GetTransactionsUsecase>(() => GetTransactionsUsecase(getIt()));
+  getIt.registerFactory<CreateTransactionUsecase>(() => CreateTransactionUsecase(getIt()));
+  getIt.registerFactory<UpdateTransactionUsecase>(() => UpdateTransactionUsecase(getIt()));
+  getIt.registerFactory<DeleteTransactionUsecase>(() => DeleteTransactionUsecase(getIt()));
+  getIt.registerFactory<TransactionsCubit>(
+    () => TransactionsCubit(
+      getTransactions: getIt(),
+      createTransaction: getIt(),
+      updateTransaction: getIt(),
+      deleteTransaction: getIt(),
     ),
   );
 }
