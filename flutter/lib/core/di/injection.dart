@@ -15,6 +15,22 @@ import '../../features/accounts/domain/usecases/create_account_usecase.dart';
 import '../../features/accounts/domain/usecases/update_account_usecase.dart';
 import '../../features/accounts/domain/usecases/delete_account_usecase.dart';
 import '../../features/accounts/presentation/cubit/accounts_cubit.dart';
+import '../../features/categories/data/datasources/categories_remote_datasource.dart';
+import '../../features/categories/data/repositories/categories_repository_impl.dart';
+import '../../features/categories/domain/repositories/categories_repository.dart';
+import '../../features/categories/domain/usecases/get_categories_usecase.dart';
+import '../../features/categories/domain/usecases/create_category_usecase.dart';
+import '../../features/categories/domain/usecases/update_category_usecase.dart';
+import '../../features/categories/domain/usecases/delete_category_usecase.dart';
+import '../../features/categories/presentation/cubit/categories_cubit.dart';
+import '../../features/tags/data/datasources/tags_remote_datasource.dart';
+import '../../features/tags/data/repositories/tags_repository_impl.dart';
+import '../../features/tags/domain/repositories/tags_repository.dart';
+import '../../features/tags/domain/usecases/get_tags_usecase.dart';
+import '../../features/tags/domain/usecases/create_tag_usecase.dart';
+import '../../features/tags/domain/usecases/update_tag_usecase.dart';
+import '../../features/tags/domain/usecases/delete_tag_usecase.dart';
+import '../../features/tags/presentation/cubit/tags_cubit.dart';
 
 final getIt = GetIt.instance;
 
@@ -48,6 +64,46 @@ void setupDi() {
       createAccount: getIt(),
       updateAccount: getIt(),
       deleteAccount: getIt(),
+    ),
+  );
+
+  // categories
+  getIt.registerLazySingleton<CategoriesRemoteDatasource>(
+    () => CategoriesSupabaseDatasource(Supabase.instance.client),
+  );
+  getIt.registerLazySingleton<CategoriesRepository>(
+    () => CategoriesRepositoryImpl(getIt()),
+  );
+  getIt.registerFactory<GetCategoriesUsecase>(() => GetCategoriesUsecase(getIt()));
+  getIt.registerFactory<CreateCategoryUsecase>(() => CreateCategoryUsecase(getIt()));
+  getIt.registerFactory<UpdateCategoryUsecase>(() => UpdateCategoryUsecase(getIt()));
+  getIt.registerFactory<DeleteCategoryUsecase>(() => DeleteCategoryUsecase(getIt()));
+  getIt.registerFactory<CategoriesCubit>(
+    () => CategoriesCubit(
+      getCategories: getIt(),
+      createCategory: getIt(),
+      updateCategory: getIt(),
+      deleteCategory: getIt(),
+    ),
+  );
+
+  // tags
+  getIt.registerLazySingleton<TagsRemoteDatasource>(
+    () => TagsSupabaseDatasource(Supabase.instance.client),
+  );
+  getIt.registerLazySingleton<TagsRepository>(
+    () => TagsRepositoryImpl(getIt()),
+  );
+  getIt.registerFactory<GetTagsUsecase>(() => GetTagsUsecase(getIt()));
+  getIt.registerFactory<CreateTagUsecase>(() => CreateTagUsecase(getIt()));
+  getIt.registerFactory<UpdateTagUsecase>(() => UpdateTagUsecase(getIt()));
+  getIt.registerFactory<DeleteTagUsecase>(() => DeleteTagUsecase(getIt()));
+  getIt.registerFactory<TagsCubit>(
+    () => TagsCubit(
+      getTags: getIt(),
+      createTag: getIt(),
+      updateTag: getIt(),
+      deleteTag: getIt(),
     ),
   );
 }
