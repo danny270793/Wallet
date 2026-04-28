@@ -60,6 +60,17 @@ class AppLocalizationsEn extends AppLocalizations {
   String get dashboardTagPieNeedOneTag => 'Select at least one tag';
 
   @override
+  String get dashboardCategoryPieFilterCategories => 'Filter categories';
+
+  @override
+  String get dashboardCategoryPieFilterDescription =>
+      'Choose which categories are included in the chart.';
+
+  @override
+  String get dashboardCategoryPieNeedOneCategory =>
+      'Select at least one category';
+
+  @override
   String get yearlyDashboard => 'Yearly dashboard';
 
   @override
