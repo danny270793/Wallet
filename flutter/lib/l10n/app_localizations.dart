@@ -394,6 +394,12 @@ abstract class AppLocalizations {
   /// **'New transaction'**
   String get newTransaction;
 
+  /// No description provided for @transactionsFabTransfer.
+  ///
+  /// In en, this message translates to:
+  /// **'Transfer'**
+  String get transactionsFabTransfer;
+
   /// No description provided for @editTransaction.
   ///
   /// In en, this message translates to:
