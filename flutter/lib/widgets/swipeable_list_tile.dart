@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 /// Row actions via horizontal swipe only (no tap on the row).
 ///
 /// LTR: swipe **right → left** (finger moves left) = [onEdit] (row stays).
-/// Swipe **left → right** = [confirmDelete]; if true, row dismisses and [onDeleted] runs.
+/// Swipe **left → right** = [confirmDelete] then [onDelete]; row dismisses only if both succeed.
 class SwipeableListTile extends StatelessWidget {
   const SwipeableListTile({
     super.key,
@@ -16,7 +16,7 @@ class SwipeableListTile extends StatelessWidget {
     this.enabled = true,
     required this.onEdit,
     required this.confirmDelete,
-    required this.onDeleted,
+    required this.onDelete,
   });
 
   final String itemKey;
@@ -30,7 +30,8 @@ class SwipeableListTile extends StatelessWidget {
   final VoidCallback onEdit;
   /// Return true to allow delete dismiss after user confirms in dialog.
   final Future<bool> Function() confirmDelete;
-  final VoidCallback onDeleted;
+  /// Runs after [confirmDelete] returns true. Return false to keep the row (e.g. server delete failed).
+  final Future<bool> Function() onDelete;
 
   @override
   Widget build(BuildContext context) {
@@ -63,15 +64,12 @@ class SwipeableListTile extends StatelessWidget {
             return false;
           }
           if (direction == DismissDirection.startToEnd) {
-            return await confirmDelete();
+            if (!await confirmDelete()) return false;
+            return await onDelete();
           }
           return false;
         },
-        onDismissed: (direction) {
-          if (direction == DismissDirection.startToEnd) {
-            onDeleted();
-          }
-        },
+        onDismissed: (_) {},
         movementDuration: const Duration(milliseconds: 260),
         background: DecoratedBox(
           decoration: BoxDecoration(
