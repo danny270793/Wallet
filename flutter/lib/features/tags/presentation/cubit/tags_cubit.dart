@@ -1,5 +1,6 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/logger/app_logger.dart';
+import '../../../../core/sort_by_name.dart';
 import '../../domain/entities/tag_entity.dart';
 import '../../domain/usecases/get_tags_usecase.dart';
 import '../../domain/usecases/create_tag_usecase.dart';
@@ -28,7 +29,7 @@ class TagsCubit extends Cubit<TagsState> {
     AppLogger.debug('loading tags');
     emit(const TagsLoading());
     try {
-      final tags = await _getTags();
+      final tags = sortedByName(await _getTags(), (t) => t.name);
       AppLogger.info('tags loaded: ${tags.length}');
       emit(TagsLoaded(tags));
     } catch (e, s) {
@@ -43,7 +44,7 @@ class TagsCubit extends Cubit<TagsState> {
     try {
       final tag = await _createTag(name: name, description: description);
       AppLogger.info('tag created: ${tag.id}');
-      emit(TagsLoaded([...current, tag]));
+      emit(TagsLoaded(sortedByName([...current, tag], (t) => t.name)));
     } catch (e, s) {
       AppLogger.error('failed to create tag', e, s);
       emit(TagsActionError(current));
@@ -56,23 +57,32 @@ class TagsCubit extends Cubit<TagsState> {
     try {
       final updated = await _updateTag(id: id, name: name, description: description);
       AppLogger.info('tag updated: ${updated.id}');
-      emit(TagsLoaded(current.map((a) => a.id == id ? updated : a).toList()));
+      emit(TagsLoaded(
+        sortedByName(
+          current.map((a) => a.id == id ? updated : a).toList(),
+          (t) => t.name,
+        ),
+      ));
     } catch (e, s) {
       AppLogger.error('failed to update tag', e, s);
       emit(TagsActionError(current));
     }
   }
 
-  Future<void> delete({required String id}) async {
+  Future<bool> delete({required String id}) async {
     final current = _currentTags();
     AppLogger.debug('deleting tag: $id');
     try {
       await _deleteTag(id: id);
       AppLogger.info('tag deleted: $id');
-      emit(TagsLoaded(current.where((a) => a.id != id).toList()));
+      emit(TagsLoaded(
+        sortedByName(current.where((a) => a.id != id).toList(), (t) => t.name),
+      ));
+      return true;
     } catch (e, s) {
       AppLogger.error('failed to delete tag', e, s);
       emit(TagsActionError(current));
+      return false;
     }
   }
 
