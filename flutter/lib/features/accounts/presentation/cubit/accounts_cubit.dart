@@ -6,6 +6,7 @@ import '../../domain/usecases/create_account_usecase.dart';
 import '../../domain/usecases/update_account_usecase.dart';
 import '../../domain/usecases/delete_account_usecase.dart';
 import '../../../transactions/domain/usecases/get_account_balances_usecase.dart';
+import '../../domain/usecases/adjust_account_balance_via_transaction_usecase.dart';
 import 'accounts_state.dart';
 
 class AccountsCubit extends Cubit<AccountsState> {
@@ -14,6 +15,7 @@ class AccountsCubit extends Cubit<AccountsState> {
   final CreateAccountUsecase _createAccount;
   final UpdateAccountUsecase _updateAccount;
   final DeleteAccountUsecase _deleteAccount;
+  final AdjustAccountBalanceViaTransactionUsecase _adjustBalanceViaTransaction;
 
   AccountsCubit({
     required GetAccountsUsecase getAccounts,
@@ -21,11 +23,13 @@ class AccountsCubit extends Cubit<AccountsState> {
     required CreateAccountUsecase createAccount,
     required UpdateAccountUsecase updateAccount,
     required DeleteAccountUsecase deleteAccount,
+    required AdjustAccountBalanceViaTransactionUsecase adjustBalanceViaTransaction,
   })  : _getAccounts = getAccounts,
         _getAccountBalances = getAccountBalances,
         _createAccount = createAccount,
         _updateAccount = updateAccount,
         _deleteAccount = deleteAccount,
+        _adjustBalanceViaTransaction = adjustBalanceViaTransaction,
         super(const AccountsInitial());
 
   Future<void> load() async {
@@ -64,20 +68,45 @@ class AccountsCubit extends Cubit<AccountsState> {
     }
   }
 
-  Future<void> update({required String id, required String name, String? description}) async {
+  Future<void> update({
+    required String id,
+    required String name,
+    String? description,
+    required double previousBalance,
+    required double targetBalance,
+  }) async {
     final current = _currentAccounts();
     final balances = _currentBalances();
     AppLogger.debug('updating account: $id');
     try {
       final updated = await _updateAccount(id: id, name: name, description: description);
+      final delta = targetBalance - previousBalance;
+      if (delta.abs() >= 1e-9) {
+        await _adjustBalanceViaTransaction(accountId: id, delta: delta);
+      }
+      Map<String, double> newBalances = balances;
+      try {
+        newBalances = await _getAccountBalances();
+      } catch (e, s) {
+        AppLogger.error('failed to refresh account balances', e, s);
+      }
       AppLogger.info('account updated: ${updated.id}');
       emit(AccountsLoaded(
         current.map((a) => a.id == id ? updated : a).toList(),
-        balancesByAccountId: balances,
+        balancesByAccountId: newBalances,
       ));
     } catch (e, s) {
       AppLogger.error('failed to update account', e, s);
-      emit(AccountsActionError(current, balancesByAccountId: balances));
+      try {
+        final reloaded = await _getAccounts();
+        Map<String, double> b = {};
+        try {
+          b = await _getAccountBalances();
+        } catch (_) {}
+        emit(AccountsActionError(reloaded, balancesByAccountId: b));
+      } catch (_) {
+        emit(AccountsActionError(current, balancesByAccountId: balances));
+      }
     }
   }
 
