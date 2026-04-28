@@ -225,7 +225,7 @@ class _CardTile extends StatelessWidget {
         );
         return ok ?? false;
       },
-      onDeleted: () => cubit.delete(id: card.id),
+      onDelete: () => cubit.delete(id: card.id),
     );
   }
 }
