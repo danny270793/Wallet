@@ -1,4 +1,5 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../../../core/logger/app_logger.dart';
 import '../../domain/entities/user_entity.dart';
 
 abstract class AuthRemoteDatasource {
@@ -16,6 +17,7 @@ class AuthSupabaseDatasource implements AuthRemoteDatasource {
     required String email,
     required String password,
   }) async {
+    AppLogger.debug('signIn called');
     final response = await _client.auth.signInWithPassword(
       email: email,
       password: password,
@@ -26,5 +28,8 @@ class AuthSupabaseDatasource implements AuthRemoteDatasource {
   }
 
   @override
-  Future<void> signOut() => _client.auth.signOut();
+  Future<void> signOut() {
+    AppLogger.debug('signOut called');
+    return _client.auth.signOut();
+  }
 }
