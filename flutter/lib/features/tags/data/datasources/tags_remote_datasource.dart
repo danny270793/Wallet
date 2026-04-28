@@ -58,9 +58,12 @@ class TagsSupabaseDatasource implements TagsRemoteDatasource {
   @override
   Future<void> deleteTag({required String id}) async {
     AppLogger.debug('deleteTag called: $id');
-    await _client
-        .from('wallet_tags')
-        .update({'deletedAt': DateTime.now().toIso8601String()})
-        .eq('id', id);
+    final ok = await _client.rpc<bool>(
+      'soft_delete_wallet_tag',
+      params: {'p_id': id},
+    );
+    if (ok != true) {
+      throw Exception('soft_delete_wallet_tag: no row updated for $id');
+    }
   }
 }

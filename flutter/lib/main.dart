@@ -1,8 +1,14 @@
+import 'dart:ui';
+
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:wallet/l10n/app_localizations.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'core/di/injection.dart';
+import 'core/locale/app_locale_controller.dart';
+import 'core/theme/app_theme_controller.dart';
 import 'core/logger/app_logger.dart';
+import 'core/wallet_actions/wallet_actions_reporter.dart';
 import 'router.dart';
 
 Future<void> main() async {
@@ -17,23 +23,65 @@ Future<void> main() async {
 
   setupDi();
   AppLogger.info('DI setup complete');
+  await getIt<AppLocaleController>().load();
+  await getIt<AppThemeController>().load();
+  _bindGlobalErrorReporting();
 
   runApp(const App());
+}
+
+void _bindGlobalErrorReporting() {
+  final reporter = getIt<WalletActionsReporter>();
+  FlutterError.onError = (details) {
+    reporter.recordFlutterError(details);
+    FlutterError.presentError(details);
+  };
+  PlatformDispatcher.instance.onError = (error, stack) {
+    reporter.recordUncaught(error, stack);
+    return true;
+  };
 }
 
 class App extends StatelessWidget {
   const App({super.key});
 
+  static Locale? _resolveDeviceLocale(Locale? deviceLocale, Iterable<Locale> supported) {
+    if (deviceLocale == null) return supported.first;
+    for (final loc in supported) {
+      if (loc.languageCode == deviceLocale.languageCode) return loc;
+    }
+    return supported.first;
+  }
+
   @override
   Widget build(BuildContext context) {
-    return MaterialApp.router(
-      onGenerateTitle: (context) => AppLocalizations.of(context)!.appTitle,
-      localizationsDelegates: AppLocalizations.localizationsDelegates,
-      supportedLocales: AppLocalizations.supportedLocales,
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
-      ),
-      routerConfig: router,
+    final appLocale = getIt<AppLocaleController>();
+    final appTheme = getIt<AppThemeController>();
+    return ListenableBuilder(
+      listenable: Listenable.merge([appLocale, appTheme]),
+      builder: (context, _) {
+        final seed = Colors.deepPurple;
+        return MaterialApp.router(
+          onGenerateTitle: (context) => AppLocalizations.of(context)!.appTitle,
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          locale: appLocale.materialAppLocale,
+          localeResolutionCallback: _resolveDeviceLocale,
+          theme: ThemeData(
+            colorScheme: ColorScheme.fromSeed(seedColor: seed),
+            useMaterial3: true,
+          ),
+          darkTheme: ThemeData(
+            colorScheme: ColorScheme.fromSeed(
+              seedColor: seed,
+              brightness: Brightness.dark,
+            ),
+            useMaterial3: true,
+          ),
+          themeMode: appTheme.themeMode,
+          routerConfig: router,
+        );
+      },
     );
   }
 }

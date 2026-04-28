@@ -1,7 +1,9 @@
 import '../entities/transaction_entity.dart';
 
 abstract class TransactionsRepository {
-  Future<List<TransactionEntity>> getTransactions();
+  Future<List<TransactionEntity>> getTransactionsForMonth(DateTime monthStartLocal);
+  Future<List<TransactionEntity>> getTransactionsForYear(DateTime yearStartLocal);
+  Future<List<TransactionEntity>> searchTransactionsByDescription(String query, {int limit = 200});
   Future<TransactionEntity> createTransaction({
     String? accountId,
     String? cardId,
@@ -12,6 +14,7 @@ abstract class TransactionsRepository {
     required double value,
     required bool ignore,
     required double percentage,
+    String? transactionGroupId,
   });
   Future<TransactionEntity> updateTransaction({
     required String id,
@@ -24,6 +27,7 @@ abstract class TransactionsRepository {
     required double value,
     required bool ignore,
     required double percentage,
+    String? transactionGroupId,
   });
   Future<void> deleteTransaction({required String id});
 }

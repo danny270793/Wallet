@@ -7,6 +7,8 @@ class AccountEntity extends Equatable {
   final String? description;
   final DateTime createdAt;
   final DateTime updatedAt;
+  /// Sum of all transaction values (non-deleted); from [wallet_accounts_with_balance].
+  final double balance;
 
   const AccountEntity({
     required this.id,
@@ -15,6 +17,7 @@ class AccountEntity extends Equatable {
     this.description,
     required this.createdAt,
     required this.updatedAt,
+    this.balance = 0,
   });
 
   factory AccountEntity.fromJson(Map<String, dynamic> json) => AccountEntity(
@@ -24,8 +27,10 @@ class AccountEntity extends Equatable {
     description: json['description'] as String?,
     createdAt: DateTime.parse(json['createdAt'] as String),
     updatedAt: DateTime.parse(json['updatedAt'] as String),
+    balance: (json['balance'] as num?)?.toDouble() ?? 0,
   );
 
   @override
-  List<Object?> get props => [id, userId, name, description, createdAt, updatedAt];
+  List<Object?> get props =>
+      [id, userId, name, description, createdAt, updatedAt, balance];
 }

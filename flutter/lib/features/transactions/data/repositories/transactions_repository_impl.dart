@@ -7,7 +7,16 @@ class TransactionsRepositoryImpl implements TransactionsRepository {
   const TransactionsRepositoryImpl(this._datasource);
 
   @override
-  Future<List<TransactionEntity>> getTransactions() => _datasource.getTransactions();
+  Future<List<TransactionEntity>> getTransactionsForMonth(DateTime monthStartLocal) =>
+      _datasource.getTransactionsForMonth(monthStartLocal);
+
+  @override
+  Future<List<TransactionEntity>> getTransactionsForYear(DateTime yearStartLocal) =>
+      _datasource.getTransactionsForYear(yearStartLocal);
+
+  @override
+  Future<List<TransactionEntity>> searchTransactionsByDescription(String query, {int limit = 200}) =>
+      _datasource.searchTransactionsByDescription(query, limit: limit);
 
   @override
   Future<TransactionEntity> createTransaction({
@@ -20,6 +29,7 @@ class TransactionsRepositoryImpl implements TransactionsRepository {
     required double value,
     required bool ignore,
     required double percentage,
+    String? transactionGroupId,
   }) =>
       _datasource.createTransaction(
         accountId: accountId,
@@ -31,6 +41,7 @@ class TransactionsRepositoryImpl implements TransactionsRepository {
         value: value,
         ignore: ignore,
         percentage: percentage,
+        transactionGroupId: transactionGroupId,
       );
 
   @override
@@ -45,6 +56,7 @@ class TransactionsRepositoryImpl implements TransactionsRepository {
     required double value,
     required bool ignore,
     required double percentage,
+    String? transactionGroupId,
   }) =>
       _datasource.updateTransaction(
         id: id,
@@ -57,6 +69,7 @@ class TransactionsRepositoryImpl implements TransactionsRepository {
         value: value,
         ignore: ignore,
         percentage: percentage,
+        transactionGroupId: transactionGroupId,
       );
 
   @override

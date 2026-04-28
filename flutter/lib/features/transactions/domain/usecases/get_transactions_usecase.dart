@@ -5,5 +5,6 @@ class GetTransactionsUsecase {
   final TransactionsRepository _repository;
   const GetTransactionsUsecase(this._repository);
 
-  Future<List<TransactionEntity>> call() => _repository.getTransactions();
+  Future<List<TransactionEntity>> call(DateTime monthStartLocal) =>
+      _repository.getTransactionsForMonth(monthStartLocal);
 }

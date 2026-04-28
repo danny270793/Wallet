@@ -17,7 +17,7 @@ class AccountsSupabaseDatasource implements AccountsRemoteDatasource {
   Future<List<AccountEntity>> getAccounts() async {
     AppLogger.debug('getAccounts called');
     final data = await _client
-        .from('wallet_accounts')
+        .from('wallet_accounts_with_balance')
         .select()
         .isFilter('deletedAt', null)
         .order('createdAt');
@@ -58,9 +58,12 @@ class AccountsSupabaseDatasource implements AccountsRemoteDatasource {
   @override
   Future<void> deleteAccount({required String id}) async {
     AppLogger.debug('deleteAccount called: $id');
-    await _client
-        .from('wallet_accounts')
-        .update({'deletedAt': DateTime.now().toIso8601String()})
-        .eq('id', id);
+    final ok = await _client.rpc<bool>(
+      'soft_delete_wallet_account',
+      params: {'p_id': id},
+    );
+    if (ok != true) {
+      throw Exception('soft_delete_wallet_account: no row updated for $id');
+    }
   }
 }

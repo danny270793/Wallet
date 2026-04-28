@@ -1,5 +1,6 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/logger/app_logger.dart';
+import '../../../../core/sort_by_name.dart';
 import '../../domain/entities/category_entity.dart';
 import '../../domain/usecases/get_categories_usecase.dart';
 import '../../domain/usecases/create_category_usecase.dart';
@@ -28,7 +29,7 @@ class CategoriesCubit extends Cubit<CategoriesState> {
     AppLogger.debug('loading categories');
     emit(const CategoriesLoading());
     try {
-      final categories = await _getCategories();
+      final categories = sortedByName(await _getCategories(), (c) => c.name);
       AppLogger.info('categories loaded: ${categories.length}');
       emit(CategoriesLoaded(categories));
     } catch (e, s) {
@@ -43,7 +44,7 @@ class CategoriesCubit extends Cubit<CategoriesState> {
     try {
       final category = await _createCategory(name: name, description: description);
       AppLogger.info('category created: ${category.id}');
-      emit(CategoriesLoaded([...current, category]));
+      emit(CategoriesLoaded(sortedByName([...current, category], (c) => c.name)));
     } catch (e, s) {
       AppLogger.error('failed to create category', e, s);
       emit(CategoriesActionError(current));
@@ -56,23 +57,32 @@ class CategoriesCubit extends Cubit<CategoriesState> {
     try {
       final updated = await _updateCategory(id: id, name: name, description: description);
       AppLogger.info('category updated: ${updated.id}');
-      emit(CategoriesLoaded(current.map((a) => a.id == id ? updated : a).toList()));
+      emit(CategoriesLoaded(
+        sortedByName(
+          current.map((a) => a.id == id ? updated : a).toList(),
+          (c) => c.name,
+        ),
+      ));
     } catch (e, s) {
       AppLogger.error('failed to update category', e, s);
       emit(CategoriesActionError(current));
     }
   }
 
-  Future<void> delete({required String id}) async {
+  Future<bool> delete({required String id}) async {
     final current = _currentCategories();
     AppLogger.debug('deleting category: $id');
     try {
       await _deleteCategory(id: id);
       AppLogger.info('category deleted: $id');
-      emit(CategoriesLoaded(current.where((a) => a.id != id).toList()));
+      emit(CategoriesLoaded(
+        sortedByName(current.where((a) => a.id != id).toList(), (c) => c.name),
+      ));
+      return true;
     } catch (e, s) {
       AppLogger.error('failed to delete category', e, s);
       emit(CategoriesActionError(current));
+      return false;
     }
   }
 
