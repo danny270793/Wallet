@@ -125,6 +125,7 @@ class _TransactionTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final relationNames = _relationNames(transaction);
     return ListTile(
       title: Text(l10n.transactionAmountValue(transaction.value.toString())),
       subtitle: Column(
@@ -139,6 +140,18 @@ class _TransactionTile extends StatelessWidget {
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
                 style: Theme.of(context).textTheme.bodyMedium,
+              ),
+            ),
+          if (relationNames.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 4),
+              child: Text(
+                relationNames.join(' · '),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
               ),
             ),
           Text(dateFmt.format(transaction.transactedAt.toLocal())),
@@ -167,6 +180,14 @@ class _TransactionTile extends StatelessWidget {
       ),
     );
   }
+
+  /// Account, card, category, tag labels from embedded FK names (aligned with datasource order).
+  static List<String> _relationNames(TransactionEntity t) => [
+        if (t.accountName?.isNotEmpty == true) t.accountName!,
+        if (t.cardName?.isNotEmpty == true) t.cardName!,
+        if (t.categoryName?.isNotEmpty == true) t.categoryName!,
+        if (t.tagName?.isNotEmpty == true) t.tagName!,
+      ];
 
   Future<void> _confirmDelete(BuildContext context) async {
     final cubit = context.read<TransactionsCubit>();
