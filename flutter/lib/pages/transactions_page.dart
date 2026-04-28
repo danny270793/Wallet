@@ -1372,7 +1372,8 @@ Widget _transactionSearchResultsList(
             final desc = t.description?.isNotEmpty == true ? t.description! : l10n.none;
             final weighted = t.value * t.percentage / 100.0;
             final amt = l10n.transactionAmountValue(weighted.toStringAsFixed(2));
-            final sub = '${dateFmt.format(t.transactedAt.toLocal())} · ${t.accountName ?? l10n.none}';
+            final pay = t.accountName ?? t.cardName ?? l10n.none;
+            final sub = '${dateFmt.format(t.transactedAt.toLocal())} · $pay';
             return ListTile(
               title: Text(desc, maxLines: 2, overflow: TextOverflow.ellipsis),
               subtitle: Text(sub, maxLines: 2, overflow: TextOverflow.ellipsis),
@@ -1439,54 +1440,47 @@ class _TransferPairTile extends StatelessWidget {
     final gid = source.transactionGroupId;
     String payLabel(TransactionEntity t) => t.accountName ?? t.cardName ?? '—';
 
+    final heading = (source.description ?? target.description)?.trim();
+    final titleLine = heading != null && heading.isNotEmpty ? heading : l10n.transferSheetTitle;
+
     final title = Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
       children: [
-        Row(
-          children: [
-            Expanded(
-              child: Text(
-                payLabel(target),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: theme.textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w500),
-              ),
-            ),
-            Text(
-              amountStr,
-              style: theme.textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.w700,
-                color: theme.colorScheme.onSurfaceVariant,
-                height: 1.2,
-                fontFeatures: const [FontFeature.tabularFigures()],
-              ),
-            ),
-          ],
+        Text(
+          titleLine,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: theme.textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w500),
         ),
         const SizedBox(height: 4),
-        Row(
-          children: [
-            Expanded(
-              child: Text(
-                payLabel(source),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: theme.colorScheme.onSurfaceVariant,
-                ),
-              ),
-            ),
-            Text(
-              timeStr,
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
-                fontFeatures: const [FontFeature.tabularFigures()],
-              ),
-            ),
-          ],
+        Text(
+          '${payLabel(source)} → ${payLabel(target)}',
+          maxLines: 2,
+          overflow: TextOverflow.ellipsis,
+          style: theme.textTheme.bodySmall?.copyWith(
+            color: theme.colorScheme.onSurfaceVariant,
+          ),
         ),
       ],
+    );
+
+    final subtitle = Text(
+      timeStr,
+      style: theme.textTheme.bodySmall?.copyWith(
+        color: theme.colorScheme.onSurfaceVariant,
+        fontFeatures: const [FontFeature.tabularFigures()],
+      ),
+    );
+
+    final trailing = Text(
+      amountStr,
+      style: theme.textTheme.titleMedium?.copyWith(
+        fontWeight: FontWeight.w700,
+        color: theme.colorScheme.onSurfaceVariant,
+        height: 1.2,
+        fontFeatures: const [FontFeature.tabularFigures()],
+      ),
     );
 
     void openEdit() {
@@ -1511,6 +1505,8 @@ class _TransferPairTile extends StatelessWidget {
         color: theme.colorScheme.onSurfaceVariant,
       ),
       title: title,
+      subtitle: subtitle,
+      trailing: trailing,
       onEdit: openEdit,
       confirmDelete: () async {
         final ok = await showDialog<bool>(
