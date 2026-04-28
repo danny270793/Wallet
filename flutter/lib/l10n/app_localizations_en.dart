@@ -62,6 +62,26 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get cards => 'Cards';
+
+  @override
+  String get noCards => 'No cards yet';
+
+  @override
+  String get newCard => 'New card';
+
+  @override
+  String get editCard => 'Edit card';
+
+  @override
+  String get deleteCard => 'Delete card';
+
+  @override
+  String confirmDeleteCard(String name) {
+    return 'Are you sure you want to delete \"$name\"?';
+  }
+
+  @override
   String get cancel => 'Cancel';
 
   @override
