@@ -42,7 +42,7 @@ class _AccountsView extends StatelessWidget {
               right: 16,
               bottom: 16,
               child: FloatingActionButton(
-                onPressed: () => _showAccountDialog(context, l10n),
+                onPressed: () => _showNewAccountBottomSheet(context, l10n),
                 child: const Icon(Icons.add),
               ),
             ),
@@ -130,16 +130,26 @@ class _AccountsView extends StatelessWidget {
     );
   }
 
-  void _showAccountDialog(BuildContext context, AppLocalizations l10n, [AccountEntity? account]) {
-    showDialog<void>(
+  void _showNewAccountBottomSheet(BuildContext context, AppLocalizations l10n) {
+    showModalBottomSheet<void>(
       context: context,
-      builder: (_) => _AccountDialog(
-        cubit: context.read<AccountsCubit>(),
-        l10n: l10n,
-        account: account,
+      isScrollControlled: true,
+      useSafeArea: true,
+      showDragHandle: true,
+      builder: (sheetContext) => Padding(
+        padding: EdgeInsets.only(
+          bottom: MediaQuery.viewInsetsOf(sheetContext).bottom,
+        ),
+        child: _AccountEditor(
+          cubit: context.read<AccountsCubit>(),
+          l10n: l10n,
+          account: null,
+          isBottomSheet: true,
+        ),
       ),
     );
   }
+
 }
 
 class _AccountTile extends StatelessWidget {
@@ -154,7 +164,12 @@ class _AccountTile extends StatelessWidget {
     void openEdit() {
       showDialog<void>(
         context: context,
-        builder: (_) => _AccountDialog(cubit: cubit, l10n: l10n, account: account),
+        builder: (_) => _AccountEditor(
+          cubit: cubit,
+          l10n: l10n,
+          account: account,
+          isBottomSheet: false,
+        ),
       );
     }
 
@@ -192,18 +207,25 @@ class _AccountTile extends StatelessWidget {
   }
 }
 
-class _AccountDialog extends StatefulWidget {
+class _AccountEditor extends StatefulWidget {
   final AccountsCubit cubit;
   final AppLocalizations l10n;
   final AccountEntity? account;
+  /// New account uses a bottom sheet; edit still uses an [AlertDialog].
+  final bool isBottomSheet;
 
-  const _AccountDialog({required this.cubit, required this.l10n, this.account});
+  const _AccountEditor({
+    required this.cubit,
+    required this.l10n,
+    this.account,
+    required this.isBottomSheet,
+  });
 
   @override
-  State<_AccountDialog> createState() => _AccountDialogState();
+  State<_AccountEditor> createState() => _AccountEditorState();
 }
 
-class _AccountDialogState extends State<_AccountDialog> {
+class _AccountEditorState extends State<_AccountEditor> {
   final _formKey = GlobalKey<FormState>();
   late final TextEditingController _nameController;
   late final TextEditingController _descriptionController;
@@ -212,6 +234,10 @@ class _AccountDialogState extends State<_AccountDialog> {
   @override
   void initState() {
     super.initState();
+    assert(
+      !widget.isBottomSheet || widget.account == null,
+      'Bottom sheet is only used for creating a new account',
+    );
     _nameController = TextEditingController(text: widget.account?.name ?? '');
     _descriptionController = TextEditingController(text: widget.account?.description ?? '');
   }
@@ -239,34 +265,84 @@ class _AccountDialogState extends State<_AccountDialog> {
     }
   }
 
+  Widget _formFields(AppLocalizations l10n) {
+    return Form(
+      key: _formKey,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          TextFormField(
+            controller: _nameController,
+            decoration: InputDecoration(labelText: l10n.accountName),
+            validator: (v) => (v == null || v.trim().isEmpty) ? l10n.fieldRequired : null,
+            autofocus: true,
+            textInputAction: TextInputAction.next,
+          ),
+          const SizedBox(height: 8),
+          TextFormField(
+            controller: _descriptionController,
+            decoration: InputDecoration(labelText: l10n.accountDescription),
+            maxLines: 3,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _actions(AppLocalizations l10n) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.end,
+      children: [
+        TextButton(
+          onPressed: _loading ? null : () => Navigator.of(context).pop(),
+          child: Text(l10n.cancel),
+        ),
+        const SizedBox(width: 8),
+        FilledButton(
+          onPressed: _loading ? null : _submit,
+          child: _loading
+              ? const SizedBox(
+                  height: 20,
+                  width: 20,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                )
+              : Text(l10n.save),
+        ),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = widget.l10n;
+    final theme = Theme.of(context);
     final isEdit = widget.account != null;
+
+    if (widget.isBottomSheet) {
+      return SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Text(
+                l10n.newAccount,
+                style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w600),
+              ),
+              const SizedBox(height: 16),
+              _formFields(l10n),
+              const SizedBox(height: 24),
+              _actions(l10n),
+            ],
+          ),
+        ),
+      );
+    }
 
     return AlertDialog(
       title: Text(isEdit ? l10n.editAccount : l10n.newAccount),
-      content: Form(
-        key: _formKey,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextFormField(
-              controller: _nameController,
-              decoration: InputDecoration(labelText: l10n.accountName),
-              validator: (v) => (v == null || v.trim().isEmpty) ? l10n.fieldRequired : null,
-              autofocus: true,
-              textInputAction: TextInputAction.next,
-            ),
-            const SizedBox(height: 8),
-            TextFormField(
-              controller: _descriptionController,
-              decoration: InputDecoration(labelText: l10n.accountDescription),
-              maxLines: 3,
-            ),
-          ],
-        ),
-      ),
+      content: _formFields(l10n),
       actions: [
         TextButton(
           onPressed: _loading ? null : () => Navigator.of(context).pop(),
