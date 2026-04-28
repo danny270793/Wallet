@@ -205,7 +205,7 @@ class _TagTile extends StatelessWidget {
         );
         return ok ?? false;
       },
-      onDeleted: () => cubit.delete(id: tag.id),
+      onDelete: () => cubit.delete(id: tag.id),
     );
   }
 }
