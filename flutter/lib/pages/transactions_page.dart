@@ -15,11 +15,17 @@ import '../features/transactions/domain/entities/transaction_entity.dart';
 import '../features/transactions/presentation/cubit/transactions_cubit.dart';
 import '../features/transactions/presentation/cubit/transactions_state.dart';
 import '../widgets/swipeable_list_tile.dart';
+import '../widgets/transactions_month_scope.dart';
 
 /// Local calendar day (midnight) used as a group key for [transactedAt].
 DateTime _calendarDayLocal(DateTime utcOrLocal) {
   final l = utcOrLocal.toLocal();
   return DateTime(l.year, l.month, l.day);
+}
+
+bool _transactionInLocalMonth(TransactionEntity t, DateTime monthStart) {
+  final l = t.transactedAt.toLocal();
+  return l.year == monthStart.year && l.month == monthStart.month;
 }
 
 sealed class _GroupedTxRow {
@@ -75,6 +81,7 @@ class _TransactionsView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final monthNotifier = TransactionsMonthScope.of(context);
 
     return BlocConsumer<TransactionsCubit, TransactionsState>(
       listener: (context, state) {
@@ -85,24 +92,34 @@ class _TransactionsView extends StatelessWidget {
         }
       },
       builder: (context, state) {
-        return Stack(
-          children: [
-            _body(context, state, l10n),
-            Positioned(
-              right: 16,
-              bottom: 16,
-              child: FloatingActionButton(
-                onPressed: () => _showTxDialog(context, l10n),
-                child: const Icon(Icons.add),
-              ),
-            ),
-          ],
+        return ValueListenableBuilder<DateTime>(
+          valueListenable: monthNotifier,
+          builder: (context, visibleMonth, _) {
+            return Stack(
+              children: [
+                _body(context, state, l10n, visibleMonth),
+                Positioned(
+                  right: 16,
+                  bottom: 16,
+                  child: FloatingActionButton(
+                    onPressed: () => _showTxDialog(context, l10n),
+                    child: const Icon(Icons.add),
+                  ),
+                ),
+              ],
+            );
+          },
         );
       },
     );
   }
 
-  Widget _body(BuildContext context, TransactionsState state, AppLocalizations l10n) {
+  Widget _body(
+    BuildContext context,
+    TransactionsState state,
+    AppLocalizations l10n,
+    DateTime visibleMonth,
+  ) {
     Future<void> refresh() => context.read<TransactionsCubit>().load();
 
     if (state is TransactionsLoading || state is TransactionsInitial) {
@@ -153,7 +170,20 @@ class _TransactionsView extends StatelessWidget {
       _ => <TransactionEntity>[],
     };
 
-    if (list.isEmpty) {
+    final filtered = list.where((t) => _transactionInLocalMonth(t, visibleMonth)).toList();
+
+    return _monthListBody(context, l10n, visibleMonth, list, filtered, refresh);
+  }
+
+  Widget _monthListBody(
+    BuildContext context,
+    AppLocalizations l10n,
+    DateTime visibleMonth,
+    List<TransactionEntity> all,
+    List<TransactionEntity> filtered,
+    Future<void> Function() refresh,
+  ) {
+    if (all.isEmpty) {
       return RefreshIndicator(
         onRefresh: refresh,
         child: ListView(
@@ -161,7 +191,7 @@ class _TransactionsView extends StatelessWidget {
           padding: const EdgeInsets.only(bottom: 88),
           children: [
             SizedBox(
-              height: MediaQuery.sizeOf(context).height * 0.35,
+              height: MediaQuery.sizeOf(context).height * 0.3,
               child: Center(child: Text(l10n.noTransactions)),
             ),
           ],
@@ -169,8 +199,25 @@ class _TransactionsView extends StatelessWidget {
       );
     }
 
-    final rows = _groupTransactionsByDay(list);
+    if (filtered.isEmpty) {
+      final locale = Localizations.localeOf(context);
+      final monthYear = DateFormat.yMMMM(locale.toString()).format(visibleMonth);
+      return RefreshIndicator(
+        onRefresh: refresh,
+        child: ListView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          padding: const EdgeInsets.only(bottom: 88),
+          children: [
+            SizedBox(
+              height: MediaQuery.sizeOf(context).height * 0.3,
+              child: Center(child: Text(l10n.noTransactionsInMonth(monthYear))),
+            ),
+          ],
+        ),
+      );
+    }
 
+    final rows = _groupTransactionsByDay(filtered);
     return RefreshIndicator(
       onRefresh: refresh,
       child: ListView.builder(
