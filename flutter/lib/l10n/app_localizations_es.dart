@@ -411,6 +411,13 @@ class AppLocalizationsEs extends AppLocalizations {
       'Introduce un número válido (signo y decimales opcionales)';
 
   @override
+  String get transactionAmountMustBeNonZero => 'El importe no puede ser cero';
+
+  @override
+  String get transferAmountMustBePositive =>
+      'Introduce un importe mayor que cero';
+
+  @override
   String get transactionPercentage => 'Porcentaje';
 
   @override
