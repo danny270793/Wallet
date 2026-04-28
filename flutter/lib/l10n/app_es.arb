@@ -158,6 +158,8 @@
   "transactionTag": "Etiqueta",
   "transactionAmount": "Importe",
   "transactionAmountInvalidNumber": "Introduce un número válido (signo y decimales opcionales)",
+  "transactionAmountMustBeNonZero": "El importe no puede ser cero",
+  "transferAmountMustBePositive": "Introduce un importe mayor que cero",
   "transactionPercentage": "Porcentaje",
   "transactionPercentageInvalidRange": "Introduce un número entre 0 y 100",
   "transactionIgnore": "Ignorar",
