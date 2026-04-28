@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 import 'package:wallet/l10n/app_localizations.dart';
 import '../core/di/injection.dart';
 import '../features/accounts/domain/entities/account_entity.dart';
@@ -180,6 +181,18 @@ class _AccountTile extends StatelessWidget {
       _showAccountBottomSheet(context, l10n, account: account);
     }
 
+    void openTransactions() {
+      context.push(
+        Uri(
+          path: '/transactions',
+          queryParameters: {
+            'accountId': account.id,
+            'accountName': account.name,
+          },
+        ).toString(),
+      );
+    }
+
     return SwipeableListTile(
       itemKey: account.id,
       title: Text(account.name),
@@ -190,6 +203,7 @@ class _AccountTile extends StatelessWidget {
         l10n.transactionAmountValue(balance.toStringAsFixed(2)),
         style: TextStyle(fontWeight: FontWeight.w600, color: balanceColor()),
       ),
+      onTap: openTransactions,
       onEdit: openEdit,
       confirmDelete: () async {
         final ok = await showDialog<bool>(
