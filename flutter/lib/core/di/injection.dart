@@ -1,6 +1,7 @@
 import 'package:get_it/get_it.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../locale/app_locale_controller.dart';
+import '../theme/app_theme_controller.dart';
 import '../wallet_actions/wallet_actions_datasource.dart';
 import '../wallet_actions/wallet_actions_reporter.dart';
 import '../../features/auth/data/datasources/auth_remote_datasource.dart';
@@ -59,6 +60,7 @@ final getIt = GetIt.instance;
 
 void setupDi() {
   getIt.registerLazySingleton<AppLocaleController>(AppLocaleController.new);
+  getIt.registerLazySingleton<AppThemeController>(AppThemeController.new);
 
   getIt.registerLazySingleton<WalletActionsDatasource>(
     () => WalletActionsDatasource(Supabase.instance.client),
