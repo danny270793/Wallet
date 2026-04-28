@@ -37,4 +37,36 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get accounts => 'Accounts';
+
+  @override
+  String get noAccounts => 'No accounts yet';
+
+  @override
+  String get newAccount => 'New account';
+
+  @override
+  String get accountName => 'Name';
+
+  @override
+  String get accountDescription => 'Description';
+
+  @override
+  String get editAccount => 'Edit account';
+
+  @override
+  String get deleteAccount => 'Delete account';
+
+  @override
+  String confirmDeleteAccount(String name) {
+    return 'Are you sure you want to delete \"$name\"?';
+  }
+
+  @override
+  String get cancel => 'Cancel';
+
+  @override
+  String get save => 'Save';
+
+  @override
+  String get delete => 'Delete';
 }
