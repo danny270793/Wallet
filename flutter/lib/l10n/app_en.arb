@@ -104,5 +104,8 @@
         "type": "String"
       }
     }
-  }
+  },
+  "transactionsTotalIncome": "Income",
+  "transactionsTotalOutcome": "Outcome",
+  "transactionsTotalBalance": "Balance"
 }
