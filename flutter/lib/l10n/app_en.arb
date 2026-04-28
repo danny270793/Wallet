@@ -24,6 +24,19 @@
       }
     }
   },
+  "cards": "Cards",
+  "noCards": "No cards yet",
+  "newCard": "New card",
+  "editCard": "Edit card",
+  "deleteCard": "Delete card",
+  "confirmDeleteCard": "Are you sure you want to delete \"{name}\"?",
+  "@confirmDeleteCard": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "cancel": "Cancel",
   "save": "Save",
   "delete": "Delete",
