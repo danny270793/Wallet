@@ -471,6 +471,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{amount}'**
   String transactionAmountValue(String amount);
+
+  /// No description provided for @transactionsTotalIncome.
+  ///
+  /// In en, this message translates to:
+  /// **'Income'**
+  String get transactionsTotalIncome;
+
+  /// No description provided for @transactionsTotalOutcome.
+  ///
+  /// In en, this message translates to:
+  /// **'Outcome'**
+  String get transactionsTotalOutcome;
+
+  /// No description provided for @transactionsTotalBalance.
+  ///
+  /// In en, this message translates to:
+  /// **'Balance'**
+  String get transactionsTotalBalance;
 }
 
 class _AppLocalizationsDelegate
