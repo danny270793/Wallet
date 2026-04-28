@@ -12,6 +12,7 @@ void _showAccountBottomSheet(
   BuildContext context,
   AppLocalizations l10n, {
   AccountEntity? account,
+  double? currentBalance,
 }) {
   showModalBottomSheet<void>(
     context: context,
@@ -26,6 +27,7 @@ void _showAccountBottomSheet(
         cubit: context.read<AccountsCubit>(),
         l10n: l10n,
         account: account,
+        currentBalance: currentBalance,
       ),
     ),
   );
@@ -186,7 +188,7 @@ class _AccountTile extends StatelessWidget {
     }
 
     void openEdit() {
-      _showAccountBottomSheet(context, l10n, account: account);
+      _showAccountBottomSheet(context, l10n, account: account, currentBalance: balance);
     }
 
     return SwipeableListTile(
@@ -230,11 +232,13 @@ class _AccountEditor extends StatefulWidget {
   final AccountsCubit cubit;
   final AppLocalizations l10n;
   final AccountEntity? account;
+  final double? currentBalance;
 
   const _AccountEditor({
     required this.cubit,
     required this.l10n,
     this.account,
+    this.currentBalance,
   });
 
   @override
@@ -245,6 +249,7 @@ class _AccountEditorState extends State<_AccountEditor> {
   final _formKey = GlobalKey<FormState>();
   late final TextEditingController _nameController;
   late final TextEditingController _descriptionController;
+  TextEditingController? _balanceController;
   bool _loading = false;
 
   @override
@@ -252,12 +257,18 @@ class _AccountEditorState extends State<_AccountEditor> {
     super.initState();
     _nameController = TextEditingController(text: widget.account?.name ?? '');
     _descriptionController = TextEditingController(text: widget.account?.description ?? '');
+    if (widget.account != null) {
+      _balanceController = TextEditingController(
+        text: (widget.currentBalance ?? 0).toStringAsFixed(2),
+      );
+    }
   }
 
   @override
   void dispose() {
     _nameController.dispose();
     _descriptionController.dispose();
+    _balanceController?.dispose();
     super.dispose();
   }
 
@@ -270,7 +281,15 @@ class _AccountEditorState extends State<_AccountEditor> {
       if (widget.account == null) {
         await widget.cubit.create(name: name, description: description);
       } else {
-        await widget.cubit.update(id: widget.account!.id, name: name, description: description);
+        final targetBalance = double.tryParse(_balanceController!.text.trim());
+        if (targetBalance == null) return;
+        await widget.cubit.update(
+          id: widget.account!.id,
+          name: name,
+          description: description,
+          previousBalance: widget.currentBalance ?? 0,
+          targetBalance: targetBalance,
+        );
       }
     } finally {
       if (mounted) Navigator.of(context).pop();
@@ -291,6 +310,20 @@ class _AccountEditorState extends State<_AccountEditor> {
             textInputAction: TextInputAction.next,
           ),
           const SizedBox(height: 8),
+          if (_balanceController != null) ...[
+            TextFormField(
+              controller: _balanceController,
+              decoration: InputDecoration(labelText: l10n.accountBalance),
+              keyboardType: const TextInputType.numberWithOptions(decimal: true, signed: true),
+              validator: (v) {
+                if (v == null || v.trim().isEmpty) return l10n.fieldRequired;
+                if (double.tryParse(v.trim()) == null) return l10n.fieldRequired;
+                return null;
+              },
+              textInputAction: TextInputAction.next,
+            ),
+            const SizedBox(height: 8),
+          ],
           TextFormField(
             controller: _descriptionController,
             decoration: InputDecoration(labelText: l10n.accountDescription),
