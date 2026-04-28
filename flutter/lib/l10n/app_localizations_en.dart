@@ -206,6 +206,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get transactionIgnore => 'Ignore';
 
   @override
+  String get transactionIgnoredBadge => 'Ignored';
+
+  @override
   String transactionAmountValue(String amount) {
     return '$amount';
   }
@@ -218,4 +221,8 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get transactionsTotalBalance => 'Balance';
+
+  @override
+  String get transactionsTotalsExcludingIgnoredHint =>
+      'Excluding ignored transactions';
 }
