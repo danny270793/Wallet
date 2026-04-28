@@ -7,6 +7,8 @@ import '../features/transactions/domain/entities/transaction_entity.dart';
 import '../features/transactions/presentation/cubit/transactions_cubit.dart';
 import '../pages/transactions_page.dart'
     show showAccountTransferEditorBottomSheet, showTransactionEditorBottomSheet;
+import 'swipeable_list_tile.dart';
+import 'transaction_delete_dialogs.dart';
 
 DateTime _calendarDayLocal(DateTime utcOrLocal) {
   final l = utcOrLocal.toLocal();
@@ -172,6 +174,7 @@ class _DashboardTxListTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cubit = context.read<TransactionsCubit>();
     final theme = Theme.of(context);
     final locale = Localizations.localeOf(context);
     final weighted = transaction.value * transaction.percentage / 100.0;
@@ -185,7 +188,17 @@ class _DashboardTxListTile extends StatelessWidget {
       return theme.colorScheme.onSurfaceVariant;
     }
 
-    Widget tile = ListTile(
+    void openEdit() {
+      showTransactionEditorBottomSheet(
+        context,
+        l10n: l10n,
+        cubit: cubit,
+        transaction: transaction,
+      );
+    }
+
+    Widget tile = SwipeableListTile(
+      itemKey: transaction.id,
       title: Text(desc, maxLines: 2, overflow: TextOverflow.ellipsis),
       subtitle: sub != null
           ? Text(sub, maxLines: 2, overflow: TextOverflow.ellipsis)
@@ -219,12 +232,9 @@ class _DashboardTxListTile extends StatelessWidget {
             ),
         ],
       ),
-      onTap: () => showTransactionEditorBottomSheet(
-        context,
-        l10n: l10n,
-        cubit: context.read<TransactionsCubit>(),
-        transaction: transaction,
-      ),
+      onEdit: openEdit,
+      confirmDelete: () => confirmDeleteTransactionDialog(context, l10n),
+      onDelete: () => cubit.delete(id: transaction.id),
     );
 
     if (transaction.ignore) {
@@ -248,13 +258,26 @@ class _DashboardTransferListTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cubit = context.read<TransactionsCubit>();
     final theme = Theme.of(context);
     final locale = Localizations.localeOf(context);
     String payLabel(TransactionEntity t) => t.accountName ?? t.cardName ?? '—';
     final amountStr = l10n.transactionAmountValue(target.value.toStringAsFixed(2));
     final timeStr = DateFormat.Hm(locale.toString()).format(source.transactedAt.toLocal());
+    final gid = source.transactionGroupId;
+    final pairKey = gid != null && gid.isNotEmpty ? 'pair_$gid' : '${source.id}|${target.id}';
 
-    Widget tile = ListTile(
+    void openEdit() {
+      showAccountTransferEditorBottomSheet(
+        context,
+        l10n: l10n,
+        editingSource: source,
+        editingTarget: target,
+      );
+    }
+
+    Widget tile = SwipeableListTile(
+      itemKey: pairKey,
       leading: Icon(Icons.swap_vert_rounded, color: theme.colorScheme.onSurfaceVariant),
       title: Text(
         payLabel(target),
@@ -288,12 +311,9 @@ class _DashboardTransferListTile extends StatelessWidget {
           fontFeatures: const [FontFeature.tabularFigures()],
         ),
       ),
-      onTap: () => showAccountTransferEditorBottomSheet(
-        context,
-        l10n: l10n,
-        editingSource: source,
-        editingTarget: target,
-      ),
+      onEdit: openEdit,
+      confirmDelete: () => confirmDeleteTransferPairDialog(context, l10n),
+      onDelete: () => cubit.deleteMany([source.id, target.id]),
     );
 
     if (source.ignore || target.ignore) {
