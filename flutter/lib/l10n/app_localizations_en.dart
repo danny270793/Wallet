@@ -209,4 +209,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String transactionAmountValue(String amount) {
     return '$amount';
   }
+
+  @override
+  String get transactionsTotalIncome => 'Income';
+
+  @override
+  String get transactionsTotalOutcome => 'Outcome';
+
+  @override
+  String get transactionsTotalBalance => 'Balance';
 }
