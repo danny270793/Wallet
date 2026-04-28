@@ -5,6 +5,7 @@ import '../core/di/injection.dart';
 import '../features/categories/domain/entities/category_entity.dart';
 import '../features/categories/presentation/cubit/categories_cubit.dart';
 import '../features/categories/presentation/cubit/categories_state.dart';
+import '../widgets/shell_scaffold.dart';
 import '../widgets/swipeable_list_tile.dart';
 
 class CategoriesPage extends StatelessWidget {
@@ -35,18 +36,21 @@ class _CategoriesView extends StatelessWidget {
         }
       },
       builder: (context, state) {
-        return Stack(
-          children: [
-            _body(context, state, l10n),
-            Positioned(
-              right: 16,
-              bottom: 16,
-              child: FloatingActionButton(
-                onPressed: () => _showCategoryDialog(context, l10n),
-                child: const Icon(Icons.add),
+        return ShellScaffold(
+          title: l10n.categories,
+          body: Stack(
+            children: [
+              _body(context, state, l10n),
+              Positioned(
+                right: 16,
+                bottom: 16,
+                child: FloatingActionButton(
+                  onPressed: () => _showCategoryDialog(context, l10n),
+                  child: const Icon(Icons.add),
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         );
       },
     );
