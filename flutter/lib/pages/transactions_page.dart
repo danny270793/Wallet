@@ -133,22 +133,21 @@ class _TransactionsTotalsBarHostState extends State<_TransactionsTotalsBarHost> 
   }
 }
 
-/// Speed dial: main control plus new-transaction and transfer (transfer is a placeholder).
-class _TransactionsExpandableFab extends StatefulWidget {
+/// Speed dial: main control plus new-transaction and account transfer.
+class _TransactionsExpandableFab extends StatelessWidget {
   const _TransactionsExpandableFab({
     required this.l10n,
+    required this.isOpen,
+    required this.onOpenChanged,
     required this.onNewTransaction,
+    required this.onTransfer,
   });
 
   final AppLocalizations l10n;
+  final bool isOpen;
+  final ValueChanged<bool> onOpenChanged;
   final VoidCallback onNewTransaction;
-
-  @override
-  State<_TransactionsExpandableFab> createState() => _TransactionsExpandableFabState();
-}
-
-class _TransactionsExpandableFabState extends State<_TransactionsExpandableFab> {
-  bool _open = false;
+  final VoidCallback onTransfer;
 
   @override
   Widget build(BuildContext context) {
@@ -156,23 +155,26 @@ class _TransactionsExpandableFabState extends State<_TransactionsExpandableFab> 
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.end,
       children: [
-        if (_open) ...[
+        if (isOpen) ...[
           Tooltip(
-            message: widget.l10n.transactionsFabTransfer,
+            message: l10n.transactionsFabTransfer,
             child: FloatingActionButton.small(
               heroTag: 'transactions_fab_transfer',
-              onPressed: () {},
+              onPressed: () {
+                onOpenChanged(false);
+                onTransfer();
+              },
               child: const Icon(Icons.swap_horiz_rounded),
             ),
           ),
           const SizedBox(height: 12),
           Tooltip(
-            message: widget.l10n.newTransaction,
+            message: l10n.newTransaction,
             child: FloatingActionButton.small(
               heroTag: 'transactions_fab_new',
               onPressed: () {
-                setState(() => _open = false);
-                widget.onNewTransaction();
+                onOpenChanged(false);
+                onNewTransaction();
               },
               child: const Icon(Icons.add),
             ),
@@ -181,12 +183,253 @@ class _TransactionsExpandableFabState extends State<_TransactionsExpandableFab> 
         ],
         FloatingActionButton(
           heroTag: 'transactions_fab_toggle',
-          onPressed: () => setState(() => _open = !_open),
-          child: Icon(_open ? Icons.close : Icons.add),
+          onPressed: () => onOpenChanged(!isOpen),
+          child: Icon(isOpen ? Icons.close : Icons.add),
         ),
       ],
     );
   }
+}
+
+class _AccountTransferBottomSheet extends StatefulWidget {
+  const _AccountTransferBottomSheet({
+    required this.cubit,
+    required this.l10n,
+  });
+
+  final TransactionsCubit cubit;
+  final AppLocalizations l10n;
+
+  @override
+  State<_AccountTransferBottomSheet> createState() => _AccountTransferBottomSheetState();
+}
+
+class _AccountTransferBottomSheetState extends State<_AccountTransferBottomSheet> {
+  final _formKey = GlobalKey<FormState>();
+  late DateTime _transactedAt;
+  final _valueController = TextEditingController(text: '0.00');
+  List<AccountEntity> _accounts = [];
+  bool _loadingAccounts = true;
+  String? _sourceId;
+  String? _targetId;
+  bool _submitting = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _transactedAt = DateTime.now();
+    _loadAccounts();
+  }
+
+  Future<void> _loadAccounts() async {
+    try {
+      final list = await getIt<GetAccountsUsecase>()();
+      if (!mounted) return;
+      setState(() {
+        _accounts = list;
+        _loadingAccounts = false;
+        if (list.length >= 2) {
+          _sourceId ??= list.first.id;
+          _targetId ??= list[1].id;
+        }
+      });
+    } catch (_) {
+      if (mounted) setState(() => _loadingAccounts = false);
+    }
+  }
+
+  @override
+  void dispose() {
+    _valueController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _pickDate() async {
+    final d = await showDatePicker(
+      context: context,
+      initialDate: _transactedAt,
+      firstDate: DateTime(2000),
+      lastDate: DateTime(2100),
+    );
+    if (d == null || !mounted) return;
+    setState(() {
+      _transactedAt = DateTime(d.year, d.month, d.day, _transactedAt.hour, _transactedAt.minute);
+    });
+  }
+
+  Future<void> _pickTime() async {
+    final time = await showTimePicker(
+      context: context,
+      initialTime: TimeOfDay.fromDateTime(_transactedAt),
+    );
+    if (time == null || !mounted) return;
+    setState(() {
+      _transactedAt = DateTime(
+        _transactedAt.year,
+        _transactedAt.month,
+        _transactedAt.day,
+        time.hour,
+        time.minute,
+      );
+    });
+  }
+
+  Future<void> _submit() async {
+    if (!_formKey.currentState!.validate()) return;
+    if (_sourceId == null || _targetId == null) return;
+    if (_sourceId == _targetId) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(widget.l10n.transferAccountsMustDiffer)),
+      );
+      return;
+    }
+    final amount = double.tryParse(_valueController.text.trim());
+    if (amount == null || amount <= 0) return;
+
+    setState(() => _submitting = true);
+    final ok = await widget.cubit.transferBetweenAccounts(
+      sourceAccountId: _sourceId!,
+      targetAccountId: _targetId!,
+      amount: amount,
+      transactedAt: _transactedAt,
+    );
+    if (!mounted) return;
+    setState(() => _submitting = false);
+    if (ok) Navigator.of(context).pop();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = widget.l10n;
+    final locale = Localizations.localeOf(context).toString();
+    final dateStr = DateFormat.yMd(locale).format(_transactedAt);
+    final timeStr = DateFormat.Hm(locale).format(_transactedAt);
+    final bottomInset = MediaQuery.viewInsetsOf(context).bottom;
+
+    return Padding(
+      padding: EdgeInsets.only(bottom: bottomInset),
+      child: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Text(l10n.transferSheetTitle, style: Theme.of(context).textTheme.titleLarge),
+              const SizedBox(height: 16),
+              if (_loadingAccounts)
+                const Padding(
+                  padding: EdgeInsets.all(24),
+                  child: Center(child: CircularProgressIndicator()),
+                )
+              else if (_accounts.length < 2)
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 24),
+                  child: Text(l10n.transferNeedTwoAccounts, textAlign: TextAlign.center),
+                )
+              else
+                Form(
+                  key: _formKey,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Expanded(
+                            child: OutlinedButton.icon(
+                              onPressed: _pickDate,
+                              icon: const Icon(Icons.calendar_today_outlined, size: 18),
+                              label: Text('${l10n.transferDateLabel}\n$dateStr', textAlign: TextAlign.center),
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: OutlinedButton.icon(
+                              onPressed: _pickTime,
+                              icon: const Icon(Icons.schedule, size: 18),
+                              label: Text('${l10n.transferTimeLabel}\n$timeStr', textAlign: TextAlign.center),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Expanded(
+                            child: DropdownButtonFormField<String>(
+                              initialValue: _sourceId,
+                              decoration: InputDecoration(labelText: l10n.transferSourceAccount),
+                              items: _accounts
+                                  .map((a) => DropdownMenuItem(value: a.id, child: Text(a.name)))
+                                  .toList(),
+                              onChanged: (v) => setState(() => _sourceId = v),
+                              validator: (v) => v == null ? l10n.fieldRequired : null,
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: DropdownButtonFormField<String>(
+                              initialValue: _targetId,
+                              decoration: InputDecoration(labelText: l10n.transferTargetAccount),
+                              items: _accounts
+                                  .map((a) => DropdownMenuItem(value: a.id, child: Text(a.name)))
+                                  .toList(),
+                              onChanged: (v) => setState(() => _targetId = v),
+                              validator: (v) => v == null ? l10n.fieldRequired : null,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+                      Align(
+                        child: SizedBox(
+                          width: 200,
+                          child: TextFormField(
+                            controller: _valueController,
+                            decoration: InputDecoration(labelText: l10n.transactionAmount),
+                            keyboardType: const TextInputType.numberWithOptions(decimal: true, signed: false),
+                            textAlign: TextAlign.center,
+                            validator: (v) {
+                              if (v == null || v.trim().isEmpty) return l10n.fieldRequired;
+                              final n = double.tryParse(v.trim());
+                              if (n == null || n <= 0) return l10n.fieldRequired;
+                              return null;
+                            },
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 24),
+                      FilledButton(
+                        onPressed: _submitting ? null : _submit,
+                        child: _submitting
+                            ? const SizedBox(
+                                height: 20,
+                                width: 20,
+                                child: CircularProgressIndicator(strokeWidth: 2),
+                              )
+                            : Text(l10n.save),
+                      ),
+                    ],
+                  ),
+                ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+void _showAccountTransferSheet(BuildContext context, AppLocalizations l10n) {
+  final cubit = context.read<TransactionsCubit>();
+  showModalBottomSheet<void>(
+    context: context,
+    isScrollControlled: true,
+    showDragHandle: true,
+    builder: (_) => _AccountTransferBottomSheet(cubit: cubit, l10n: l10n),
+  );
 }
 
 class TransactionsPage extends StatelessWidget {
@@ -277,7 +520,7 @@ class _TransactionsMonthLoadSyncState extends State<_TransactionsMonthLoadSync> 
   Widget build(BuildContext context) => widget.child;
 }
 
-class _TransactionsView extends StatelessWidget {
+class _TransactionsView extends StatefulWidget {
   const _TransactionsView({
     this.accountIdFilter,
     this.accountNameFilter,
@@ -299,26 +542,33 @@ class _TransactionsView extends StatelessWidget {
   final String? tagNameFilter;
 
   @override
+  State<_TransactionsView> createState() => _TransactionsViewState();
+}
+
+class _TransactionsViewState extends State<_TransactionsView> {
+  bool _fabMenuOpen = false;
+
+  @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final monthNotifier = TransactionsMonthScope.of(context);
     final String title;
-    if (accountNameFilter != null && accountNameFilter!.isNotEmpty) {
-      title = '${accountNameFilter!} · ${l10n.transactions}';
-    } else if (cardNameFilter != null && cardNameFilter!.isNotEmpty) {
-      title = '${cardNameFilter!} · ${l10n.transactions}';
-    } else if (categoryNameFilter != null && categoryNameFilter!.isNotEmpty) {
-      title = '${categoryNameFilter!} · ${l10n.transactions}';
-    } else if (tagNameFilter != null && tagNameFilter!.isNotEmpty) {
-      title = '${tagNameFilter!} · ${l10n.transactions}';
+    if (widget.accountNameFilter != null && widget.accountNameFilter!.isNotEmpty) {
+      title = '${widget.accountNameFilter!} · ${l10n.transactions}';
+    } else if (widget.cardNameFilter != null && widget.cardNameFilter!.isNotEmpty) {
+      title = '${widget.cardNameFilter!} · ${l10n.transactions}';
+    } else if (widget.categoryNameFilter != null && widget.categoryNameFilter!.isNotEmpty) {
+      title = '${widget.categoryNameFilter!} · ${l10n.transactions}';
+    } else if (widget.tagNameFilter != null && widget.tagNameFilter!.isNotEmpty) {
+      title = '${widget.tagNameFilter!} · ${l10n.transactions}';
     } else {
       title = l10n.transactions;
     }
 
-    final isScoped = (accountIdFilter != null && accountIdFilter!.isNotEmpty) ||
-        (cardIdFilter != null && cardIdFilter!.isNotEmpty) ||
-        (categoryIdFilter != null && categoryIdFilter!.isNotEmpty) ||
-        (tagIdFilter != null && tagIdFilter!.isNotEmpty);
+    final isScoped = (widget.accountIdFilter != null && widget.accountIdFilter!.isNotEmpty) ||
+        (widget.cardIdFilter != null && widget.cardIdFilter!.isNotEmpty) ||
+        (widget.categoryIdFilter != null && widget.categoryIdFilter!.isNotEmpty) ||
+        (widget.tagIdFilter != null && widget.tagIdFilter!.isNotEmpty);
 
     return BlocConsumer<TransactionsCubit, TransactionsState>(
       listener: (context, state) {
@@ -342,15 +592,18 @@ class _TransactionsView extends StatelessWidget {
               appBarBottom: TransactionsMonthAppBarBottom(notifier: monthNotifier),
               floatingActionButton: _TransactionsExpandableFab(
                 l10n: l10n,
+                isOpen: _fabMenuOpen,
+                onOpenChanged: (v) => setState(() => _fabMenuOpen = v),
                 onNewTransaction: () => _showTxDialog(
                   context,
                   l10n,
                   null,
-                  accountIdFilter,
-                  cardIdFilter,
-                  categoryIdFilter,
-                  tagIdFilter,
+                  widget.accountIdFilter,
+                  widget.cardIdFilter,
+                  widget.categoryIdFilter,
+                  widget.tagIdFilter,
                 ),
+                onTransfer: () => _showAccountTransferSheet(context, l10n),
               ),
               bottomNavigationBar: showTotalsBar
                   ? _TransactionsTotalsBarHost(
@@ -358,13 +611,26 @@ class _TransactionsView extends StatelessWidget {
                       transactions: filtered,
                     )
                   : null,
-              body: _body(
-                context,
-                state,
-                l10n,
-                visibleMonth,
-                monthNotifier,
-                filtered,
+              body: Stack(
+                fit: StackFit.expand,
+                children: [
+                  _body(
+                    context,
+                    state,
+                    l10n,
+                    visibleMonth,
+                    monthNotifier,
+                    filtered,
+                  ),
+                  if (_fabMenuOpen)
+                    Positioned.fill(
+                      child: GestureDetector(
+                        behavior: HitTestBehavior.opaque,
+                        onTap: () => setState(() => _fabMenuOpen = false),
+                        child: const SizedBox.expand(),
+                      ),
+                    ),
+                ],
               ),
             );
           },
@@ -380,17 +646,17 @@ class _TransactionsView extends StatelessWidget {
       _ => <TransactionEntity>[],
     };
     var list = rawList;
-    if (accountIdFilter != null && accountIdFilter!.isNotEmpty) {
-      list = list.where((t) => t.accountId == accountIdFilter).toList();
+    if (widget.accountIdFilter != null && widget.accountIdFilter!.isNotEmpty) {
+      list = list.where((t) => t.accountId == widget.accountIdFilter).toList();
     }
-    if (cardIdFilter != null && cardIdFilter!.isNotEmpty) {
-      list = list.where((t) => t.cardId == cardIdFilter).toList();
+    if (widget.cardIdFilter != null && widget.cardIdFilter!.isNotEmpty) {
+      list = list.where((t) => t.cardId == widget.cardIdFilter).toList();
     }
-    if (categoryIdFilter != null && categoryIdFilter!.isNotEmpty) {
-      list = list.where((t) => t.categoryId == categoryIdFilter).toList();
+    if (widget.categoryIdFilter != null && widget.categoryIdFilter!.isNotEmpty) {
+      list = list.where((t) => t.categoryId == widget.categoryIdFilter).toList();
     }
-    if (tagIdFilter != null && tagIdFilter!.isNotEmpty) {
-      list = list.where((t) => t.tagId == tagIdFilter).toList();
+    if (widget.tagIdFilter != null && widget.tagIdFilter!.isNotEmpty) {
+      list = list.where((t) => t.tagId == widget.tagIdFilter).toList();
     }
     return list;
   }
@@ -881,6 +1147,7 @@ class _TransactionDialogState extends State<_TransactionDialog> {
           value: value,
           ignore: _ignore,
           percentage: pct,
+          transactionGroupId: widget.transaction!.transactionGroupId,
         );
       }
     } finally {
