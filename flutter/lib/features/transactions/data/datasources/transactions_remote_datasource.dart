@@ -6,6 +6,9 @@ abstract class TransactionsRemoteDatasource {
   /// [monthStartLocal] normalized to local calendar day 1; range is \[start local, next month local).
   Future<List<TransactionEntity>> getTransactionsForMonth(DateTime monthStartLocal);
 
+  /// [yearStartLocal] normalized to Jan 1 local; range is \[Jan 1, Jan 1 next year).
+  Future<List<TransactionEntity>> getTransactionsForYear(DateTime yearStartLocal);
+
   /// All-time search on [description] (case-insensitive substring). RLS limits to current user.
   Future<List<TransactionEntity>> searchTransactionsByDescription(String query, {int limit = 200});
   Future<TransactionEntity> createTransaction({
@@ -58,6 +61,24 @@ wallet_tags(name)
     final startUtc = startLocal.toUtc().toIso8601String();
     final endUtc = endExclusiveLocal.toUtc().toIso8601String();
     AppLogger.debug('getTransactionsForMonth utc: $startUtc .. $endUtc');
+    final data = await _client
+        .from('wallet_transactions')
+        .select(_transactionSelectEmbedded)
+        .isFilter('deletedAt', null)
+        .gte('transactedAt', startUtc)
+        .lt('transactedAt', endUtc)
+        .order('transactedAt', ascending: false);
+    return (data as List).map((e) => TransactionEntity.fromJson(e as Map<String, dynamic>)).toList();
+  }
+
+  @override
+  Future<List<TransactionEntity>> getTransactionsForYear(DateTime yearStartLocal) async {
+    final y = yearStartLocal.year;
+    final startLocal = DateTime(y, 1, 1);
+    final endExclusiveLocal = DateTime(y + 1, 1, 1);
+    final startUtc = startLocal.toUtc().toIso8601String();
+    final endUtc = endExclusiveLocal.toUtc().toIso8601String();
+    AppLogger.debug('getTransactionsForYear utc: $startUtc .. $endUtc');
     final data = await _client
         .from('wallet_transactions')
         .select(_transactionSelectEmbedded)
