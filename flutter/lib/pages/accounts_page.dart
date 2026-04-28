@@ -130,6 +130,12 @@ class _AccountsView extends StatelessWidget {
       _ => <AccountEntity>[],
     };
 
+    final balancesByAccountId = switch (state) {
+      AccountsLoaded(:final balancesByAccountId) => balancesByAccountId,
+      AccountsActionError(:final balancesByAccountId) => balancesByAccountId,
+      _ => const <String, double>{},
+    };
+
     if (accounts.isEmpty) {
       return RefreshIndicator(
         onRefresh: refresh,
@@ -152,7 +158,10 @@ class _AccountsView extends StatelessWidget {
         physics: const AlwaysScrollableScrollPhysics(),
         padding: const EdgeInsets.only(bottom: 88),
         itemCount: accounts.length,
-        itemBuilder: (context, index) => _AccountTile(account: accounts[index]),
+        itemBuilder: (context, index) => _AccountTile(
+          account: accounts[index],
+          balance: balancesByAccountId[accounts[index].id] ?? 0,
+        ),
       ),
     );
   }
@@ -161,12 +170,20 @@ class _AccountsView extends StatelessWidget {
 
 class _AccountTile extends StatelessWidget {
   final AccountEntity account;
-  const _AccountTile({required this.account});
+  final double balance;
+  const _AccountTile({required this.account, required this.balance});
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final theme = Theme.of(context);
     final cubit = context.read<AccountsCubit>();
+
+    Color balanceColor() {
+      if (balance > 0) return const Color(0xFF1B8736);
+      if (balance < 0) return theme.colorScheme.error;
+      return theme.colorScheme.onSurface;
+    }
 
     void openEdit() {
       _showAccountBottomSheet(context, l10n, account: account);
@@ -178,6 +195,10 @@ class _AccountTile extends StatelessWidget {
       subtitle: account.description != null
           ? Text(account.description!, maxLines: 2, overflow: TextOverflow.ellipsis)
           : null,
+      trailing: Text(
+        l10n.transactionAmountValue(balance.toStringAsFixed(2)),
+        style: TextStyle(fontWeight: FontWeight.w600, color: balanceColor()),
+      ),
       onEdit: openEdit,
       confirmDelete: () async {
         final ok = await showDialog<bool>(
