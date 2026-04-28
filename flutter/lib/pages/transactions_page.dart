@@ -310,7 +310,7 @@ class _AccountTransferBottomSheetState extends State<_AccountTransferBottomSheet
       _ignorePair = es.ignore || et.ignore;
     } else {
       _transactedAt = DateTime.now();
-      _valueController = TextEditingController(text: '0.00');
+      _valueController = TextEditingController(text: '0');
     }
     _dateDisplayController = TextEditingController();
     _timeDisplayController = TextEditingController();
@@ -379,21 +379,9 @@ class _AccountTransferBottomSheetState extends State<_AccountTransferBottomSheet
     return false;
   }
 
-  void _assignDefaultPickKeysIfNeeded() {
-    if (_isEditingPair) return;
-    if (_paymentMethodCount < 2) return;
-    final keys = <String>[
-      ..._cards.map((c) => '$_paymentMethodPickCardPrefix${c.id}'),
-      ..._accounts.map((a) => '$_paymentMethodPickAccountPrefix${a.id}'),
-    ];
-    _sourcePickKey ??= keys[0];
-    _targetPickKey ??= keys[1];
-  }
-
   void _pruneStalePickKeysAndDefault() {
     if (!_pickKeyStillValid(_sourcePickKey)) _sourcePickKey = null;
     if (!_pickKeyStillValid(_targetPickKey)) _targetPickKey = null;
-    _assignDefaultPickKeysIfNeeded();
   }
 
   Future<void> _loadPaymentMethods() async {
@@ -494,7 +482,7 @@ class _AccountTransferBottomSheetState extends State<_AccountTransferBottomSheet
       );
       return;
     }
-    final amount = double.tryParse(_valueController.text.trim());
+    final amount = _parseTransactionAmountInput(_valueController.text);
     if (amount == null || amount <= 0) return;
 
     final s = _parseTransferPickKey(_sourcePickKey!);
@@ -671,8 +659,9 @@ class _AccountTransferBottomSheetState extends State<_AccountTransferBottomSheet
                       keyboardType: const TextInputType.numberWithOptions(decimal: true, signed: false),
                       validator: (v) {
                         if (v == null || v.trim().isEmpty) return l10n.fieldRequired;
-                        final n = double.tryParse(v.trim());
-                        if (n == null || n <= 0) return l10n.fieldRequired;
+                        final amt = _parseTransactionAmountInput(v);
+                        if (amt == null) return l10n.transactionAmountInvalidNumber;
+                        if (amt <= 0) return l10n.transferAmountMustBePositive;
                         return null;
                       },
                     ),
@@ -2374,7 +2363,7 @@ class _TransactionDialogState extends State<_TransactionDialog> {
     if (!_formKey.currentState!.validate()) return;
     final value = _parseTransactionAmountInput(_valueController.text);
     final pct = double.tryParse(_percentageController.text.trim());
-    if (value == null || pct == null || pct < 0 || pct > 100) return;
+    if (value == null || value == 0 || pct == null || pct < 0 || pct > 100) return;
     final desc = _descriptionController.text.trim().isEmpty ? null : _descriptionController.text.trim();
     setState(() => _loading = true);
     try {
@@ -2484,9 +2473,9 @@ class _TransactionDialogState extends State<_TransactionDialog> {
                         keyboardType: const TextInputType.numberWithOptions(decimal: true, signed: true),
                         validator: (v) {
                           if (v == null || v.trim().isEmpty) return l10n.fieldRequired;
-                          if (_parseTransactionAmountInput(v) == null) {
-                            return l10n.transactionAmountInvalidNumber;
-                          }
+                          final amt = _parseTransactionAmountInput(v);
+                          if (amt == null) return l10n.transactionAmountInvalidNumber;
+                          if (amt == 0) return l10n.transactionAmountMustBeNonZero;
                           return null;
                         },
                       ),
