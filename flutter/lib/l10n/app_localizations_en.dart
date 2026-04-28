@@ -54,6 +54,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get editAccount => 'Edit account';
 
   @override
+  String get accountSubmitCreate => 'Create';
+
+  @override
   String get deleteAccount => 'Delete account';
 
   @override
