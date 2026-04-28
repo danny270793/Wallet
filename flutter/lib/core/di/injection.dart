@@ -14,6 +14,7 @@ import '../../features/accounts/domain/usecases/get_accounts_usecase.dart';
 import '../../features/accounts/domain/usecases/create_account_usecase.dart';
 import '../../features/accounts/domain/usecases/update_account_usecase.dart';
 import '../../features/accounts/domain/usecases/delete_account_usecase.dart';
+import '../../features/accounts/domain/usecases/adjust_account_balance_via_transaction_usecase.dart';
 import '../../features/accounts/presentation/cubit/accounts_cubit.dart';
 import '../../features/cards/data/datasources/cards_remote_datasource.dart';
 import '../../features/cards/data/repositories/cards_repository_impl.dart';
@@ -75,6 +76,15 @@ void setupDi() {
   getIt.registerFactory<CreateAccountUsecase>(() => CreateAccountUsecase(getIt()));
   getIt.registerFactory<UpdateAccountUsecase>(() => UpdateAccountUsecase(getIt()));
   getIt.registerFactory<DeleteAccountUsecase>(() => DeleteAccountUsecase(getIt()));
+  getIt.registerFactory<AdjustAccountBalanceViaTransactionUsecase>(
+    () => AdjustAccountBalanceViaTransactionUsecase(
+      getCategories: getIt(),
+      createCategory: getIt(),
+      getTags: getIt(),
+      createTag: getIt(),
+      createTransaction: getIt(),
+    ),
+  );
   getIt.registerFactory<AccountsCubit>(
     () => AccountsCubit(
       getAccounts: getIt(),
@@ -82,6 +92,7 @@ void setupDi() {
       createAccount: getIt(),
       updateAccount: getIt(),
       deleteAccount: getIt(),
+      adjustBalanceViaTransaction: getIt(),
     ),
   );
 
