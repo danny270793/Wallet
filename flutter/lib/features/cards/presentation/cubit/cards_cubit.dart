@@ -5,6 +5,7 @@ import '../../domain/usecases/get_cards_usecase.dart';
 import '../../domain/usecases/create_card_usecase.dart';
 import '../../domain/usecases/update_card_usecase.dart';
 import '../../domain/usecases/delete_card_usecase.dart';
+import '../../domain/usecases/adjust_card_balance_via_transaction_usecase.dart';
 import 'cards_state.dart';
 
 class CardsCubit extends Cubit<CardsState> {
@@ -12,16 +13,19 @@ class CardsCubit extends Cubit<CardsState> {
   final CreateCardUsecase _createCard;
   final UpdateCardUsecase _updateCard;
   final DeleteCardUsecase _deleteCard;
+  final AdjustCardBalanceViaTransactionUsecase _adjustBalanceViaTransaction;
 
   CardsCubit({
     required GetCardsUsecase getCards,
     required CreateCardUsecase createCard,
     required UpdateCardUsecase updateCard,
     required DeleteCardUsecase deleteCard,
+    required AdjustCardBalanceViaTransactionUsecase adjustBalanceViaTransaction,
   })  : _getCards = getCards,
         _createCard = createCard,
         _updateCard = updateCard,
         _deleteCard = deleteCard,
+        _adjustBalanceViaTransaction = adjustBalanceViaTransaction,
         super(const CardsInitial());
 
   Future<void> load() async {
@@ -51,11 +55,21 @@ class CardsCubit extends Cubit<CardsState> {
     }
   }
 
-  Future<void> update({required String id, required String name, String? description}) async {
+  Future<void> update({
+    required String id,
+    required String name,
+    String? description,
+    required double previousBalance,
+    required double targetBalance,
+  }) async {
     final current = _currentCards();
     AppLogger.debug('updating card: $id');
     try {
       await _updateCard(id: id, name: name, description: description);
+      final delta = targetBalance - previousBalance;
+      if (delta.abs() >= 1e-9) {
+        await _adjustBalanceViaTransaction(cardId: id, delta: delta);
+      }
       AppLogger.info('card updated: $id');
       final cards = await _getCards();
       emit(CardsLoaded(cards));
