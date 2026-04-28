@@ -205,7 +205,7 @@ class _CategoryTile extends StatelessWidget {
         );
         return ok ?? false;
       },
-      onDeleted: () => cubit.delete(id: category.id),
+      onDelete: () => cubit.delete(id: category.id),
     );
   }
 }
