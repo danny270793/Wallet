@@ -148,13 +148,25 @@ class _AccountsView extends StatelessWidget {
       );
     }
 
+    final totalWeighted = accounts.fold<double>(0, (s, a) => s + a.balanceWeighted);
+    final totalCounted = accounts.fold<double>(0, (s, a) => s + a.balanceCounted);
+
     return RefreshIndicator(
       onRefresh: refresh,
       child: ListView.builder(
         physics: const AlwaysScrollableScrollPhysics(),
         padding: const EdgeInsets.only(bottom: 88),
-        itemCount: accounts.length,
-        itemBuilder: (context, index) => _AccountTile(account: accounts[index]),
+        itemCount: accounts.length + 1,
+        itemBuilder: (context, index) {
+          if (index == accounts.length) {
+            return WalletDualBalanceListFooter(
+              l10n: l10n,
+              totalWeighted: totalWeighted,
+              totalCounted: totalCounted,
+            );
+          }
+          return _AccountTile(account: accounts[index]);
+        },
       ),
     );
   }
