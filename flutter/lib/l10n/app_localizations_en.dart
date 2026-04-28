@@ -134,6 +134,21 @@ class AppLocalizationsEn extends AppLocalizations {
   String get transactions => 'Transactions';
 
   @override
+  String get transactionsPickMonth => 'Choose month';
+
+  @override
+  String get transactionsPickPreviousYear => 'Previous year';
+
+  @override
+  String get transactionsPickNextYear => 'Next year';
+
+  @override
+  String get year => 'Year';
+
+  @override
+  String get month => 'Month';
+
+  @override
   String get noTransactions => 'No transactions yet';
 
   @override
