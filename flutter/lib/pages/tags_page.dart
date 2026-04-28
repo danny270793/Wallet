@@ -164,7 +164,6 @@ class _TagTile extends StatelessWidget {
 
     return SwipeableListTile(
       itemKey: tag.id,
-      leading: initialsAvatar(context, tag.name),
       title: Text(tag.name),
       subtitle: tag.description != null
           ? Text(tag.description!, maxLines: 2, overflow: TextOverflow.ellipsis)
