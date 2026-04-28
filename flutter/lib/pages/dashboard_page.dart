@@ -39,8 +39,8 @@ class _MonthlyDashboardView extends StatefulWidget {
 }
 
 class _MonthlyDashboardViewState extends State<_MonthlyDashboardView> {
-  /// When true, ignored rows count toward income/outcome/balance (matches transactions totals default).
-  bool _includeIgnored = true;
+  /// When true, ignored rows count toward income/outcome/balance.
+  bool _includeIgnored = false;
 
   /// Same semantics as [MonthlyTagPieChart.tagKeysFilter]: null = all tags.
   Set<String>? _tagKeysFilter;
@@ -83,7 +83,8 @@ class _MonthlyDashboardViewState extends State<_MonthlyDashboardView> {
       },
       builder: (context, state) {
         final txs = _monthTransactions(state);
-        final tagFilter = pruneTagKeysFilter(txs, _includeIgnored, _tagKeysFilter);
+        // Pies always aggregate tagged/categorized expenses including ignored rows so all slices show by default.
+        final tagFilter = pruneTagKeysFilter(txs, true, _tagKeysFilter);
         if (!setEquals(tagFilter, _tagKeysFilter)) {
           WidgetsBinding.instance.addPostFrameCallback((_) {
             if (!mounted) return;
@@ -203,14 +204,14 @@ class _MonthlyDashboardViewState extends State<_MonthlyDashboardView> {
           MonthlyTagPieChart(
             l10n: l10n,
             transactions: _monthTransactions(state),
-            includeIgnored: _includeIgnored,
+            includeIgnored: true,
             tagKeysFilter: tagKeysFilter,
             onTagKeysFilterChanged: (v) => setState(() => _tagKeysFilter = v),
           ),
           MonthlyCategoryExpensePieChart(
             l10n: l10n,
             transactions: listTransactions,
-            includeIgnored: _includeIgnored,
+            includeIgnored: true,
           ),
           DashboardMonthTransactionsList(
             l10n: l10n,
