@@ -23,6 +23,7 @@ import '../widgets/card_editor_sheet.dart';
 import '../widgets/category_editor_sheet.dart';
 import '../widgets/tag_editor_sheet.dart';
 import '../widgets/shell_scaffold.dart';
+import '../widgets/transaction_delete_dialogs.dart';
 import '../widgets/swipeable_list_tile.dart';
 import '../widgets/transaction_month_totals.dart';
 import '../widgets/transactions_month_scope.dart';
@@ -231,13 +232,17 @@ class _TransactionsTotalsBarHostState extends State<_TransactionsTotalsBarHost> 
 }
 
 /// Speed dial: main control plus new-transaction and account transfer.
-class _TransactionsExpandableFab extends StatelessWidget {
-  const _TransactionsExpandableFab({
+class TransactionsExpandableFab extends StatelessWidget {
+  const TransactionsExpandableFab({
+    super.key,
     required this.l10n,
     required this.isOpen,
     required this.onOpenChanged,
     required this.onNewTransaction,
     required this.onTransfer,
+    this.transferHeroTag = 'transactions_fab_transfer',
+    this.newTransactionHeroTag = 'transactions_fab_new',
+    this.toggleHeroTag = 'transactions_fab_toggle',
   });
 
   final AppLocalizations l10n;
@@ -245,6 +250,9 @@ class _TransactionsExpandableFab extends StatelessWidget {
   final ValueChanged<bool> onOpenChanged;
   final VoidCallback onNewTransaction;
   final VoidCallback onTransfer;
+  final String transferHeroTag;
+  final String newTransactionHeroTag;
+  final String toggleHeroTag;
 
   @override
   Widget build(BuildContext context) {
@@ -256,7 +264,7 @@ class _TransactionsExpandableFab extends StatelessWidget {
           Tooltip(
             message: l10n.transactionsFabTransfer,
             child: FloatingActionButton.small(
-              heroTag: 'transactions_fab_transfer',
+              heroTag: transferHeroTag,
               onPressed: () {
                 onOpenChanged(false);
                 onTransfer();
@@ -268,7 +276,7 @@ class _TransactionsExpandableFab extends StatelessWidget {
           Tooltip(
             message: l10n.newTransaction,
             child: FloatingActionButton.small(
-              heroTag: 'transactions_fab_new',
+              heroTag: newTransactionHeroTag,
               onPressed: () {
                 onOpenChanged(false);
                 onNewTransaction();
@@ -279,7 +287,7 @@ class _TransactionsExpandableFab extends StatelessWidget {
           const SizedBox(height: 12),
         ],
         FloatingActionButton(
-          heroTag: 'transactions_fab_toggle',
+          heroTag: toggleHeroTag,
           onPressed: () => onOpenChanged(!isOpen),
           child: Icon(isOpen ? Icons.close : Icons.add),
         ),
@@ -721,7 +729,10 @@ class _AccountTransferBottomSheetState extends State<_AccountTransferBottomSheet
   }
 }
 
-void _showAccountTransferSheet(BuildContext context, AppLocalizations l10n) {
+void showAccountTransferCreateBottomSheet(
+  BuildContext context, {
+  required AppLocalizations l10n,
+}) {
   final cubit = context.read<TransactionsCubit>();
   showModalBottomSheet<void>(
     context: context,
@@ -872,7 +883,7 @@ class _TransactionsViewState extends State<_TransactionsView> {
                   },
                 ),
               ],
-              floatingActionButton: _TransactionsExpandableFab(
+              floatingActionButton: TransactionsExpandableFab(
                 l10n: l10n,
                 isOpen: _fabMenuOpen,
                 onOpenChanged: (v) => setState(() => _fabMenuOpen = v),
@@ -885,7 +896,7 @@ class _TransactionsViewState extends State<_TransactionsView> {
                   widget.categoryIdFilter,
                   widget.tagIdFilter,
                 ),
-                onTransfer: () => _showAccountTransferSheet(context, l10n),
+                onTransfer: () => showAccountTransferCreateBottomSheet(context, l10n: l10n),
               ),
               bottomNavigationBar: showTotalsBar
                   ? _TransactionsTotalsBarHost(
@@ -1499,27 +1510,7 @@ class _TransferPairTile extends StatelessWidget {
       subtitle: subtitle,
       trailing: trailing,
       onEdit: openEdit,
-      confirmDelete: () async {
-        final ok = await showDialog<bool>(
-          context: context,
-          builder: (dialogContext) => AlertDialog(
-            title: Text(l10n.deleteTransferPair),
-            content: Text(l10n.confirmDeleteTransferPair),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.of(dialogContext).pop(false),
-                child: Text(l10n.cancel),
-              ),
-              ElevatedButton(
-                style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-                onPressed: () => Navigator.of(dialogContext).pop(true),
-                child: Text(l10n.delete, style: const TextStyle(color: Colors.white)),
-              ),
-            ],
-          ),
-        );
-        return ok ?? false;
-      },
+      confirmDelete: () => confirmDeleteTransferPairDialog(context, l10n),
       onDelete: () => cubit.deleteMany([source.id, target.id]),
     );
 
@@ -1684,27 +1675,7 @@ class _TransactionTile extends StatelessWidget {
       title: titleSection(),
       trailing: trailingPrices,
       onEdit: openEdit,
-      confirmDelete: () async {
-        final ok = await showDialog<bool>(
-          context: context,
-          builder: (dialogContext) => AlertDialog(
-            title: Text(l10n.deleteTransaction),
-            content: Text(l10n.confirmDeleteTransaction),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.of(dialogContext).pop(false),
-                child: Text(l10n.cancel),
-              ),
-              ElevatedButton(
-                style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-                onPressed: () => Navigator.of(dialogContext).pop(true),
-                child: Text(l10n.delete, style: const TextStyle(color: Colors.white)),
-              ),
-            ],
-          ),
-        );
-        return ok ?? false;
-      },
+      confirmDelete: () => confirmDeleteTransactionDialog(context, l10n),
       onDelete: () => cubit.delete(id: transaction.id),
     );
 
