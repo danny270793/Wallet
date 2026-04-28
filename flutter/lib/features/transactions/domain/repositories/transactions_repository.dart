@@ -2,6 +2,7 @@ import '../entities/transaction_entity.dart';
 
 abstract class TransactionsRepository {
   Future<List<TransactionEntity>> getTransactionsForMonth(DateTime monthStartLocal);
+  Future<List<TransactionEntity>> getTransactionsForYear(DateTime yearStartLocal);
   Future<List<TransactionEntity>> searchTransactionsByDescription(String query, {int limit = 200});
   Future<TransactionEntity> createTransaction({
     String? accountId,
