@@ -464,7 +464,7 @@ class _TransactionTile extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.end,
       children: [
         Text(
-          l10n.transactionAmountValue(transaction.value.toString()),
+          l10n.transactionAmountValue(transaction.value.toStringAsFixed(2)),
           style: theme.textTheme.titleMedium?.copyWith(
             fontWeight: FontWeight.w700,
             color: valueColor(),
@@ -595,7 +595,9 @@ class _TransactionDialogState extends State<_TransactionDialog> {
     super.initState();
     final t = widget.transaction;
     _transactedAt = t?.transactedAt.toLocal() ?? DateTime.now();
-    _valueController = TextEditingController(text: t != null ? t.value.toString() : '0');
+    _valueController = TextEditingController(
+      text: t != null ? t.value.toStringAsFixed(2) : '0.00',
+    );
     _percentageController = TextEditingController(text: t != null ? t.percentage.toString() : '0');
     _descriptionController = TextEditingController(text: t?.description ?? '');
     _ignore = t?.ignore ?? false;
