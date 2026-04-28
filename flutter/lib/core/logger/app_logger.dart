@@ -1,4 +1,7 @@
 import 'package:flutter/foundation.dart';
+import 'package:get_it/get_it.dart';
+
+import '../wallet_actions/wallet_actions_reporter.dart';
 
 abstract class AppLogger {
   static void debug(String message) {
@@ -17,10 +20,19 @@ abstract class AppLogger {
   }
 
   static void error(String message, [Object? error, StackTrace? stackTrace]) {
-    if (!kDebugMode) return;
-    _log('ERROR', message);
-    if (error != null) debugPrint('         error: $error');
-    if (stackTrace != null) debugPrint('    stacktrace: $stackTrace');
+    if (kDebugMode) {
+      _log('ERROR', message);
+      if (error != null) debugPrint('         error: $error');
+      if (stackTrace != null) debugPrint('    stacktrace: $stackTrace');
+    }
+    if (GetIt.instance.isRegistered<WalletActionsReporter>()) {
+      final r = GetIt.instance<WalletActionsReporter>();
+      if (error != null) {
+        r.recordCaughtWithContext(message, error, stackTrace);
+      } else {
+        r.recordErrorMessage(message, stackTrace);
+      }
+    }
   }
 
   static void _log(String level, String message) {
