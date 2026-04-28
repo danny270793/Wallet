@@ -67,6 +67,11 @@
     }
   },
   "transactions": "Transactions",
+  "transactionsPickMonth": "Choose month",
+  "transactionsPickPreviousYear": "Previous year",
+  "transactionsPickNextYear": "Next year",
+  "year": "Year",
+  "month": "Month",
   "noTransactions": "No transactions yet",
   "noTransactionsInMonth": "No transactions in {monthYear}",
   "@noTransactionsInMonth": {
