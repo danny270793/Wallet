@@ -184,6 +184,12 @@ abstract class AppLocalizations {
   /// **'Edit account'**
   String get editAccount;
 
+  /// No description provided for @accountSubmitCreate.
+  ///
+  /// In en, this message translates to:
+  /// **'Create'**
+  String get accountSubmitCreate;
+
   /// No description provided for @deleteAccount.
   ///
   /// In en, this message translates to:
