@@ -9,10 +9,6 @@ class AccountEntity extends Equatable {
   final DateTime updatedAt;
   /// Sum of all transaction values (non-deleted); from [wallet_accounts_with_balance].
   final double balance;
-  /// Sum of value × (percentage / 100) per transaction.
-  final double balanceWeighted;
-  /// Sum of value for transactions with ignore = false.
-  final double balanceCounted;
 
   const AccountEntity({
     required this.id,
@@ -22,8 +18,6 @@ class AccountEntity extends Equatable {
     required this.createdAt,
     required this.updatedAt,
     this.balance = 0,
-    this.balanceWeighted = 0,
-    this.balanceCounted = 0,
   });
 
   factory AccountEntity.fromJson(Map<String, dynamic> json) => AccountEntity(
@@ -34,11 +28,9 @@ class AccountEntity extends Equatable {
     createdAt: DateTime.parse(json['createdAt'] as String),
     updatedAt: DateTime.parse(json['updatedAt'] as String),
     balance: (json['balance'] as num?)?.toDouble() ?? 0,
-    balanceWeighted: (json['balanceWeighted'] as num?)?.toDouble() ?? 0,
-    balanceCounted: (json['balanceCounted'] as num?)?.toDouble() ?? 0,
   );
 
   @override
   List<Object?> get props =>
-      [id, userId, name, description, createdAt, updatedAt, balance, balanceWeighted, balanceCounted];
+      [id, userId, name, description, createdAt, updatedAt, balance];
 }
