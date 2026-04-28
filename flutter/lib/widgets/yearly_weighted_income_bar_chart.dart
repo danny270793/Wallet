@@ -94,6 +94,19 @@ List<double> weightedCumulativeNetByMonthForYear(
   return out;
 }
 
+/// Cumulative YTD values for Jan through [lastMonthWithTransactionsForYear], then zeros so the
+/// chart keeps 12 month slots like the net chart but shows no bar after the last month with data.
+List<double> _cumulativeNetMonthlyBarsWithTrailingZeros(
+  List<TransactionEntity> txs,
+  int year, {
+  required bool includeIgnored,
+}) {
+  final full = weightedCumulativeNetByMonthForYear(txs, year, includeIgnored: includeIgnored);
+  final last = lastMonthWithTransactionsForYear(txs, year, includeIgnored: includeIgnored);
+  if (last == 0) return full;
+  return List<double>.generate(12, (i) => i < last ? full[i] : 0.0);
+}
+
 /// Bar chart: monthly weighted income for [year] from [transactions].
 class YearlyWeightedIncomeBarChart extends StatelessWidget {
   const YearlyWeightedIncomeBarChart({
@@ -214,17 +227,11 @@ class YearlyCumulativeNetBarChart extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    final full = weightedCumulativeNetByMonthForYear(
+    final monthly = _cumulativeNetMonthlyBarsWithTrailingZeros(
       transactions,
       year,
       includeIgnored: includeIgnored,
     );
-    final last = lastMonthWithTransactionsForYear(
-      transactions,
-      year,
-      includeIgnored: includeIgnored,
-    );
-    final monthly = last == 0 ? full : full.sublist(0, last);
     return _YearlyMonthlyBarChartCore(
       l10n: l10n,
       year: year,
