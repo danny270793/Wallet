@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 import 'package:wallet/l10n/app_localizations.dart';
@@ -45,6 +46,57 @@ double? _parseTransactionAmountInput(String? raw) {
   if (x == null || !x.isFinite) return null;
   return x;
 }
+
+/// Allows optional leading minus, digits, and at most one `.` or `,` as decimal separator.
+final class _DecimalAmountInputFormatter extends TextInputFormatter {
+  const _DecimalAmountInputFormatter({this.allowNegative = true});
+
+  final bool allowNegative;
+
+  static String _filter(String input, {required bool allowNegative}) {
+    if (input.isEmpty) return input;
+    final buf = StringBuffer();
+    var hasSep = false;
+    for (var i = 0; i < input.length; i++) {
+      final c = input[i];
+      if (allowNegative && c == '-' && i == 0) {
+        buf.write(c);
+        continue;
+      }
+      final u = c.codeUnitAt(0);
+      if (u >= 0x30 && u <= 0x39) {
+        buf.write(c);
+        continue;
+      }
+      if ((c == '.' || c == ',') && !hasSep) {
+        buf.write(c);
+        hasSep = true;
+      }
+    }
+    return buf.toString();
+  }
+
+  @override
+  TextEditingValue formatEditUpdate(TextEditingValue oldValue, TextEditingValue newValue) {
+    final filtered = _filter(newValue.text, allowNegative: allowNegative);
+    if (filtered == newValue.text) return newValue;
+    final end = newValue.selection.end.clamp(0, newValue.text.length);
+    final mapped = _filter(newValue.text.substring(0, end), allowNegative: allowNegative).length;
+    final off = mapped.clamp(0, filtered.length);
+    return TextEditingValue(
+      text: filtered,
+      selection: TextSelection.collapsed(offset: off),
+    );
+  }
+}
+
+const _transactionAmountInputFormatters = <TextInputFormatter>[
+  _DecimalAmountInputFormatter(allowNegative: true),
+];
+
+const _transferAmountInputFormatters = <TextInputFormatter>[
+  _DecimalAmountInputFormatter(allowNegative: false),
+];
 
 /// Local calendar day (midnight) used as a group key for [transactedAt].
 DateTime _calendarDayLocal(DateTime utcOrLocal) {
@@ -657,6 +709,7 @@ class _AccountTransferBottomSheetState extends State<_AccountTransferBottomSheet
                       controller: _valueController,
                       decoration: InputDecoration(labelText: l10n.transactionAmount),
                       keyboardType: const TextInputType.numberWithOptions(decimal: true, signed: false),
+                      inputFormatters: _transferAmountInputFormatters,
                       validator: (v) {
                         if (v == null || v.trim().isEmpty) return l10n.fieldRequired;
                         final amt = _parseTransactionAmountInput(v);
@@ -2471,6 +2524,7 @@ class _TransactionDialogState extends State<_TransactionDialog> {
                         controller: _valueController,
                         decoration: InputDecoration(labelText: l10n.transactionAmount),
                         keyboardType: const TextInputType.numberWithOptions(decimal: true, signed: true),
+                        inputFormatters: _transactionAmountInputFormatters,
                         validator: (v) {
                           if (v == null || v.trim().isEmpty) return l10n.fieldRequired;
                           final amt = _parseTransactionAmountInput(v);
