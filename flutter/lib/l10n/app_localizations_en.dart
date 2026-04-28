@@ -404,7 +404,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get transactionAmount => 'Amount';
 
   @override
+  String get transactionAmountInvalidNumber =>
+      'Enter a valid number (optional minus sign and decimals)';
+
+  @override
   String get transactionPercentage => 'Percentage';
+
+  @override
+  String get transactionPercentageInvalidRange =>
+      'Enter a number from 0 to 100';
 
   @override
   String get transactionIgnore => 'Ignore';
