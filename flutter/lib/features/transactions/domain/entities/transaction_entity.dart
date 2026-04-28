@@ -7,6 +7,7 @@ class TransactionEntity extends Equatable {
   final String? cardId;
   final String? categoryId;
   final String? tagId;
+  final String? description;
   final DateTime transactedAt;
   final double value;
   final bool ignore;
@@ -21,6 +22,7 @@ class TransactionEntity extends Equatable {
     this.cardId,
     this.categoryId,
     this.tagId,
+    this.description,
     required this.transactedAt,
     required this.value,
     required this.ignore,
@@ -39,6 +41,7 @@ class TransactionEntity extends Equatable {
       cardId: json['cardId'] as String?,
       categoryId: json['categoryId'] as String?,
       tagId: json['tagId'] as String?,
+      description: json['description'] as String?,
       transactedAt: DateTime.parse(json['transactedAt'] as String),
       value: asDouble(json['value']),
       ignore: json['ignore'] as bool,
@@ -56,6 +59,7 @@ class TransactionEntity extends Equatable {
     cardId,
     categoryId,
     tagId,
+    description,
     transactedAt,
     value,
     ignore,
