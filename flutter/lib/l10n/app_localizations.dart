@@ -184,29 +184,11 @@ abstract class AppLocalizations {
   /// **'Balance'**
   String get accountBalance;
 
-  /// No description provided for @listBalanceWeightedLine.
+  /// No description provided for @listBalanceTotalLabel.
   ///
   /// In en, this message translates to:
-  /// **'Weighted {amount}'**
-  String listBalanceWeightedLine(String amount);
-
-  /// No description provided for @listBalanceCountedLine.
-  ///
-  /// In en, this message translates to:
-  /// **'Counted {amount}'**
-  String listBalanceCountedLine(String amount);
-
-  /// No description provided for @listBalanceTotalWeightedLine.
-  ///
-  /// In en, this message translates to:
-  /// **'Total weighted {amount}'**
-  String listBalanceTotalWeightedLine(String amount);
-
-  /// No description provided for @listBalanceTotalCountedLine.
-  ///
-  /// In en, this message translates to:
-  /// **'Total counted {amount}'**
-  String listBalanceTotalCountedLine(String amount);
+  /// **'Total'**
+  String get listBalanceTotalLabel;
 
   /// No description provided for @editAccount.
   ///
