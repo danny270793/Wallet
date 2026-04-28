@@ -48,7 +48,43 @@ class AppLocalizationsEs extends AppLocalizations {
   String get settingsLanguageSpanish => 'Español';
 
   @override
+  String get settingsTheme => 'Tema';
+
+  @override
+  String get settingsThemeSystem => 'Predeterminado del sistema';
+
+  @override
+  String get settingsThemeLight => 'Claro';
+
+  @override
+  String get settingsThemeDark => 'Oscuro';
+
+  @override
   String get signOut => 'Cerrar sesión';
+
+  @override
+  String get settingsAboutSection => 'Acerca de';
+
+  @override
+  String get settingsAboutApp => 'Acerca de';
+
+  @override
+  String get settingsPrivacyPolicy => 'Política de privacidad';
+
+  @override
+  String get settingsTermsOfUse => 'Términos de uso';
+
+  @override
+  String get settingsAboutBody =>
+      'Wallet te ayuda a llevar cuentas, tarjetas, categorías, etiquetas y transacciones en un solo lugar. Los datos se guardan en tu propio backend (por ejemplo Supabase) vinculados a tu sesión. La app se ofrece tal cual para uso personal.';
+
+  @override
+  String get settingsPrivacyBody =>
+      'La aplicación envía y guarda solo la información que introduces para ofrecer funciones de registro y presupuesto. No vendemos tus datos. Las operaciones técnicas (alojamiento, autenticación, base de datos) las gestionan los servicios que configures. Para dudas sobre el tratamiento, contacta a quien opere tu proyecto o cuenta. Sustituye este texto por una política acorde a tu despliegue antes de uso en producción.';
+
+  @override
+  String get settingsTermsBody =>
+      'Al usar Wallet aceptas hacerlo bajo tu propia responsabilidad. Nada de lo aquí constituye asesoramiento financiero, legal o fiscal. Los autores no se hacen responsables de pérdidas o decisiones basadas en la app. Eres responsable de proteger tus credenciales y cumplir las leyes que te apliquen. Sustituye este texto por tus términos reales antes de publicar.';
 
   @override
   String get accounts => 'Cuentas';
@@ -264,6 +300,13 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get transactionCard => 'Tarjeta';
+
+  @override
+  String get transactionPaymentMethod => 'Medio de pago';
+
+  @override
+  String get transactionPaymentMethodSearchNoResults =>
+      'Ningún medio de pago coincide con tu búsqueda';
 
   @override
   String get transactionCategory => 'Categoría';
