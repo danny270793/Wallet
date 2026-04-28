@@ -172,6 +172,29 @@ class AppLocalizationsEn extends AppLocalizations {
   String get transactionsFabTransfer => 'Transfer';
 
   @override
+  String get transferSheetTitle => 'Transfer between accounts';
+
+  @override
+  String get transferSourceAccount => 'Source';
+
+  @override
+  String get transferTargetAccount => 'Target';
+
+  @override
+  String get transferDateLabel => 'Date';
+
+  @override
+  String get transferTimeLabel => 'Time';
+
+  @override
+  String get transferAccountsMustDiffer =>
+      'Source and target must be different accounts';
+
+  @override
+  String get transferNeedTwoAccounts =>
+      'Add at least two accounts to transfer money between them';
+
+  @override
   String get editTransaction => 'Edit transaction';
 
   @override
