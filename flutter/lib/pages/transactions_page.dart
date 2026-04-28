@@ -1,5 +1,3 @@
-import 'dart:math' as math;
-
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
@@ -429,112 +427,6 @@ class _TransactionDayHeader extends StatelessWidget {
   }
 }
 
-String _transactionPctLabel(double percentage) {
-  final c = percentage.clamp(0.0, 100.0);
-  if ((c - c.round()).abs() < 0.05) return '${c.round()}';
-  return c.toStringAsFixed(1);
-}
-
-/// Ring gauge + center label: allocation % for this transaction (0–100).
-class _TransactionPercentageRing extends StatelessWidget {
-  const _TransactionPercentageRing({
-    required this.percentage,
-    required this.accentColor,
-    required this.muted,
-  });
-
-  final double percentage;
-  final Color accentColor;
-  final bool muted;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final strokeColor = muted ? theme.colorScheme.outline : accentColor;
-    final labelColor = muted ? theme.colorScheme.onSurfaceVariant : theme.colorScheme.onSurface;
-    final progress = (percentage.clamp(0.0, 100.0)) / 100.0;
-
-    return SizedBox(
-      width: 46,
-      height: 46,
-      child: CustomPaint(
-        painter: _TransactionPctRingPainter(
-          progress: progress,
-          trackColor: theme.colorScheme.surfaceContainerHighest,
-          valueColor: strokeColor,
-        ),
-        child: Center(
-          child: Padding(
-            padding: const EdgeInsets.only(bottom: 1),
-            child: Text(
-              '${_transactionPctLabel(percentage)}%',
-              textAlign: TextAlign.center,
-              style: theme.textTheme.labelSmall?.copyWith(
-                fontWeight: FontWeight.w800,
-                fontSize: 10,
-                height: 1,
-                letterSpacing: -0.2,
-                color: labelColor,
-                fontFeatures: const [FontFeature.tabularFigures()],
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _TransactionPctRingPainter extends CustomPainter {
-  _TransactionPctRingPainter({
-    required this.progress,
-    required this.trackColor,
-    required this.valueColor,
-  });
-
-  final double progress;
-  final Color trackColor;
-  final Color valueColor;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final center = Offset(size.width / 2, size.height / 2);
-    final radius = (size.shortestSide / 2) - 3.5;
-    const stroke = 3.2;
-
-    final track = Paint()
-      ..color = trackColor
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = stroke
-      ..strokeCap = StrokeCap.round;
-
-    canvas.drawCircle(center, radius, track);
-
-    if (progress <= 0) return;
-
-    final arc = Paint()
-      ..color = valueColor
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = stroke
-      ..strokeCap = StrokeCap.round;
-
-    final sweep = 2 * math.pi * progress.clamp(0.0, 1.0);
-    canvas.drawArc(
-      Rect.fromCircle(center: center, radius: radius),
-      -math.pi / 2,
-      sweep,
-      false,
-      arc,
-    );
-  }
-
-  @override
-  bool shouldRepaint(covariant _TransactionPctRingPainter oldDelegate) =>
-      oldDelegate.progress != progress ||
-      oldDelegate.trackColor != trackColor ||
-      oldDelegate.valueColor != valueColor;
-}
-
 class _TransactionTile extends StatelessWidget {
   final TransactionEntity transaction;
   final AppLocalizations l10n;
@@ -638,14 +530,6 @@ class _TransactionTile extends StatelessWidget {
 
     return SwipeableListTile(
       itemKey: transaction.id,
-      leading: Tooltip(
-        message: '${l10n.transactionPercentage}: ${_transactionPctLabel(transaction.percentage)}%',
-        child: _TransactionPercentageRing(
-          percentage: transaction.percentage,
-          accentColor: weightedColor(),
-          muted: transaction.ignore,
-        ),
-      ),
       title: titleSection(),
       trailing: Row(
         mainAxisSize: MainAxisSize.min,
