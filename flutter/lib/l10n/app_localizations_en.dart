@@ -30,8 +30,34 @@ class AppLocalizationsEn extends AppLocalizations {
   String get monthlyDashboard => 'Monthly dashboard';
 
   @override
-  String get dashboardIncludeIgnoredInTotals =>
-      'Include ignored transactions in totals';
+  String get monthlyDashboardTransactionsListTitle => 'Transactions';
+
+  @override
+  String get dashboardIncludeIgnoredInTotals => 'Include ignored transactions';
+
+  @override
+  String get monthlyDashboardTagPieTitle => 'Expenses by tag';
+
+  @override
+  String get monthlyDashboardCategoryPieTitle => 'Expenses by category';
+
+  @override
+  String get dashboardCategoryPieNoData =>
+      'No categorized expenses to show for this month with the current filter.';
+
+  @override
+  String get dashboardTagPieNoData =>
+      'No amounts to show for this month with the current filter.';
+
+  @override
+  String get dashboardTagPieFilterTags => 'Filter tags';
+
+  @override
+  String get dashboardTagPieFilterDescription =>
+      'Choose which tags are included in the chart.';
+
+  @override
+  String get dashboardTagPieNeedOneTag => 'Select at least one tag';
 
   @override
   String get yearlyDashboard => 'Yearly dashboard';
