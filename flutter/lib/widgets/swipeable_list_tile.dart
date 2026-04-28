@@ -40,6 +40,7 @@ class SwipeableListTile extends StatelessWidget {
         subtitle: subtitle,
         trailing: trailing,
         onTap: onTap,
+        enabled: false,
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
         shape: RoundedRectangleBorder(borderRadius: radius),
       );
