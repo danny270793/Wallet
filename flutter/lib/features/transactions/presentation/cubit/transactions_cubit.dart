@@ -169,23 +169,80 @@ class TransactionsCubit extends Cubit<TransactionsState> {
     }
   }
 
-  Future<void> delete({required String id}) async {
+  /// Updates both legs of an existing account transfer; refetches once.
+  Future<bool> updateAccountTransfer({
+    required TransactionEntity source,
+    required TransactionEntity target,
+    required String sourceAccountId,
+    required String targetAccountId,
+    required double amount,
+    required DateTime transactedAt,
+    required bool ignore,
+  }) async {
+    final current = _currentTransactions();
+    final gid = source.transactionGroupId;
+    if (gid == null || gid.isEmpty || gid != target.transactionGroupId) {
+      AppLogger.error('updateAccountTransfer: invalid or mismatched group id');
+      emit(TransactionsActionError(current));
+      return false;
+    }
+    AppLogger.debug('account transfer update');
+    try {
+      await _updateTransaction(
+        id: source.id,
+        accountId: sourceAccountId,
+        cardId: source.cardId,
+        categoryId: source.categoryId,
+        tagId: source.tagId,
+        description: source.description,
+        transactedAt: transactedAt,
+        value: -amount,
+        ignore: ignore,
+        percentage: source.percentage,
+        transactionGroupId: gid,
+      );
+      await _updateTransaction(
+        id: target.id,
+        accountId: targetAccountId,
+        cardId: target.cardId,
+        categoryId: target.categoryId,
+        tagId: target.tagId,
+        description: target.description,
+        transactedAt: transactedAt,
+        value: amount,
+        ignore: ignore,
+        percentage: target.percentage,
+        transactionGroupId: gid,
+      );
+      AppLogger.info('account transfer updated');
+      await _refetchCurrentMonthQuietly();
+      return true;
+    } catch (e, s) {
+      AppLogger.error('failed account transfer update', e, s);
+      emit(TransactionsActionError(current));
+      return false;
+    }
+  }
+
+  Future<bool> delete({required String id}) async {
     final current = _currentTransactions();
     AppLogger.debug('deleting transaction: $id');
     try {
       await _deleteTransaction(id: id);
       AppLogger.info('transaction deleted: $id');
       await _refetchCurrentMonthQuietly();
+      return true;
     } catch (e, s) {
       AppLogger.error('failed to delete transaction', e, s);
       emit(TransactionsActionError(current));
+      return false;
     }
   }
 
   /// Deletes several rows then refetches once (e.g. paired transfer legs).
-  Future<void> deleteMany(List<String> ids) async {
+  Future<bool> deleteMany(List<String> ids) async {
     final current = _currentTransactions();
-    if (ids.isEmpty) return;
+    if (ids.isEmpty) return true;
     final unique = ids.toSet().toList();
     AppLogger.debug('deleting transactions: $unique');
     try {
@@ -194,9 +251,11 @@ class TransactionsCubit extends Cubit<TransactionsState> {
       }
       AppLogger.info('transactions deleted: $unique');
       await _refetchCurrentMonthQuietly();
+      return true;
     } catch (e, s) {
       AppLogger.error('failed to delete transactions', e, s);
       emit(TransactionsActionError(current));
+      return false;
     }
   }
 
