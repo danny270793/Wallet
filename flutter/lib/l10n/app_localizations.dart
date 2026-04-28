@@ -218,6 +218,30 @@ abstract class AppLocalizations {
   /// **'Yearly dashboard'**
   String get yearlyDashboard;
 
+  /// No description provided for @yearlyDashboardIncomeByMonthTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Income by month'**
+  String get yearlyDashboardIncomeByMonthTitle;
+
+  /// No description provided for @yearlyDashboardOutcomeByMonthTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Outcome by month'**
+  String get yearlyDashboardOutcomeByMonthTitle;
+
+  /// No description provided for @yearlyDashboardNetByMonthTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Balance by month'**
+  String get yearlyDashboardNetByMonthTitle;
+
+  /// No description provided for @yearlyDashboardCumulativeByMonthTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Cumulative balance by month'**
+  String get yearlyDashboardCumulativeByMonthTitle;
+
   /// No description provided for @settings.
   ///
   /// In en, this message translates to:
