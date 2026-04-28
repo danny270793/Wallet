@@ -5,6 +5,7 @@ import '../core/di/injection.dart';
 import '../features/cards/domain/entities/card_entity.dart';
 import '../features/cards/presentation/cubit/cards_cubit.dart';
 import '../features/cards/presentation/cubit/cards_state.dart';
+import '../widgets/swipeable_list_tile.dart';
 
 class CardsPage extends StatelessWidget {
   const CardsPage({super.key});
@@ -148,56 +149,46 @@ class _CardTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-
-    return ListTile(
-      title: Text(card.name),
-      subtitle: card.description != null ? Text(card.description!, maxLines: 2, overflow: TextOverflow.ellipsis) : null,
-      trailing: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          IconButton(
-            icon: const Icon(Icons.edit_outlined),
-            onPressed: () => showDialog<void>(
-              context: context,
-              builder: (_) => _CardDialog(
-                cubit: context.read<CardsCubit>(),
-                l10n: l10n,
-                card: card,
-              ),
-            ),
-          ),
-          IconButton(
-            icon: const Icon(Icons.delete_outlined),
-            onPressed: () => _confirmDelete(context, l10n),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Future<void> _confirmDelete(BuildContext context, AppLocalizations l10n) async {
     final cubit = context.read<CardsCubit>();
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: Text(l10n.deleteCard),
-        content: Text(l10n.confirmDeleteCard(card.name)),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(dialogContext).pop(false),
-            child: Text(l10n.cancel),
-          ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-            onPressed: () => Navigator.of(dialogContext).pop(true),
-            child: Text(l10n.delete, style: const TextStyle(color: Colors.white)),
-          ),
-        ],
-      ),
-    );
-    if (confirmed == true) {
-      cubit.delete(id: card.id);
+
+    void openEdit() {
+      showDialog<void>(
+        context: context,
+        builder: (_) => _CardDialog(cubit: cubit, l10n: l10n, card: card),
+      );
     }
+
+    return SwipeableListTile(
+      itemKey: card.id,
+      leading: initialsAvatar(context, card.name),
+      title: Text(card.name),
+      subtitle: card.description != null
+          ? Text(card.description!, maxLines: 2, overflow: TextOverflow.ellipsis)
+          : null,
+      onEdit: openEdit,
+      confirmDelete: () async {
+        final ok = await showDialog<bool>(
+          context: context,
+          builder: (dialogContext) => AlertDialog(
+            title: Text(l10n.deleteCard),
+            content: Text(l10n.confirmDeleteCard(card.name)),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(dialogContext).pop(false),
+                child: Text(l10n.cancel),
+              ),
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+                onPressed: () => Navigator.of(dialogContext).pop(true),
+                child: Text(l10n.delete, style: const TextStyle(color: Colors.white)),
+              ),
+            ],
+          ),
+        );
+        return ok ?? false;
+      },
+      onDeleted: () => cubit.delete(id: card.id),
+    );
   }
 }
 
