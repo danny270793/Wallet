@@ -52,20 +52,44 @@ class _AccountsView extends StatelessWidget {
   }
 
   Widget _body(BuildContext context, AccountsState state, AppLocalizations l10n) {
+    Future<void> refresh() => context.read<AccountsCubit>().load();
+
     if (state is AccountsLoading || state is AccountsInitial) {
-      return const Center(child: CircularProgressIndicator());
+      return RefreshIndicator(
+        onRefresh: refresh,
+        child: ListView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          children: [
+            SizedBox(
+              height: MediaQuery.sizeOf(context).height * 0.35,
+              child: const Center(child: CircularProgressIndicator()),
+            ),
+          ],
+        ),
+      );
     }
 
     if (state is AccountsError) {
-      return Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
+      return RefreshIndicator(
+        onRefresh: refresh,
+        child: ListView(
+          physics: const AlwaysScrollableScrollPhysics(),
           children: [
-            Text(l10n.unexpectedError),
-            const SizedBox(height: 12),
-            ElevatedButton(
-              onPressed: () => context.read<AccountsCubit>().load(),
-              child: const Text('Retry'),
+            SizedBox(
+              height: MediaQuery.sizeOf(context).height * 0.35,
+              child: Center(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(l10n.unexpectedError),
+                    const SizedBox(height: 12),
+                    ElevatedButton(
+                      onPressed: refresh,
+                      child: const Text('Retry'),
+                    ),
+                  ],
+                ),
+              ),
             ),
           ],
         ),
@@ -79,13 +103,29 @@ class _AccountsView extends StatelessWidget {
     };
 
     if (accounts.isEmpty) {
-      return Center(child: Text(l10n.noAccounts));
+      return RefreshIndicator(
+        onRefresh: refresh,
+        child: ListView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          padding: const EdgeInsets.only(bottom: 88),
+          children: [
+            SizedBox(
+              height: MediaQuery.sizeOf(context).height * 0.35,
+              child: Center(child: Text(l10n.noAccounts)),
+            ),
+          ],
+        ),
+      );
     }
 
-    return ListView.builder(
-      padding: const EdgeInsets.only(bottom: 88),
-      itemCount: accounts.length,
-      itemBuilder: (context, index) => _AccountTile(account: accounts[index]),
+    return RefreshIndicator(
+      onRefresh: refresh,
+      child: ListView.builder(
+        physics: const AlwaysScrollableScrollPhysics(),
+        padding: const EdgeInsets.only(bottom: 88),
+        itemCount: accounts.length,
+        itemBuilder: (context, index) => _AccountTile(account: accounts[index]),
+      ),
     );
   }
 
