@@ -836,6 +836,18 @@ abstract class AppLocalizations {
   /// **'Enter a valid number (optional minus sign and decimals)'**
   String get transactionAmountInvalidNumber;
 
+  /// No description provided for @transactionAmountMustBeNonZero.
+  ///
+  /// In en, this message translates to:
+  /// **'Amount cannot be zero'**
+  String get transactionAmountMustBeNonZero;
+
+  /// No description provided for @transferAmountMustBePositive.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter an amount greater than zero'**
+  String get transferAmountMustBePositive;
+
   /// No description provided for @transactionPercentage.
   ///
   /// In en, this message translates to:
