@@ -17,7 +17,7 @@ class AccountsSupabaseDatasource implements AccountsRemoteDatasource {
   Future<List<AccountEntity>> getAccounts() async {
     AppLogger.debug('getAccounts called');
     final data = await _client
-        .from('wallet_accounts')
+        .from('wallet_accounts_with_balance')
         .select()
         .isFilter('deletedAt', null)
         .order('createdAt');
