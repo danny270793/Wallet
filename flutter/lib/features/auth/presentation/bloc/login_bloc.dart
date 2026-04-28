@@ -1,6 +1,6 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import '../../../domain/usecases/sign_in_usecase.dart';
+import '../../domain/usecases/sign_in_usecase.dart';
 import 'login_event.dart';
 import 'login_state.dart';
 
