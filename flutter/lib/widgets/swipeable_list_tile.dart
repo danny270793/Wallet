@@ -32,22 +32,17 @@ class SwipeableListTile extends StatelessWidget {
     final theme = Theme.of(context);
     final radius = BorderRadius.circular(14);
 
-    final tile = Material(
-      color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.42),
-      borderRadius: radius,
-      clipBehavior: Clip.antiAlias,
-      child: ListTile(
+    final tile = ListTile(
         leading: leading,
         title: title,
         subtitle: subtitle,
         trailing: trailing,
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
         shape: RoundedRectangleBorder(borderRadius: radius),
-      ),
-    );
+      );
 
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 5),
+      padding: const EdgeInsets.symmetric(horizontal: 0, vertical: 0),
       child: Dismissible(
         key: ValueKey('swipe_$itemKey'),
         direction: DismissDirection.horizontal,
