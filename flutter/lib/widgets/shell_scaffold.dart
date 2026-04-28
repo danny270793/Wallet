@@ -85,6 +85,9 @@ class ShellScaffold extends StatelessWidget {
   final Widget body;
   /// When false, no navigation drawer is shown and the app bar uses a back control if the route can pop.
   final bool useDrawer;
+  final Widget? bottomNavigationBar;
+  final Widget? floatingActionButton;
+  final FloatingActionButtonLocation? floatingActionButtonLocation;
 
   const ShellScaffold({
     super.key,
@@ -92,6 +95,9 @@ class ShellScaffold extends StatelessWidget {
     this.appBarBottom,
     required this.body,
     this.useDrawer = true,
+    this.bottomNavigationBar,
+    this.floatingActionButton,
+    this.floatingActionButtonLocation,
   });
 
   @override
@@ -115,6 +121,9 @@ class ShellScaffold extends StatelessWidget {
         ],
       ),
       body: body,
+      bottomNavigationBar: bottomNavigationBar,
+      floatingActionButton: floatingActionButton,
+      floatingActionButtonLocation: floatingActionButtonLocation,
     );
   }
 }
