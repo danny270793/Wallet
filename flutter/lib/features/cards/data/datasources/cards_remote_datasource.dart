@@ -17,7 +17,7 @@ class CardsSupabaseDatasource implements CardsRemoteDatasource {
   Future<List<CardEntity>> getCards() async {
     AppLogger.debug('getCards called');
     final data = await _client
-        .from('wallet_cards')
+        .from('wallet_cards_with_balance')
         .select()
         .isFilter('deletedAt', null)
         .order('createdAt');
