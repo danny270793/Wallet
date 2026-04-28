@@ -10,6 +10,29 @@ import '../widgets/shell_scaffold.dart';
 import '../widgets/swipeable_list_tile.dart';
 import '../widgets/wallet_dual_balance_trailing.dart';
 
+void _showCardBottomSheet(
+  BuildContext context,
+  AppLocalizations l10n, {
+  CardEntity? card,
+}) {
+  showModalBottomSheet<void>(
+    context: context,
+    isScrollControlled: true,
+    useSafeArea: true,
+    showDragHandle: true,
+    builder: (sheetContext) => Padding(
+      padding: EdgeInsets.only(
+        bottom: MediaQuery.viewInsetsOf(sheetContext).bottom,
+      ),
+      child: _CardEditor(
+        cubit: context.read<CardsCubit>(),
+        l10n: l10n,
+        card: card,
+      ),
+    ),
+  );
+}
+
 class CardsPage extends StatelessWidget {
   const CardsPage({super.key});
 
@@ -50,7 +73,7 @@ class _CardsView extends StatelessWidget {
         return ShellScaffold(
           title: l10n.cards,
           floatingActionButton: FloatingActionButton(
-            onPressed: () => _showCardDialog(context, l10n),
+            onPressed: () => _showCardBottomSheet(context, l10n),
             child: const Icon(Icons.add),
           ),
           bottomNavigationBar: showTotalBar
@@ -142,17 +165,6 @@ class _CardsView extends StatelessWidget {
       ),
     );
   }
-
-  void _showCardDialog(BuildContext context, AppLocalizations l10n, [CardEntity? card]) {
-    showDialog<void>(
-      context: context,
-      builder: (_) => _CardDialog(
-        cubit: context.read<CardsCubit>(),
-        l10n: l10n,
-        card: card,
-      ),
-    );
-  }
 }
 
 class _CardTile extends StatelessWidget {
@@ -165,10 +177,7 @@ class _CardTile extends StatelessWidget {
     final cubit = context.read<CardsCubit>();
 
     void openEdit() {
-      showDialog<void>(
-        context: context,
-        builder: (_) => _CardDialog(cubit: cubit, l10n: l10n, card: card),
-      );
+      _showCardBottomSheet(context, l10n, card: card);
     }
 
     void openTransactions() {
@@ -221,18 +230,18 @@ class _CardTile extends StatelessWidget {
   }
 }
 
-class _CardDialog extends StatefulWidget {
+class _CardEditor extends StatefulWidget {
   final CardsCubit cubit;
   final AppLocalizations l10n;
   final CardEntity? card;
 
-  const _CardDialog({required this.cubit, required this.l10n, this.card});
+  const _CardEditor({required this.cubit, required this.l10n, this.card});
 
   @override
-  State<_CardDialog> createState() => _CardDialogState();
+  State<_CardEditor> createState() => _CardEditorState();
 }
 
-class _CardDialogState extends State<_CardDialog> {
+class _CardEditorState extends State<_CardEditor> {
   final _formKey = GlobalKey<FormState>();
   late final TextEditingController _nameController;
   late final TextEditingController _descriptionController;
@@ -268,46 +277,79 @@ class _CardDialogState extends State<_CardDialog> {
     }
   }
 
+  Widget _formFields(AppLocalizations l10n) {
+    return Form(
+      key: _formKey,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          TextFormField(
+            controller: _nameController,
+            decoration: InputDecoration(labelText: l10n.accountName),
+            validator: (v) => (v == null || v.trim().isEmpty) ? l10n.fieldRequired : null,
+            autofocus: true,
+            textInputAction: TextInputAction.next,
+          ),
+          const SizedBox(height: 8),
+          TextFormField(
+            controller: _descriptionController,
+            decoration: InputDecoration(labelText: l10n.accountDescription),
+            maxLines: 3,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _submitPrimaryButton(AppLocalizations l10n) {
+    final theme = Theme.of(context);
+    final label = widget.card == null ? l10n.accountSubmitCreate : l10n.save;
+    return SizedBox(
+      width: double.infinity,
+      child: FilledButton(
+        onPressed: _loading ? null : _submit,
+        style: FilledButton.styleFrom(
+          minimumSize: const Size(double.infinity, 48),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        ),
+        child: _loading
+            ? SizedBox(
+                height: 22,
+                width: 22,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  color: theme.colorScheme.onPrimary,
+                ),
+              )
+            : Text(label),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = widget.l10n;
-    final isEdit = widget.card != null;
+    final theme = Theme.of(context);
+    final title = widget.card == null ? l10n.newCard : l10n.editCard;
 
-    return AlertDialog(
-      title: Text(isEdit ? l10n.editCard : l10n.newCard),
-      content: Form(
-        key: _formKey,
+    return SingleChildScrollView(
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
         child: Column(
           mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            TextFormField(
-              controller: _nameController,
-              decoration: InputDecoration(labelText: l10n.accountName),
-              validator: (v) => (v == null || v.trim().isEmpty) ? l10n.fieldRequired : null,
-              autofocus: true,
-              textInputAction: TextInputAction.next,
+            Text(
+              title,
+              style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w600),
             ),
-            const SizedBox(height: 8),
-            TextFormField(
-              controller: _descriptionController,
-              decoration: InputDecoration(labelText: l10n.accountDescription),
-              maxLines: 3,
-            ),
+            const SizedBox(height: 16),
+            _formFields(l10n),
+            const SizedBox(height: 24),
+            _submitPrimaryButton(l10n),
           ],
         ),
       ),
-      actions: [
-        TextButton(
-          onPressed: _loading ? null : () => Navigator.of(context).pop(),
-          child: Text(l10n.cancel),
-        ),
-        ElevatedButton(
-          onPressed: _loading ? null : _submit,
-          child: _loading
-              ? const SizedBox(height: 16, width: 16, child: CircularProgressIndicator(strokeWidth: 2))
-              : Text(l10n.save),
-        ),
-      ],
     );
   }
 }
