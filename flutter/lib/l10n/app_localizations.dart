@@ -178,6 +178,12 @@ abstract class AppLocalizations {
   /// **'Description'**
   String get accountDescription;
 
+  /// No description provided for @accountBalance.
+  ///
+  /// In en, this message translates to:
+  /// **'Balance'**
+  String get accountBalance;
+
   /// No description provided for @editAccount.
   ///
   /// In en, this message translates to:
