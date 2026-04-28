@@ -17,6 +17,7 @@ import '../features/transactions/presentation/cubit/transactions_state.dart';
 import '../widgets/shell_scaffold.dart';
 import '../widgets/swipeable_list_tile.dart';
 import '../widgets/transactions_month_scope.dart';
+import '../widgets/transactions_totals_bar.dart';
 
 /// Local calendar day (midnight) used as a group key for [transactedAt].
 DateTime _calendarDayLocal(DateTime utcOrLocal) {
@@ -190,48 +191,92 @@ class _TransactionsView extends StatelessWidget {
         (categoryIdFilter != null && categoryIdFilter!.isNotEmpty) ||
         (tagIdFilter != null && tagIdFilter!.isNotEmpty);
 
-    return ShellScaffold(
-      title: title,
-      useDrawer: !isScoped,
-      appBarBottom: TransactionsMonthAppBarBottom(notifier: monthNotifier),
-      body: BlocConsumer<TransactionsCubit, TransactionsState>(
-        listener: (context, state) {
-          if (state is TransactionsActionError) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(state.message ?? l10n.unexpectedError)),
-            );
-          }
-        },
-        builder: (context, state) {
-          return ValueListenableBuilder<DateTime>(
-            valueListenable: monthNotifier,
-            builder: (context, visibleMonth, _) {
-              return Stack(
-                children: [
-                  _body(context, state, l10n, visibleMonth, monthNotifier),
-                  Positioned(
-                    right: 16,
-                    bottom: 16,
-                    child: FloatingActionButton(
-                      onPressed: () => _showTxDialog(
-                        context,
-                        l10n,
-                        null,
-                        accountIdFilter,
-                        cardIdFilter,
-                        categoryIdFilter,
-                        tagIdFilter,
-                      ),
-                      child: const Icon(Icons.add),
-                    ),
-                  ),
-                ],
-              );
-            },
+    return BlocConsumer<TransactionsCubit, TransactionsState>(
+      listener: (context, state) {
+        if (state is TransactionsActionError) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(state.message ?? l10n.unexpectedError)),
           );
-        },
-      ),
+        }
+      },
+      builder: (context, state) {
+        return ValueListenableBuilder<DateTime>(
+          valueListenable: monthNotifier,
+          builder: (context, visibleMonth, _) {
+            final filtered = _filteredTransactions(state);
+            final showTotalsBar =
+                state is TransactionsLoaded || state is TransactionsActionError;
+            var income = 0.0;
+            var outcome = 0.0;
+            for (final t in filtered) {
+              final v = t.value;
+              if (v > 0) {
+                income += v;
+              } else if (v < 0) {
+                outcome += -v;
+              }
+            }
+            final balance = filtered.fold<double>(0, (s, t) => s + t.value);
+
+            return ShellScaffold(
+              title: title,
+              useDrawer: !isScoped,
+              appBarBottom: TransactionsMonthAppBarBottom(notifier: monthNotifier),
+              floatingActionButton: FloatingActionButton(
+                onPressed: () => _showTxDialog(
+                  context,
+                  l10n,
+                  null,
+                  accountIdFilter,
+                  cardIdFilter,
+                  categoryIdFilter,
+                  tagIdFilter,
+                ),
+                child: const Icon(Icons.add),
+              ),
+              bottomNavigationBar: showTotalsBar
+                  ? TransactionsTotalsBar(
+                      l10n: l10n,
+                      income: income,
+                      outcome: outcome,
+                      balance: balance,
+                    )
+                  : null,
+              body: _body(
+                context,
+                state,
+                l10n,
+                visibleMonth,
+                monthNotifier,
+                filtered,
+              ),
+            );
+          },
+        );
+      },
     );
+  }
+
+  List<TransactionEntity> _filteredTransactions(TransactionsState state) {
+    final rawList = switch (state) {
+      TransactionsLoaded(:final transactions) => transactions,
+      TransactionsActionError(:final transactions) => transactions,
+      _ => <TransactionEntity>[],
+    };
+    var list = rawList;
+    if (accountIdFilter != null && accountIdFilter!.isNotEmpty) {
+      list = list.where((t) => t.accountId == accountIdFilter).toList();
+    }
+    if (cardIdFilter != null && cardIdFilter!.isNotEmpty) {
+      list = list.where((t) => t.cardId == cardIdFilter).toList();
+    }
+    if (categoryIdFilter != null && categoryIdFilter!.isNotEmpty) {
+      list = list.where((t) => t.categoryId == categoryIdFilter).toList();
+    }
+    if (tagIdFilter != null && tagIdFilter!.isNotEmpty) {
+      list = list.where((t) => t.tagId == tagIdFilter).toList();
+    }
+    return list;
   }
 
   Widget _body(
@@ -240,6 +285,7 @@ class _TransactionsView extends StatelessWidget {
     AppLocalizations l10n,
     DateTime visibleMonth,
     ValueNotifier<DateTime> monthNotifier,
+    List<TransactionEntity> filteredList,
   ) {
     Future<void> refresh() =>
         context.read<TransactionsCubit>().loadForMonth(monthNotifier.value);
@@ -286,27 +332,7 @@ class _TransactionsView extends StatelessWidget {
       );
     }
 
-    final rawList = switch (state) {
-      TransactionsLoaded(:final transactions) => transactions,
-      TransactionsActionError(:final transactions) => transactions,
-      _ => <TransactionEntity>[],
-    };
-
-    var list = rawList;
-    if (accountIdFilter != null && accountIdFilter!.isNotEmpty) {
-      list = list.where((t) => t.accountId == accountIdFilter).toList();
-    }
-    if (cardIdFilter != null && cardIdFilter!.isNotEmpty) {
-      list = list.where((t) => t.cardId == cardIdFilter).toList();
-    }
-    if (categoryIdFilter != null && categoryIdFilter!.isNotEmpty) {
-      list = list.where((t) => t.categoryId == categoryIdFilter).toList();
-    }
-    if (tagIdFilter != null && tagIdFilter!.isNotEmpty) {
-      list = list.where((t) => t.tagId == tagIdFilter).toList();
-    }
-
-    return _monthListBody(context, l10n, visibleMonth, list, refresh);
+    return _monthListBody(context, l10n, visibleMonth, filteredList, refresh);
   }
 
   Widget _monthListBody(
@@ -323,7 +349,7 @@ class _TransactionsView extends StatelessWidget {
         onRefresh: refresh,
         child: ListView(
           physics: const AlwaysScrollableScrollPhysics(),
-          padding: const EdgeInsets.only(bottom: 88),
+          padding: const EdgeInsets.only(bottom: 8),
           children: [
             SizedBox(
               height: MediaQuery.sizeOf(context).height * 0.3,
@@ -339,7 +365,7 @@ class _TransactionsView extends StatelessWidget {
       onRefresh: refresh,
       child: ListView.builder(
         physics: const AlwaysScrollableScrollPhysics(),
-        padding: const EdgeInsets.only(bottom: 88),
+        padding: const EdgeInsets.only(bottom: 8),
         itemCount: rows.length,
         itemBuilder: (context, index) {
           return switch (rows[index]) {
