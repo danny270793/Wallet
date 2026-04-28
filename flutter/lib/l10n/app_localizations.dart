@@ -176,11 +176,77 @@ abstract class AppLocalizations {
   /// **'Spanish'**
   String get settingsLanguageSpanish;
 
+  /// No description provided for @settingsTheme.
+  ///
+  /// In en, this message translates to:
+  /// **'Theme'**
+  String get settingsTheme;
+
+  /// No description provided for @settingsThemeSystem.
+  ///
+  /// In en, this message translates to:
+  /// **'System default'**
+  String get settingsThemeSystem;
+
+  /// No description provided for @settingsThemeLight.
+  ///
+  /// In en, this message translates to:
+  /// **'Light'**
+  String get settingsThemeLight;
+
+  /// No description provided for @settingsThemeDark.
+  ///
+  /// In en, this message translates to:
+  /// **'Dark'**
+  String get settingsThemeDark;
+
   /// No description provided for @signOut.
   ///
   /// In en, this message translates to:
   /// **'Sign out'**
   String get signOut;
+
+  /// No description provided for @settingsAboutSection.
+  ///
+  /// In en, this message translates to:
+  /// **'About'**
+  String get settingsAboutSection;
+
+  /// No description provided for @settingsAboutApp.
+  ///
+  /// In en, this message translates to:
+  /// **'About'**
+  String get settingsAboutApp;
+
+  /// No description provided for @settingsPrivacyPolicy.
+  ///
+  /// In en, this message translates to:
+  /// **'Privacy policy'**
+  String get settingsPrivacyPolicy;
+
+  /// No description provided for @settingsTermsOfUse.
+  ///
+  /// In en, this message translates to:
+  /// **'Terms of use'**
+  String get settingsTermsOfUse;
+
+  /// No description provided for @settingsAboutBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Wallet helps you track accounts, cards, categories, tags, and transactions in one place. Data is stored in your own backend (for example Supabase) and tied to your sign-in. This app is provided as-is for personal use.'**
+  String get settingsAboutBody;
+
+  /// No description provided for @settingsPrivacyBody.
+  ///
+  /// In en, this message translates to:
+  /// **'The app sends and stores only the information you enter to provide budgeting and ledger features. We do not sell your data. Technical operations (hosting, authentication, database) are handled by the services you configure. For questions about processing, contact whoever operates your project or account. Replace this text with a policy that matches your deployment before production use.'**
+  String get settingsPrivacyBody;
+
+  /// No description provided for @settingsTermsBody.
+  ///
+  /// In en, this message translates to:
+  /// **'By using Wallet you agree to use the app at your own risk. Nothing here is financial, legal, or tax advice. The authors are not liable for losses or decisions based on the app. You are responsible for securing your credentials and complying with laws that apply to you. Replace this text with your real terms before publishing.'**
+  String get settingsTermsBody;
 
   /// No description provided for @accounts.
   ///
@@ -577,6 +643,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Card'**
   String get transactionCard;
+
+  /// No description provided for @transactionPaymentMethod.
+  ///
+  /// In en, this message translates to:
+  /// **'Payment method'**
+  String get transactionPaymentMethod;
+
+  /// No description provided for @transactionPaymentMethodSearchNoResults.
+  ///
+  /// In en, this message translates to:
+  /// **'No payment methods match your search'**
+  String get transactionPaymentMethodSearchNoResults;
 
   /// No description provided for @transactionCategory.
   ///
