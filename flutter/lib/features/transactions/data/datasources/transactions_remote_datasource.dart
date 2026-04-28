@@ -154,9 +154,12 @@ wallet_tags(name)
   @override
   Future<void> deleteTransaction({required String id}) async {
     AppLogger.debug('deleteTransaction called: $id');
-    await _client
-        .from('wallet_transactions')
-        .update({'deletedAt': DateTime.now().toUtc().toIso8601String()})
-        .eq('id', id);
+    final ok = await _client.rpc<bool>(
+      'soft_delete_wallet_transaction',
+      params: {'p_id': id},
+    );
+    if (ok != true) {
+      throw Exception('soft_delete_wallet_transaction: no row updated for $id');
+    }
   }
 }
