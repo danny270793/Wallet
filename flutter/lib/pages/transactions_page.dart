@@ -60,6 +60,79 @@ List<_GroupedTxRow> _groupTransactionsByDay(List<TransactionEntity> list) {
   return entries;
 }
 
+({double income, double outcome, double balance}) _transactionTotalsBreakdown(
+  Iterable<TransactionEntity> txs, {
+  required bool Function(TransactionEntity) include,
+  required double Function(TransactionEntity) amount,
+}) {
+  var income = 0.0;
+  var outcome = 0.0;
+  var balance = 0.0;
+  for (final t in txs) {
+    if (!include(t)) continue;
+    final v = amount(t);
+    balance += v;
+    if (v > 0) {
+      income += v;
+    } else if (v < 0) {
+      outcome += -v;
+    }
+  }
+  return (income: income, outcome: outcome, balance: balance);
+}
+
+class _TransactionsTotalsBarHost extends StatefulWidget {
+  const _TransactionsTotalsBarHost({
+    required this.l10n,
+    required this.transactions,
+  });
+
+  final AppLocalizations l10n;
+  final List<TransactionEntity> transactions;
+
+  @override
+  State<_TransactionsTotalsBarHost> createState() => _TransactionsTotalsBarHostState();
+}
+
+class _TransactionsTotalsBarHostState extends State<_TransactionsTotalsBarHost> {
+  bool _altTotals = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final txs = widget.transactions;
+    double weighted(TransactionEntity t) => t.value * t.percentage / 100.0;
+
+    final weightedAll = _transactionTotalsBreakdown(
+      txs,
+      include: (_) => true,
+      amount: weighted,
+    );
+    final weightedExcludingIgnored = _transactionTotalsBreakdown(
+      txs,
+      include: (t) => !t.ignore,
+      amount: weighted,
+    );
+
+    if (!_altTotals) {
+      return TransactionsTotalsBar(
+        l10n: widget.l10n,
+        income: weightedAll.income,
+        outcome: weightedAll.outcome,
+        balance: weightedAll.balance,
+        onDoubleTap: () => setState(() => _altTotals = true),
+      );
+    }
+    return TransactionsTotalsBar(
+      l10n: widget.l10n,
+      primarySubtitle: widget.l10n.transactionsTotalsExcludingIgnoredHint,
+      income: weightedExcludingIgnored.income,
+      outcome: weightedExcludingIgnored.outcome,
+      balance: weightedExcludingIgnored.balance,
+      onDoubleTap: () => setState(() => _altTotals = false),
+    );
+  }
+}
+
 class TransactionsPage extends StatelessWidget {
   const TransactionsPage({
     super.key,
@@ -206,17 +279,6 @@ class _TransactionsView extends StatelessWidget {
             final filtered = _filteredTransactions(state);
             final showTotalsBar =
                 state is TransactionsLoaded || state is TransactionsActionError;
-            var income = 0.0;
-            var outcome = 0.0;
-            for (final t in filtered) {
-              final v = t.value;
-              if (v > 0) {
-                income += v;
-              } else if (v < 0) {
-                outcome += -v;
-              }
-            }
-            final balance = filtered.fold<double>(0, (s, t) => s + t.value);
 
             return ShellScaffold(
               title: title,
@@ -235,11 +297,9 @@ class _TransactionsView extends StatelessWidget {
                 child: const Icon(Icons.add),
               ),
               bottomNavigationBar: showTotalsBar
-                  ? TransactionsTotalsBar(
+                  ? _TransactionsTotalsBarHost(
                       l10n: l10n,
-                      income: income,
-                      outcome: outcome,
-                      balance: balance,
+                      transactions: filtered,
                     )
                   : null,
               body: _body(
@@ -452,22 +512,64 @@ class _TransactionTile extends StatelessWidget {
       return theme.colorScheme.onSurfaceVariant;
     }
 
+    final notFullPercentage = (transaction.percentage - 100.0).abs() > 0.01;
+
     Widget titleSection() {
       final chunks = <Widget>[];
-      if (transaction.description != null && transaction.description!.isNotEmpty) {
+      final desc = transaction.description;
+      final hasDesc = desc != null && desc.isNotEmpty;
+
+      if (hasDesc) {
+        if (notFullPercentage) {
+          chunks.add(
+            Text.rich(
+              TextSpan(
+                children: [
+                  TextSpan(
+                    text: '(${transaction.percentage.toStringAsFixed(2)}%) ',
+                    style: theme.textTheme.labelLarge?.copyWith(
+                      color: theme.colorScheme.primary,
+                      fontWeight: FontWeight.w700,
+                      fontFeatures: const [FontFeature.tabularFigures()],
+                    ),
+                  ),
+                  TextSpan(
+                    text: desc,
+                    style: theme.textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w500),
+                  ),
+                ],
+              ),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+            ),
+          );
+        } else {
+          chunks.add(
+            Text(
+              desc,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: theme.textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w500),
+            ),
+          );
+        }
+      } else if (notFullPercentage) {
         chunks.add(
           Text(
-            transaction.description!,
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-            style: theme.textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w500),
+            '(${transaction.percentage.toStringAsFixed(2)}%)',
+            style: theme.textTheme.labelLarge?.copyWith(
+              color: theme.colorScheme.primary,
+              fontWeight: FontWeight.w700,
+              fontFeatures: const [FontFeature.tabularFigures()],
+            ),
           ),
         );
       }
+
       if (relationNames.isNotEmpty) {
         chunks.add(
           Padding(
-            padding: EdgeInsets.only(top: transaction.description?.isNotEmpty == true ? 4 : 0),
+            padding: EdgeInsets.only(top: chunks.isNotEmpty ? 4 : 0),
             child: Text(
               relationNames.join(' · '),
               maxLines: 2,
@@ -477,6 +579,7 @@ class _TransactionTile extends StatelessWidget {
           ),
         );
       }
+
       if (chunks.isEmpty) {
         return const SizedBox.shrink();
       }
@@ -499,17 +602,19 @@ class _TransactionTile extends StatelessWidget {
             height: 1.2,
           ),
         ),
-        const SizedBox(height: 2),
-        Text(
-          l10n.transactionAmountValue(transaction.value.toStringAsFixed(2)),
-          style: theme.textTheme.bodySmall?.copyWith(
-            color: theme.colorScheme.onSurfaceVariant,
-            height: 1.1,
-            decoration: TextDecoration.lineThrough,
-            decorationColor: theme.colorScheme.onSurfaceVariant,
-            fontFeatures: const [FontFeature.tabularFigures()],
+        if (notFullPercentage) ...[
+          const SizedBox(height: 2),
+          Text(
+            l10n.transactionAmountValue(transaction.value.toStringAsFixed(2)),
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+              height: 1.1,
+              decoration: TextDecoration.lineThrough,
+              decorationColor: theme.colorScheme.onSurfaceVariant,
+              fontFeatures: const [FontFeature.tabularFigures()],
+            ),
           ),
-        ),
+        ],
         const SizedBox(height: 4),
         Text(
           DateFormat.Hm(locale.toString()).format(localTime),
@@ -530,26 +635,18 @@ class _TransactionTile extends StatelessWidget {
 
     return SwipeableListTile(
       itemKey: transaction.id,
-      title: titleSection(),
-      trailing: Row(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          if (transaction.ignore)
-            Padding(
-              padding: const EdgeInsets.only(right: 8),
-              child: Tooltip(
-                message: l10n.transactionIgnore,
-                child: Icon(
-                  Icons.visibility_off_rounded,
-                  size: 22,
-                  color: theme.colorScheme.outline,
-                ),
+      leading: transaction.ignore
+          ? Tooltip(
+              message: l10n.transactionIgnoredBadge,
+              child: Icon(
+                Icons.do_not_disturb_on_outlined,
+                size: 22,
+                color: theme.colorScheme.tertiary,
               ),
-            ),
-          trailingPrices,
-        ],
-      ),
+            )
+          : null,
+      title: titleSection(),
+      trailing: trailingPrices,
       onEdit: openEdit,
       confirmDelete: () async {
         final ok = await showDialog<bool>(
