@@ -52,20 +52,44 @@ class _TagsView extends StatelessWidget {
   }
 
   Widget _body(BuildContext context, TagsState state, AppLocalizations l10n) {
+    Future<void> refresh() => context.read<TagsCubit>().load();
+
     if (state is TagsLoading || state is TagsInitial) {
-      return const Center(child: CircularProgressIndicator());
+      return RefreshIndicator(
+        onRefresh: refresh,
+        child: ListView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          children: [
+            SizedBox(
+              height: MediaQuery.sizeOf(context).height * 0.35,
+              child: const Center(child: CircularProgressIndicator()),
+            ),
+          ],
+        ),
+      );
     }
 
     if (state is TagsError) {
-      return Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
+      return RefreshIndicator(
+        onRefresh: refresh,
+        child: ListView(
+          physics: const AlwaysScrollableScrollPhysics(),
           children: [
-            Text(l10n.unexpectedError),
-            const SizedBox(height: 12),
-            ElevatedButton(
-              onPressed: () => context.read<TagsCubit>().load(),
-              child: const Text('Retry'),
+            SizedBox(
+              height: MediaQuery.sizeOf(context).height * 0.35,
+              child: Center(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(l10n.unexpectedError),
+                    const SizedBox(height: 12),
+                    ElevatedButton(
+                      onPressed: refresh,
+                      child: const Text('Retry'),
+                    ),
+                  ],
+                ),
+              ),
             ),
           ],
         ),
@@ -79,13 +103,29 @@ class _TagsView extends StatelessWidget {
     };
 
     if (tags.isEmpty) {
-      return Center(child: Text(l10n.noTags));
+      return RefreshIndicator(
+        onRefresh: refresh,
+        child: ListView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          padding: const EdgeInsets.only(bottom: 88),
+          children: [
+            SizedBox(
+              height: MediaQuery.sizeOf(context).height * 0.35,
+              child: Center(child: Text(l10n.noTags)),
+            ),
+          ],
+        ),
+      );
     }
 
-    return ListView.builder(
-      padding: const EdgeInsets.only(bottom: 88),
-      itemCount: tags.length,
-      itemBuilder: (context, index) => _TagTile(tag: tags[index]),
+    return RefreshIndicator(
+      onRefresh: refresh,
+      child: ListView.builder(
+        physics: const AlwaysScrollableScrollPhysics(),
+        padding: const EdgeInsets.only(bottom: 88),
+        itemCount: tags.length,
+        itemBuilder: (context, index) => _TagTile(tag: tags[index]),
+      ),
     );
   }
 
