@@ -9,6 +9,7 @@ import 'pages/categories_page.dart';
 import 'pages/tags_page.dart';
 import 'pages/transactions_page.dart';
 import 'pages/settings_page.dart';
+import 'pages/legal_info_page.dart';
 
 final router = GoRouter(
   initialLocation: '/',
@@ -29,7 +30,24 @@ final router = GoRouter(
   routes: [
     GoRoute(path: '/', builder: (context, state) => const SplashPage()),
     GoRoute(path: '/login', builder: (context, state) => const LoginPage()),
-    GoRoute(path: '/settings', builder: (context, state) => const SettingsPage()),
+    GoRoute(
+      path: '/settings',
+      builder: (context, state) => const SettingsPage(),
+      routes: [
+        GoRoute(
+          path: 'about',
+          builder: (context, state) => const LegalInfoPage(kind: LegalInfoKind.about),
+        ),
+        GoRoute(
+          path: 'privacy',
+          builder: (context, state) => const LegalInfoPage(kind: LegalInfoKind.privacy),
+        ),
+        GoRoute(
+          path: 'terms',
+          builder: (context, state) => const LegalInfoPage(kind: LegalInfoKind.terms),
+        ),
+      ],
+    ),
     ShellRoute(
       builder: (context, state, child) => child,
       routes: [
