@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:wallet/l10n/app_localizations.dart';
 
-/// Holds the visible month for the transactions route; ancestor of both [AppShell] and body so the app bar can read it.
+/// Holds the visible month for the transactions route so [TransactionsMonthAppBarBottom] shares state with the list.
 class TransactionsMonthHost extends StatefulWidget {
   const TransactionsMonthHost({super.key, required this.child});
 
