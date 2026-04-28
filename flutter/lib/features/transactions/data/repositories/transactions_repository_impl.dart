@@ -11,6 +11,10 @@ class TransactionsRepositoryImpl implements TransactionsRepository {
       _datasource.getTransactionsForMonth(monthStartLocal);
 
   @override
+  Future<List<TransactionEntity>> searchTransactionsByDescription(String query, {int limit = 200}) =>
+      _datasource.searchTransactionsByDescription(query, limit: limit);
+
+  @override
   Future<TransactionEntity> createTransaction({
     String? accountId,
     String? cardId,
