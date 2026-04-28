@@ -58,9 +58,12 @@ class CategoriesSupabaseDatasource implements CategoriesRemoteDatasource {
   @override
   Future<void> deleteCategory({required String id}) async {
     AppLogger.debug('deleteCategory called: $id');
-    await _client
-        .from('wallet_categories')
-        .update({'deletedAt': DateTime.now().toIso8601String()})
-        .eq('id', id);
+    final ok = await _client.rpc<bool>(
+      'soft_delete_wallet_category',
+      params: {'p_id': id},
+    );
+    if (ok != true) {
+      throw Exception('soft_delete_wallet_category: no row updated for $id');
+    }
   }
 }
