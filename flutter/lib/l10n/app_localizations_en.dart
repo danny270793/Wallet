@@ -74,6 +74,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String get yearlyDashboard => 'Yearly dashboard';
 
   @override
+  String get yearlyDashboardIncomeByMonthTitle => 'Income by month';
+
+  @override
+  String get yearlyDashboardOutcomeByMonthTitle => 'Outcome by month';
+
+  @override
+  String get yearlyDashboardNetByMonthTitle => 'Balance by month';
+
+  @override
+  String get yearlyDashboardCumulativeByMonthTitle =>
+      'Cumulative balance by month';
+
+  @override
   String get settings => 'Settings';
 
   @override
