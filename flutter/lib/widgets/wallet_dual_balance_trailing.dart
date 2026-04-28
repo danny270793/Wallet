@@ -7,105 +7,84 @@ Color walletListBalanceColor(ThemeData theme, double v) {
   return theme.colorScheme.onSurface;
 }
 
-/// Two-line trailing: weighted (value × %/100) and counted (excluding ignored transactions).
-class WalletDualBalanceTrailing extends StatelessWidget {
-  const WalletDualBalanceTrailing({
+/// Trailing amount for account/card rows (sum of transaction values).
+class WalletListBalanceAmount extends StatelessWidget {
+  const WalletListBalanceAmount({
     super.key,
     required this.l10n,
-    required this.balanceWeighted,
-    required this.balanceCounted,
+    required this.balance,
   });
 
   final AppLocalizations l10n;
-  final double balanceWeighted;
-  final double balanceCounted;
+  final double balance;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final w = balanceWeighted.toStringAsFixed(2);
-    final c = balanceCounted.toStringAsFixed(2);
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.end,
-      children: [
-        Text(
-          l10n.listBalanceWeightedLine(l10n.transactionAmountValue(w)),
-          style: TextStyle(
-            fontWeight: FontWeight.w600,
-            fontSize: 13,
-            height: 1.15,
-            color: walletListBalanceColor(theme, balanceWeighted),
-          ),
-        ),
-        Text(
-          l10n.listBalanceCountedLine(l10n.transactionAmountValue(c)),
-          style: TextStyle(
-            fontWeight: FontWeight.w500,
-            fontSize: 12,
-            height: 1.15,
-            color: walletListBalanceColor(theme, balanceCounted),
-          ),
-        ),
-      ],
+    final s = balance.toStringAsFixed(2);
+    return Text(
+      l10n.transactionAmountValue(s),
+      style: TextStyle(
+        fontWeight: FontWeight.w600,
+        color: walletListBalanceColor(theme, balance),
+      ),
     );
   }
 }
 
-/// Footer row: sums of weighted and counted balances across all items in the list.
-class WalletDualBalanceListFooter extends StatelessWidget {
-  const WalletDualBalanceListFooter({
+/// Pinned footer: sum of [balance] across all accounts or cards.
+class WalletListBalanceTotalBar extends StatelessWidget {
+  const WalletListBalanceTotalBar({
     super.key,
     required this.l10n,
-    required this.totalWeighted,
-    required this.totalCounted,
+    required this.total,
   });
 
   final AppLocalizations l10n;
-  final double totalWeighted;
-  final double totalCounted;
+  final double total;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final w = totalWeighted.toStringAsFixed(2);
-    final c = totalCounted.toStringAsFixed(2);
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Divider(height: 1, thickness: 1, color: theme.dividerColor),
-        Padding(
-          padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
-          child: Align(
-            alignment: Alignment.centerRight,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                Text(
-                  l10n.listBalanceTotalWeightedLine(l10n.transactionAmountValue(w)),
-                  style: TextStyle(
-                    fontWeight: FontWeight.w600,
-                    fontSize: 13,
-                    height: 1.15,
-                    color: walletListBalanceColor(theme, totalWeighted),
+    final s = total.toStringAsFixed(2);
+    return Material(
+      color: theme.colorScheme.surfaceContainerHighest,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            child: Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    l10n.transactionAmountValue(s),
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontWeight: FontWeight.w600,
+                      fontSize: 18,
+                      height: 1.2,
+                      color: walletListBalanceColor(theme, total),
+                    ),
                   ),
-                ),
-                Text(
-                  l10n.listBalanceTotalCountedLine(l10n.transactionAmountValue(c)),
-                  style: TextStyle(
-                    fontWeight: FontWeight.w500,
-                    fontSize: 12,
-                    height: 1.15,
-                    color: walletListBalanceColor(theme, totalCounted),
+                  const SizedBox(height: 2),
+                  Text(
+                    l10n.listBalanceTotalLabel,
+                    textAlign: TextAlign.center,
+                    style: theme.textTheme.labelMedium?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                      fontWeight: FontWeight.w500,
+                    ),
                   ),
-                ),
-              ],
+                  const SizedBox(height: 2),
+                ],
+              ),
             ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }
