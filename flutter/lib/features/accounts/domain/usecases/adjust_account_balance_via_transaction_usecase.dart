@@ -58,7 +58,7 @@ class AdjustAccountBalanceViaTransactionUsecase {
       transactedAt: DateTime.now(),
       value: delta,
       ignore: false,
-      percentage: 0,
+      percentage: 100,
     );
   }
 }
