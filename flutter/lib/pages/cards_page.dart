@@ -164,7 +164,6 @@ class _CardTile extends StatelessWidget {
 
     return SwipeableListTile(
       itemKey: card.id,
-      leading: initialsAvatar(context, card.name),
       title: Text(card.name),
       subtitle: card.description != null
           ? Text(card.description!, maxLines: 2, overflow: TextOverflow.ellipsis)
