@@ -289,26 +289,28 @@ class _AccountEditorState extends State<_AccountEditor> {
     );
   }
 
-  Widget _actions(AppLocalizations l10n) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.end,
-      children: [
-        TextButton(
-          onPressed: _loading ? null : () => Navigator.of(context).pop(),
-          child: Text(l10n.cancel),
+  Widget _submitPrimaryButton(AppLocalizations l10n) {
+    final theme = Theme.of(context);
+    final label = widget.account == null ? l10n.accountSubmitCreate : l10n.save;
+    return SizedBox(
+      width: double.infinity,
+      child: FilledButton(
+        onPressed: _loading ? null : _submit,
+        style: FilledButton.styleFrom(
+          minimumSize: const Size(double.infinity, 48),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         ),
-        const SizedBox(width: 8),
-        FilledButton(
-          onPressed: _loading ? null : _submit,
-          child: _loading
-              ? const SizedBox(
-                  height: 20,
-                  width: 20,
-                  child: CircularProgressIndicator(strokeWidth: 2),
-                )
-              : Text(l10n.save),
-        ),
-      ],
+        child: _loading
+            ? SizedBox(
+                height: 22,
+                width: 22,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  color: theme.colorScheme.onPrimary,
+                ),
+              )
+            : Text(label),
+      ),
     );
   }
 
@@ -333,7 +335,7 @@ class _AccountEditorState extends State<_AccountEditor> {
               const SizedBox(height: 16),
               _formFields(l10n),
               const SizedBox(height: 24),
-              _actions(l10n),
+              _submitPrimaryButton(l10n),
             ],
           ),
         ),
@@ -342,19 +344,15 @@ class _AccountEditorState extends State<_AccountEditor> {
 
     return AlertDialog(
       title: Text(isEdit ? l10n.editAccount : l10n.newAccount),
-      content: _formFields(l10n),
-      actions: [
-        TextButton(
-          onPressed: _loading ? null : () => Navigator.of(context).pop(),
-          child: Text(l10n.cancel),
-        ),
-        ElevatedButton(
-          onPressed: _loading ? null : _submit,
-          child: _loading
-              ? const SizedBox(height: 16, width: 16, child: CircularProgressIndicator(strokeWidth: 2))
-              : Text(l10n.save),
-        ),
-      ],
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          _formFields(l10n),
+          const SizedBox(height: 20),
+          _submitPrimaryButton(l10n),
+        ],
+      ),
     );
   }
 }
