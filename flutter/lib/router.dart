@@ -1,7 +1,7 @@
 import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'pages/splash_page.dart';
-import 'pages/login_page.dart';
+import 'features/auth/presentation/pages/login_page.dart';
 import 'pages/dashboard_page.dart';
 
 final router = GoRouter(

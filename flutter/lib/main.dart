@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'core/di/injection.dart';
 import 'router.dart';
 
 Future<void> main() async {
@@ -8,6 +9,7 @@ Future<void> main() async {
     url: const String.fromEnvironment('SUPABASE_URL'),
     anonKey: const String.fromEnvironment('SUPABASE_ANON_KEY'),
   );
+  setupDi();
   runApp(const App());
 }
 
