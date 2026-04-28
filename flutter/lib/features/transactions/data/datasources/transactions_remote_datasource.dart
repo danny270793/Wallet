@@ -9,6 +9,7 @@ abstract class TransactionsRemoteDatasource {
     String? cardId,
     String? categoryId,
     String? tagId,
+    String? description,
     required DateTime transactedAt,
     required double value,
     required bool ignore,
@@ -20,6 +21,7 @@ abstract class TransactionsRemoteDatasource {
     String? cardId,
     String? categoryId,
     String? tagId,
+    String? description,
     required DateTime transactedAt,
     required double value,
     required bool ignore,
@@ -49,6 +51,7 @@ class TransactionsSupabaseDatasource implements TransactionsRemoteDatasource {
     String? cardId,
     String? categoryId,
     String? tagId,
+    String? description,
     required DateTime transactedAt,
     required double value,
     required bool ignore,
@@ -65,6 +68,7 @@ class TransactionsSupabaseDatasource implements TransactionsRemoteDatasource {
       if (cardId != null) 'cardId': cardId,
       if (categoryId != null) 'categoryId': categoryId,
       if (tagId != null) 'tagId': tagId,
+      if (description != null) 'description': description,
     };
     final data = await _client.from('wallet_transactions').insert(row).select().single();
     return TransactionEntity.fromJson(data);
@@ -77,6 +81,7 @@ class TransactionsSupabaseDatasource implements TransactionsRemoteDatasource {
     String? cardId,
     String? categoryId,
     String? tagId,
+    String? description,
     required DateTime transactedAt,
     required double value,
     required bool ignore,
@@ -90,6 +95,7 @@ class TransactionsSupabaseDatasource implements TransactionsRemoteDatasource {
           'cardId': cardId,
           'categoryId': categoryId,
           'tagId': tagId,
+          'description': description,
           'transactedAt': transactedAt.toUtc().toIso8601String(),
           'value': value,
           'ignore': ignore,
