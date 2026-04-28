@@ -5,6 +5,9 @@ import '../../domain/entities/transaction_entity.dart';
 abstract class TransactionsRemoteDatasource {
   /// [monthStartLocal] normalized to local calendar day 1; range is \[start local, next month local).
   Future<List<TransactionEntity>> getTransactionsForMonth(DateTime monthStartLocal);
+
+  /// Sum of [TransactionEntity.value] for each non-null [TransactionEntity.accountId] (non-deleted rows only).
+  Future<Map<String, double>> sumTransactionValuesByAccountId();
   Future<TransactionEntity> createTransaction({
     String? accountId,
     String? cardId,
@@ -61,6 +64,23 @@ wallet_tags(name)
         .lt('transactedAt', endUtc)
         .order('transactedAt', ascending: false);
     return (data as List).map((e) => TransactionEntity.fromJson(e as Map<String, dynamic>)).toList();
+  }
+
+  @override
+  Future<Map<String, double>> sumTransactionValuesByAccountId() async {
+    final data = await _client
+        .from('wallet_transactions')
+        .select('accountId, value')
+        .isFilter('deletedAt', null);
+    final sums = <String, double>{};
+    for (final row in data as List) {
+      final m = row as Map<String, dynamic>;
+      final accountId = m['accountId'] as String?;
+      if (accountId == null) continue;
+      final v = (m['value'] as num).toDouble();
+      sums[accountId] = (sums[accountId] ?? 0) + v;
+    }
+    return sums;
   }
 
   @override
