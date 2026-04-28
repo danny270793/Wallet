@@ -30,8 +30,35 @@ class AppLocalizationsEs extends AppLocalizations {
   String get monthlyDashboard => 'Panel mensual';
 
   @override
+  String get monthlyDashboardTransactionsListTitle => 'Transacciones';
+
+  @override
   String get dashboardIncludeIgnoredInTotals =>
-      'Incluir transacciones ignoradas en los totales';
+      'Incluir transacciones ignoradas';
+
+  @override
+  String get monthlyDashboardTagPieTitle => 'Gastos por etiqueta';
+
+  @override
+  String get monthlyDashboardCategoryPieTitle => 'Gastos por categoría';
+
+  @override
+  String get dashboardCategoryPieNoData =>
+      'No hay gastos con categoría que mostrar este mes con el filtro actual.';
+
+  @override
+  String get dashboardTagPieNoData =>
+      'No hay importes que mostrar este mes con el filtro actual.';
+
+  @override
+  String get dashboardTagPieFilterTags => 'Filtrar etiquetas';
+
+  @override
+  String get dashboardTagPieFilterDescription =>
+      'Elige qué etiquetas incluir en el gráfico.';
+
+  @override
+  String get dashboardTagPieNeedOneTag => 'Selecciona al menos una etiqueta';
 
   @override
   String get yearlyDashboard => 'Panel anual';
