@@ -13,4 +13,7 @@ class AuthRepositoryImpl implements AuthRepository {
     required String password,
   }) =>
       _datasource.signIn(email: email, password: password);
+
+  @override
+  Future<void> signOut() => _datasource.signOut();
 }
