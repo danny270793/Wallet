@@ -133,6 +133,62 @@ class _TransactionsTotalsBarHostState extends State<_TransactionsTotalsBarHost> 
   }
 }
 
+/// Speed dial: main control plus new-transaction and transfer (transfer is a placeholder).
+class _TransactionsExpandableFab extends StatefulWidget {
+  const _TransactionsExpandableFab({
+    required this.l10n,
+    required this.onNewTransaction,
+  });
+
+  final AppLocalizations l10n;
+  final VoidCallback onNewTransaction;
+
+  @override
+  State<_TransactionsExpandableFab> createState() => _TransactionsExpandableFabState();
+}
+
+class _TransactionsExpandableFabState extends State<_TransactionsExpandableFab> {
+  bool _open = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.end,
+      children: [
+        if (_open) ...[
+          Tooltip(
+            message: widget.l10n.transactionsFabTransfer,
+            child: FloatingActionButton.small(
+              heroTag: 'transactions_fab_transfer',
+              onPressed: () {},
+              child: const Icon(Icons.swap_horiz_rounded),
+            ),
+          ),
+          const SizedBox(height: 12),
+          Tooltip(
+            message: widget.l10n.newTransaction,
+            child: FloatingActionButton.small(
+              heroTag: 'transactions_fab_new',
+              onPressed: () {
+                setState(() => _open = false);
+                widget.onNewTransaction();
+              },
+              child: const Icon(Icons.add),
+            ),
+          ),
+          const SizedBox(height: 12),
+        ],
+        FloatingActionButton(
+          heroTag: 'transactions_fab_toggle',
+          onPressed: () => setState(() => _open = !_open),
+          child: Icon(_open ? Icons.close : Icons.add),
+        ),
+      ],
+    );
+  }
+}
+
 class TransactionsPage extends StatelessWidget {
   const TransactionsPage({
     super.key,
@@ -284,8 +340,9 @@ class _TransactionsView extends StatelessWidget {
               title: title,
               useDrawer: !isScoped,
               appBarBottom: TransactionsMonthAppBarBottom(notifier: monthNotifier),
-              floatingActionButton: FloatingActionButton(
-                onPressed: () => _showTxDialog(
+              floatingActionButton: _TransactionsExpandableFab(
+                l10n: l10n,
+                onNewTransaction: () => _showTxDialog(
                   context,
                   l10n,
                   null,
@@ -294,7 +351,6 @@ class _TransactionsView extends StatelessWidget {
                   categoryIdFilter,
                   tagIdFilter,
                 ),
-                child: const Icon(Icons.add),
               ),
               bottomNavigationBar: showTotalsBar
                   ? _TransactionsTotalsBarHost(
@@ -633,18 +689,8 @@ class _TransactionTile extends StatelessWidget {
       );
     }
 
-    return SwipeableListTile(
+    Widget tile = SwipeableListTile(
       itemKey: transaction.id,
-      leading: transaction.ignore
-          ? Tooltip(
-              message: l10n.transactionIgnoredBadge,
-              child: Icon(
-                Icons.do_not_disturb_on_outlined,
-                size: 22,
-                color: theme.colorScheme.tertiary,
-              ),
-            )
-          : null,
       title: titleSection(),
       trailing: trailingPrices,
       onEdit: openEdit,
@@ -671,6 +717,13 @@ class _TransactionTile extends StatelessWidget {
       },
       onDeleted: () => cubit.delete(id: transaction.id),
     );
+
+    if (transaction.ignore) {
+      // Whole-row muted look; explicit text styles bypass ListTile disabled tints.
+      tile = Opacity(opacity: 0.52, child: tile);
+      tile = Tooltip(message: l10n.transactionIgnoredBadge, child: tile);
+    }
+    return tile;
   }
 
   /// Account, card, category, tag labels from embedded FK names (aligned with datasource order).
