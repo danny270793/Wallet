@@ -830,11 +830,23 @@ abstract class AppLocalizations {
   /// **'Amount'**
   String get transactionAmount;
 
+  /// No description provided for @transactionAmountInvalidNumber.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a valid number (optional minus sign and decimals)'**
+  String get transactionAmountInvalidNumber;
+
   /// No description provided for @transactionPercentage.
   ///
   /// In en, this message translates to:
   /// **'Percentage'**
   String get transactionPercentage;
+
+  /// No description provided for @transactionPercentageInvalidRange.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a number from 0 to 100'**
+  String get transactionPercentageInvalidRange;
 
   /// No description provided for @transactionIgnore.
   ///
