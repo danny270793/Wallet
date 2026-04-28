@@ -27,7 +27,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get unexpectedError => 'An unexpected error occurred';
 
   @override
-  String get dashboard => 'Dashboard';
+  String get monthlyDashboard => 'Monthly dashboard';
+
+  @override
+  String get yearlyDashboard => 'Yearly dashboard';
 
   @override
   String get settings => 'Settings';
@@ -299,6 +302,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get transactionsPickNextYear => 'Next year';
+
+  @override
+  String get yearlyPickYear => 'Choose year';
 
   @override
   String get year => 'Year';
