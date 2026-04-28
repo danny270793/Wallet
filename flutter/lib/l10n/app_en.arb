@@ -15,6 +15,22 @@
   "accountName": "Name",
   "accountDescription": "Description",
   "accountBalance": "Balance",
+  "listBalanceWeightedLine": "Weighted {amount}",
+  "@listBalanceWeightedLine": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "listBalanceCountedLine": "Counted {amount}",
+  "@listBalanceCountedLine": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
   "editAccount": "Edit account",
   "accountSubmitCreate": "Create",
   "deleteAccount": "Delete account",
