@@ -9,6 +9,29 @@ import '../features/tags/presentation/cubit/tags_state.dart';
 import '../widgets/shell_scaffold.dart';
 import '../widgets/swipeable_list_tile.dart';
 
+void _showTagBottomSheet(
+  BuildContext context,
+  AppLocalizations l10n, {
+  TagEntity? tag,
+}) {
+  showModalBottomSheet<void>(
+    context: context,
+    isScrollControlled: true,
+    useSafeArea: true,
+    showDragHandle: true,
+    builder: (sheetContext) => Padding(
+      padding: EdgeInsets.only(
+        bottom: MediaQuery.viewInsetsOf(sheetContext).bottom,
+      ),
+      child: _TagEditor(
+        cubit: context.read<TagsCubit>(),
+        l10n: l10n,
+        tag: tag,
+      ),
+    ),
+  );
+}
+
 class TagsPage extends StatelessWidget {
   const TagsPage({super.key});
 
@@ -39,19 +62,11 @@ class _TagsView extends StatelessWidget {
       builder: (context, state) {
         return ShellScaffold(
           title: l10n.tags,
-          body: Stack(
-            children: [
-              _body(context, state, l10n),
-              Positioned(
-                right: 16,
-                bottom: 16,
-                child: FloatingActionButton(
-                  onPressed: () => _showTagDialog(context, l10n),
-                  child: const Icon(Icons.add),
-                ),
-              ),
-            ],
+          floatingActionButton: FloatingActionButton(
+            onPressed: () => _showTagBottomSheet(context, l10n),
+            child: const Icon(Icons.add),
           ),
+          body: _body(context, state, l10n),
         );
       },
     );
@@ -134,17 +149,6 @@ class _TagsView extends StatelessWidget {
       ),
     );
   }
-
-  void _showTagDialog(BuildContext context, AppLocalizations l10n, [TagEntity? tag]) {
-    showDialog<void>(
-      context: context,
-      builder: (_) => _TagDialog(
-        cubit: context.read<TagsCubit>(),
-        l10n: l10n,
-        tag: tag,
-      ),
-    );
-  }
 }
 
 class _TagTile extends StatelessWidget {
@@ -157,10 +161,7 @@ class _TagTile extends StatelessWidget {
     final cubit = context.read<TagsCubit>();
 
     void openEdit() {
-      showDialog<void>(
-        context: context,
-        builder: (_) => _TagDialog(cubit: cubit, l10n: l10n, tag: tag),
-      );
+      _showTagBottomSheet(context, l10n, tag: tag);
     }
 
     void openTransactions() {
@@ -209,18 +210,18 @@ class _TagTile extends StatelessWidget {
   }
 }
 
-class _TagDialog extends StatefulWidget {
+class _TagEditor extends StatefulWidget {
   final TagsCubit cubit;
   final AppLocalizations l10n;
   final TagEntity? tag;
 
-  const _TagDialog({required this.cubit, required this.l10n, this.tag});
+  const _TagEditor({required this.cubit, required this.l10n, this.tag});
 
   @override
-  State<_TagDialog> createState() => _TagDialogState();
+  State<_TagEditor> createState() => _TagEditorState();
 }
 
-class _TagDialogState extends State<_TagDialog> {
+class _TagEditorState extends State<_TagEditor> {
   final _formKey = GlobalKey<FormState>();
   late final TextEditingController _nameController;
   late final TextEditingController _descriptionController;
@@ -256,46 +257,79 @@ class _TagDialogState extends State<_TagDialog> {
     }
   }
 
+  Widget _formFields(AppLocalizations l10n) {
+    return Form(
+      key: _formKey,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          TextFormField(
+            controller: _nameController,
+            decoration: InputDecoration(labelText: l10n.accountName),
+            validator: (v) => (v == null || v.trim().isEmpty) ? l10n.fieldRequired : null,
+            autofocus: true,
+            textInputAction: TextInputAction.next,
+          ),
+          const SizedBox(height: 8),
+          TextFormField(
+            controller: _descriptionController,
+            decoration: InputDecoration(labelText: l10n.accountDescription),
+            maxLines: 3,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _submitPrimaryButton(AppLocalizations l10n) {
+    final theme = Theme.of(context);
+    final label = widget.tag == null ? l10n.accountSubmitCreate : l10n.save;
+    return SizedBox(
+      width: double.infinity,
+      child: FilledButton(
+        onPressed: _loading ? null : _submit,
+        style: FilledButton.styleFrom(
+          minimumSize: const Size(double.infinity, 48),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        ),
+        child: _loading
+            ? SizedBox(
+                height: 22,
+                width: 22,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  color: theme.colorScheme.onPrimary,
+                ),
+              )
+            : Text(label),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = widget.l10n;
-    final isEdit = widget.tag != null;
+    final theme = Theme.of(context);
+    final title = widget.tag == null ? l10n.newTag : l10n.editTag;
 
-    return AlertDialog(
-      title: Text(isEdit ? l10n.editTag : l10n.newTag),
-      content: Form(
-        key: _formKey,
+    return SingleChildScrollView(
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
         child: Column(
           mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            TextFormField(
-              controller: _nameController,
-              decoration: InputDecoration(labelText: l10n.accountName),
-              validator: (v) => (v == null || v.trim().isEmpty) ? l10n.fieldRequired : null,
-              autofocus: true,
-              textInputAction: TextInputAction.next,
+            Text(
+              title,
+              style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w600),
             ),
-            const SizedBox(height: 8),
-            TextFormField(
-              controller: _descriptionController,
-              decoration: InputDecoration(labelText: l10n.accountDescription),
-              maxLines: 3,
-            ),
+            const SizedBox(height: 16),
+            _formFields(l10n),
+            const SizedBox(height: 24),
+            _submitPrimaryButton(l10n),
           ],
         ),
       ),
-      actions: [
-        TextButton(
-          onPressed: _loading ? null : () => Navigator.of(context).pop(),
-          child: Text(l10n.cancel),
-        ),
-        ElevatedButton(
-          onPressed: _loading ? null : _submit,
-          child: _loading
-              ? const SizedBox(height: 16, width: 16, child: CircularProgressIndicator(strokeWidth: 2))
-              : Text(l10n.save),
-        ),
-      ],
     );
   }
 }
