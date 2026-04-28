@@ -42,11 +42,55 @@ List<Color> _palette(ColorScheme scheme, int n) {
 
 double _weighted(TransactionEntity t) => t.value * t.percentage / 100.0;
 
+/// Categories that appear on at least one expense row in [txs] (same basis as the category pie).
+List<({String key, String label})> distinctExpenseCategoryOptions(
+  List<TransactionEntity> txs,
+  bool includeIgnored,
+) {
+  bool include(TransactionEntity t) => includeIgnored || !t.ignore;
+  final labels = <String, String>{};
+  final seen = <String>{};
+
+  for (final t in txs) {
+    if (!include(t)) continue;
+    final id = t.categoryId;
+    if (id == null || id.isEmpty) continue;
+    if (_weighted(t) >= 0) continue;
+    seen.add(id);
+    if (t.categoryName != null && t.categoryName!.isNotEmpty) {
+      labels[id] = t.categoryName!;
+    }
+  }
+
+  for (final k in seen) {
+    labels.putIfAbsent(k, () => '#${k.substring(0, math.min(8, k.length))}');
+  }
+
+  final list = seen.map((k) => (key: k, label: labels[k]!)).toList();
+  list.sort((a, b) => a.label.toLowerCase().compareTo(b.label.toLowerCase()));
+  return list;
+}
+
+/// Drops stale category ids and normalizes "all selected" to null.
+Set<String>? pruneCategoryKeysFilter(
+  List<TransactionEntity> txs,
+  bool includeIgnored,
+  Set<String>? current,
+) {
+  if (current == null) return null;
+  final options = distinctExpenseCategoryOptions(txs, includeIgnored);
+  final valid = options.map((o) => o.key).toSet();
+  final pruned = current.intersection(valid);
+  if (pruned.isEmpty || pruned.length == valid.length) return null;
+  return pruned;
+}
+
 List<_CategorySlice> _aggregateExpenseByCategory(
   List<TransactionEntity> txs,
   bool includeIgnored,
-  ColorScheme scheme,
-) {
+  ColorScheme scheme, {
+  Set<String>? categoryKeysFilter,
+}) {
   bool include(TransactionEntity t) => includeIgnored || !t.ignore;
 
   final sums = <String, double>{};
@@ -56,6 +100,7 @@ List<_CategorySlice> _aggregateExpenseByCategory(
     if (!include(t)) continue;
     final id = t.categoryId;
     if (id == null || id.isEmpty) continue;
+    if (categoryKeysFilter != null && !categoryKeysFilter.contains(id)) continue;
     final w = _weighted(t);
     if (w >= 0) continue;
     final expense = -w;
@@ -89,23 +134,137 @@ List<_CategorySlice> _aggregateExpenseByCategory(
 }
 
 /// Donut chart of expense totals (negative weighted amounts) per category.
+///
+/// [categoryKeysFilter] is owned by the parent: null = all categories; otherwise restrict to these [TransactionEntity.categoryId]s.
 class MonthlyCategoryExpensePieChart extends StatelessWidget {
   const MonthlyCategoryExpensePieChart({
     super.key,
     required this.l10n,
     required this.transactions,
     required this.includeIgnored,
+    required this.categoryKeysFilter,
+    required this.onCategoryKeysFilterChanged,
   });
 
   final AppLocalizations l10n;
   final List<TransactionEntity> transactions;
   final bool includeIgnored;
+  final Set<String>? categoryKeysFilter;
+  final ValueChanged<Set<String>?> onCategoryKeysFilterChanged;
+
+  Future<void> _openCategoryFilter(
+    BuildContext context,
+    List<({String key, String label})> options,
+  ) async {
+    final allKeys = options.map((o) => o.key).toSet();
+    final draft = Set<String>.from(categoryKeysFilter ?? allKeys);
+
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      showDragHandle: true,
+      builder: (ctx) {
+        final listMaxHeight = MediaQuery.sizeOf(ctx).height * 0.45;
+        return SafeArea(
+          child: StatefulBuilder(
+            builder: (ctx, setModal) {
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 16),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(20, 8, 12, 0),
+                      child: Text(
+                        l10n.dashboardCategoryPieFilterCategories,
+                        style: Theme.of(ctx).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(20, 8, 20, 8),
+                      child: Text(
+                        l10n.dashboardCategoryPieFilterDescription,
+                        style: Theme.of(ctx).textTheme.bodySmall?.copyWith(
+                              color: Theme.of(ctx).colorScheme.onSurfaceVariant,
+                            ),
+                      ),
+                    ),
+                    SizedBox(
+                      height: listMaxHeight,
+                      child: ListView(
+                        children: [
+                          for (final o in options)
+                            CheckboxListTile(
+                              value: draft.contains(o.key),
+                              onChanged: (v) {
+                                setModal(() {
+                                  if (v == true) {
+                                    draft.add(o.key);
+                                  } else {
+                                    draft.remove(o.key);
+                                  }
+                                });
+                              },
+                              title: Text(o.label),
+                              controlAffinity: ListTileControlAffinity.leading,
+                            ),
+                        ],
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      child: FilledButton(
+                        onPressed: () {
+                          if (draft.isEmpty) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text(l10n.dashboardCategoryPieNeedOneCategory)),
+                            );
+                            return;
+                          }
+                          onCategoryKeysFilterChanged(
+                            draft.length == allKeys.length ? null : Set<String>.from(draft),
+                          );
+                          Navigator.of(ctx).pop();
+                        },
+                        child: Text(l10n.save),
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            },
+          ),
+        );
+      },
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
-    final slices = _aggregateExpenseByCategory(transactions, includeIgnored, scheme);
+    final options = distinctExpenseCategoryOptions(
+      transactions,
+      includeIgnored,
+    );
+    final slices = _aggregateExpenseByCategory(
+      transactions,
+      includeIgnored,
+      scheme,
+      categoryKeysFilter: categoryKeysFilter,
+    );
+
+    if (options.isEmpty) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 16),
+        child: Text(
+          l10n.dashboardCategoryPieNoData,
+          textAlign: TextAlign.center,
+          style: theme.textTheme.bodyMedium?.copyWith(color: scheme.onSurfaceVariant),
+        ),
+      );
+    }
 
     if (slices.isEmpty) {
       return Padding(
@@ -133,9 +292,25 @@ class MonthlyCategoryExpensePieChart extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text(
-            l10n.monthlyDashboardCategoryPieTitle,
-            style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: Text(
+                  l10n.monthlyDashboardCategoryPieTitle,
+                  style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
+                ),
+              ),
+              IconButton(
+                tooltip: l10n.dashboardCategoryPieFilterCategories,
+                onPressed: () => _openCategoryFilter(context, options),
+                icon: Badge(
+                  isLabelVisible: categoryKeysFilter != null,
+                  smallSize: 8,
+                  child: const Icon(Icons.filter_list_rounded),
+                ),
+              ),
+            ],
           ),
           const SizedBox(height: 12),
           SizedBox(
