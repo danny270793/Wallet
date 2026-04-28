@@ -48,7 +48,43 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsLanguageSpanish => 'Spanish';
 
   @override
+  String get settingsTheme => 'Theme';
+
+  @override
+  String get settingsThemeSystem => 'System default';
+
+  @override
+  String get settingsThemeLight => 'Light';
+
+  @override
+  String get settingsThemeDark => 'Dark';
+
+  @override
   String get signOut => 'Sign out';
+
+  @override
+  String get settingsAboutSection => 'About';
+
+  @override
+  String get settingsAboutApp => 'About';
+
+  @override
+  String get settingsPrivacyPolicy => 'Privacy policy';
+
+  @override
+  String get settingsTermsOfUse => 'Terms of use';
+
+  @override
+  String get settingsAboutBody =>
+      'Wallet helps you track accounts, cards, categories, tags, and transactions in one place. Data is stored in your own backend (for example Supabase) and tied to your sign-in. This app is provided as-is for personal use.';
+
+  @override
+  String get settingsPrivacyBody =>
+      'The app sends and stores only the information you enter to provide budgeting and ledger features. We do not sell your data. Technical operations (hosting, authentication, database) are handled by the services you configure. For questions about processing, contact whoever operates your project or account. Replace this text with a policy that matches your deployment before production use.';
+
+  @override
+  String get settingsTermsBody =>
+      'By using Wallet you agree to use the app at your own risk. Nothing here is financial, legal, or tax advice. The authors are not liable for losses or decisions based on the app. You are responsible for securing your credentials and complying with laws that apply to you. Replace this text with your real terms before publishing.';
 
   @override
   String get accounts => 'Accounts';
@@ -262,6 +298,13 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get transactionCard => 'Card';
+
+  @override
+  String get transactionPaymentMethod => 'Payment method';
+
+  @override
+  String get transactionPaymentMethodSearchNoResults =>
+      'No payment methods match your search';
 
   @override
   String get transactionCategory => 'Category';
