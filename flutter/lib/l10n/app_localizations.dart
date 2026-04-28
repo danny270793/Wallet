@@ -140,6 +140,12 @@ abstract class AppLocalizations {
   /// **'Monthly dashboard'**
   String get monthlyDashboard;
 
+  /// No description provided for @dashboardIncludeIgnoredInTotals.
+  ///
+  /// In en, this message translates to:
+  /// **'Include ignored transactions in totals'**
+  String get dashboardIncludeIgnoredInTotals;
+
   /// No description provided for @yearlyDashboard.
   ///
   /// In en, this message translates to:
