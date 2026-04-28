@@ -14,6 +14,7 @@ import '../features/tags/domain/entities/tag_entity.dart';
 import '../features/transactions/domain/entities/transaction_entity.dart';
 import '../features/transactions/presentation/cubit/transactions_cubit.dart';
 import '../features/transactions/presentation/cubit/transactions_state.dart';
+import '../widgets/shell_scaffold.dart';
 import '../widgets/swipeable_list_tile.dart';
 import '../widgets/transactions_month_scope.dart';
 
@@ -123,34 +124,38 @@ class _TransactionsView extends StatelessWidget {
     final l10n = AppLocalizations.of(context)!;
     final monthNotifier = TransactionsMonthScope.of(context);
 
-    return BlocConsumer<TransactionsCubit, TransactionsState>(
-      listener: (context, state) {
-        if (state is TransactionsActionError) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(state.message ?? l10n.unexpectedError)),
-          );
-        }
-      },
-      builder: (context, state) {
-        return ValueListenableBuilder<DateTime>(
-          valueListenable: monthNotifier,
-          builder: (context, visibleMonth, _) {
-            return Stack(
-              children: [
-                _body(context, state, l10n, visibleMonth, monthNotifier),
-                Positioned(
-                  right: 16,
-                  bottom: 16,
-                  child: FloatingActionButton(
-                    onPressed: () => _showTxDialog(context, l10n),
-                    child: const Icon(Icons.add),
-                  ),
-                ),
-              ],
+    return ShellScaffold(
+      title: l10n.transactions,
+      appBarBottom: TransactionsMonthAppBarBottom(notifier: monthNotifier),
+      body: BlocConsumer<TransactionsCubit, TransactionsState>(
+        listener: (context, state) {
+          if (state is TransactionsActionError) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text(state.message ?? l10n.unexpectedError)),
             );
-          },
-        );
-      },
+          }
+        },
+        builder: (context, state) {
+          return ValueListenableBuilder<DateTime>(
+            valueListenable: monthNotifier,
+            builder: (context, visibleMonth, _) {
+              return Stack(
+                children: [
+                  _body(context, state, l10n, visibleMonth, monthNotifier),
+                  Positioned(
+                    right: 16,
+                    bottom: 16,
+                    child: FloatingActionButton(
+                      onPressed: () => _showTxDialog(context, l10n),
+                      child: const Icon(Icons.add),
+                    ),
+                  ),
+                ],
+              );
+            },
+          );
+        },
+      ),
     );
   }
 
