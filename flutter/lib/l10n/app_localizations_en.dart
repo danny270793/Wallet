@@ -169,6 +169,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get newTransaction => 'New transaction';
 
   @override
+  String get transactionsFabTransfer => 'Transfer';
+
+  @override
   String get editTransaction => 'Edit transaction';
 
   @override
