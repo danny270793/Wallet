@@ -12,7 +12,6 @@ void _showAccountBottomSheet(
   BuildContext context,
   AppLocalizations l10n, {
   AccountEntity? account,
-  double? currentBalance,
 }) {
   showModalBottomSheet<void>(
     context: context,
@@ -27,7 +26,6 @@ void _showAccountBottomSheet(
         cubit: context.read<AccountsCubit>(),
         l10n: l10n,
         account: account,
-        currentBalance: currentBalance,
       ),
     ),
   );
@@ -132,12 +130,6 @@ class _AccountsView extends StatelessWidget {
       _ => <AccountEntity>[],
     };
 
-    final balancesByAccountId = switch (state) {
-      AccountsLoaded(:final balancesByAccountId) => balancesByAccountId,
-      AccountsActionError(:final balancesByAccountId) => balancesByAccountId,
-      _ => const <String, double>{},
-    };
-
     if (accounts.isEmpty) {
       return RefreshIndicator(
         onRefresh: refresh,
@@ -160,10 +152,7 @@ class _AccountsView extends StatelessWidget {
         physics: const AlwaysScrollableScrollPhysics(),
         padding: const EdgeInsets.only(bottom: 88),
         itemCount: accounts.length,
-        itemBuilder: (context, index) => _AccountTile(
-          account: accounts[index],
-          balance: balancesByAccountId[accounts[index].id] ?? 0,
-        ),
+        itemBuilder: (context, index) => _AccountTile(account: accounts[index]),
       ),
     );
   }
@@ -172,14 +161,14 @@ class _AccountsView extends StatelessWidget {
 
 class _AccountTile extends StatelessWidget {
   final AccountEntity account;
-  final double balance;
-  const _AccountTile({required this.account, required this.balance});
+  const _AccountTile({required this.account});
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
     final cubit = context.read<AccountsCubit>();
+    final balance = account.balance;
 
     Color balanceColor() {
       if (balance > 0) return const Color(0xFF1B8736);
@@ -188,7 +177,7 @@ class _AccountTile extends StatelessWidget {
     }
 
     void openEdit() {
-      _showAccountBottomSheet(context, l10n, account: account, currentBalance: balance);
+      _showAccountBottomSheet(context, l10n, account: account);
     }
 
     return SwipeableListTile(
@@ -232,13 +221,11 @@ class _AccountEditor extends StatefulWidget {
   final AccountsCubit cubit;
   final AppLocalizations l10n;
   final AccountEntity? account;
-  final double? currentBalance;
 
   const _AccountEditor({
     required this.cubit,
     required this.l10n,
     this.account,
-    this.currentBalance,
   });
 
   @override
@@ -259,7 +246,7 @@ class _AccountEditorState extends State<_AccountEditor> {
     _descriptionController = TextEditingController(text: widget.account?.description ?? '');
     if (widget.account != null) {
       _balanceController = TextEditingController(
-        text: (widget.currentBalance ?? 0).toStringAsFixed(2),
+        text: widget.account!.balance.toStringAsFixed(2),
       );
     }
   }
@@ -287,7 +274,7 @@ class _AccountEditorState extends State<_AccountEditor> {
           id: widget.account!.id,
           name: name,
           description: description,
-          previousBalance: widget.currentBalance ?? 0,
+          previousBalance: widget.account!.balance,
           targetBalance: targetBalance,
         );
       }
