@@ -7,6 +7,24 @@ import '../features/transactions/domain/entities/transaction_entity.dart';
 
 double _weighted(TransactionEntity t) => t.value * t.percentage / 100.0;
 
+/// Latest calendar month in [year] (1–12) that has at least one counted transaction,
+/// or 0 if none. Uses local dates; respects [includeIgnored] the same as other yearly charts.
+int lastMonthWithTransactionsForYear(
+  List<TransactionEntity> txs,
+  int year, {
+  required bool includeIgnored,
+}) {
+  var last = 0;
+  for (final t in txs) {
+    if (!includeIgnored && t.ignore) continue;
+    final local = t.transactedAt.toLocal();
+    if (local.year != year) continue;
+    final m = local.month;
+    if (m > last) last = m;
+  }
+  return last;
+}
+
 /// Per calendar month (local), sum of positive weighted amounts.
 /// When [includeIgnored] is false, skips [TransactionEntity.ignore].
 List<double> weightedIncomeByMonthForYear(
@@ -196,15 +214,21 @@ class YearlyCumulativeNetBarChart extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    final cumulative = weightedCumulativeNetByMonthForYear(
+    final full = weightedCumulativeNetByMonthForYear(
       transactions,
       year,
       includeIgnored: includeIgnored,
     );
+    final last = lastMonthWithTransactionsForYear(
+      transactions,
+      year,
+      includeIgnored: includeIgnored,
+    );
+    final monthly = last == 0 ? full : full.sublist(0, last);
     return _YearlyMonthlyBarChartCore(
       l10n: l10n,
       year: year,
-      monthly: cumulative,
+      monthly: monthly,
       title: l10n.yearlyDashboardCumulativeByMonthTitle,
       barColor: scheme.primary,
       kind: _YearlyBarKind.net,
@@ -236,6 +260,7 @@ class _YearlyMonthlyBarChartCore extends StatelessWidget {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
     final locale = Localizations.localeOf(context).toString();
+    final monthCount = monthly.length;
 
     final rodToY = switch (kind) {
       _YearlyBarKind.income => List<double>.from(monthly),
@@ -288,7 +313,7 @@ class _YearlyMonthlyBarChartCore extends StatelessWidget {
     }
 
     final monthLabels = List.generate(
-      12,
+      monthCount,
       (i) => DateFormat.MMM(locale).format(DateTime(year, i + 1, 1)),
     );
 
@@ -356,7 +381,7 @@ class _YearlyMonthlyBarChartCore extends StatelessWidget {
                       reservedSize: 28,
                       getTitlesWidget: (value, meta) {
                         final i = value.toInt();
-                        if (i < 0 || i > 11) return const SizedBox.shrink();
+                        if (i < 0 || i >= monthCount) return const SizedBox.shrink();
                         return Padding(
                           padding: const EdgeInsets.only(top: 8),
                           child: Text(
@@ -404,7 +429,7 @@ class _YearlyMonthlyBarChartCore extends StatelessWidget {
                 ),
                 borderData: FlBorderData(show: false),
                 barGroups: List.generate(
-                  12,
+                  monthCount,
                   (i) => BarChartGroupData(
                     x: i,
                     barRods: [
