@@ -41,11 +41,15 @@ final router = GoRouter(
         GoRoute(
           path: '/transactions',
           builder: (context, state) {
-            final id = state.uri.queryParameters['accountId'];
-            final name = state.uri.queryParameters['accountName'];
+            final accountId = state.uri.queryParameters['accountId'];
+            final accountName = state.uri.queryParameters['accountName'];
+            final cardId = state.uri.queryParameters['cardId'];
+            final cardName = state.uri.queryParameters['cardName'];
             return TransactionsPage(
-              accountIdFilter: (id == null || id.isEmpty) ? null : id,
-              accountNameFilter: (name == null || name.isEmpty) ? null : name,
+              accountIdFilter: (accountId == null || accountId.isEmpty) ? null : accountId,
+              accountNameFilter: (accountName == null || accountName.isEmpty) ? null : accountName,
+              cardIdFilter: (cardId == null || cardId.isEmpty) ? null : cardId,
+              cardNameFilter: (cardName == null || cardName.isEmpty) ? null : cardName,
             );
           },
         ),
