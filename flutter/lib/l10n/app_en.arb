@@ -26,5 +26,31 @@
   },
   "cancel": "Cancel",
   "save": "Save",
-  "delete": "Delete"
+  "delete": "Delete",
+  "categories": "Categories",
+  "noCategories": "No categories yet",
+  "newCategory": "New category",
+  "editCategory": "Edit category",
+  "deleteCategory": "Delete category",
+  "confirmDeleteCategory": "Are you sure you want to delete \"{name}\"?",
+  "@confirmDeleteCategory": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "tags": "Tags",
+  "noTags": "No tags yet",
+  "newTag": "New tag",
+  "editTag": "Edit tag",
+  "deleteTag": "Delete tag",
+  "confirmDeleteTag": "Are you sure you want to delete \"{name}\"?",
+  "@confirmDeleteTag": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  }
 }
