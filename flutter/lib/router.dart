@@ -52,16 +52,8 @@ final router = GoRouter(
     ShellRoute(
       builder: (context, state, child) => child,
       routes: [
-        GoRoute(
-          path: '/dashboard',
-          redirect: (context, state) => '/dashboard/monthly',
-        ),
         GoRoute(path: '/dashboard/monthly', builder: (context, state) => const DashboardPage()),
         GoRoute(path: '/dashboard/yearly', builder: (context, state) => const YearlyDashboardPage()),
-        GoRoute(
-          path: '/yearly-dashboard',
-          redirect: (context, state) => '/dashboard/yearly',
-        ),
         GoRoute(path: '/accounts', builder: (context, state) => const AccountsPage()),
         GoRoute(path: '/cards', builder: (context, state) => const CardsPage()),
         GoRoute(path: '/categories', builder: (context, state) => const CategoriesPage()),
