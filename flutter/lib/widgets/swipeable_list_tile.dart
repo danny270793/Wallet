@@ -101,15 +101,3 @@ class SwipeableListTile extends StatelessWidget {
 /// Slightly lower than default so short swipes still register.
 const double _kDismissThreshold = 0.28;
 
-/// Decorative leading circle with the first letter of [name].
-CircleAvatar initialsAvatar(BuildContext context, String name, {double radius = 20}) {
-  final theme = Theme.of(context);
-  final trimmed = name.trim();
-  final letter = trimmed.isEmpty ? '?' : trimmed[0].toUpperCase();
-  return CircleAvatar(
-    radius: radius,
-    backgroundColor: theme.colorScheme.primaryContainer,
-    foregroundColor: theme.colorScheme.onPrimaryContainer,
-    child: Text(letter, style: const TextStyle(fontWeight: FontWeight.w600)),
-  );
-}
