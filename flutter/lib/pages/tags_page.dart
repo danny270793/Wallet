@@ -8,27 +8,18 @@ import '../features/tags/presentation/cubit/tags_cubit.dart';
 import '../features/tags/presentation/cubit/tags_state.dart';
 import '../widgets/shell_scaffold.dart';
 import '../widgets/swipeable_list_tile.dart';
+import '../widgets/tag_editor_sheet.dart';
 
 void _showTagBottomSheet(
   BuildContext context,
   AppLocalizations l10n, {
   TagEntity? tag,
 }) {
-  showModalBottomSheet<void>(
-    context: context,
-    isScrollControlled: true,
-    useSafeArea: true,
-    showDragHandle: true,
-    builder: (sheetContext) => Padding(
-      padding: EdgeInsets.only(
-        bottom: MediaQuery.viewInsetsOf(sheetContext).bottom,
-      ),
-      child: _TagEditor(
-        cubit: context.read<TagsCubit>(),
-        l10n: l10n,
-        tag: tag,
-      ),
-    ),
+  showTagEditorBottomSheet(
+    context,
+    l10n,
+    tag: tag,
+    cubit: context.read<TagsCubit>(),
   );
 }
 
@@ -206,130 +197,6 @@ class _TagTile extends StatelessWidget {
         return ok ?? false;
       },
       onDelete: () => cubit.delete(id: tag.id),
-    );
-  }
-}
-
-class _TagEditor extends StatefulWidget {
-  final TagsCubit cubit;
-  final AppLocalizations l10n;
-  final TagEntity? tag;
-
-  const _TagEditor({required this.cubit, required this.l10n, this.tag});
-
-  @override
-  State<_TagEditor> createState() => _TagEditorState();
-}
-
-class _TagEditorState extends State<_TagEditor> {
-  final _formKey = GlobalKey<FormState>();
-  late final TextEditingController _nameController;
-  late final TextEditingController _descriptionController;
-  bool _loading = false;
-
-  @override
-  void initState() {
-    super.initState();
-    _nameController = TextEditingController(text: widget.tag?.name ?? '');
-    _descriptionController = TextEditingController(text: widget.tag?.description ?? '');
-  }
-
-  @override
-  void dispose() {
-    _nameController.dispose();
-    _descriptionController.dispose();
-    super.dispose();
-  }
-
-  Future<void> _submit() async {
-    if (!_formKey.currentState!.validate()) return;
-    setState(() => _loading = true);
-    final name = _nameController.text.trim();
-    final description = _descriptionController.text.trim().isEmpty ? null : _descriptionController.text.trim();
-    try {
-      if (widget.tag == null) {
-        await widget.cubit.create(name: name, description: description);
-      } else {
-        await widget.cubit.update(id: widget.tag!.id, name: name, description: description);
-      }
-    } finally {
-      if (mounted) Navigator.of(context).pop();
-    }
-  }
-
-  Widget _formFields(AppLocalizations l10n) {
-    return Form(
-      key: _formKey,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          TextFormField(
-            controller: _nameController,
-            decoration: InputDecoration(labelText: l10n.accountName),
-            validator: (v) => (v == null || v.trim().isEmpty) ? l10n.fieldRequired : null,
-            autofocus: true,
-            textInputAction: TextInputAction.next,
-          ),
-          const SizedBox(height: 8),
-          TextFormField(
-            controller: _descriptionController,
-            decoration: InputDecoration(labelText: l10n.accountDescription),
-            maxLines: 3,
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _submitPrimaryButton(AppLocalizations l10n) {
-    final theme = Theme.of(context);
-    final label = widget.tag == null ? l10n.accountSubmitCreate : l10n.save;
-    return SizedBox(
-      width: double.infinity,
-      child: FilledButton(
-        onPressed: _loading ? null : _submit,
-        style: FilledButton.styleFrom(
-          minimumSize: const Size(double.infinity, 48),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        ),
-        child: _loading
-            ? SizedBox(
-                height: 22,
-                width: 22,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2,
-                  color: theme.colorScheme.onPrimary,
-                ),
-              )
-            : Text(label),
-      ),
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = widget.l10n;
-    final theme = Theme.of(context);
-    final title = widget.tag == null ? l10n.newTag : l10n.editTag;
-
-    return SingleChildScrollView(
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Text(
-              title,
-              style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w600),
-            ),
-            const SizedBox(height: 16),
-            _formFields(l10n),
-            const SizedBox(height: 24),
-            _submitPrimaryButton(l10n),
-          ],
-        ),
-      ),
     );
   }
 }
