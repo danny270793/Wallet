@@ -49,12 +49,14 @@ import '../../features/transactions/data/datasources/transactions_remote_datasou
 import '../../features/transactions/data/repositories/transactions_repository_impl.dart';
 import '../../features/transactions/domain/repositories/transactions_repository.dart';
 import '../../features/transactions/domain/usecases/get_transactions_usecase.dart';
+import '../../features/transactions/domain/usecases/get_transactions_for_year_usecase.dart';
 import '../../features/transactions/domain/usecases/search_transactions_by_description_usecase.dart';
 import '../../features/transactions/domain/usecases/create_transaction_usecase.dart';
 import '../../features/transactions/domain/usecases/create_account_transfer_usecase.dart';
 import '../../features/transactions/domain/usecases/update_transaction_usecase.dart';
 import '../../features/transactions/domain/usecases/delete_transaction_usecase.dart';
 import '../../features/transactions/presentation/cubit/transactions_cubit.dart';
+import '../../features/transactions/presentation/cubit/yearly_dashboard_cubit.dart';
 
 final getIt = GetIt.instance;
 
@@ -191,6 +193,7 @@ void setupDi() {
     () => TransactionsRepositoryImpl(getIt()),
   );
   getIt.registerFactory<GetTransactionsUsecase>(() => GetTransactionsUsecase(getIt()));
+  getIt.registerFactory<GetTransactionsForYearUsecase>(() => GetTransactionsForYearUsecase(getIt()));
   getIt.registerFactory<SearchTransactionsByDescriptionUsecase>(
     () => SearchTransactionsByDescriptionUsecase(getIt()),
   );
@@ -207,4 +210,5 @@ void setupDi() {
       createAccountTransfer: getIt(),
     ),
   );
+  getIt.registerFactory<YearlyDashboardCubit>(() => YearlyDashboardCubit(getIt()));
 }
