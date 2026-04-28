@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:wallet/l10n/app_localizations.dart';
 import '../core/di/injection.dart';
 import '../core/locale/app_locale_controller.dart';
+import '../core/theme/app_theme_controller.dart';
 import '../features/auth/presentation/cubit/settings_cubit.dart';
 import '../features/auth/presentation/cubit/settings_state.dart';
 
@@ -12,6 +13,13 @@ String _languageOptionLabel(AppLocalizations l10n, AppLanguagePreference p) =>
       AppLanguagePreference.system => l10n.settingsLanguageSystem,
       AppLanguagePreference.en => l10n.settingsLanguageEnglish,
       AppLanguagePreference.es => l10n.settingsLanguageSpanish,
+    };
+
+String _themeOptionLabel(AppLocalizations l10n, AppThemePreference p) =>
+    switch (p) {
+      AppThemePreference.system => l10n.settingsThemeSystem,
+      AppThemePreference.light => l10n.settingsThemeLight,
+      AppThemePreference.dark => l10n.settingsThemeDark,
     };
 
 Future<void> _showLanguagePickerSheet(
@@ -42,6 +50,51 @@ Future<void> _showLanguagePickerSheet(
               final selected = ctrl.preference == option;
               return ListTile(
                 title: Text(_languageOptionLabel(l10n, option)),
+                trailing: selected
+                    ? Icon(Icons.check, color: theme.colorScheme.primary)
+                    : null,
+                onTap: () async {
+                  await ctrl.setPreference(option);
+                  if (sheetContext.mounted) Navigator.of(sheetContext).pop();
+                },
+              );
+            }),
+            const SizedBox(height: 8),
+          ],
+        ),
+      );
+    },
+  );
+}
+
+Future<void> _showThemePickerSheet(
+  BuildContext context,
+  AppLocalizations l10n,
+  AppThemeController ctrl,
+) async {
+  await showModalBottomSheet<void>(
+    context: context,
+    showDragHandle: true,
+    builder: (sheetContext) {
+      final theme = Theme.of(sheetContext);
+      return SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 8, 20, 4),
+              child: Text(
+                l10n.settingsTheme,
+                style: theme.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+            ...AppThemePreference.values.map((option) {
+              final selected = ctrl.preference == option;
+              return ListTile(
+                title: Text(_themeOptionLabel(l10n, option)),
                 trailing: selected
                     ? Icon(Icons.check, color: theme.colorScheme.primary)
                     : null,
@@ -92,18 +145,57 @@ class SettingsPage extends StatelessWidget {
                   listenable: getIt<AppLocaleController>(),
                   builder: (context, _) {
                     final ctrl = getIt<AppLocaleController>();
-                    return Card(
-                      clipBehavior: Clip.antiAlias,
-                      child: ListTile(
-                        title: Text(l10n.settingsLanguage),
-                        subtitle: Text(
-                          _languageOptionLabel(l10n, ctrl.preference),
-                        ),
-                        trailing: const Icon(Icons.chevron_right),
-                        onTap: () => _showLanguagePickerSheet(context, l10n, ctrl),
+                    return ListTile(
+                      contentPadding: EdgeInsets.zero,
+                      title: Text(l10n.settingsLanguage),
+                      subtitle: Text(
+                        _languageOptionLabel(l10n, ctrl.preference),
                       ),
+                      trailing: const Icon(Icons.chevron_right),
+                      onTap: () => _showLanguagePickerSheet(context, l10n, ctrl),
                     );
                   },
+                ),
+                ListenableBuilder(
+                  listenable: getIt<AppThemeController>(),
+                  builder: (context, _) {
+                    final ctrl = getIt<AppThemeController>();
+                    return ListTile(
+                      contentPadding: EdgeInsets.zero,
+                      title: Text(l10n.settingsTheme),
+                      subtitle: Text(
+                        _themeOptionLabel(l10n, ctrl.preference),
+                      ),
+                      trailing: const Icon(Icons.chevron_right),
+                      onTap: () => _showThemePickerSheet(context, l10n, ctrl),
+                    );
+                  },
+                ),
+                const SizedBox(height: 24),
+                Text(
+                  l10n.settingsAboutSection,
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  title: Text(l10n.settingsAboutApp),
+                  trailing: const Icon(Icons.chevron_right),
+                  onTap: () => context.push('/settings/about'),
+                ),
+                ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  title: Text(l10n.settingsPrivacyPolicy),
+                  trailing: const Icon(Icons.chevron_right),
+                  onTap: () => context.push('/settings/privacy'),
+                ),
+                ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  title: Text(l10n.settingsTermsOfUse),
+                  trailing: const Icon(Icons.chevron_right),
+                  onTap: () => context.push('/settings/terms'),
                 ),
                 const SizedBox(height: 24),
                 BlocBuilder<SettingsCubit, SettingsState>(
