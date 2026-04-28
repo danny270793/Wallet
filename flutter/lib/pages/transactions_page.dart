@@ -208,6 +208,10 @@ class _AccountTransferBottomSheetState extends State<_AccountTransferBottomSheet
   final _formKey = GlobalKey<FormState>();
   late DateTime _transactedAt;
   final _valueController = TextEditingController(text: '0.00');
+  late final TextEditingController _dateDisplayController;
+  late final TextEditingController _timeDisplayController;
+  late final TextEditingController _sourceDisplayController;
+  late final TextEditingController _targetDisplayController;
   List<AccountEntity> _accounts = [];
   bool _loadingAccounts = true;
   String? _sourceId;
@@ -218,7 +222,32 @@ class _AccountTransferBottomSheetState extends State<_AccountTransferBottomSheet
   void initState() {
     super.initState();
     _transactedAt = DateTime.now();
+    _dateDisplayController = TextEditingController();
+    _timeDisplayController = TextEditingController();
+    _sourceDisplayController = TextEditingController();
+    _targetDisplayController = TextEditingController();
     _loadAccounts();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _syncDateTimeControllers();
+    });
+  }
+
+  void _syncDateTimeControllers() {
+    final locale = Localizations.localeOf(context).toString();
+    _dateDisplayController.text = DateFormat.yMd(locale).format(_transactedAt);
+    _timeDisplayController.text = DateFormat.Hm(locale).format(_transactedAt);
+  }
+
+  void _syncAccountDisplayControllers() {
+    String? nameFor(String? id) {
+      if (id == null) return null;
+      for (final a in _accounts) {
+        if (a.id == id) return a.name;
+      }
+      return null;
+    }
+    _sourceDisplayController.text = nameFor(_sourceId) ?? '';
+    _targetDisplayController.text = nameFor(_targetId) ?? '';
   }
 
   Future<void> _loadAccounts() async {
@@ -233,6 +262,7 @@ class _AccountTransferBottomSheetState extends State<_AccountTransferBottomSheet
           _targetId ??= list[1].id;
         }
       });
+      _syncAccountDisplayControllers();
     } catch (_) {
       if (mounted) setState(() => _loadingAccounts = false);
     }
@@ -241,6 +271,10 @@ class _AccountTransferBottomSheetState extends State<_AccountTransferBottomSheet
   @override
   void dispose() {
     _valueController.dispose();
+    _dateDisplayController.dispose();
+    _timeDisplayController.dispose();
+    _sourceDisplayController.dispose();
+    _targetDisplayController.dispose();
     super.dispose();
   }
 
@@ -255,6 +289,7 @@ class _AccountTransferBottomSheetState extends State<_AccountTransferBottomSheet
     setState(() {
       _transactedAt = DateTime(d.year, d.month, d.day, _transactedAt.hour, _transactedAt.minute);
     });
+    _syncDateTimeControllers();
   }
 
   Future<void> _pickTime() async {
@@ -272,6 +307,56 @@ class _AccountTransferBottomSheetState extends State<_AccountTransferBottomSheet
         time.minute,
       );
     });
+    _syncDateTimeControllers();
+  }
+
+  Future<void> _pickAccount({required bool source}) async {
+    final l10n = widget.l10n;
+    final id = await showModalBottomSheet<String>(
+      context: context,
+      showDragHandle: true,
+      isScrollControlled: true,
+      builder: (sheetContext) {
+        final maxH = MediaQuery.sizeOf(sheetContext).height * 0.55;
+        return SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 12, 20, 8),
+                child: Text(
+                  source ? l10n.transferSourceAccount : l10n.transferTargetAccount,
+                  style: Theme.of(sheetContext).textTheme.titleMedium,
+                ),
+              ),
+              SizedBox(
+                height: maxH,
+                child: ListView.builder(
+                  itemCount: _accounts.length,
+                  itemBuilder: (context, index) {
+                    final a = _accounts[index];
+                    return ListTile(
+                      title: Text(a.name),
+                      onTap: () => Navigator.of(sheetContext).pop(a.id),
+                    );
+                  },
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+    if (id == null || !mounted) return;
+    setState(() {
+      if (source) {
+        _sourceId = id;
+      } else {
+        _targetId = id;
+      }
+    });
+    _syncAccountDisplayControllers();
   }
 
   Future<void> _submit() async {
@@ -301,9 +386,6 @@ class _AccountTransferBottomSheetState extends State<_AccountTransferBottomSheet
   @override
   Widget build(BuildContext context) {
     final l10n = widget.l10n;
-    final locale = Localizations.localeOf(context).toString();
-    final dateStr = DateFormat.yMd(locale).format(_transactedAt);
-    final timeStr = DateFormat.Hm(locale).format(_transactedAt);
     final bottomInset = MediaQuery.viewInsetsOf(context).bottom;
 
     return Padding(
@@ -337,18 +419,30 @@ class _AccountTransferBottomSheetState extends State<_AccountTransferBottomSheet
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Expanded(
-                            child: OutlinedButton.icon(
-                              onPressed: _pickDate,
-                              icon: const Icon(Icons.calendar_today_outlined, size: 18),
-                              label: Text('${l10n.transferDateLabel}\n$dateStr', textAlign: TextAlign.center),
+                            child: TextFormField(
+                              readOnly: true,
+                              enableInteractiveSelection: false,
+                              showCursor: false,
+                              controller: _dateDisplayController,
+                              decoration: InputDecoration(
+                                labelText: l10n.transferDateLabel,
+                                suffixIcon: const Icon(Icons.calendar_today_outlined, size: 20),
+                              ),
+                              onTap: _pickDate,
                             ),
                           ),
                           const SizedBox(width: 12),
                           Expanded(
-                            child: OutlinedButton.icon(
-                              onPressed: _pickTime,
-                              icon: const Icon(Icons.schedule, size: 18),
-                              label: Text('${l10n.transferTimeLabel}\n$timeStr', textAlign: TextAlign.center),
+                            child: TextFormField(
+                              readOnly: true,
+                              enableInteractiveSelection: false,
+                              showCursor: false,
+                              controller: _timeDisplayController,
+                              decoration: InputDecoration(
+                                labelText: l10n.transferTimeLabel,
+                                suffixIcon: const Icon(Icons.schedule, size: 20),
+                              ),
+                              onTap: _pickTime,
                             ),
                           ),
                         ],
@@ -358,47 +452,47 @@ class _AccountTransferBottomSheetState extends State<_AccountTransferBottomSheet
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Expanded(
-                            child: DropdownButtonFormField<String>(
-                              initialValue: _sourceId,
-                              decoration: InputDecoration(labelText: l10n.transferSourceAccount),
-                              items: _accounts
-                                  .map((a) => DropdownMenuItem(value: a.id, child: Text(a.name)))
-                                  .toList(),
-                              onChanged: (v) => setState(() => _sourceId = v),
-                              validator: (v) => v == null ? l10n.fieldRequired : null,
+                            child: TextFormField(
+                              readOnly: true,
+                              enableInteractiveSelection: false,
+                              showCursor: false,
+                              controller: _sourceDisplayController,
+                              decoration: InputDecoration(
+                                labelText: l10n.transferSourceAccount,
+                                suffixIcon: const Icon(Icons.expand_more_rounded, size: 22),
+                              ),
+                              validator: (_) => _sourceId == null ? l10n.fieldRequired : null,
+                              onTap: () => _pickAccount(source: true),
                             ),
                           ),
                           const SizedBox(width: 12),
                           Expanded(
-                            child: DropdownButtonFormField<String>(
-                              initialValue: _targetId,
-                              decoration: InputDecoration(labelText: l10n.transferTargetAccount),
-                              items: _accounts
-                                  .map((a) => DropdownMenuItem(value: a.id, child: Text(a.name)))
-                                  .toList(),
-                              onChanged: (v) => setState(() => _targetId = v),
-                              validator: (v) => v == null ? l10n.fieldRequired : null,
+                            child: TextFormField(
+                              readOnly: true,
+                              enableInteractiveSelection: false,
+                              showCursor: false,
+                              controller: _targetDisplayController,
+                              decoration: InputDecoration(
+                                labelText: l10n.transferTargetAccount,
+                                suffixIcon: const Icon(Icons.expand_more_rounded, size: 22),
+                              ),
+                              validator: (_) => _targetId == null ? l10n.fieldRequired : null,
+                              onTap: () => _pickAccount(source: false),
                             ),
                           ),
                         ],
                       ),
                       const SizedBox(height: 16),
-                      Align(
-                        child: SizedBox(
-                          width: 200,
-                          child: TextFormField(
-                            controller: _valueController,
-                            decoration: InputDecoration(labelText: l10n.transactionAmount),
-                            keyboardType: const TextInputType.numberWithOptions(decimal: true, signed: false),
-                            textAlign: TextAlign.center,
-                            validator: (v) {
-                              if (v == null || v.trim().isEmpty) return l10n.fieldRequired;
-                              final n = double.tryParse(v.trim());
-                              if (n == null || n <= 0) return l10n.fieldRequired;
-                              return null;
-                            },
-                          ),
-                        ),
+                      TextFormField(
+                        controller: _valueController,
+                        decoration: InputDecoration(labelText: l10n.transactionAmount),
+                        keyboardType: const TextInputType.numberWithOptions(decimal: true, signed: false),
+                        validator: (v) {
+                          if (v == null || v.trim().isEmpty) return l10n.fieldRequired;
+                          final n = double.tryParse(v.trim());
+                          if (n == null || n <= 0) return l10n.fieldRequired;
+                          return null;
+                        },
                       ),
                       const SizedBox(height: 24),
                       FilledButton(
