@@ -112,8 +112,6 @@ class _TransactionsView extends StatelessWidget {
       _ => <TransactionEntity>[],
     };
 
-    final fmt = DateFormat.yMd().add_Hm();
-
     if (list.isEmpty) {
       return RefreshIndicator(
         onRefresh: refresh,
@@ -136,8 +134,7 @@ class _TransactionsView extends StatelessWidget {
         physics: const AlwaysScrollableScrollPhysics(),
         padding: const EdgeInsets.only(bottom: 88),
         itemCount: list.length,
-        itemBuilder: (context, index) =>
-            _TransactionTile(transaction: list[index], dateFmt: fmt, l10n: l10n),
+        itemBuilder: (context, index) => _TransactionTile(transaction: list[index], l10n: l10n),
       ),
     );
   }
@@ -156,12 +153,10 @@ class _TransactionsView extends StatelessWidget {
 
 class _TransactionTile extends StatelessWidget {
   final TransactionEntity transaction;
-  final DateFormat dateFmt;
   final AppLocalizations l10n;
 
   const _TransactionTile({
     required this.transaction,
-    required this.dateFmt,
     required this.l10n,
   });
 
@@ -170,6 +165,73 @@ class _TransactionTile extends StatelessWidget {
     final cubit = context.read<TransactionsCubit>();
     final relationNames = _relationNames(transaction);
     final theme = Theme.of(context);
+    final locale = Localizations.localeOf(context);
+    final localTime = transaction.transactedAt.toLocal();
+    final dateLine = DateFormat.yMMMd(locale.toString()).format(localTime);
+
+    Color valueColor() {
+      if (transaction.value > 0) return const Color(0xFF1B8736);
+      if (transaction.value < 0) return theme.colorScheme.error;
+      return theme.colorScheme.onSurfaceVariant;
+    }
+
+    Widget titleSection() {
+      final chunks = <Widget>[];
+      if (transaction.description != null && transaction.description!.isNotEmpty) {
+        chunks.add(
+          Text(
+            transaction.description!,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: theme.textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w500),
+          ),
+        );
+      }
+      if (relationNames.isNotEmpty) {
+        chunks.add(
+          Padding(
+            padding: EdgeInsets.only(top: transaction.description?.isNotEmpty == true ? 4 : 0),
+            child: Text(
+              relationNames.join(' · '),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+            ),
+          ),
+        );
+      }
+      if (chunks.isEmpty) {
+        return const SizedBox.shrink();
+      }
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: chunks,
+      );
+    }
+
+    final trailingPrices = Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.end,
+      children: [
+        Text(
+          l10n.transactionAmountValue(transaction.value.toString()),
+          style: theme.textTheme.titleMedium?.copyWith(
+            fontWeight: FontWeight.w700,
+            color: valueColor(),
+            height: 1.2,
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          DateFormat.Hm(locale.toString()).format(localTime),
+          style: theme.textTheme.bodySmall?.copyWith(
+            color: theme.colorScheme.onSurfaceVariant,
+            fontFeatures: const [FontFeature.tabularFigures()],
+          ),
+        ),
+      ],
+    );
 
     void openEdit() {
       showDialog<void>(
@@ -180,55 +242,35 @@ class _TransactionTile extends StatelessWidget {
 
     return SwipeableListTile(
       itemKey: transaction.id,
-      leading: CircleAvatar(
-        radius: 20,
-        backgroundColor: theme.colorScheme.tertiaryContainer,
-        foregroundColor: theme.colorScheme.onTertiaryContainer,
-        child: const Icon(Icons.payments_rounded, size: 22),
+      title: titleSection(),
+      subtitle: Padding(
+        padding: const EdgeInsets.only(top: 4),
+        child: Text(
+          dateLine,
+          style: theme.textTheme.bodySmall?.copyWith(
+            color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.9),
+          ),
+        ),
       ),
-      title: Text(
-        l10n.transactionAmountValue(transaction.value.toString()),
-        style: const TextStyle(fontWeight: FontWeight.w600),
-      ),
-      subtitle: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      trailing: Row(
         mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          if (transaction.description != null && transaction.description!.isNotEmpty)
+          if (transaction.ignore)
             Padding(
-              padding: const EdgeInsets.only(bottom: 4),
-              child: Text(
-                transaction.description!,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                style: theme.textTheme.bodyMedium,
-              ),
-            ),
-          if (relationNames.isNotEmpty)
-            Padding(
-              padding: const EdgeInsets.only(bottom: 4),
-              child: Text(
-                relationNames.join(' · '),
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: theme.colorScheme.onSurfaceVariant,
+              padding: const EdgeInsets.only(right: 8),
+              child: Tooltip(
+                message: l10n.transactionIgnore,
+                child: Icon(
+                  Icons.visibility_off_rounded,
+                  size: 22,
+                  color: theme.colorScheme.outline,
                 ),
               ),
             ),
-          Text(dateFmt.format(transaction.transactedAt.toLocal())),
+          trailingPrices,
         ],
       ),
-      trailing: transaction.ignore
-          ? Tooltip(
-              message: l10n.transactionIgnore,
-              child: Icon(
-                Icons.visibility_off_rounded,
-                size: 22,
-                color: theme.colorScheme.outline,
-              ),
-            )
-          : null,
       onEdit: openEdit,
       confirmDelete: () async {
         final ok = await showDialog<bool>(
