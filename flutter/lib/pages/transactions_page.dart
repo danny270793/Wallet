@@ -19,6 +19,8 @@ import '../features/transactions/presentation/cubit/transactions_cubit.dart';
 import '../features/transactions/presentation/cubit/transactions_state.dart';
 import '../widgets/account_editor_sheet.dart';
 import '../widgets/card_editor_sheet.dart';
+import '../widgets/category_editor_sheet.dart';
+import '../widgets/tag_editor_sheet.dart';
 import '../widgets/shell_scaffold.dart';
 import '../widgets/swipeable_list_tile.dart';
 import '../widgets/transactions_month_scope.dart';
@@ -29,6 +31,20 @@ const _paymentMethodPickAccountPrefix = 'a:';
 const _paymentMethodPickCardPrefix = 'c:';
 
 enum _PaymentMethodCreateChoice { account, card }
+
+/// Parses a transaction amount: optional leading −, digits, optional fractional part.
+/// Returns null if empty, not parseable, or not finite. If the string has a comma but no dot, the first comma is treated as the decimal separator.
+double? _parseTransactionAmountInput(String? raw) {
+  if (raw == null) return null;
+  var s = raw.trim();
+  if (s.isEmpty) return null;
+  if (s.contains(',') && !s.contains('.')) {
+    s = s.replaceFirst(',', '.');
+  }
+  final x = double.tryParse(s);
+  if (x == null || !x.isFinite) return null;
+  return x;
+}
 
 /// Local calendar day (midnight) used as a group key for [transactedAt].
 DateTime _calendarDayLocal(DateTime utcOrLocal) {
@@ -1733,6 +1749,9 @@ Future<String?> _showSearchableIdPickerSheet(
   required String emptyMessage,
   required bool allowNone,
   required List<({String id, String name})> initialItems,
+  Future<void> Function(BuildContext sheetContext)? onAddPressed,
+  String? addTooltip,
+  Future<List<({String id, String name})>> Function()? reloadItems,
 }) {
   return showModalBottomSheet<String?>(
     context: context,
@@ -1753,6 +1772,13 @@ Future<String?> _showSearchableIdPickerSheet(
       return StatefulBuilder(
         builder: (context, setPickerState) {
           final list = visible();
+
+          Future<void> refreshItems() async {
+            final r = reloadItems;
+            if (r == null) return;
+            items = await r();
+            setPickerState(() {});
+          }
 
           return SafeArea(
             child: Column(
@@ -1779,6 +1805,15 @@ Future<String?> _showSearchableIdPickerSheet(
                           });
                         },
                       ),
+                      if (onAddPressed != null)
+                        IconButton(
+                          tooltip: addTooltip ?? '',
+                          icon: const Icon(Icons.add_circle_outline),
+                          onPressed: () async {
+                            await onAddPressed(sheetContext);
+                            await refreshItems();
+                          },
+                        ),
                     ],
                   ),
                 ),
@@ -2277,6 +2312,21 @@ class _TransactionDialogState extends State<_TransactionDialog> {
       emptyMessage: l10n.noCategories,
       allowNone: false,
       initialItems: _categories.map((c) => (id: c.id, name: c.name)).toList(),
+      addTooltip: l10n.newCategory,
+      onAddPressed: (sheetContext) => showCategoryEditorBottomSheet(sheetContext, l10n),
+      reloadItems: () async {
+        final cats = await getIt<GetCategoriesUsecase>()();
+        if (mounted) {
+          setState(() {
+            _categories = cats;
+            if (_categoryId != null && !cats.any((c) => c.id == _categoryId)) {
+              _categoryId = null;
+            }
+            _syncRelationDisplays();
+          });
+        }
+        return cats.map((c) => (id: c.id, name: c.name)).toList();
+      },
     );
     if (!mounted || selectedId == null || selectedId.isEmpty) return;
     setState(() {
@@ -2300,6 +2350,21 @@ class _TransactionDialogState extends State<_TransactionDialog> {
       emptyMessage: l10n.noTags,
       allowNone: false,
       initialItems: _tags.map((t) => (id: t.id, name: t.name)).toList(),
+      addTooltip: l10n.newTag,
+      onAddPressed: (sheetContext) => showTagEditorBottomSheet(sheetContext, l10n),
+      reloadItems: () async {
+        final tags = await getIt<GetTagsUsecase>()();
+        if (mounted) {
+          setState(() {
+            _tags = tags;
+            if (_tagId != null && !tags.any((t) => t.id == _tagId)) {
+              _tagId = null;
+            }
+            _syncRelationDisplays();
+          });
+        }
+        return tags.map((t) => (id: t.id, name: t.name)).toList();
+      },
     );
     if (!mounted || selectedId == null || selectedId.isEmpty) return;
     setState(() {
@@ -2314,9 +2379,9 @@ class _TransactionDialogState extends State<_TransactionDialog> {
   Future<void> _submit() async {
     if (_loadingLookups) return;
     if (!_formKey.currentState!.validate()) return;
-    final value = double.tryParse(_valueController.text.trim());
+    final value = _parseTransactionAmountInput(_valueController.text);
     final pct = double.tryParse(_percentageController.text.trim());
-    if (value == null || pct == null) return;
+    if (value == null || pct == null || pct < 0 || pct > 100) return;
     final desc = _descriptionController.text.trim().isEmpty ? null : _descriptionController.text.trim();
     setState(() => _loading = true);
     try {
@@ -2426,7 +2491,9 @@ class _TransactionDialogState extends State<_TransactionDialog> {
                         keyboardType: const TextInputType.numberWithOptions(decimal: true, signed: true),
                         validator: (v) {
                           if (v == null || v.trim().isEmpty) return l10n.fieldRequired;
-                          if (double.tryParse(v.trim()) == null) return l10n.fieldRequired;
+                          if (_parseTransactionAmountInput(v) == null) {
+                            return l10n.transactionAmountInvalidNumber;
+                          }
                           return null;
                         },
                       ),
@@ -2550,7 +2617,9 @@ class _TransactionDialogState extends State<_TransactionDialog> {
                         keyboardType: const TextInputType.numberWithOptions(decimal: true),
                         validator: (v) {
                           if (v == null || v.trim().isEmpty) return l10n.fieldRequired;
-                          if (double.tryParse(v.trim()) == null) return l10n.fieldRequired;
+                          final p = double.tryParse(v.trim());
+                          if (p == null) return l10n.fieldRequired;
+                          if (p < 0 || p > 100) return l10n.transactionPercentageInvalidRange;
                           return null;
                         },
                       ),
