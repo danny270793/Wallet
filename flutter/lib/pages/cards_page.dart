@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 import 'package:wallet/l10n/app_localizations.dart';
 import '../core/di/injection.dart';
 import '../features/cards/domain/entities/card_entity.dart';
@@ -153,12 +154,32 @@ class _CardTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final theme = Theme.of(context);
     final cubit = context.read<CardsCubit>();
+    final balance = card.balance;
+
+    Color balanceColor() {
+      if (balance > 0) return const Color(0xFF1B8736);
+      if (balance < 0) return theme.colorScheme.error;
+      return theme.colorScheme.onSurface;
+    }
 
     void openEdit() {
       showDialog<void>(
         context: context,
         builder: (_) => _CardDialog(cubit: cubit, l10n: l10n, card: card),
+      );
+    }
+
+    void openTransactions() {
+      context.push(
+        Uri(
+          path: '/transactions',
+          queryParameters: {
+            'cardId': card.id,
+            'cardName': card.name,
+          },
+        ).toString(),
       );
     }
 
@@ -168,6 +189,11 @@ class _CardTile extends StatelessWidget {
       subtitle: card.description != null
           ? Text(card.description!, maxLines: 2, overflow: TextOverflow.ellipsis)
           : null,
+      trailing: Text(
+        l10n.transactionAmountValue(balance.toStringAsFixed(2)),
+        style: TextStyle(fontWeight: FontWeight.w600, color: balanceColor()),
+      ),
+      onTap: openTransactions,
       onEdit: openEdit,
       confirmDelete: () async {
         final ok = await showDialog<bool>(
