@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:wallet/l10n/app_localizations.dart';
 
+import 'transactions_month_scope.dart';
+
 class AppShell extends StatelessWidget {
   final Widget child;
 
@@ -12,9 +14,14 @@ class AppShell extends StatelessWidget {
     final l10n = AppLocalizations.of(context)!;
     final location = GoRouterState.of(context).matchedLocation;
 
+    final transactionsMonthNotifier = TransactionsMonthScope.maybeOf(context);
+
     return Scaffold(
       appBar: AppBar(
         title: Text(_title(location, l10n)),
+        bottom: transactionsMonthNotifier != null
+            ? TransactionsMonthAppBarBottom(notifier: transactionsMonthNotifier)
+            : null,
         actions: [
           IconButton(
             icon: const Icon(Icons.settings),
