@@ -442,6 +442,24 @@ abstract class AppLocalizations {
   /// **'Add at least two accounts to transfer money between them'**
   String get transferNeedTwoAccounts;
 
+  /// No description provided for @transferAccountSearch.
+  ///
+  /// In en, this message translates to:
+  /// **'Search by name'**
+  String get transferAccountSearch;
+
+  /// No description provided for @transferAccountSearchHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Filter by account name'**
+  String get transferAccountSearchHint;
+
+  /// No description provided for @transferAccountSearchNoResults.
+  ///
+  /// In en, this message translates to:
+  /// **'No accounts match your search'**
+  String get transferAccountSearchNoResults;
+
   /// No description provided for @editTransaction.
   ///
   /// In en, this message translates to:
