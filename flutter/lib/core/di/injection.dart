@@ -1,5 +1,8 @@
 import 'package:get_it/get_it.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../locale/app_locale_controller.dart';
+import '../wallet_actions/wallet_actions_datasource.dart';
+import '../wallet_actions/wallet_actions_reporter.dart';
 import '../../features/auth/data/datasources/auth_remote_datasource.dart';
 import '../../features/auth/data/repositories/auth_repository_impl.dart';
 import '../../features/auth/domain/repositories/auth_repository.dart';
@@ -45,6 +48,7 @@ import '../../features/transactions/data/datasources/transactions_remote_datasou
 import '../../features/transactions/data/repositories/transactions_repository_impl.dart';
 import '../../features/transactions/domain/repositories/transactions_repository.dart';
 import '../../features/transactions/domain/usecases/get_transactions_usecase.dart';
+import '../../features/transactions/domain/usecases/search_transactions_by_description_usecase.dart';
 import '../../features/transactions/domain/usecases/create_transaction_usecase.dart';
 import '../../features/transactions/domain/usecases/create_account_transfer_usecase.dart';
 import '../../features/transactions/domain/usecases/update_transaction_usecase.dart';
@@ -54,6 +58,17 @@ import '../../features/transactions/presentation/cubit/transactions_cubit.dart';
 final getIt = GetIt.instance;
 
 void setupDi() {
+  getIt.registerLazySingleton<AppLocaleController>(AppLocaleController.new);
+
+  getIt.registerLazySingleton<WalletActionsDatasource>(
+    () => WalletActionsDatasource(Supabase.instance.client),
+  );
+  getIt.registerLazySingleton<WalletActionsReporter>(
+    () => WalletActionsReporter(
+      datasource: getIt<WalletActionsDatasource>(),
+    ),
+  );
+
   // auth
   getIt.registerLazySingleton<AuthRemoteDatasource>(
     () => AuthSupabaseDatasource(Supabase.instance.client),
@@ -174,6 +189,9 @@ void setupDi() {
     () => TransactionsRepositoryImpl(getIt()),
   );
   getIt.registerFactory<GetTransactionsUsecase>(() => GetTransactionsUsecase(getIt()));
+  getIt.registerFactory<SearchTransactionsByDescriptionUsecase>(
+    () => SearchTransactionsByDescriptionUsecase(getIt()),
+  );
   getIt.registerFactory<CreateTransactionUsecase>(() => CreateTransactionUsecase(getIt()));
   getIt.registerFactory<CreateAccountTransferUsecase>(() => CreateAccountTransferUsecase(getIt()));
   getIt.registerFactory<UpdateTransactionUsecase>(() => UpdateTransactionUsecase(getIt()));
