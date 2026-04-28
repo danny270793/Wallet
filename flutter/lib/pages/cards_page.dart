@@ -5,6 +5,7 @@ import '../core/di/injection.dart';
 import '../features/cards/domain/entities/card_entity.dart';
 import '../features/cards/presentation/cubit/cards_cubit.dart';
 import '../features/cards/presentation/cubit/cards_state.dart';
+import '../widgets/shell_scaffold.dart';
 import '../widgets/swipeable_list_tile.dart';
 
 class CardsPage extends StatelessWidget {
@@ -35,18 +36,21 @@ class _CardsView extends StatelessWidget {
         }
       },
       builder: (context, state) {
-        return Stack(
-          children: [
-            _body(context, state, l10n),
-            Positioned(
-              right: 16,
-              bottom: 16,
-              child: FloatingActionButton(
-                onPressed: () => _showCardDialog(context, l10n),
-                child: const Icon(Icons.add),
+        return ShellScaffold(
+          title: l10n.cards,
+          body: Stack(
+            children: [
+              _body(context, state, l10n),
+              Positioned(
+                right: 16,
+                bottom: 16,
+                child: FloatingActionButton(
+                  onPressed: () => _showCardDialog(context, l10n),
+                  child: const Icon(Icons.add),
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         );
       },
     );
