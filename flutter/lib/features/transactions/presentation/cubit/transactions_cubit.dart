@@ -144,37 +144,44 @@ class TransactionsCubit extends Cubit<TransactionsState> {
   }
 
   /// Returns true if both transfer rows were created successfully.
-  Future<bool> transferBetweenAccounts({
-    required String sourceAccountId,
-    required String targetAccountId,
+  /// Each leg must set exactly one of accountId or cardId.
+  Future<bool> transferBetweenPaymentMethods({
+    required String? sourceAccountId,
+    required String? sourceCardId,
+    required String? targetAccountId,
+    required String? targetCardId,
     required double amount,
     required DateTime transactedAt,
   }) async {
     final current = _currentTransactions();
-    AppLogger.debug('account transfer');
+    AppLogger.debug('payment method transfer');
     try {
       await _createAccountTransfer(
         sourceAccountId: sourceAccountId,
+        sourceCardId: sourceCardId,
         targetAccountId: targetAccountId,
+        targetCardId: targetCardId,
         amount: amount,
         transactedAt: transactedAt,
       );
-      AppLogger.info('account transfer created');
+      AppLogger.info('transfer created');
       await _refetchCurrentMonthQuietly();
       return true;
     } catch (e, s) {
-      AppLogger.error('failed account transfer', e, s);
+      AppLogger.error('failed transfer', e, s);
       emit(TransactionsActionError(current));
       return false;
     }
   }
 
-  /// Updates both legs of an existing account transfer; refetches once.
+  /// Updates both legs of an existing transfer; refetches once.
   Future<bool> updateAccountTransfer({
     required TransactionEntity source,
     required TransactionEntity target,
-    required String sourceAccountId,
-    required String targetAccountId,
+    required String? sourceAccountId,
+    required String? sourceCardId,
+    required String? targetAccountId,
+    required String? targetCardId,
     required double amount,
     required DateTime transactedAt,
     required bool ignore,
@@ -186,12 +193,12 @@ class TransactionsCubit extends Cubit<TransactionsState> {
       emit(TransactionsActionError(current));
       return false;
     }
-    AppLogger.debug('account transfer update');
+    AppLogger.debug('transfer update');
     try {
       await _updateTransaction(
         id: source.id,
         accountId: sourceAccountId,
-        cardId: source.cardId,
+        cardId: sourceCardId,
         categoryId: source.categoryId,
         tagId: source.tagId,
         description: source.description,
@@ -204,7 +211,7 @@ class TransactionsCubit extends Cubit<TransactionsState> {
       await _updateTransaction(
         id: target.id,
         accountId: targetAccountId,
-        cardId: target.cardId,
+        cardId: targetCardId,
         categoryId: target.categoryId,
         tagId: target.tagId,
         description: target.description,
@@ -214,11 +221,11 @@ class TransactionsCubit extends Cubit<TransactionsState> {
         percentage: target.percentage,
         transactionGroupId: gid,
       );
-      AppLogger.info('account transfer updated');
+      AppLogger.info('transfer updated');
       await _refetchCurrentMonthQuietly();
       return true;
     } catch (e, s) {
-      AppLogger.error('failed account transfer update', e, s);
+      AppLogger.error('failed transfer update', e, s);
       emit(TransactionsActionError(current));
       return false;
     }
