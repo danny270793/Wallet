@@ -12,6 +12,7 @@ import '../features/cards/domain/entities/card_entity.dart';
 import '../features/categories/domain/entities/category_entity.dart';
 import '../features/tags/domain/entities/tag_entity.dart';
 import '../features/transactions/domain/entities/transaction_entity.dart';
+import '../features/transactions/domain/usecases/search_transactions_by_description_usecase.dart';
 import '../features/transactions/presentation/cubit/transactions_cubit.dart';
 import '../features/transactions/presentation/cubit/transactions_state.dart';
 import '../widgets/account_editor_sheet.dart';
@@ -234,10 +235,17 @@ class _AccountTransferBottomSheet extends StatefulWidget {
   const _AccountTransferBottomSheet({
     required this.cubit,
     required this.l10n,
-  });
+    this.editingSource,
+    this.editingTarget,
+  }) : assert(
+          (editingSource == null && editingTarget == null) ||
+              (editingSource != null && editingTarget != null),
+        );
 
   final TransactionsCubit cubit;
   final AppLocalizations l10n;
+  final TransactionEntity? editingSource;
+  final TransactionEntity? editingTarget;
 
   @override
   State<_AccountTransferBottomSheet> createState() => _AccountTransferBottomSheetState();
@@ -246,7 +254,7 @@ class _AccountTransferBottomSheet extends StatefulWidget {
 class _AccountTransferBottomSheetState extends State<_AccountTransferBottomSheet> {
   final _formKey = GlobalKey<FormState>();
   late DateTime _transactedAt;
-  final _valueController = TextEditingController(text: '0.00');
+  late final TextEditingController _valueController;
   late final TextEditingController _dateDisplayController;
   late final TextEditingController _timeDisplayController;
   late final TextEditingController _sourceDisplayController;
@@ -256,11 +264,26 @@ class _AccountTransferBottomSheetState extends State<_AccountTransferBottomSheet
   String? _sourceId;
   String? _targetId;
   bool _submitting = false;
+  bool _ignorePair = false;
+
+  bool get _isEditingPair =>
+      widget.editingSource != null && widget.editingTarget != null;
 
   @override
   void initState() {
     super.initState();
-    _transactedAt = DateTime.now();
+    final es = widget.editingSource;
+    final et = widget.editingTarget;
+    if (es != null && et != null) {
+      _transactedAt = es.transactedAt.toLocal();
+      _sourceId = es.accountId;
+      _targetId = et.accountId;
+      _valueController = TextEditingController(text: et.value.abs().toStringAsFixed(2));
+      _ignorePair = es.ignore || et.ignore;
+    } else {
+      _transactedAt = DateTime.now();
+      _valueController = TextEditingController(text: '0.00');
+    }
     _dateDisplayController = TextEditingController();
     _timeDisplayController = TextEditingController();
     _sourceDisplayController = TextEditingController();
@@ -489,12 +512,22 @@ class _AccountTransferBottomSheetState extends State<_AccountTransferBottomSheet
     if (amount == null || amount <= 0) return;
 
     setState(() => _submitting = true);
-    final ok = await widget.cubit.transferBetweenAccounts(
-      sourceAccountId: _sourceId!,
-      targetAccountId: _targetId!,
-      amount: amount,
-      transactedAt: _transactedAt,
-    );
+    final ok = _isEditingPair
+        ? await widget.cubit.updateAccountTransfer(
+            source: widget.editingSource!,
+            target: widget.editingTarget!,
+            sourceAccountId: _sourceId!,
+            targetAccountId: _targetId!,
+            amount: amount,
+            transactedAt: _transactedAt,
+            ignore: _ignorePair,
+          )
+        : await widget.cubit.transferBetweenAccounts(
+            sourceAccountId: _sourceId!,
+            targetAccountId: _targetId!,
+            amount: amount,
+            transactedAt: _transactedAt,
+          );
     if (!mounted) return;
     setState(() => _submitting = false);
     if (ok) Navigator.of(context).pop();
@@ -514,7 +547,10 @@ class _AccountTransferBottomSheetState extends State<_AccountTransferBottomSheet
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Text(l10n.transferSheetTitle, style: Theme.of(context).textTheme.titleLarge),
+              Text(
+                _isEditingPair ? l10n.editTransferTitle : l10n.transferSheetTitle,
+                style: Theme.of(context).textTheme.titleLarge,
+              ),
               const SizedBox(height: 16),
               if (_loadingAccounts)
                 const Padding(
@@ -801,6 +837,31 @@ class _TransactionsViewState extends State<_TransactionsView> {
               title: title,
               useDrawer: !isScoped,
               appBarBottom: TransactionsMonthAppBarBottom(notifier: monthNotifier),
+              appBarActionsBeforeSettings: [
+                IconButton(
+                  icon: const Icon(Icons.search),
+                  tooltip: l10n.transactionsSearchTooltip,
+                  onPressed: () async {
+                    final tx = await showSearch<TransactionEntity?>(
+                      context: context,
+                      delegate: _TransactionSearchDelegate(
+                        l10n: l10n,
+                        search: getIt<SearchTransactionsByDescriptionUsecase>(),
+                      ),
+                    );
+                    if (!context.mounted || tx == null) return;
+                    _showTxDialog(
+                      context,
+                      l10n,
+                      tx,
+                      widget.accountIdFilter,
+                      widget.cardIdFilter,
+                      widget.categoryIdFilter,
+                      widget.tagIdFilter,
+                    );
+                  },
+                ),
+              ],
               floatingActionButton: _TransactionsExpandableFab(
                 l10n: l10n,
                 isOpen: _fabMenuOpen,
@@ -997,6 +1058,105 @@ class _TransactionsViewState extends State<_TransactionsView> {
   }
 }
 
+class _TransactionSearchDelegate extends SearchDelegate<TransactionEntity?> {
+  _TransactionSearchDelegate({
+    required this.l10n,
+    required this.search,
+  });
+
+  final AppLocalizations l10n;
+  final SearchTransactionsByDescriptionUsecase search;
+
+  @override
+  String get searchFieldLabel => l10n.transactionsSearchHint;
+
+  @override
+  List<Widget>? buildActions(BuildContext context) {
+    if (query.isEmpty) return null;
+    return [
+      IconButton(
+        icon: const Icon(Icons.clear),
+        onPressed: () {
+          query = '';
+          showSuggestions(context);
+        },
+      ),
+    ];
+  }
+
+  @override
+  Widget buildLeading(BuildContext context) {
+    return IconButton(
+      icon: const Icon(Icons.arrow_back),
+      onPressed: () => close(context, null),
+    );
+  }
+
+  @override
+  Widget buildResults(BuildContext context) => _results(context);
+
+  @override
+  Widget buildSuggestions(BuildContext context) => _results(context);
+
+  Widget _results(BuildContext context) {
+    final q = query.trim();
+    if (q.isEmpty) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Text(
+            l10n.transactionsSearchTypeQuery,
+            textAlign: TextAlign.center,
+            style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
+          ),
+        ),
+      );
+    }
+    return FutureBuilder<List<TransactionEntity>>(
+      key: ValueKey(q),
+      future: search(q),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        }
+        if (snapshot.hasError) {
+          return Center(child: Text(l10n.unexpectedError));
+        }
+        final list = snapshot.data ?? [];
+        if (list.isEmpty) {
+          return Center(child: Text(l10n.transactionsSearchNoResults));
+        }
+        final locale = Localizations.localeOf(context).toString();
+        final dateFmt = DateFormat.yMMMd(locale).add_Hm();
+        return ListView.builder(
+          itemCount: list.length,
+          itemBuilder: (context, i) {
+            final t = list[i];
+            final desc = t.description?.isNotEmpty == true ? t.description! : l10n.none;
+            final weighted = t.value * t.percentage / 100.0;
+            final amt = l10n.transactionAmountValue(weighted.toStringAsFixed(2));
+            final sub = '${dateFmt.format(t.transactedAt.toLocal())} · ${t.accountName ?? l10n.none}';
+            return ListTile(
+              title: Text(desc, maxLines: 2, overflow: TextOverflow.ellipsis),
+              subtitle: Text(sub, maxLines: 2, overflow: TextOverflow.ellipsis),
+              trailing: Text(
+                amt,
+                style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.w600,
+                      fontFeatures: const [FontFeature.tabularFigures()],
+                    ),
+              ),
+              onTap: () => close(context, t),
+            );
+          },
+        );
+      },
+    );
+  }
+}
+
 class _TransactionDayHeader extends StatelessWidget {
   const _TransactionDayHeader({required this.day});
 
@@ -1061,7 +1221,7 @@ class _TransferPairTile extends StatelessWidget {
               amountStr,
               style: theme.textTheme.titleMedium?.copyWith(
                 fontWeight: FontWeight.w700,
-                color: const Color(0xFF1B8736),
+                color: theme.colorScheme.onSurfaceVariant,
                 height: 1.2,
                 fontFeatures: const [FontFeature.tabularFigures()],
               ),
@@ -1094,9 +1254,16 @@ class _TransferPairTile extends StatelessWidget {
     );
 
     void openEdit() {
-      showDialog<void>(
+      showModalBottomSheet<void>(
         context: context,
-        builder: (_) => _TransactionDialog(cubit: cubit, l10n: l10n, transaction: target),
+        isScrollControlled: true,
+        showDragHandle: true,
+        builder: (_) => _AccountTransferBottomSheet(
+          cubit: cubit,
+          l10n: l10n,
+          editingSource: source,
+          editingTarget: target,
+        ),
       );
     }
 
@@ -1113,8 +1280,8 @@ class _TransferPairTile extends StatelessWidget {
         final ok = await showDialog<bool>(
           context: context,
           builder: (dialogContext) => AlertDialog(
-            title: Text(l10n.deleteTransaction),
-            content: Text(l10n.confirmDeleteTransaction),
+            title: Text(l10n.deleteTransferPair),
+            content: Text(l10n.confirmDeleteTransferPair),
             actions: [
               TextButton(
                 onPressed: () => Navigator.of(dialogContext).pop(false),
@@ -1130,7 +1297,7 @@ class _TransferPairTile extends StatelessWidget {
         );
         return ok ?? false;
       },
-      onDeleted: () => cubit.deleteMany([source.id, target.id]),
+      onDelete: () => cubit.deleteMany([source.id, target.id]),
     );
 
     if (source.ignore || target.ignore) {
@@ -1313,7 +1480,7 @@ class _TransactionTile extends StatelessWidget {
         );
         return ok ?? false;
       },
-      onDeleted: () => cubit.delete(id: transaction.id),
+      onDelete: () => cubit.delete(id: transaction.id),
     );
 
     if (transaction.ignore) {
