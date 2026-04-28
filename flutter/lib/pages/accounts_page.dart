@@ -213,7 +213,7 @@ class _AccountTile extends StatelessWidget {
         );
         return ok ?? false;
       },
-      onDeleted: () => cubit.delete(id: account.id),
+      onDelete: () => cubit.delete(id: account.id),
     );
   }
 }
