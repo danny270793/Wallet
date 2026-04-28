@@ -8,6 +8,29 @@ import '../features/accounts/presentation/cubit/accounts_state.dart';
 import '../widgets/shell_scaffold.dart';
 import '../widgets/swipeable_list_tile.dart';
 
+void _showAccountBottomSheet(
+  BuildContext context,
+  AppLocalizations l10n, {
+  AccountEntity? account,
+}) {
+  showModalBottomSheet<void>(
+    context: context,
+    isScrollControlled: true,
+    useSafeArea: true,
+    showDragHandle: true,
+    builder: (sheetContext) => Padding(
+      padding: EdgeInsets.only(
+        bottom: MediaQuery.viewInsetsOf(sheetContext).bottom,
+      ),
+      child: _AccountEditor(
+        cubit: context.read<AccountsCubit>(),
+        l10n: l10n,
+        account: account,
+      ),
+    ),
+  );
+}
+
 class AccountsPage extends StatelessWidget {
   const AccountsPage({super.key});
 
@@ -45,7 +68,7 @@ class _AccountsView extends StatelessWidget {
                 right: 16,
                 bottom: 16,
                 child: FloatingActionButton(
-                  onPressed: () => _showNewAccountBottomSheet(context, l10n),
+                  onPressed: () => _showAccountBottomSheet(context, l10n),
                   child: const Icon(Icons.add),
                 ),
               ),
@@ -134,26 +157,6 @@ class _AccountsView extends StatelessWidget {
     );
   }
 
-  void _showNewAccountBottomSheet(BuildContext context, AppLocalizations l10n) {
-    showModalBottomSheet<void>(
-      context: context,
-      isScrollControlled: true,
-      useSafeArea: true,
-      showDragHandle: true,
-      builder: (sheetContext) => Padding(
-        padding: EdgeInsets.only(
-          bottom: MediaQuery.viewInsetsOf(sheetContext).bottom,
-        ),
-        child: _AccountEditor(
-          cubit: context.read<AccountsCubit>(),
-          l10n: l10n,
-          account: null,
-          isBottomSheet: true,
-        ),
-      ),
-    );
-  }
-
 }
 
 class _AccountTile extends StatelessWidget {
@@ -166,20 +169,11 @@ class _AccountTile extends StatelessWidget {
     final cubit = context.read<AccountsCubit>();
 
     void openEdit() {
-      showDialog<void>(
-        context: context,
-        builder: (_) => _AccountEditor(
-          cubit: cubit,
-          l10n: l10n,
-          account: account,
-          isBottomSheet: false,
-        ),
-      );
+      _showAccountBottomSheet(context, l10n, account: account);
     }
 
     return SwipeableListTile(
       itemKey: account.id,
-      leading: initialsAvatar(context, account.name),
       title: Text(account.name),
       subtitle: account.description != null
           ? Text(account.description!, maxLines: 2, overflow: TextOverflow.ellipsis)
@@ -215,14 +209,11 @@ class _AccountEditor extends StatefulWidget {
   final AccountsCubit cubit;
   final AppLocalizations l10n;
   final AccountEntity? account;
-  /// New account uses a bottom sheet; edit still uses an [AlertDialog].
-  final bool isBottomSheet;
 
   const _AccountEditor({
     required this.cubit,
     required this.l10n,
     this.account,
-    required this.isBottomSheet,
   });
 
   @override
@@ -238,10 +229,6 @@ class _AccountEditorState extends State<_AccountEditor> {
   @override
   void initState() {
     super.initState();
-    assert(
-      !widget.isBottomSheet || widget.account == null,
-      'Bottom sheet is only used for creating a new account',
-    );
     _nameController = TextEditingController(text: widget.account?.name ?? '');
     _descriptionController = TextEditingController(text: widget.account?.description ?? '');
   }
@@ -322,40 +309,25 @@ class _AccountEditorState extends State<_AccountEditor> {
   Widget build(BuildContext context) {
     final l10n = widget.l10n;
     final theme = Theme.of(context);
-    final isEdit = widget.account != null;
+    final title = widget.account == null ? l10n.newAccount : l10n.editAccount;
 
-    if (widget.isBottomSheet) {
-      return SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Text(
-                l10n.newAccount,
-                style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w600),
-              ),
-              const SizedBox(height: 16),
-              _formFields(l10n),
-              const SizedBox(height: 24),
-              _submitPrimaryButton(l10n),
-            ],
-          ),
+    return SingleChildScrollView(
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text(
+              title,
+              style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w600),
+            ),
+            const SizedBox(height: 16),
+            _formFields(l10n),
+            const SizedBox(height: 24),
+            _submitPrimaryButton(l10n),
+          ],
         ),
-      );
-    }
-
-    return AlertDialog(
-      title: Text(isEdit ? l10n.editAccount : l10n.newAccount),
-      content: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          _formFields(l10n),
-          const SizedBox(height: 20),
-          _submitPrimaryButton(l10n),
-        ],
       ),
     );
   }
