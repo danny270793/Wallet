@@ -4,6 +4,7 @@ import 'pages/splash_page.dart';
 import 'features/auth/presentation/pages/login_page.dart';
 import 'pages/dashboard_page.dart';
 import 'pages/accounts_page.dart';
+import 'pages/cards_page.dart';
 import 'pages/categories_page.dart';
 import 'pages/tags_page.dart';
 import 'pages/settings_page.dart';
@@ -34,6 +35,7 @@ final router = GoRouter(
       routes: [
         GoRoute(path: '/dashboard', builder: (context, state) => const DashboardPage()),
         GoRoute(path: '/accounts', builder: (context, state) => const AccountsPage()),
+        GoRoute(path: '/cards', builder: (context, state) => const CardsPage()),
         GoRoute(path: '/categories', builder: (context, state) => const CategoriesPage()),
         GoRoute(path: '/tags', builder: (context, state) => const TagsPage()),
       ],
