@@ -4,11 +4,12 @@ import 'package:wallet/l10n/app_localizations.dart';
 
 /// Drawer destination index aligned with [WalletNavigationDrawer] items.
 int walletDrawerSelectedIndex(String matchedLocation) {
+  if (matchedLocation.startsWith('/transactions')) return 0;
   if (matchedLocation.startsWith('/accounts')) return 1;
   if (matchedLocation.startsWith('/cards')) return 2;
   if (matchedLocation.startsWith('/categories')) return 3;
   if (matchedLocation.startsWith('/tags')) return 4;
-  if (matchedLocation.startsWith('/transactions')) return 5;
+  if (matchedLocation.startsWith('/dashboard')) return 5;
   return 0;
 }
 
@@ -29,24 +30,30 @@ class WalletNavigationDrawer extends StatelessWidget {
         Scaffold.of(context).closeDrawer();
         switch (index) {
           case 0:
-            router.go('/dashboard');
+            router.go('/transactions');
+            break;
           case 1:
             router.go('/accounts');
+            break;
           case 2:
             router.go('/cards');
+            break;
           case 3:
             router.go('/categories');
+            break;
           case 4:
             router.go('/tags');
+            break;
           case 5:
-            router.go('/transactions');
+            router.go('/dashboard');
+            break;
         }
       },
       children: [
         NavigationDrawerDestination(
-          icon: const Icon(Icons.dashboard_outlined),
-          selectedIcon: const Icon(Icons.dashboard),
-          label: Text(l10n.dashboard),
+          icon: const Icon(Icons.receipt_long_outlined),
+          selectedIcon: const Icon(Icons.receipt_long),
+          label: Text(l10n.transactions),
         ),
         NavigationDrawerDestination(
           icon: const Icon(Icons.account_balance_wallet_outlined),
@@ -69,9 +76,9 @@ class WalletNavigationDrawer extends StatelessWidget {
           label: Text(l10n.tags),
         ),
         NavigationDrawerDestination(
-          icon: const Icon(Icons.receipt_long_outlined),
-          selectedIcon: const Icon(Icons.receipt_long),
-          label: Text(l10n.transactions),
+          icon: const Icon(Icons.dashboard_outlined),
+          selectedIcon: const Icon(Icons.dashboard),
+          label: Text(l10n.dashboard),
         ),
       ],
     );
