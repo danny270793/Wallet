@@ -18,6 +18,7 @@ import '../features/transactions/domain/usecases/search_transactions_by_descript
 import '../features/transactions/presentation/cubit/transactions_cubit.dart';
 import '../features/transactions/presentation/cubit/transactions_state.dart';
 import '../widgets/account_editor_sheet.dart';
+import '../widgets/card_editor_sheet.dart';
 import '../widgets/shell_scaffold.dart';
 import '../widgets/swipeable_list_tile.dart';
 import '../widgets/transactions_month_scope.dart';
@@ -26,6 +27,8 @@ import '../widgets/transactions_totals_bar.dart';
 /// Encodes account vs card in unified payment-method picker sheet results.
 const _paymentMethodPickAccountPrefix = 'a:';
 const _paymentMethodPickCardPrefix = 'c:';
+
+enum _PaymentMethodCreateChoice { account, card }
 
 /// Local calendar day (midnight) used as a group key for [transactedAt].
 DateTime _calendarDayLocal(DateTime utcOrLocal) {
@@ -266,14 +269,17 @@ class _AccountTransferBottomSheetState extends State<_AccountTransferBottomSheet
   late final TextEditingController _sourceDisplayController;
   late final TextEditingController _targetDisplayController;
   List<AccountEntity> _accounts = [];
-  bool _loadingAccounts = true;
-  String? _sourceId;
-  String? _targetId;
+  List<CardEntity> _cards = [];
+  bool _loadingPaymentMethods = true;
+  String? _sourcePickKey;
+  String? _targetPickKey;
   bool _submitting = false;
   bool _ignorePair = false;
 
   bool get _isEditingPair =>
       widget.editingSource != null && widget.editingTarget != null;
+
+  int get _paymentMethodCount => _accounts.length + _cards.length;
 
   @override
   void initState() {
@@ -282,8 +288,8 @@ class _AccountTransferBottomSheetState extends State<_AccountTransferBottomSheet
     final et = widget.editingTarget;
     if (es != null && et != null) {
       _transactedAt = es.transactedAt.toLocal();
-      _sourceId = es.accountId;
-      _targetId = et.accountId;
+      _sourcePickKey = _entityToPickKey(es);
+      _targetPickKey = _entityToPickKey(et);
       _valueController = TextEditingController(text: et.value.abs().toStringAsFixed(2));
       _ignorePair = es.ignore || et.ignore;
     } else {
@@ -294,10 +300,16 @@ class _AccountTransferBottomSheetState extends State<_AccountTransferBottomSheet
     _timeDisplayController = TextEditingController();
     _sourceDisplayController = TextEditingController();
     _targetDisplayController = TextEditingController();
-    _loadAccounts();
+    _loadPaymentMethods();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) _syncDateTimeControllers();
     });
+  }
+
+  String? _entityToPickKey(TransactionEntity e) {
+    if (e.accountId != null) return '$_paymentMethodPickAccountPrefix${e.accountId}';
+    if (e.cardId != null) return '$_paymentMethodPickCardPrefix${e.cardId}';
+    return null;
   }
 
   void _syncDateTimeControllers() {
@@ -306,33 +318,82 @@ class _AccountTransferBottomSheetState extends State<_AccountTransferBottomSheet
     _timeDisplayController.text = DateFormat.Hm(locale).format(_transactedAt);
   }
 
-  void _syncAccountDisplayControllers() {
-    String? nameFor(String? id) {
-      if (id == null) return null;
-      for (final a in _accounts) {
-        if (a.id == id) return a.name;
-      }
-      return null;
+  ({String? accountId, String? cardId}) _parseTransferPickKey(String key) {
+    if (key.startsWith(_paymentMethodPickAccountPrefix)) {
+      return (
+        accountId: key.substring(_paymentMethodPickAccountPrefix.length),
+        cardId: null,
+      );
     }
-    _sourceDisplayController.text = nameFor(_sourceId) ?? '';
-    _targetDisplayController.text = nameFor(_targetId) ?? '';
+    if (key.startsWith(_paymentMethodPickCardPrefix)) {
+      return (
+        accountId: null,
+        cardId: key.substring(_paymentMethodPickCardPrefix.length),
+      );
+    }
+    return (accountId: null, cardId: null);
   }
 
-  Future<void> _loadAccounts() async {
+  void _syncLegDisplayControllers() {
+    String labelFor(String? key) {
+      if (key == null) return '';
+      if (key.startsWith(_paymentMethodPickAccountPrefix)) {
+        final id = key.substring(_paymentMethodPickAccountPrefix.length);
+        for (final a in _accounts) {
+          if (a.id == id) return a.name;
+        }
+      } else if (key.startsWith(_paymentMethodPickCardPrefix)) {
+        final id = key.substring(_paymentMethodPickCardPrefix.length);
+        for (final c in _cards) {
+          if (c.id == id) return c.name;
+        }
+      }
+      return '';
+    }
+
+    _sourceDisplayController.text = labelFor(_sourcePickKey);
+    _targetDisplayController.text = labelFor(_targetPickKey);
+  }
+
+  bool _pickKeyStillValid(String? key) {
+    if (key == null) return false;
+    final p = _parseTransferPickKey(key);
+    if (p.accountId != null) return _accounts.any((a) => a.id == p.accountId);
+    if (p.cardId != null) return _cards.any((c) => c.id == p.cardId);
+    return false;
+  }
+
+  void _assignDefaultPickKeysIfNeeded() {
+    if (_isEditingPair) return;
+    if (_paymentMethodCount < 2) return;
+    final keys = <String>[
+      ..._cards.map((c) => '$_paymentMethodPickCardPrefix${c.id}'),
+      ..._accounts.map((a) => '$_paymentMethodPickAccountPrefix${a.id}'),
+    ];
+    _sourcePickKey ??= keys[0];
+    _targetPickKey ??= keys[1];
+  }
+
+  void _pruneStalePickKeysAndDefault() {
+    if (!_pickKeyStillValid(_sourcePickKey)) _sourcePickKey = null;
+    if (!_pickKeyStillValid(_targetPickKey)) _targetPickKey = null;
+    _assignDefaultPickKeysIfNeeded();
+  }
+
+  Future<void> _loadPaymentMethods() async {
     try {
-      final list = await getIt<GetAccountsUsecase>()();
+      final accounts = await getIt<GetAccountsUsecase>()();
+      final cards = await getIt<GetCardsUsecase>()();
       if (!mounted) return;
       setState(() {
-        _accounts = list;
-        _loadingAccounts = false;
-        if (list.length >= 2) {
-          _sourceId ??= list.first.id;
-          _targetId ??= list[1].id;
-        }
+        _accounts = accounts;
+        _cards = cards;
+        _loadingPaymentMethods = false;
+        _pruneStalePickKeysAndDefault();
       });
-      _syncAccountDisplayControllers();
+      _syncLegDisplayControllers();
     } catch (_) {
-      if (mounted) setState(() => _loadingAccounts = false);
+      if (mounted) setState(() => _loadingPaymentMethods = false);
     }
   }
 
@@ -378,138 +439,40 @@ class _AccountTransferBottomSheetState extends State<_AccountTransferBottomSheet
     _syncDateTimeControllers();
   }
 
-  Future<void> _pickAccount({required bool source}) async {
+  Future<void> _pickTransferLeg({required bool source}) async {
     final l10n = widget.l10n;
-    var pickerAccounts = List<AccountEntity>.from(_accounts);
-    var showSearchField = false;
-    var searchFilter = '';
-
-    final selectedId = await showModalBottomSheet<String>(
-      context: context,
-      showDragHandle: true,
-      isScrollControlled: true,
-      builder: (sheetContext) {
-            final maxH = MediaQuery.sizeOf(sheetContext).height * 0.55;
-
-            List<AccountEntity> visibleAccounts() {
-              final q = searchFilter.trim().toLowerCase();
-              if (q.isEmpty) return pickerAccounts;
-              return pickerAccounts
-                  .where((a) => a.name.toLowerCase().contains(q))
-                  .toList();
-            }
-
-            return StatefulBuilder(
-              builder: (context, setPickerState) {
-                Future<void> refreshPickerAccounts() async {
-                  final fresh = await getIt<GetAccountsUsecase>()();
-                  pickerAccounts = fresh;
-                  setPickerState(() {});
-                  if (!mounted) return;
-                  setState(() {
-                    _accounts = fresh;
-                    if (fresh.length >= 2) {
-                      _sourceId ??= fresh.first.id;
-                      _targetId ??= fresh[1].id;
-                    }
-                    _syncAccountDisplayControllers();
-                  });
-                }
-
-                final visible = visibleAccounts();
-
-                return SafeArea(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      Padding(
-                        padding: const EdgeInsets.fromLTRB(12, 12, 4, 8),
-                        child: Row(
-                          children: [
-                            Expanded(
-                              child: Text(
-                                source ? l10n.transferSourceAccount : l10n.transferTargetAccount,
-                                style: Theme.of(sheetContext).textTheme.titleMedium,
-                              ),
-                            ),
-                            IconButton(
-                              tooltip: l10n.transferAccountSearch,
-                              icon: Icon(showSearchField ? Icons.search_off_outlined : Icons.search),
-                              onPressed: () {
-                                setPickerState(() {
-                                  showSearchField = !showSearchField;
-                                  if (!showSearchField) searchFilter = '';
-                                });
-                              },
-                            ),
-                            IconButton(
-                              tooltip: l10n.newAccount,
-                              icon: const Icon(Icons.add_circle_outline),
-                              onPressed: () async {
-                                await showAccountEditorBottomSheet(sheetContext, l10n);
-                                await refreshPickerAccounts();
-                              },
-                            ),
-                          ],
-                        ),
-                      ),
-                      if (showSearchField)
-                        Padding(
-                          padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
-                          child: TextField(
-                            key: const ValueKey('transfer_account_search'),
-                            decoration: InputDecoration(
-                              hintText: l10n.transferAccountSearchHint,
-                              prefixIcon: const Icon(Icons.search, size: 22),
-                              isDense: true,
-                              border: const OutlineInputBorder(),
-                            ),
-                            textInputAction: TextInputAction.search,
-                            onChanged: (v) => setPickerState(() => searchFilter = v),
-                          ),
-                        ),
-                      SizedBox(
-                        height: maxH,
-                        child: pickerAccounts.isEmpty
-                            ? Center(child: Text(l10n.noAccounts))
-                            : visible.isEmpty
-                                ? Center(child: Text(l10n.transferAccountSearchNoResults))
-                                : ListView.builder(
-                                    itemCount: visible.length,
-                                    itemBuilder: (context, index) {
-                                      final a = visible[index];
-                                      return ListTile(
-                                        title: Text(a.name),
-                                        onTap: () => Navigator.of(sheetContext).pop(a.id),
-                                      );
-                                    },
-                                  ),
-                      ),
-                    ],
-                  ),
-                );
-              },
-            );
-          },
+    final raw = await showPaymentMethodPickerSheet(
+      context,
+      l10n: l10n,
+      sheetTitle: source ? l10n.transferSourceAccount : l10n.transferTargetAccount,
+      accounts: _accounts,
+      cards: _cards,
+      onListsUpdated: (a, c) {
+        if (!mounted) return;
+        setState(() {
+          _accounts = a;
+          _cards = c;
+          _pruneStalePickKeysAndDefault();
+          _syncLegDisplayControllers();
+        });
+      },
     );
-
-    if (selectedId == null || selectedId.isEmpty || !mounted) return;
+    if (!mounted || raw == null || raw.isEmpty) return;
     setState(() {
       if (source) {
-        _sourceId = selectedId;
+        _sourcePickKey = raw;
       } else {
-        _targetId = selectedId;
+        _targetPickKey = raw;
       }
     });
-    _syncAccountDisplayControllers();
+    _syncLegDisplayControllers();
   }
 
   Future<void> _submit() async {
-    if (_loadingAccounts || _accounts.length < 2) return;
+    if (_loadingPaymentMethods || _paymentMethodCount < 2) return;
     if (!_formKey.currentState!.validate()) return;
-    if (_sourceId == null || _targetId == null) return;
-    if (_sourceId == _targetId) {
+    if (_sourcePickKey == null || _targetPickKey == null) return;
+    if (_sourcePickKey == _targetPickKey) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(widget.l10n.transferAccountsMustDiffer)),
       );
@@ -518,20 +481,27 @@ class _AccountTransferBottomSheetState extends State<_AccountTransferBottomSheet
     final amount = double.tryParse(_valueController.text.trim());
     if (amount == null || amount <= 0) return;
 
+    final s = _parseTransferPickKey(_sourcePickKey!);
+    final t = _parseTransferPickKey(_targetPickKey!);
+
     setState(() => _submitting = true);
     final ok = _isEditingPair
         ? await widget.cubit.updateAccountTransfer(
             source: widget.editingSource!,
             target: widget.editingTarget!,
-            sourceAccountId: _sourceId!,
-            targetAccountId: _targetId!,
+            sourceAccountId: s.accountId,
+            sourceCardId: s.cardId,
+            targetAccountId: t.accountId,
+            targetCardId: t.cardId,
             amount: amount,
             transactedAt: _transactedAt,
             ignore: _ignorePair,
           )
-        : await widget.cubit.transferBetweenAccounts(
-            sourceAccountId: _sourceId!,
-            targetAccountId: _targetId!,
+        : await widget.cubit.transferBetweenPaymentMethods(
+            sourceAccountId: s.accountId,
+            sourceCardId: s.cardId,
+            targetAccountId: t.accountId,
+            targetCardId: t.cardId,
             amount: amount,
             transactedAt: _transactedAt,
           );
@@ -597,7 +567,7 @@ class _AccountTransferBottomSheetState extends State<_AccountTransferBottomSheet
                       ],
                     ),
                     const SizedBox(height: 16),
-                    if (_loadingAccounts)
+                    if (_loadingPaymentMethods)
                       Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -638,7 +608,7 @@ class _AccountTransferBottomSheetState extends State<_AccountTransferBottomSheet
                           ),
                         ],
                       )
-                    else if (_accounts.length < 2)
+                    else if (_paymentMethodCount < 2)
                       Padding(
                         padding: const EdgeInsets.symmetric(vertical: 8),
                         child: Text(l10n.transferNeedTwoAccounts, textAlign: TextAlign.center),
@@ -657,8 +627,8 @@ class _AccountTransferBottomSheetState extends State<_AccountTransferBottomSheet
                                 labelText: l10n.transferSourceAccount,
                                 suffixIcon: const Icon(Icons.expand_more_rounded, size: 22),
                               ),
-                              validator: (_) => _sourceId == null ? l10n.fieldRequired : null,
-                              onTap: () => _pickAccount(source: true),
+                              validator: (_) => _sourcePickKey == null ? l10n.fieldRequired : null,
+                              onTap: () => _pickTransferLeg(source: true),
                             ),
                           ),
                           const SizedBox(width: 12),
@@ -672,8 +642,8 @@ class _AccountTransferBottomSheetState extends State<_AccountTransferBottomSheet
                                 labelText: l10n.transferTargetAccount,
                                 suffixIcon: const Icon(Icons.expand_more_rounded, size: 22),
                               ),
-                              validator: (_) => _targetId == null ? l10n.fieldRequired : null,
-                              onTap: () => _pickAccount(source: false),
+                              validator: (_) => _targetPickKey == null ? l10n.fieldRequired : null,
+                              onTap: () => _pickTransferLeg(source: false),
                             ),
                           ),
                         ],
@@ -692,7 +662,8 @@ class _AccountTransferBottomSheetState extends State<_AccountTransferBottomSheet
                     ),
                     const SizedBox(height: 24),
                     FilledButton(
-                      onPressed: _submitting || _loadingAccounts || _accounts.length < 2 ? null : _submit,
+                      onPressed:
+                          _submitting || _loadingPaymentMethods || _paymentMethodCount < 2 ? null : _submit,
                       child: _submitting
                           ? const SizedBox(
                               height: 20,
@@ -1450,6 +1421,7 @@ class _TransferPairTile extends StatelessWidget {
     final timeStr = DateFormat.Hm(locale.toString()).format(timeLocal);
     final amountStr = l10n.transactionAmountValue(target.value.toStringAsFixed(2));
     final gid = source.transactionGroupId;
+    String payLabel(TransactionEntity t) => t.accountName ?? t.cardName ?? '—';
 
     final title = Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -1459,7 +1431,7 @@ class _TransferPairTile extends StatelessWidget {
           children: [
             Expanded(
               child: Text(
-                target.accountName ?? '—',
+                payLabel(target),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: theme.textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w500),
@@ -1481,7 +1453,7 @@ class _TransferPairTile extends StatelessWidget {
           children: [
             Expanded(
               child: Text(
-                source.accountName ?? '—',
+                payLabel(source),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: theme.textTheme.bodySmall?.copyWith(
@@ -1856,6 +1828,211 @@ Future<String?> _showSearchableIdPickerSheet(
   );
 }
 
+/// Returns `a:id` or `c:id`. [onListsUpdated] should update parent state (e.g. [setState]).
+Future<String?> showPaymentMethodPickerSheet(
+  BuildContext context, {
+  required AppLocalizations l10n,
+  required String sheetTitle,
+  required List<AccountEntity> accounts,
+  required List<CardEntity> cards,
+  required void Function(List<AccountEntity> accounts, List<CardEntity> cards) onListsUpdated,
+}) {
+  return showModalBottomSheet<String?>(
+    context: context,
+    showDragHandle: true,
+    isScrollControlled: true,
+    builder: (sheetContext) {
+      final maxH = MediaQuery.sizeOf(sheetContext).height * 0.55;
+      var pickerAccounts = List<AccountEntity>.from(accounts);
+      var pickerCards = List<CardEntity>.from(cards);
+      var showSearchField = false;
+      var searchFilter = '';
+
+      return StatefulBuilder(
+        builder: (context, setPickerState) {
+          Future<void> refreshPicker() async {
+            final freshAccounts = await getIt<GetAccountsUsecase>()();
+            final freshCards = await getIt<GetCardsUsecase>()();
+            pickerAccounts = freshAccounts;
+            pickerCards = freshCards;
+            setPickerState(() {});
+            onListsUpdated(freshAccounts, freshCards);
+          }
+
+          List<AccountEntity> visibleAccounts() {
+            final q = searchFilter.trim().toLowerCase();
+            if (q.isEmpty) return pickerAccounts;
+            return pickerAccounts.where((a) => a.name.toLowerCase().contains(q)).toList();
+          }
+
+          List<CardEntity> visibleCards() {
+            final q = searchFilter.trim().toLowerCase();
+            if (q.isEmpty) return pickerCards;
+            return pickerCards.where((c) => c.name.toLowerCase().contains(q)).toList();
+          }
+
+          final vAccounts = visibleAccounts();
+          final vCards = visibleCards();
+          final hasAny = pickerAccounts.isNotEmpty || pickerCards.isNotEmpty;
+          final filteredEmpty = vAccounts.isEmpty && vCards.isEmpty;
+
+          return SafeArea(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(12, 12, 4, 8),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          sheetTitle,
+                          style: Theme.of(sheetContext).textTheme.titleMedium,
+                        ),
+                      ),
+                      IconButton(
+                        tooltip: l10n.transferAccountSearch,
+                        icon: Icon(showSearchField ? Icons.search_off_outlined : Icons.search),
+                        onPressed: () {
+                          setPickerState(() {
+                            showSearchField = !showSearchField;
+                            if (!showSearchField) searchFilter = '';
+                          });
+                        },
+                      ),
+                      IconButton(
+                        tooltip: l10n.paymentMethodAddChoiceTitle,
+                        icon: const Icon(Icons.add_circle_outline),
+                        onPressed: () async {
+                          final choice = await showModalBottomSheet<_PaymentMethodCreateChoice>(
+                            context: sheetContext,
+                            showDragHandle: true,
+                            builder: (ctx) => SafeArea(
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                crossAxisAlignment: CrossAxisAlignment.stretch,
+                                children: [
+                                  Padding(
+                                    padding: const EdgeInsets.fromLTRB(20, 12, 20, 4),
+                                    child: Text(
+                                      l10n.paymentMethodAddChoiceTitle,
+                                      style: Theme.of(ctx).textTheme.titleMedium,
+                                    ),
+                                  ),
+                                  ListTile(
+                                    leading: const Icon(Icons.account_balance_wallet_outlined),
+                                    title: Text(l10n.newAccount),
+                                    onTap: () => Navigator.pop(ctx, _PaymentMethodCreateChoice.account),
+                                  ),
+                                  ListTile(
+                                    leading: const Icon(Icons.credit_card_outlined),
+                                    title: Text(l10n.newCard),
+                                    onTap: () => Navigator.pop(ctx, _PaymentMethodCreateChoice.card),
+                                  ),
+                                  SizedBox(height: MediaQuery.paddingOf(ctx).bottom),
+                                ],
+                              ),
+                            ),
+                          );
+                          if (!sheetContext.mounted) return;
+                          switch (choice) {
+                            case _PaymentMethodCreateChoice.account:
+                              await showAccountEditorBottomSheet(sheetContext, l10n);
+                            case _PaymentMethodCreateChoice.card:
+                              await showCardEditorBottomSheet(sheetContext, l10n);
+                            case null:
+                              return;
+                          }
+                          await refreshPicker();
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+                if (showSearchField)
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+                    child: TextField(
+                      decoration: InputDecoration(
+                        hintText: l10n.transferAccountSearchHint,
+                        prefixIcon: const Icon(Icons.search, size: 22),
+                        isDense: true,
+                        border: const OutlineInputBorder(),
+                      ),
+                      textInputAction: TextInputAction.search,
+                      onChanged: (v) => setPickerState(() => searchFilter = v),
+                    ),
+                  ),
+                SizedBox(
+                  height: maxH,
+                  child: !hasAny
+                      ? Center(
+                          child: Padding(
+                            padding: const EdgeInsets.all(16),
+                            child: Text(
+                              '${l10n.noAccounts}\n${l10n.noCards}',
+                              textAlign: TextAlign.center,
+                            ),
+                          ),
+                        )
+                      : filteredEmpty
+                          ? Center(child: Text(l10n.transactionPaymentMethodSearchNoResults))
+                          : ListView(
+                              padding: EdgeInsets.zero,
+                              children: [
+                                if (vCards.isNotEmpty) ...[
+                                  Padding(
+                                    padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
+                                    child: Text(
+                                      l10n.cards,
+                                      style: Theme.of(sheetContext).textTheme.titleSmall?.copyWith(
+                                            color: Theme.of(sheetContext).colorScheme.primary,
+                                          ),
+                                    ),
+                                  ),
+                                  ...vCards.map(
+                                    (c) => ListTile(
+                                      leading: const Icon(Icons.credit_card_outlined),
+                                      title: Text(c.name),
+                                      onTap: () => Navigator.of(sheetContext).pop(
+                                        '$_paymentMethodPickCardPrefix${c.id}',
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                                if (vAccounts.isNotEmpty) ...[
+                                  Padding(
+                                    padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
+                                    child: Text(
+                                      l10n.accounts,
+                                      style: Theme.of(sheetContext).textTheme.titleSmall?.copyWith(
+                                            color: Theme.of(sheetContext).colorScheme.primary,
+                                          ),
+                                    ),
+                                  ),
+                                  ...vAccounts.map(
+                                    (a) => ListTile(
+                                      leading: const Icon(Icons.account_balance_wallet_outlined),
+                                      title: Text(a.name),
+                                      onTap: () => Navigator.of(sheetContext).pop(
+                                        '$_paymentMethodPickAccountPrefix${a.id}',
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ],
+                            ),
+                ),
+              ],
+            ),
+          );
+        },
+      );
+    },
+  );
+}
+
 class _TransactionDialog extends StatefulWidget {
   final TransactionsCubit cubit;
   final AppLocalizations l10n;
@@ -1881,6 +2058,9 @@ class _TransactionDialog extends StatefulWidget {
 
 class _TransactionDialogState extends State<_TransactionDialog> {
   final _formKey = GlobalKey<FormState>();
+  final _paymentMethodFieldKey = GlobalKey<FormFieldState<String>>();
+  final _categoryFieldKey = GlobalKey<FormFieldState<String>>();
+  final _tagFieldKey = GlobalKey<FormFieldState<String>>();
   late DateTime _transactedAt;
   late final TextEditingController _valueController;
   late final TextEditingController _percentageController;
@@ -2051,187 +2231,27 @@ class _TransactionDialogState extends State<_TransactionDialog> {
   Future<void> _pickPaymentMethod() async {
     if (_loadingLookups) return;
     final l10n = widget.l10n;
-    var pickerAccounts = List<AccountEntity>.from(_accounts);
-    var pickerCards = List<CardEntity>.from(_cards);
-    var showSearchField = false;
-    var searchFilter = '';
-
-    final raw = await showModalBottomSheet<String?>(
-      context: context,
-      showDragHandle: true,
-      isScrollControlled: true,
-      builder: (sheetContext) {
-        final maxH = MediaQuery.sizeOf(sheetContext).height * 0.55;
-
-        return StatefulBuilder(
-          builder: (context, setPickerState) {
-            Future<void> refreshPicker() async {
-              final accounts = await getIt<GetAccountsUsecase>()();
-              final cards = await getIt<GetCardsUsecase>()();
-              pickerAccounts = accounts;
-              pickerCards = cards;
-              setPickerState(() {});
-              if (!mounted) return;
-              setState(() {
-                _accounts = accounts;
-                _cards = cards;
-                if (_accountId != null && !_accounts.any((a) => a.id == _accountId)) {
-                  _accountId = null;
-                }
-                if (_cardId != null && !_cards.any((c) => c.id == _cardId)) {
-                  _cardId = null;
-                }
-                if (_accountId != null && _cardId != null) _cardId = null;
-                _syncRelationDisplays();
-              });
-            }
-
-            List<AccountEntity> visibleAccounts() {
-              final q = searchFilter.trim().toLowerCase();
-              if (q.isEmpty) return pickerAccounts;
-              return pickerAccounts.where((a) => a.name.toLowerCase().contains(q)).toList();
-            }
-
-            List<CardEntity> visibleCards() {
-              final q = searchFilter.trim().toLowerCase();
-              if (q.isEmpty) return pickerCards;
-              return pickerCards.where((c) => c.name.toLowerCase().contains(q)).toList();
-            }
-
-            final vAccounts = visibleAccounts();
-            final vCards = visibleCards();
-            final hasAny = pickerAccounts.isNotEmpty || pickerCards.isNotEmpty;
-            final filteredEmpty = vAccounts.isEmpty && vCards.isEmpty;
-
-            return SafeArea(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(12, 12, 4, 8),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: Text(
-                            l10n.transactionPaymentMethod,
-                            style: Theme.of(sheetContext).textTheme.titleMedium,
-                          ),
-                        ),
-                        IconButton(
-                          tooltip: l10n.transferAccountSearch,
-                          icon: Icon(showSearchField ? Icons.search_off_outlined : Icons.search),
-                          onPressed: () {
-                            setPickerState(() {
-                              showSearchField = !showSearchField;
-                              if (!showSearchField) searchFilter = '';
-                            });
-                          },
-                        ),
-                        IconButton(
-                          tooltip: l10n.newAccount,
-                          icon: const Icon(Icons.add_circle_outline),
-                          onPressed: () async {
-                            await showAccountEditorBottomSheet(sheetContext, l10n);
-                            await refreshPicker();
-                          },
-                        ),
-                      ],
-                    ),
-                  ),
-                  ListTile(
-                    title: Text(l10n.none),
-                    leading: const Icon(Icons.clear),
-                    onTap: () => Navigator.of(sheetContext).pop(''),
-                  ),
-                  if (showSearchField)
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
-                      child: TextField(
-                        decoration: InputDecoration(
-                          hintText: l10n.transferAccountSearchHint,
-                          prefixIcon: const Icon(Icons.search, size: 22),
-                          isDense: true,
-                          border: const OutlineInputBorder(),
-                        ),
-                        textInputAction: TextInputAction.search,
-                        onChanged: (v) => setPickerState(() => searchFilter = v),
-                      ),
-                    ),
-                  SizedBox(
-                    height: maxH,
-                    child: !hasAny
-                        ? Center(
-                            child: Padding(
-                              padding: const EdgeInsets.all(16),
-                              child: Text(
-                                '${l10n.noAccounts}\n${l10n.noCards}',
-                                textAlign: TextAlign.center,
-                              ),
-                            ),
-                          )
-                        : filteredEmpty
-                            ? Center(child: Text(l10n.transactionPaymentMethodSearchNoResults))
-                            : ListView(
-                                padding: EdgeInsets.zero,
-                                children: [
-                                  if (vAccounts.isNotEmpty) ...[
-                                    Padding(
-                                      padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
-                                      child: Text(
-                                        l10n.accounts,
-                                        style: Theme.of(sheetContext).textTheme.titleSmall?.copyWith(
-                                              color: Theme.of(sheetContext).colorScheme.primary,
-                                            ),
-                                      ),
-                                    ),
-                                    ...vAccounts.map(
-                                      (a) => ListTile(
-                                        leading: const Icon(Icons.account_balance_wallet_outlined),
-                                        title: Text(a.name),
-                                        onTap: () => Navigator.of(sheetContext).pop(
-                                          '$_paymentMethodPickAccountPrefix${a.id}',
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                  if (vCards.isNotEmpty) ...[
-                                    Padding(
-                                      padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
-                                      child: Text(
-                                        l10n.cards,
-                                        style: Theme.of(sheetContext).textTheme.titleSmall?.copyWith(
-                                              color: Theme.of(sheetContext).colorScheme.primary,
-                                            ),
-                                      ),
-                                    ),
-                                    ...vCards.map(
-                                      (c) => ListTile(
-                                        leading: const Icon(Icons.credit_card_outlined),
-                                        title: Text(c.name),
-                                        onTap: () => Navigator.of(sheetContext).pop(
-                                          '$_paymentMethodPickCardPrefix${c.id}',
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                ],
-                              ),
-                  ),
-                ],
-              ),
-            );
-          },
-        );
+    final raw = await showPaymentMethodPickerSheet(
+      context,
+      l10n: l10n,
+      sheetTitle: l10n.transactionPaymentMethod,
+      accounts: _accounts,
+      cards: _cards,
+      onListsUpdated: (a, c) {
+        if (!mounted) return;
+        setState(() {
+          _accounts = a;
+          _cards = c;
+          if (_accountId != null && !_accounts.any((x) => x.id == _accountId)) _accountId = null;
+          if (_cardId != null && !_cards.any((x) => x.id == _cardId)) _cardId = null;
+          if (_accountId != null && _cardId != null) _cardId = null;
+          _syncRelationDisplays();
+        });
       },
     );
-
-    if (!mounted || raw == null) return;
+    if (!mounted || raw == null || raw.isEmpty) return;
     setState(() {
-      if (raw.isEmpty) {
-        _accountId = null;
-        _cardId = null;
-      } else if (raw.startsWith(_paymentMethodPickAccountPrefix)) {
+      if (raw.startsWith(_paymentMethodPickAccountPrefix)) {
         _accountId = raw.substring(_paymentMethodPickAccountPrefix.length);
         _cardId = null;
       } else if (raw.startsWith(_paymentMethodPickCardPrefix)) {
@@ -2240,6 +2260,9 @@ class _TransactionDialogState extends State<_TransactionDialog> {
       }
     });
     _syncRelationDisplays();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _paymentMethodFieldKey.currentState?.validate();
+    });
   }
 
   Future<void> _pickCategory() async {
@@ -2252,14 +2275,17 @@ class _TransactionDialogState extends State<_TransactionDialog> {
       searchHint: l10n.transferAccountSearchHint,
       noResultsMessage: l10n.transferAccountSearchNoResults,
       emptyMessage: l10n.noCategories,
-      allowNone: true,
+      allowNone: false,
       initialItems: _categories.map((c) => (id: c.id, name: c.name)).toList(),
     );
-    if (!mounted || selectedId == null) return;
+    if (!mounted || selectedId == null || selectedId.isEmpty) return;
     setState(() {
-      _categoryId = selectedId.isEmpty ? null : selectedId;
+      _categoryId = selectedId;
     });
     _syncRelationDisplays();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _categoryFieldKey.currentState?.validate();
+    });
   }
 
   Future<void> _pickTag() async {
@@ -2272,14 +2298,17 @@ class _TransactionDialogState extends State<_TransactionDialog> {
       searchHint: l10n.transferAccountSearchHint,
       noResultsMessage: l10n.transferAccountSearchNoResults,
       emptyMessage: l10n.noTags,
-      allowNone: true,
+      allowNone: false,
       initialItems: _tags.map((t) => (id: t.id, name: t.name)).toList(),
     );
-    if (!mounted || selectedId == null) return;
+    if (!mounted || selectedId == null || selectedId.isEmpty) return;
     setState(() {
-      _tagId = selectedId.isEmpty ? null : selectedId;
+      _tagId = selectedId;
     });
     _syncRelationDisplays();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _tagFieldKey.currentState?.validate();
+    });
   }
 
   Future<void> _submit() async {
@@ -2419,6 +2448,7 @@ class _TransactionDialogState extends State<_TransactionDialog> {
                               ),
                             )
                           : TextFormField(
+                              key: _paymentMethodFieldKey,
                               readOnly: true,
                               enableInteractiveSelection: false,
                               showCursor: false,
@@ -2427,6 +2457,12 @@ class _TransactionDialogState extends State<_TransactionDialog> {
                                 labelText: l10n.transactionPaymentMethod,
                                 suffixIcon: const Icon(Icons.expand_more_rounded, size: 22),
                               ),
+                              validator: (_) {
+                                if (_accountId == null && _cardId == null) {
+                                  return l10n.fieldRequired;
+                                }
+                                return null;
+                              },
                               onTap: _pickPaymentMethod,
                             ),
                     ),
@@ -2452,6 +2488,7 @@ class _TransactionDialogState extends State<_TransactionDialog> {
                               ),
                             )
                           : TextFormField(
+                              key: _categoryFieldKey,
                               readOnly: true,
                               enableInteractiveSelection: false,
                               showCursor: false,
@@ -2460,6 +2497,10 @@ class _TransactionDialogState extends State<_TransactionDialog> {
                                 labelText: l10n.transactionCategory,
                                 suffixIcon: const Icon(Icons.expand_more_rounded, size: 22),
                               ),
+                              validator: (_) {
+                                if (_categoryId == null) return l10n.fieldRequired;
+                                return null;
+                              },
                               onTap: _pickCategory,
                             ),
                     ),
@@ -2480,6 +2521,7 @@ class _TransactionDialogState extends State<_TransactionDialog> {
                               ),
                             )
                           : TextFormField(
+                              key: _tagFieldKey,
                               readOnly: true,
                               enableInteractiveSelection: false,
                               showCursor: false,
@@ -2488,6 +2530,10 @@ class _TransactionDialogState extends State<_TransactionDialog> {
                                 labelText: l10n.transactionTag,
                                 suffixIcon: const Icon(Icons.expand_more_rounded, size: 22),
                               ),
+                              validator: (_) {
+                                if (_tagId == null) return l10n.fieldRequired;
+                                return null;
+                              },
                               onTap: _pickTag,
                             ),
                     ),
