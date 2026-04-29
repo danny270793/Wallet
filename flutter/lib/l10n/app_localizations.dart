@@ -854,11 +854,11 @@ abstract class AppLocalizations {
   /// **'Deferred purchase'**
   String get creditsUntitledGroup;
 
-  /// No description provided for @creditsInstallmentsCount.
+  /// No description provided for @creditsInstallmentsWithPending.
   ///
   /// In en, this message translates to:
-  /// **'{count} installments'**
-  String creditsInstallmentsCount(int count);
+  /// **'{count} installments - {pending} pending'**
+  String creditsInstallmentsWithPending(int count, int pending);
 
   /// No description provided for @transactionsSearchTooltip.
   ///
