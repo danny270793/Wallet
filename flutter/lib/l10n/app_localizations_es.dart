@@ -389,6 +389,11 @@ class AppLocalizationsEs extends AppLocalizations {
   }
 
   @override
+  String assetValuePerApproximateMonth(String amount) {
+    return '~$amount/mes (prom.)';
+  }
+
+  @override
   String get editAsset => 'Editar activo';
 
   @override
