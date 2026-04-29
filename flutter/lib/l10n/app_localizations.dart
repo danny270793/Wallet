@@ -158,12 +158,6 @@ abstract class AppLocalizations {
   /// **'Weighted amounts (%)'**
   String get dashboardUseWeightedAmounts;
 
-  /// No description provided for @monthlyDashboardTotalsSubtitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Totals for the view above (filters and options).'**
-  String get monthlyDashboardTotalsSubtitle;
-
   /// No description provided for @monthlyDashboardTagPieTitle.
   ///
   /// In en, this message translates to:
