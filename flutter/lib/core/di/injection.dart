@@ -59,6 +59,7 @@ import '../../features/transactions/domain/repositories/transactions_repository.
 import '../../features/transactions/domain/usecases/get_transactions_usecase.dart';
 import '../../features/transactions/domain/usecases/get_transactions_for_year_usecase.dart';
 import '../../features/transactions/domain/usecases/get_transactions_by_credit_group_id_usecase.dart';
+import '../../features/transactions/domain/usecases/list_transactions_having_credit_group_usecase.dart';
 import '../../features/transactions/domain/usecases/search_transactions_by_description_usecase.dart';
 import '../../features/transactions/domain/usecases/create_transaction_usecase.dart';
 import '../../features/transactions/domain/usecases/create_account_transfer_usecase.dart';
@@ -232,6 +233,9 @@ void setupDi() {
   getIt.registerFactory<DeleteTransactionUsecase>(() => DeleteTransactionUsecase(getIt()));
   getIt.registerFactory<GetTransactionsByCreditGroupIdUsecase>(
     () => GetTransactionsByCreditGroupIdUsecase(getIt()),
+  );
+  getIt.registerFactory<ListTransactionsHavingCreditGroupUsecase>(
+    () => ListTransactionsHavingCreditGroupUsecase(getIt()),
   );
   getIt.registerFactory<TransactionsCubit>(
     () => TransactionsCubit(
