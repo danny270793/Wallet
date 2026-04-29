@@ -503,5 +503,17 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get transactionsTotalsExcludingIgnoredHint =>
-      'Excluding ignored transactions';
+      'Weighted excluding ignored';
+
+  @override
+  String get transactionsTotalsIncludingIgnoredHint =>
+      'Including ignored transactions';
+
+  @override
+  String get transactionsTotalsNotWeightedIncludingIgnoredHint =>
+      'Not weighted including ignored';
+
+  @override
+  String get transactionsTotalsNotWeightedExcludingIgnoredHint =>
+      'Not weighted excluding ignored';
 }
