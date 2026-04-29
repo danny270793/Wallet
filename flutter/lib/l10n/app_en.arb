@@ -132,6 +132,8 @@
   "transactionsSearchHint": "Search by description",
   "transactionsSearchTypeQuery": "Enter text to search all your transactions",
   "transactionsSearchNoResults": "No matching transactions",
+  "transactionSameDescriptionTitle": "Matching past transactions",
+  "transactionSameDescriptionHint": "Tap a row to fill payment method, category, tag, and percentage.",
   "transactionsPickMonth": "Choose month",
   "transactionsPickPreviousYear": "Previous year",
   "transactionsPickNextYear": "Next year",
