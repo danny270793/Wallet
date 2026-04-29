@@ -1,6 +1,5 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/logger/app_logger.dart';
-import '../../../../core/sort_by_name.dart';
 import '../../domain/entities/asset_entity.dart';
 import '../../domain/usecases/create_asset_usecase.dart';
 import '../../domain/usecases/delete_asset_usecase.dart';
@@ -29,7 +28,7 @@ class AssetsCubit extends Cubit<AssetsState> {
     AppLogger.debug('loading assets');
     if (showLoading) emit(const AssetsLoading());
     try {
-      final assets = sortedByName(await _getAssets(), (a) => a.name);
+      final assets = _sortedByBoughtAt(await _getAssets());
       AppLogger.info('assets loaded: ${assets.length}');
       emit(AssetsLoaded(assets));
     } catch (e, s) {
@@ -58,7 +57,7 @@ class AssetsCubit extends Cubit<AssetsState> {
         soldValue: soldValue,
       );
       AppLogger.info('asset created: ${asset.id}');
-      emit(AssetsLoaded(sortedByName([...current, asset], (a) => a.name)));
+      emit(AssetsLoaded(_sortedByBoughtAt([...current, asset])));
     } catch (e, s) {
       AppLogger.error('failed to create asset', e, s);
       emit(AssetsActionError(current));
@@ -88,9 +87,8 @@ class AssetsCubit extends Cubit<AssetsState> {
       );
       emit(
         AssetsLoaded(
-          sortedByName(
+          _sortedByBoughtAt(
             current.map((a) => a.id == id ? asset : a).toList(),
-            (a) => a.name,
           ),
         ),
       );
@@ -107,7 +105,7 @@ class AssetsCubit extends Cubit<AssetsState> {
       await _deleteAssetUsecase(id: id);
       emit(
         AssetsLoaded(
-          sortedByName(current.where((a) => a.id != id).toList(), (a) => a.name),
+          _sortedByBoughtAt(current.where((a) => a.id != id).toList()),
         ),
       );
       return true;
@@ -123,4 +121,11 @@ class AssetsCubit extends Cubit<AssetsState> {
     AssetsActionError(:final assets) => assets,
     _ => [],
   };
+
+  /// Newest purchase first ([boughtAt] descending).
+  static List<AssetEntity> _sortedByBoughtAt(List<AssetEntity> assets) {
+    final out = List<AssetEntity>.of(assets);
+    out.sort((a, b) => b.boughtAt.compareTo(a.boughtAt));
+    return out;
+  }
 }
