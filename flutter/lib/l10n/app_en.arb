@@ -7,6 +7,8 @@
   "fieldRequired": "Required",
   "unexpectedError": "An unexpected error occurred",
   "monthlyDashboard": "Monthly dashboard",
+  "monthlyDashboardConfigureTooltip": "Charts and totals options",
+  "monthlyDashboardOptionsSheetTitle": "View options",
   "monthlyDashboardTransactionsListTitle": "Transactions",
   "dashboardIncludeIgnoredInTotals": "Include ignored transactions",
   "dashboardUseWeightedAmounts": "Weighted amounts (%)",
