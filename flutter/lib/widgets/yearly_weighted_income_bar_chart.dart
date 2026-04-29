@@ -84,7 +84,11 @@ List<double> weightedCumulativeNetByMonthForYear(
   int year, {
   required bool includeIgnored,
 }) {
-  final monthly = weightedNetByMonthForYear(txs, year, includeIgnored: includeIgnored);
+  final monthly = weightedNetByMonthForYear(
+    txs,
+    year,
+    includeIgnored: includeIgnored,
+  );
   final out = List<double>.filled(12, 0);
   var sum = 0.0;
   for (var i = 0; i < 12; i++) {
@@ -101,8 +105,16 @@ List<double> _cumulativeNetMonthlyBarsWithTrailingZeros(
   int year, {
   required bool includeIgnored,
 }) {
-  final full = weightedCumulativeNetByMonthForYear(txs, year, includeIgnored: includeIgnored);
-  final last = lastMonthWithTransactionsForYear(txs, year, includeIgnored: includeIgnored);
+  final full = weightedCumulativeNetByMonthForYear(
+    txs,
+    year,
+    includeIgnored: includeIgnored,
+  );
+  final last = lastMonthWithTransactionsForYear(
+    txs,
+    year,
+    includeIgnored: includeIgnored,
+  );
   if (last == 0) return full;
   return List<double>.generate(12, (i) => i < last ? full[i] : 0.0);
 }
@@ -294,7 +306,9 @@ class _YearlyMonthlyBarChartCore extends StatelessWidget {
         maxY = 0;
         minY = minVal * 1.15;
         final span = maxY - minY;
-        gridInterval = span > 0 ? (span / 4).clamp(0.25, double.infinity) : 0.25;
+        gridInterval = span > 0
+            ? (span / 4).clamp(0.25, double.infinity)
+            : 0.25;
       }
     } else {
       var maxPos = 0.0;
@@ -315,7 +329,9 @@ class _YearlyMonthlyBarChartCore extends StatelessWidget {
         maxY = top;
         minY = bottom;
         final span = maxY - minY;
-        gridInterval = span > 0 ? (span / 4).clamp(0.25, double.infinity) : 0.25;
+        gridInterval = span > 0
+            ? (span / 4).clamp(0.25, double.infinity)
+            : 0.25;
       }
     }
 
@@ -328,7 +344,8 @@ class _YearlyMonthlyBarChartCore extends StatelessWidget {
       if (kind == _YearlyBarKind.net) {
         final v = rodToY[i];
         if (v > 0) return const BorderRadius.vertical(top: Radius.circular(4));
-        if (v < 0) return const BorderRadius.vertical(bottom: Radius.circular(4));
+        if (v < 0)
+          return const BorderRadius.vertical(bottom: Radius.circular(4));
         return BorderRadius.circular(2);
       }
       return kind == _YearlyBarKind.income
@@ -352,7 +369,9 @@ class _YearlyMonthlyBarChartCore extends StatelessWidget {
         children: [
           Text(
             title,
-            style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
+            style: theme.textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.w600,
+            ),
           ),
           const SizedBox(height: 16),
           SizedBox(
@@ -380,22 +399,29 @@ class _YearlyMonthlyBarChartCore extends StatelessWidget {
                 ),
                 titlesData: FlTitlesData(
                   show: true,
-                  topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                  rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                  topTitles: const AxisTitles(
+                    sideTitles: SideTitles(showTitles: false),
+                  ),
+                  rightTitles: const AxisTitles(
+                    sideTitles: SideTitles(showTitles: false),
+                  ),
                   bottomTitles: AxisTitles(
                     sideTitles: SideTitles(
                       showTitles: true,
                       reservedSize: 28,
                       getTitlesWidget: (value, meta) {
                         final i = value.toInt();
-                        if (i < 0 || i >= monthCount) return const SizedBox.shrink();
+                        if (i < 0 || i >= monthCount)
+                          return const SizedBox.shrink();
                         return Padding(
                           padding: const EdgeInsets.only(top: 8),
                           child: Text(
                             monthLabels[i],
                             style: theme.textTheme.labelSmall?.copyWith(
                               color: scheme.onSurfaceVariant,
-                              fontFeatures: const [FontFeature.tabularFigures()],
+                              fontFeatures: const [
+                                FontFeature.tabularFigures(),
+                              ],
                             ),
                           ),
                         );
@@ -408,7 +434,8 @@ class _YearlyMonthlyBarChartCore extends StatelessWidget {
                       reservedSize: 44,
                       interval: gridInterval,
                       getTitlesWidget: (value, meta) {
-                        if (value < minY * 1.001 - 1e-9 || value > maxY * 1.001 + 1e-9) {
+                        if (value < minY * 1.001 - 1e-9 ||
+                            value > maxY * 1.001 + 1e-9) {
                           return const SizedBox.shrink();
                         }
                         final label = value == value.roundToDouble()
@@ -447,7 +474,9 @@ class _YearlyMonthlyBarChartCore extends StatelessWidget {
                         borderRadius: barRadiusForIndex(i),
                         label: BarChartRodLabel(
                           show: rodToY[i].abs() >= 1e-9,
-                          text: l10n.transactionAmountValue(rodToY[i].toStringAsFixed(2)),
+                          text: l10n.transactionAmountValue(
+                            rodToY[i].toStringAsFixed(2),
+                          ),
                           style: theme.textTheme.labelSmall?.copyWith(
                             color: scheme.onSurface,
                             fontWeight: FontWeight.w600,
