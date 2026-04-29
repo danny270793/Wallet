@@ -998,6 +998,12 @@ abstract class AppLocalizations {
   /// **'Are you sure you want to delete this transaction?'**
   String get confirmDeleteTransaction;
 
+  /// No description provided for @confirmDeleteCreditGroupTransaction.
+  ///
+  /// In en, this message translates to:
+  /// **'This installment is part of a deferred split. All installments in this group will be deleted.'**
+  String get confirmDeleteCreditGroupTransaction;
+
   /// No description provided for @deleteTransferPair.
   ///
   /// In en, this message translates to:
@@ -1099,6 +1105,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Amount'**
   String get transactionAmount;
+
+  /// No description provided for @transactionAmountCreditGroupHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Shown amount is the group total split evenly across installments. Saving updates every installment and shifts dates by the same amount.'**
+  String get transactionAmountCreditGroupHint;
 
   /// No description provided for @transactionAmountInvalidNumber.
   ///
