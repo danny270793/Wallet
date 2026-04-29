@@ -2657,7 +2657,7 @@ class _TransactionDialogState extends State<_TransactionDialog> {
   void _applyTransactionSuggestion(TransactionEntity t) {
     if (_loadingLookups) return;
     _descriptionSuggestDebounce?.cancel();
-    final snapshot = _descriptionController.text;
+    final appliedDescription = t.description ?? '';
     setState(() {
       if (_accountId == null && _cardId == null) {
         _accountId = t.accountId;
@@ -2678,10 +2678,11 @@ class _TransactionDialogState extends State<_TransactionDialog> {
         _percentageController.text = t.percentage.toString();
       }
       _syncRelationDisplays();
-      _dismissSuggestionsUntilDescriptionChange = true;
-      _descriptionSnapshotWhenSuggestionsDismissed = snapshot;
       _descriptionSuggestionMatches = const [];
       _descriptionSuggestLoading = false;
+      _dismissSuggestionsUntilDescriptionChange = true;
+      _descriptionSnapshotWhenSuggestionsDismissed = appliedDescription;
+      _descriptionController.text = appliedDescription;
     });
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
