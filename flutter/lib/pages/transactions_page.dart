@@ -283,41 +283,82 @@ class _TransactionsTotalsBarHost extends StatefulWidget {
 
 class _TransactionsTotalsBarHostState
     extends State<_TransactionsTotalsBarHost> {
-  bool _altTotals = false;
+  /// 0 weighted excl. ignored; 1 weighted all; 2 full amount incl.; 3 full amount excl. ignored.
+  int _totalsMode = 0;
+
+  void _handleTotalsModeSwipe(bool forward) {
+    setState(() {
+      _totalsMode = forward
+          ? (_totalsMode + 1) % 4
+          : (_totalsMode + 3) % 4;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
     final txs = widget.transactions;
     double weighted(TransactionEntity t) => t.value * t.percentage / 100.0;
 
-    final weightedAll = transactionMonthTotalsBreakdown(
-      txs,
-      include: (_) => true,
-      amount: weighted,
-    );
     final weightedExcludingIgnored = transactionMonthTotalsBreakdown(
       txs,
       include: (t) => !t.ignore,
       amount: weighted,
     );
-
-    if (!_altTotals) {
-      return TransactionsTotalsBar(
-        l10n: widget.l10n,
-        income: weightedAll.income,
-        outcome: weightedAll.outcome,
-        balance: weightedAll.balance,
-        onDoubleTap: () => setState(() => _altTotals = true),
-      );
-    }
-    return TransactionsTotalsBar(
-      l10n: widget.l10n,
-      primarySubtitle: widget.l10n.transactionsTotalsExcludingIgnoredHint,
-      income: weightedExcludingIgnored.income,
-      outcome: weightedExcludingIgnored.outcome,
-      balance: weightedExcludingIgnored.balance,
-      onDoubleTap: () => setState(() => _altTotals = false),
+    final weightedAll = transactionMonthTotalsBreakdown(
+      txs,
+      include: (_) => true,
+      amount: weighted,
     );
+    final notWeightedIncludingIgnored = transactionMonthTotalsBreakdown(
+      txs,
+      include: (_) => true,
+      amount: (t) => t.value,
+    );
+    final notWeightedExcludingIgnored = transactionMonthTotalsBreakdown(
+      txs,
+      include: (t) => !t.ignore,
+      amount: (t) => t.value,
+    );
+
+    return switch (_totalsMode) {
+      0 => TransactionsTotalsBar(
+          l10n: widget.l10n,
+          primarySubtitle:
+              widget.l10n.transactionsTotalsExcludingIgnoredHint,
+          income: weightedExcludingIgnored.income,
+          outcome: weightedExcludingIgnored.outcome,
+          balance: weightedExcludingIgnored.balance,
+          onTotalsModeSwipe: _handleTotalsModeSwipe,
+        ),
+      1 => TransactionsTotalsBar(
+          l10n: widget.l10n,
+          primarySubtitle:
+              widget.l10n.transactionsTotalsIncludingIgnoredHint,
+          income: weightedAll.income,
+          outcome: weightedAll.outcome,
+          balance: weightedAll.balance,
+          onTotalsModeSwipe: _handleTotalsModeSwipe,
+        ),
+      2 => TransactionsTotalsBar(
+          l10n: widget.l10n,
+          primarySubtitle:
+              widget.l10n.transactionsTotalsNotWeightedIncludingIgnoredHint,
+          income: notWeightedIncludingIgnored.income,
+          outcome: notWeightedIncludingIgnored.outcome,
+          balance: notWeightedIncludingIgnored.balance,
+          onTotalsModeSwipe: _handleTotalsModeSwipe,
+        ),
+      3 => TransactionsTotalsBar(
+          l10n: widget.l10n,
+          primarySubtitle:
+              widget.l10n.transactionsTotalsNotWeightedExcludingIgnoredHint,
+          income: notWeightedExcludingIgnored.income,
+          outcome: notWeightedExcludingIgnored.outcome,
+          balance: notWeightedExcludingIgnored.balance,
+          onTotalsModeSwipe: _handleTotalsModeSwipe,
+        ),
+      _ => throw StateError('totals mode $_totalsMode'),
+    };
   }
 }
 
