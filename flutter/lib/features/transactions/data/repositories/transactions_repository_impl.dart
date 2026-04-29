@@ -19,6 +19,10 @@ class TransactionsRepositoryImpl implements TransactionsRepository {
       _datasource.searchTransactionsByDescription(query, limit: limit);
 
   @override
+  Future<List<TransactionEntity>> getTransactionsByCreditGroupId(String creditGroupId) =>
+      _datasource.getTransactionsByCreditGroupId(creditGroupId);
+
+  @override
   Future<TransactionEntity> createTransaction({
     String? accountId,
     String? cardId,
