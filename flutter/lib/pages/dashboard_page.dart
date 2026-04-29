@@ -110,6 +110,65 @@ class _MonthlyDashboardViewState extends State<_MonthlyDashboardView> {
     }).toList();
   }
 
+  Future<void> _showDashboardViewOptionsSheet(
+    BuildContext context,
+    AppLocalizations l10n,
+  ) async {
+    final draft = [_includeIgnored, _useWeightedAmounts];
+
+    await showModalBottomSheet<void>(
+      context: context,
+      showDragHandle: true,
+      builder: (sheetContext) {
+        final bottomPad = MediaQuery.paddingOf(sheetContext).bottom;
+        return StatefulBuilder(
+          builder: (context, setModal) {
+            return Padding(
+              padding: EdgeInsets.fromLTRB(16, 0, 16, 16 + bottomPad),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.only(top: 8, bottom: 4),
+                    child: Text(
+                      l10n.monthlyDashboardOptionsSheetTitle,
+                      textAlign: TextAlign.center,
+                      style: Theme.of(context).textTheme.titleLarge,
+                    ),
+                  ),
+                  SwitchListTile(
+                    contentPadding: EdgeInsets.zero,
+                    title: Text(l10n.dashboardIncludeIgnoredInTotals),
+                    value: draft[0],
+                    onChanged: (v) => setModal(() => draft[0] = v),
+                  ),
+                  SwitchListTile(
+                    contentPadding: EdgeInsets.zero,
+                    title: Text(l10n.dashboardUseWeightedAmounts),
+                    value: draft[1],
+                    onChanged: (v) => setModal(() => draft[1] = v),
+                  ),
+                  const SizedBox(height: 12),
+                  FilledButton(
+                    onPressed: () {
+                      Navigator.of(sheetContext).pop();
+                      setState(() {
+                        _includeIgnored = draft[0];
+                        _useWeightedAmounts = draft[1];
+                      });
+                    },
+                    child: Text(l10n.save),
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
@@ -197,6 +256,16 @@ class _MonthlyDashboardViewState extends State<_MonthlyDashboardView> {
         return ShellScaffold(
           title: l10n.monthlyDashboard,
           appBarBottom: TransactionsMonthAppBarBottom(notifier: monthNotifier),
+          appBarActionsBeforeSettings: showBar
+              ? <Widget>[
+                  IconButton(
+                    icon: const Icon(Icons.tune_rounded),
+                    tooltip: l10n.monthlyDashboardConfigureTooltip,
+                    onPressed: () =>
+                        _showDashboardViewOptionsSheet(context, l10n),
+                  ),
+                ]
+              : null,
           bottomNavigationBar: showBar
               ? TransactionsTotalsBar(
                   l10n: l10n,
@@ -318,16 +387,6 @@ class _MonthlyDashboardViewState extends State<_MonthlyDashboardView> {
               physics: const AlwaysScrollableScrollPhysics(),
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
               children: [
-                SwitchListTile(
-                  title: Text(l10n.dashboardIncludeIgnoredInTotals),
-                  value: _includeIgnored,
-                  onChanged: (v) => setState(() => _includeIgnored = v),
-                ),
-                SwitchListTile(
-                  title: Text(l10n.dashboardUseWeightedAmounts),
-                  value: _useWeightedAmounts,
-                  onChanged: (v) => setState(() => _useWeightedAmounts = v),
-                ),
                 MonthlyTagPieChart(
                   l10n: l10n,
                   transactions: tagPieTransactions,
