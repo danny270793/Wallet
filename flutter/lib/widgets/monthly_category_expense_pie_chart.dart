@@ -41,12 +41,14 @@ List<Color> _palette(ColorScheme scheme, int n) {
   return out;
 }
 
-double _weighted(TransactionEntity t) => t.value * t.percentage / 100.0;
+double _effectiveTxAmount(TransactionEntity t, bool useWeighted) =>
+    useWeighted ? t.value * t.percentage / 100.0 : t.value;
 
 /// Categories that appear on at least one expense row in [txs] (same basis as the category pie).
 List<({String key, String label})> distinctExpenseCategoryOptions(
   List<TransactionEntity> txs,
   bool includeIgnored,
+  bool useWeighted,
 ) {
   bool include(TransactionEntity t) => includeIgnored || !t.ignore;
   final labels = <String, String>{};
@@ -56,7 +58,7 @@ List<({String key, String label})> distinctExpenseCategoryOptions(
     if (!include(t)) continue;
     final id = t.categoryId;
     if (id == null || id.isEmpty) continue;
-    if (_weighted(t) >= 0) continue;
+    if (_effectiveTxAmount(t, useWeighted) >= 0) continue;
     seen.add(id);
     if (t.categoryName != null && t.categoryName!.isNotEmpty) {
       labels[id] = t.categoryName!;
@@ -77,9 +79,14 @@ Set<String>? pruneCategoryKeysFilter(
   List<TransactionEntity> txs,
   bool includeIgnored,
   Set<String>? current,
+  bool useWeighted,
 ) {
   if (current == null) return null;
-  final options = distinctExpenseCategoryOptions(txs, includeIgnored);
+  final options = distinctExpenseCategoryOptions(
+    txs,
+    includeIgnored,
+    useWeighted,
+  );
   final valid = options.map((o) => o.key).toSet();
   final pruned = current.intersection(valid);
   if (pruned.isEmpty || pruned.length == valid.length) return null;
@@ -90,6 +97,7 @@ List<_CategorySlice> _aggregateExpenseByCategory(
   List<TransactionEntity> txs,
   bool includeIgnored,
   ColorScheme scheme, {
+  required bool useWeighted,
   Set<String>? categoryKeysFilter,
 }) {
   bool include(TransactionEntity t) => includeIgnored || !t.ignore;
@@ -103,7 +111,7 @@ List<_CategorySlice> _aggregateExpenseByCategory(
     if (id == null || id.isEmpty) continue;
     if (categoryKeysFilter != null && !categoryKeysFilter.contains(id))
       continue;
-    final w = _weighted(t);
+    final w = _effectiveTxAmount(t, useWeighted);
     if (w >= 0) continue;
     final expense = -w;
     sums[id] = (sums[id] ?? 0) + expense;
@@ -144,6 +152,7 @@ class MonthlyCategoryExpensePieChart extends StatelessWidget {
     required this.l10n,
     required this.transactions,
     required this.includeIgnored,
+    required this.useWeightedAmounts,
     required this.categoryKeysFilter,
     required this.onCategoryKeysFilterChanged,
   });
@@ -151,6 +160,7 @@ class MonthlyCategoryExpensePieChart extends StatelessWidget {
   final AppLocalizations l10n;
   final List<TransactionEntity> transactions;
   final bool includeIgnored;
+  final bool useWeightedAmounts;
   final Set<String>? categoryKeysFilter;
   final ValueChanged<Set<String>?> onCategoryKeysFilterChanged;
 
@@ -290,11 +300,13 @@ class MonthlyCategoryExpensePieChart extends StatelessWidget {
     final options = distinctExpenseCategoryOptions(
       transactions,
       includeIgnored,
+      useWeightedAmounts,
     );
     final slices = _aggregateExpenseByCategory(
       transactions,
       includeIgnored,
       scheme,
+      useWeighted: useWeightedAmounts,
       categoryKeysFilter: categoryKeysFilter,
     );
 
