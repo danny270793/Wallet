@@ -1070,6 +1070,18 @@ abstract class AppLocalizations {
   /// **'Term (months)'**
   String get transactionMesesPlazo;
 
+  /// No description provided for @transactionGraceMonthsInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'Grace months must be 0 or greater'**
+  String get transactionGraceMonthsInvalid;
+
+  /// No description provided for @transactionTermMonthsInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter at least 2 installment months'**
+  String get transactionTermMonthsInvalid;
+
   /// No description provided for @transactionCategory.
   ///
   /// In en, this message translates to:
