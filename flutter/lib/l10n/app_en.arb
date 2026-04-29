@@ -143,6 +143,14 @@
   "assetSoldAmountField": "Sold amount",
   "assetInvalidNumber": "Enter a valid number",
   "assetEndBeforePurchase": "End date must be on or after purchase date",
+  "assetHeldDuration": "Held {duration}",
+  "@assetHeldDuration": {
+    "placeholders": {
+      "duration": {
+        "type": "String"
+      }
+    }
+  },
   "editAsset": "Edit asset",
   "deleteAsset": "Delete asset",
   "confirmDeleteAsset": "Are you sure you want to delete \"{name}\"?",
