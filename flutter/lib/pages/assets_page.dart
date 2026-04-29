@@ -208,18 +208,61 @@ class _AssetTile extends StatelessWidget {
       height: 1.22,
     );
 
-    Widget amountColumn() {
+    final trailingMonthlyStyle = theme.textTheme.labelSmall?.copyWith(
+      color: scheme.onSurfaceVariant.withValues(alpha: 0.95),
+      height: 1.15,
+      fontWeight: FontWeight.w500,
+      letterSpacing: -0.1,
+      fontFeatures: tabular,
+    );
+
+    Widget purchaseTrailing() {
       return Column(
         mainAxisSize: MainAxisSize.min,
+        mainAxisAlignment: MainAxisAlignment.center,
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
-          Text(valueStr, style: amountStyle?.copyWith(color: scheme.onSurface)),
+          Text(
+            valueStr,
+            style: amountStyle?.copyWith(color: scheme.onSurface),
+          ),
           if (perApproxMo != null) ...[
-            const SizedBox(height: 3),
+            const SizedBox(height: 2),
             Text(
               l10n.assetValuePerApproximateMonth(
                 l10n.transactionAmountValue(
                   perApproxMo.toStringAsFixed(2),
+                ),
+              ),
+              style: trailingMonthlyStyle,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              textAlign: TextAlign.right,
+            ),
+          ],
+        ],
+      );
+    }
+
+    Widget soldOnlyColumn() {
+      return Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: [
+          Text(
+            '${l10n.assetSold}: '
+            '${l10n.transactionAmountValue(
+              asset.soldValue!.toStringAsFixed(2),
+            )}',
+            style: subAmountStyle?.copyWith(color: scheme.tertiary),
+            textAlign: TextAlign.right,
+          ),
+          if (soldPerApproxMo != null) ...[
+            const SizedBox(height: 2),
+            Text(
+              l10n.assetSoldPerApproximateMonth(
+                l10n.transactionAmountValue(
+                  soldPerApproxMo.toStringAsFixed(2),
                 ),
               ),
               style: subAmountStyle,
@@ -227,30 +270,6 @@ class _AssetTile extends StatelessWidget {
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
             ),
-          ],
-          if (asset.soldValue != null) ...[
-            const SizedBox(height: 9),
-            Text(
-              '${l10n.assetSold}: '
-              '${l10n.transactionAmountValue(
-                asset.soldValue!.toStringAsFixed(2),
-              )}',
-              style: subAmountStyle?.copyWith(color: scheme.tertiary),
-              textAlign: TextAlign.right,
-            ),
-            if (soldPerApproxMo != null) ...[
-              const SizedBox(height: 2),
-              Text(
-                l10n.assetSoldPerApproximateMonth(
-                  l10n.transactionAmountValue(
-                    soldPerApproxMo.toStringAsFixed(2),
-                  ),
-                ),
-                style: subAmountStyle,
-                textAlign: TextAlign.right,
-                maxLines: 2,
-              ),
-            ],
           ],
         ],
       );
@@ -279,24 +298,25 @@ class _AssetTile extends StatelessWidget {
     }
 
     final provider = asset.provider.trim();
+    final hasSold = asset.soldValue != null;
+
     final subtitle = Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       mainAxisSize: MainAxisSize.min,
       children: [
-        // Amounts live in [subtitle], not beside [title] inside ListTile — the
-        // title row constrains its children to ~kMinInteractiveDimension tall.
-        Align(
-          alignment: Alignment.centerRight,
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 168),
-            child: amountColumn(),
+        if (hasSold)
+          Align(
+            alignment: Alignment.centerRight,
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 168),
+              child: soldOnlyColumn(),
+            ),
           ),
-        ),
         if (provider.isNotEmpty) ...[
-          const SizedBox(height: 8),
+          if (hasSold) const SizedBox(height: 8),
           Text(provider, style: muted(0.92), maxLines: 2),
         ],
-        const SizedBox(height: 6),
+        SizedBox(height: (hasSold || provider.isNotEmpty) ? 6 : 0),
         metaLine(),
       ],
     );
@@ -304,41 +324,49 @@ class _AssetTile extends StatelessWidget {
     return SwipeableListTile(
       itemKey: asset.id,
       tileIsThreeLine: true,
+      dense: true,
       contentPadding: EdgeInsets.zero,
-        title: Text(
-          asset.name,
-          maxLines: 2,
-          overflow: TextOverflow.ellipsis,
-          style: titleStyle,
+      title: Text(
+        asset.name,
+        maxLines: 2,
+        overflow: TextOverflow.ellipsis,
+        style: titleStyle,
+      ),
+      subtitle: subtitle,
+      trailing: ConstrainedBox(
+        constraints: const BoxConstraints(minWidth: 72, maxWidth: 152),
+        child: Padding(
+          padding: const EdgeInsets.only(left: 10),
+          child: purchaseTrailing(),
         ),
-        subtitle: subtitle,
-        onEdit: openEdit,
-        confirmDelete: () async {
-          final ok = await showDialog<bool>(
-            context: context,
-            builder: (dialogContext) => AlertDialog(
-              title: Text(l10n.deleteAsset),
-              content: Text(l10n.confirmDeleteAsset(asset.name)),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.of(dialogContext).pop(false),
-                  child: Text(l10n.cancel),
+      ),
+      onEdit: openEdit,
+      confirmDelete: () async {
+        final ok = await showDialog<bool>(
+          context: context,
+          builder: (dialogContext) => AlertDialog(
+            title: Text(l10n.deleteAsset),
+            content: Text(l10n.confirmDeleteAsset(asset.name)),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(dialogContext).pop(false),
+                child: Text(l10n.cancel),
+              ),
+              ElevatedButton(
+                style:
+                    ElevatedButton.styleFrom(backgroundColor: Colors.red),
+                onPressed: () => Navigator.of(dialogContext).pop(true),
+                child: Text(
+                  l10n.delete,
+                  style: const TextStyle(color: Colors.white),
                 ),
-                ElevatedButton(
-                  style:
-                      ElevatedButton.styleFrom(backgroundColor: Colors.red),
-                  onPressed: () => Navigator.of(dialogContext).pop(true),
-                  child: Text(
-                    l10n.delete,
-                    style: const TextStyle(color: Colors.white),
-                  ),
-                ),
-              ],
-            ),
-          );
-          return ok ?? false;
-        },
-        onDelete: () => cubit.delete(id: asset.id),
-      );
+              ),
+            ],
+          ),
+        );
+        return ok ?? false;
+      },
+      onDelete: () => cubit.delete(id: asset.id),
+    );
   }
 }
