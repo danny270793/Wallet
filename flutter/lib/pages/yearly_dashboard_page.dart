@@ -116,7 +116,7 @@ class _YearlyDashboardViewState extends State<_YearlyDashboardView> {
                         Padding(
                           padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
                           child: Text(
-                            l10n.transactionsTotalsExcludingIgnoredHint,
+                            l10n.transactionsTotalsNotWeightedExcludingIgnoredHint,
                             style: Theme.of(context).textTheme.labelSmall
                                 ?.copyWith(
                                   color: Theme.of(
