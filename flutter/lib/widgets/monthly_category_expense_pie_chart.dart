@@ -143,9 +143,85 @@ List<_CategorySlice> _aggregateExpenseByCategory(
       .toList();
 }
 
+class _CategoryLegendRow extends StatelessWidget {
+  const _CategoryLegendRow({
+    required this.label,
+    required this.expenseTotal,
+    required this.color,
+    required this.l10n,
+    required this.theme,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final String label;
+  final double expenseTotal;
+  final Color color;
+  final AppLocalizations l10n;
+  final ThemeData theme;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = theme.colorScheme;
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 4),
+      child: Material(
+        color: selected
+            ? scheme.primaryContainer.withValues(alpha: 0.45)
+            : Colors.transparent,
+        borderRadius: BorderRadius.circular(8),
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onTap: onTap,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 8),
+            child: Row(
+              children: [
+                Container(
+                  width: 12,
+                  height: 12,
+                  decoration: BoxDecoration(
+                    color: color,
+                    shape: BoxShape.circle,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    label,
+                    overflow: TextOverflow.ellipsis,
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      fontWeight:
+                          selected ? FontWeight.w600 : FontWeight.normal,
+                    ),
+                  ),
+                ),
+                Text(
+                  l10n.transactionAmountValue(
+                    expenseTotal.toStringAsFixed(2),
+                  ),
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    fontWeight: FontWeight.w600,
+                    fontFeatures: const [FontFeature.tabularFigures()],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 /// Donut chart of expense totals (negative weighted amounts) per category.
 ///
 /// [categoryKeysFilter] is owned by the parent: null = all categories; otherwise restrict to these [TransactionEntity.categoryId]s.
+///
+/// Tapping a legend row filters to that category (same as the sheet Save with one category selected).
+/// Tapping the lone filtered category again clears the filter (shows all categories).
 class MonthlyCategoryExpensePieChart extends StatelessWidget {
   const MonthlyCategoryExpensePieChart({
     super.key,
@@ -386,37 +462,20 @@ class MonthlyCategoryExpensePieChart extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           for (final s in slices)
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 4),
-              child: Row(
-                children: [
-                  Container(
-                    width: 12,
-                    height: 12,
-                    decoration: BoxDecoration(
-                      color: s.color,
-                      shape: BoxShape.circle,
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      s.label,
-                      overflow: TextOverflow.ellipsis,
-                      style: theme.textTheme.bodyMedium,
-                    ),
-                  ),
-                  Text(
-                    l10n.transactionAmountValue(
-                      s.expenseTotal.toStringAsFixed(2),
-                    ),
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      fontWeight: FontWeight.w600,
-                      fontFeatures: const [FontFeature.tabularFigures()],
-                    ),
-                  ),
-                ],
-              ),
+            _CategoryLegendRow(
+              label: s.label,
+              expenseTotal: s.expenseTotal,
+              color: s.color,
+              l10n: l10n,
+              theme: theme,
+              selected: categoryKeysFilter != null &&
+                  categoryKeysFilter!.length == 1 &&
+                  categoryKeysFilter!.contains(s.keyId),
+              onTap: () {
+                final onlyThis = categoryKeysFilter?.length == 1 &&
+                    categoryKeysFilter!.contains(s.keyId);
+                onCategoryKeysFilterChanged(onlyThis ? null : {s.keyId});
+              },
             ),
         ],
       ),
