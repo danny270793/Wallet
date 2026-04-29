@@ -151,6 +151,14 @@
       }
     }
   },
+  "assetValuePerApproximateMonth": "~{amount}/mes (prom.)",
+  "@assetValuePerApproximateMonth": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
   "editAsset": "Editar activo",
   "deleteAsset": "Eliminar activo",
   "confirmDeleteAsset": "¿Seguro que quieres eliminar «{name}»?",
