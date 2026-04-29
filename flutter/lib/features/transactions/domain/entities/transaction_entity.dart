@@ -18,6 +18,8 @@ class TransactionEntity extends Equatable {
   final double percentage;
   /// Shared id for paired rows (e.g. account transfers); null for normal transactions.
   final String? transferGroupId;
+  /// Groups related credit installments (e.g. deferred card purchase split).
+  final String? creditGroupId;
   final DateTime createdAt;
   final DateTime updatedAt;
 
@@ -38,6 +40,7 @@ class TransactionEntity extends Equatable {
     required this.ignore,
     required this.percentage,
     this.transferGroupId,
+    this.creditGroupId,
     required this.createdAt,
     required this.updatedAt,
   });
@@ -62,6 +65,7 @@ class TransactionEntity extends Equatable {
       ignore: json['ignore'] as bool,
       percentage: asDouble(json['percentage']),
       transferGroupId: json['transferGroupId'] as String?,
+      creditGroupId: json['creditGroupId'] as String?,
       createdAt: DateTime.parse(json['createdAt'] as String),
       updatedAt: DateTime.parse(json['updatedAt'] as String),
     );
@@ -100,6 +104,7 @@ class TransactionEntity extends Equatable {
     ignore,
     percentage,
     transferGroupId,
+    creditGroupId,
     createdAt,
     updatedAt,
   ];
