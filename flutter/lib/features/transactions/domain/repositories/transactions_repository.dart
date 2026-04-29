@@ -15,6 +15,7 @@ abstract class TransactionsRepository {
     required bool ignore,
     required double percentage,
     String? transferGroupId,
+    String? creditGroupId,
   });
   Future<TransactionEntity> updateTransaction({
     required String id,
@@ -28,6 +29,7 @@ abstract class TransactionsRepository {
     required bool ignore,
     required double percentage,
     String? transferGroupId,
+    String? creditGroupId,
   });
   Future<void> deleteTransaction({required String id});
 }
