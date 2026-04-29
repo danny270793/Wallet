@@ -218,6 +218,12 @@ abstract class AppLocalizations {
   /// **'Deselect all'**
   String get dashboardPieDeselectAll;
 
+  /// No description provided for @dashboardPieSelectAll.
+  ///
+  /// In en, this message translates to:
+  /// **'Select all'**
+  String get dashboardPieSelectAll;
+
   /// No description provided for @yearlyDashboard.
   ///
   /// In en, this message translates to:
