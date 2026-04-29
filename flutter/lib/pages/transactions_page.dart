@@ -32,8 +32,8 @@ import '../widgets/account_editor_sheet.dart';
 import '../widgets/card_editor_sheet.dart';
 import '../widgets/category_editor_sheet.dart';
 import '../widgets/tag_editor_sheet.dart';
+import '../widgets/grouped_transactions_list.dart';
 import '../widgets/shell_scaffold.dart';
-import '../widgets/transaction_delete_dialogs.dart';
 import '../widgets/swipeable_list_tile.dart';
 import '../widgets/transactions_month_scope.dart';
 import '../widgets/transactions_totals_bar.dart';
@@ -188,85 +188,6 @@ const _transactionAmountInputFormatters = <TextInputFormatter>[
 const _transferAmountInputFormatters = <TextInputFormatter>[
   _DecimalAmountInputFormatter(allowNegative: false),
 ];
-
-/// Local calendar day (midnight) used as a group key for [transactedAt].
-DateTime _calendarDayLocal(DateTime utcOrLocal) {
-  final l = utcOrLocal.toLocal();
-  return DateTime(l.year, l.month, l.day);
-}
-
-sealed class _GroupedTxRow {
-  const _GroupedTxRow();
-}
-
-final class _DayMarker extends _GroupedTxRow {
-  const _DayMarker(this.day);
-  final DateTime day;
-}
-
-final class _TxMarker extends _GroupedTxRow {
-  const _TxMarker(this.transaction);
-  final TransactionEntity transaction;
-}
-
-final class _TransferPairMarker extends _GroupedTxRow {
-  const _TransferPairMarker({required this.source, required this.target});
-  final TransactionEntity source;
-  final TransactionEntity target;
-}
-
-List<_GroupedTxRow> _groupTransactionsByDay(List<TransactionEntity> list) {
-  final byDay = <DateTime, List<TransactionEntity>>{};
-  for (final t in list) {
-    final k = _calendarDayLocal(t.transactedAt);
-    byDay.putIfAbsent(k, () => []).add(t);
-  }
-  final days = byDay.keys.toList()..sort((a, b) => b.compareTo(a));
-  for (final d in days) {
-    byDay[d]!.sort((a, b) => b.transactedAt.compareTo(a.transactedAt));
-  }
-
-  final entries = <_GroupedTxRow>[];
-  for (final d in days) {
-    entries.add(_DayMarker(d));
-    final dayList = byDay[d]!;
-    final byGroup = <String, List<TransactionEntity>>{};
-    for (final t in dayList) {
-      final g = t.transferGroupId;
-      if (g != null && g.isNotEmpty) {
-        byGroup.putIfAbsent(g, () => []).add(t);
-      }
-    }
-    final usedIds = <String>{};
-    for (final t in dayList) {
-      final gid = t.transferGroupId;
-      if (gid == null || gid.isEmpty) {
-        entries.add(_TxMarker(t));
-        continue;
-      }
-      if (usedIds.contains(t.id)) continue;
-      final peers = byGroup[gid]!;
-      if (peers.length == 2) {
-        TransactionEntity? src;
-        TransactionEntity? tgt;
-        for (final p in peers) {
-          if (p.value < 0) src = p;
-          if (p.value > 0) tgt = p;
-        }
-        if (src != null &&
-            tgt != null &&
-            (src.value.abs() - tgt.value.abs()).abs() < 0.0001) {
-          entries.add(_TransferPairMarker(source: src, target: tgt));
-          usedIds.add(src.id);
-          usedIds.add(tgt.id);
-          continue;
-        }
-      }
-      entries.add(_TxMarker(t));
-    }
-  }
-  return entries;
-}
 
 /// Speed dial: main control plus new-transaction and account transfer.
 class TransactionsExpandableFab extends StatelessWidget {
@@ -1128,7 +1049,7 @@ class _TransactionsViewState extends State<_TransactionsView> {
       );
     }
 
-    final rows = _groupTransactionsByDay(monthTransactions);
+    final rows = groupedTransactionsForList(monthTransactions);
     return RefreshIndicator(
       onRefresh: refresh,
       child: ListView.builder(
@@ -1137,14 +1058,17 @@ class _TransactionsViewState extends State<_TransactionsView> {
         itemCount: rows.length,
         itemBuilder: (context, index) {
           return switch (rows[index]) {
-            _DayMarker(:final day) => _TransactionDayHeader(day: day),
-            _TxMarker(:final transaction) => _TransactionTile(
-              cubit: cubit,
+            GroupedTxnDayMarker(:final day) => GroupedTxnDayHeader(day: day),
+            GroupedTxnTxMarker(:final transaction) => GroupedTxnTransactionTile(
               transaction: transaction,
               l10n: l10n,
             ),
-            _TransferPairMarker(:final source, :final target) =>
-              _TransferPairTile(source: source, target: target, l10n: l10n),
+            GroupedTxnTransferPairMarker(:final source, :final target) =>
+              GroupedTxnTransferPairTile(
+                source: source,
+                target: target,
+                l10n: l10n,
+              ),
           };
         },
       ),
@@ -1507,7 +1431,7 @@ Widget _transactionSearchResultsList(
           itemCount: list.length,
           itemBuilder: (context, i) {
             final t = list[i];
-            return _TransactionTile(
+            return GroupedTxnTransactionTile(
               cubit: cubit,
               transaction: t,
               l10n: l10n,
@@ -1518,319 +1442,6 @@ Widget _transactionSearchResultsList(
       ),
     ],
   );
-}
-
-class _TransactionDayHeader extends StatelessWidget {
-  const _TransactionDayHeader({required this.day});
-
-  final DateTime day;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final text = DateFormat('yyyy-MM-dd').format(day);
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 6),
-      child: Align(
-        alignment: Alignment.centerLeft,
-        child: Text(
-          text,
-          style: theme.textTheme.titleSmall?.copyWith(
-            color: theme.colorScheme.onSurfaceVariant,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _TransferPairTile extends StatelessWidget {
-  const _TransferPairTile({
-    required this.source,
-    required this.target,
-    required this.l10n,
-  });
-
-  final TransactionEntity source;
-  final TransactionEntity target;
-  final AppLocalizations l10n;
-
-  @override
-  Widget build(BuildContext context) {
-    final cubit = context.read<TransactionsCubit>();
-    final theme = Theme.of(context);
-    final locale = Localizations.localeOf(context);
-    final timeLocal = source.transactedAt.toLocal();
-    final timeStr = DateFormat.Hm(locale.toString()).format(timeLocal);
-    final amountStr = l10n.transactionAmountValue(
-      target.value.toStringAsFixed(2),
-    );
-    final gid = source.transferGroupId;
-    String payLabel(TransactionEntity t) => t.accountName ?? t.cardName ?? '—';
-
-    final title = Text(
-      payLabel(target),
-      maxLines: 1,
-      overflow: TextOverflow.ellipsis,
-      style: theme.textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w500),
-    );
-
-    final subtitle = Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Text(
-          payLabel(source),
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-          style: theme.textTheme.bodySmall?.copyWith(
-            color: theme.colorScheme.onSurfaceVariant,
-          ),
-        ),
-        const SizedBox(height: 2),
-        Text(
-          timeStr,
-          style: theme.textTheme.bodySmall?.copyWith(
-            color: theme.colorScheme.onSurfaceVariant,
-            fontFeatures: const [FontFeature.tabularFigures()],
-          ),
-        ),
-      ],
-    );
-
-    final trailing = Text(
-      amountStr,
-      style: theme.textTheme.titleMedium?.copyWith(
-        fontWeight: FontWeight.w700,
-        color: theme.colorScheme.onSurfaceVariant,
-        height: 1.2,
-        fontFeatures: const [FontFeature.tabularFigures()],
-      ),
-    );
-
-    void openEdit() {
-      showAccountTransferEditorBottomSheet(
-        context,
-        l10n: l10n,
-        editingSource: source,
-        editingTarget: target,
-      );
-    }
-
-    Widget tile = SwipeableListTile(
-      itemKey: gid != null && gid.isNotEmpty
-          ? 'pair_$gid'
-          : '${source.id}|${target.id}',
-      leading: Icon(
-        Icons.swap_vert_rounded,
-        size: 26,
-        color: theme.colorScheme.onSurfaceVariant,
-      ),
-      title: title,
-      subtitle: subtitle,
-      trailing: trailing,
-      onEdit: openEdit,
-      confirmDelete: () => confirmDeleteTransferPairDialog(context, l10n),
-      onDelete: () => cubit.deleteMany([source.id, target.id]),
-    );
-
-    if (source.ignore || target.ignore) {
-      tile = Opacity(opacity: 0.52, child: tile);
-      tile = Tooltip(message: l10n.transactionIgnoredBadge, child: tile);
-    }
-    return tile;
-  }
-}
-
-class _TransactionTile extends StatelessWidget {
-  final TransactionsCubit cubit;
-  final TransactionEntity transaction;
-  final AppLocalizations l10n;
-  final VoidCallback? onTap;
-
-  const _TransactionTile({
-    required this.cubit,
-    required this.transaction,
-    required this.l10n,
-    this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final relationNames = _relationNames(transaction);
-    final theme = Theme.of(context);
-    final locale = Localizations.localeOf(context);
-    final localTime = transaction.transactedAt.toLocal();
-
-    final weightedValue = transaction.value * transaction.percentage / 100.0;
-
-    Color weightedColor() {
-      if (weightedValue > 0) return const Color(0xFF1B8736);
-      if (weightedValue < 0) return theme.colorScheme.error;
-      return theme.colorScheme.onSurfaceVariant;
-    }
-
-    final notFullPercentage = (transaction.percentage - 100.0).abs() > 0.01;
-
-    Widget titleSection() {
-      final chunks = <Widget>[];
-      final desc = transaction.description;
-      final hasDesc = desc != null && desc.isNotEmpty;
-
-      if (hasDesc) {
-        if (notFullPercentage) {
-          chunks.add(
-            Text.rich(
-              TextSpan(
-                children: [
-                  TextSpan(
-                    text: '(${transaction.percentage.toStringAsFixed(2)}%) ',
-                    style: theme.textTheme.labelLarge?.copyWith(
-                      color: theme.colorScheme.primary,
-                      fontWeight: FontWeight.w700,
-                      fontFeatures: const [FontFeature.tabularFigures()],
-                    ),
-                  ),
-                  TextSpan(
-                    text: desc,
-                    style: theme.textTheme.bodyLarge?.copyWith(
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ],
-              ),
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-            ),
-          );
-        } else {
-          chunks.add(
-            Text(
-              desc,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-              style: theme.textTheme.bodyLarge?.copyWith(
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          );
-        }
-      } else if (notFullPercentage) {
-        chunks.add(
-          Text(
-            '(${transaction.percentage.toStringAsFixed(2)}%)',
-            style: theme.textTheme.labelLarge?.copyWith(
-              color: theme.colorScheme.primary,
-              fontWeight: FontWeight.w700,
-              fontFeatures: const [FontFeature.tabularFigures()],
-            ),
-          ),
-        );
-      }
-
-      if (relationNames.isNotEmpty) {
-        chunks.add(
-          Padding(
-            padding: EdgeInsets.only(top: chunks.isNotEmpty ? 4 : 0),
-            child: Text(
-              relationNames.join(' · '),
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
-              ),
-            ),
-          ),
-        );
-      }
-
-      if (chunks.isEmpty) {
-        return const SizedBox.shrink();
-      }
-      return Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisSize: MainAxisSize.min,
-        children: chunks,
-      );
-    }
-
-    final trailingPrices = Column(
-      mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.end,
-      children: [
-        Text(
-          l10n.transactionAmountValue(weightedValue.toStringAsFixed(2)),
-          style: theme.textTheme.titleMedium?.copyWith(
-            fontWeight: FontWeight.w700,
-            color: weightedColor(),
-            height: 1.2,
-          ),
-        ),
-        if (notFullPercentage) ...[
-          const SizedBox(height: 2),
-          Text(
-            l10n.transactionAmountValue(transaction.value.toStringAsFixed(2)),
-            style: theme.textTheme.bodySmall?.copyWith(
-              color: theme.colorScheme.onSurfaceVariant,
-              height: 1.1,
-              decoration: TextDecoration.lineThrough,
-              decorationColor: theme.colorScheme.onSurfaceVariant,
-              fontFeatures: const [FontFeature.tabularFigures()],
-            ),
-          ),
-        ],
-        const SizedBox(height: 4),
-        Text(
-          DateFormat.Hm(locale.toString()).format(localTime),
-          style: theme.textTheme.bodySmall?.copyWith(
-            color: theme.colorScheme.onSurfaceVariant,
-            fontFeatures: const [FontFeature.tabularFigures()],
-          ),
-        ),
-      ],
-    );
-
-    void openEdit() {
-      showTransactionEditorBottomSheet(
-        context,
-        l10n: l10n,
-        cubit: cubit,
-        transaction: transaction,
-      );
-    }
-
-    Widget tile = SwipeableListTile(
-      itemKey: transaction.id,
-      title: titleSection(),
-      trailing: trailingPrices,
-      onTap: onTap,
-      onEdit: openEdit,
-      confirmDelete:
-          transaction.creditGroupId != null && transaction.creditGroupId!.isNotEmpty
-          ? () => confirmDeleteCreditGroupTransactionDialog(context, l10n)
-          : () => confirmDeleteTransactionDialog(context, l10n),
-      onDelete: () => cubit.delete(
-        id: transaction.id,
-        creditGroupId: transaction.creditGroupId,
-      ),
-    );
-
-    if (transaction.ignore) {
-      // Whole-row muted look; explicit text styles bypass ListTile disabled tints.
-      tile = Opacity(opacity: 0.52, child: tile);
-      tile = Tooltip(message: l10n.transactionIgnoredBadge, child: tile);
-    }
-    return tile;
-  }
-
-  /// Category, then account/card, then tag — displayed as one line joined with middots.
-  static List<String> _relationNames(TransactionEntity t) => [
-    if (t.categoryName?.isNotEmpty == true) t.categoryName!,
-    if (t.accountName?.isNotEmpty == true) t.accountName!,
-    if (t.cardName?.isNotEmpty == true) t.cardName!,
-    if (t.tagName?.isNotEmpty == true) t.tagName!,
-  ];
 }
 
 /// Picks an id from a searchable list. Items are shown in alphabetical order by [name].
@@ -2753,7 +2364,7 @@ class _TransactionDialogState extends State<_TransactionDialog> {
                     itemCount: _descriptionSuggestionMatches.length,
                     itemBuilder: (context, i) {
                       final t = _descriptionSuggestionMatches[i];
-                      return _TransactionTile(
+                      return GroupedTxnTransactionTile(
                         cubit: widget.cubit,
                         transaction: t,
                         l10n: l10n,
