@@ -2353,6 +2353,10 @@ class _TransactionDialogState extends State<_TransactionDialog> {
   String? _categoryId;
   String? _tagId;
 
+  bool _deferred = false;
+  late final TextEditingController _graceMonthsController;
+  late final TextEditingController _termMonthsController;
+
   Timer? _descriptionSuggestDebounce;
   List<TransactionEntity> _descriptionSuggestionMatches = const [];
   bool _descriptionSuggestLoading = false;
@@ -2385,6 +2389,8 @@ class _TransactionDialogState extends State<_TransactionDialog> {
     _paymentMethodDisplayController = TextEditingController();
     _categoryDisplayController = TextEditingController();
     _tagDisplayController = TextEditingController();
+    _graceMonthsController = TextEditingController();
+    _termMonthsController = TextEditingController();
     _ignore = t?.ignore ?? false;
     _accountId = t?.accountId ?? widget.preferredAccountId;
     _cardId = t?.cardId ?? widget.preferredCardId;
@@ -2686,6 +2692,8 @@ class _TransactionDialogState extends State<_TransactionDialog> {
     _paymentMethodDisplayController.dispose();
     _categoryDisplayController.dispose();
     _tagDisplayController.dispose();
+    _graceMonthsController.dispose();
+    _termMonthsController.dispose();
     super.dispose();
   }
 
@@ -2807,6 +2815,7 @@ class _TransactionDialogState extends State<_TransactionDialog> {
       if (raw.startsWith(_paymentMethodPickAccountPrefix)) {
         _accountId = raw.substring(_paymentMethodPickAccountPrefix.length);
         _cardId = null;
+        _deferred = false;
       } else if (raw.startsWith(_paymentMethodPickCardPrefix)) {
         _cardId = raw.substring(_paymentMethodPickCardPrefix.length);
         _accountId = null;
@@ -3137,6 +3146,62 @@ class _TransactionDialogState extends State<_TransactionDialog> {
                     ),
                   ],
                 ),
+                if (!_loadingLookups && _cardId != null) ...[
+                  const SizedBox(height: 10),
+                  CheckboxListTile(
+                    value: _deferred,
+                    onChanged: _loadingLookups
+                        ? null
+                        : (checked) {
+                            setState(() {
+                              _deferred = checked ?? false;
+                              if (!_deferred) {
+                                _graceMonthsController.clear();
+                                _termMonthsController.clear();
+                              }
+                            });
+                          },
+                    dense: true,
+                    contentPadding: EdgeInsets.zero,
+                    controlAffinity: ListTileControlAffinity.leading,
+                    title: Text(l10n.transactionDeferred),
+                  ),
+                  if (_deferred) ...[
+                    const SizedBox(height: 4),
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Expanded(
+                          child: TextFormField(
+                            controller: _graceMonthsController,
+                            decoration: InputDecoration(
+                              labelText: l10n.transactionGraceMonths,
+                            ),
+                            keyboardType: TextInputType.number,
+                            inputFormatters: <TextInputFormatter>[
+                              FilteringTextInputFormatter.digitsOnly,
+                            ],
+                            textInputAction: TextInputAction.next,
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: TextFormField(
+                            controller: _termMonthsController,
+                            decoration: InputDecoration(
+                              labelText: l10n.transactionMesesPlazo,
+                            ),
+                            keyboardType: TextInputType.number,
+                            inputFormatters: <TextInputFormatter>[
+                              FilteringTextInputFormatter.digitsOnly,
+                            ],
+                            textInputAction: TextInputAction.next,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ],
                 const SizedBox(height: 16),
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
