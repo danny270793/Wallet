@@ -143,6 +143,7 @@
   "assetSoldAmountField": "Sold amount",
   "assetInvalidNumber": "Enter a valid number",
   "assetEndBeforePurchase": "End date must be on or after purchase date",
+  "assetPickEndDateFirst": "Pick the end date before the end time.",
   "editAsset": "Edit asset",
   "deleteAsset": "Delete asset",
   "confirmDeleteAsset": "Are you sure you want to delete \"{name}\"?",
