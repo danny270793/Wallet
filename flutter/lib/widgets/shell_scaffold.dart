@@ -99,11 +99,13 @@ class ShellScaffold extends StatelessWidget {
   final String title;
   final PreferredSizeWidget? appBarBottom;
   final Widget body;
+
   /// When false, no navigation drawer is shown and the app bar uses a back control if the route can pop.
   final bool useDrawer;
   final Widget? bottomNavigationBar;
   final Widget? floatingActionButton;
   final FloatingActionButtonLocation? floatingActionButtonLocation;
+
   /// Shown before the settings action (e.g. search on transactions).
   final List<Widget>? appBarActionsBeforeSettings;
 
