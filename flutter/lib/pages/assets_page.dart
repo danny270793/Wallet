@@ -341,7 +341,7 @@ class _AssetTile extends StatelessWidget {
       tileIsThreeLine: true,
       dense: true,
       minLeadingWidth: 78,
-      contentPadding: EdgeInsets.zero,
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       leading: leadingHeld,
       title: Text(
         asset.name,
