@@ -102,11 +102,13 @@ class DashboardMonthTransactionsList extends StatelessWidget {
     required this.l10n,
     required this.transactions,
     required this.visibleMonth,
+    required this.useWeightedAmounts,
   });
 
   final AppLocalizations l10n;
   final List<TransactionEntity> transactions;
   final DateTime visibleMonth;
+  final bool useWeightedAmounts;
 
   @override
   Widget build(BuildContext context) {
@@ -158,6 +160,7 @@ class DashboardMonthTransactionsList extends StatelessWidget {
             _DashTxMarker(:final transaction) => _DashboardTxListTile(
               transaction: transaction,
               l10n: l10n,
+              useWeightedAmounts: useWeightedAmounts,
             ),
             _DashTransferPairMarker(:final source, :final target) =>
               _DashboardTransferListTile(
@@ -172,10 +175,15 @@ class DashboardMonthTransactionsList extends StatelessWidget {
 }
 
 class _DashboardTxListTile extends StatelessWidget {
-  const _DashboardTxListTile({required this.transaction, required this.l10n});
+  const _DashboardTxListTile({
+    required this.transaction,
+    required this.l10n,
+    required this.useWeightedAmounts,
+  });
 
   final TransactionEntity transaction;
   final AppLocalizations l10n;
+  final bool useWeightedAmounts;
 
   @override
   Widget build(BuildContext context) {
@@ -183,6 +191,8 @@ class _DashboardTxListTile extends StatelessWidget {
     final theme = Theme.of(context);
     final locale = Localizations.localeOf(context);
     final weighted = transaction.value * transaction.percentage / 100.0;
+    final displayAmount =
+        useWeightedAmounts ? weighted : transaction.value;
     final relations = _relationNames(transaction);
     final desc = transaction.description?.isNotEmpty == true
         ? transaction.description!
@@ -190,8 +200,8 @@ class _DashboardTxListTile extends StatelessWidget {
     final sub = relations.isNotEmpty ? relations.join(' · ') : null;
 
     Color amountColor() {
-      if (weighted > 0) return const Color(0xFF1B8736);
-      if (weighted < 0) return theme.colorScheme.error;
+      if (displayAmount > 0) return const Color(0xFF1B8736);
+      if (displayAmount < 0) return theme.colorScheme.error;
       return theme.colorScheme.onSurfaceVariant;
     }
 
@@ -224,7 +234,7 @@ class _DashboardTxListTile extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           Text(
-            l10n.transactionAmountValue(weighted.toStringAsFixed(2)),
+            l10n.transactionAmountValue(displayAmount.toStringAsFixed(2)),
             style: theme.textTheme.titleSmall?.copyWith(
               fontWeight: FontWeight.w700,
               color: amountColor(),
