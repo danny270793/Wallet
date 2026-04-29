@@ -1833,7 +1833,8 @@ class _TransactionTile extends StatelessWidget {
   ];
 }
 
-/// Picks an id from a searchable list. Returns `null` if dismissed, `''` if [allowNone] and user cleared.
+/// Picks an id from a searchable list. Items are shown in alphabetical order by [name].
+/// Returns `null` if dismissed, `''` if [allowNone] and user cleared.
 ///
 /// Use [getItems] so each build reads the parent's current lists. The modal sheet [builder] can rerun
 /// when the parent rebuilds after [reloadItems]; snapshots in the outer closure would stay stale.
@@ -1860,8 +1861,11 @@ Future<String?> _showSearchableIdPickerSheet(
       var searchFilter = '';
 
       List<({String id, String name})> visible() {
+        final items = [...getItems()]
+          ..sort(
+            (a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()),
+          );
         final q = searchFilter.trim().toLowerCase();
-        final items = getItems();
         if (q.isEmpty) return items;
         return items.where((e) => e.name.toLowerCase().contains(q)).toList();
       }
