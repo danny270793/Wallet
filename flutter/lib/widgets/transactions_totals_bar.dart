@@ -12,7 +12,8 @@ const double kTransactionsTotalsSwipeMinVelocityPxPerSec = 280;
 
 /// Bottom summary: income (sum of positive amounts), outcome (sum of absolute negatives),
 /// net balance. Transfer legs ([TransactionEntity.isAccountTransferLeg]) are not included upstream.
-/// When [onTotalsModeSwipe] is set, swipe left goes to next option, swipe right to previous.
+/// When [totalsDotsCount] is at least 2, shows page-indicator dots beneath the Income / Outcome / Balance row;
+/// highlight follows [totalsDotsSelectedIndex] (typically the same index as totals mode).
 class TransactionsTotalsBar extends StatelessWidget {
   const TransactionsTotalsBar({
     super.key,
@@ -26,6 +27,8 @@ class TransactionsTotalsBar extends StatelessWidget {
     this.secondaryBalance,
     this.secondarySubtitle,
     this.onTotalsModeSwipe,
+    this.totalsDotsCount = 0,
+    this.totalsDotsSelectedIndex = 0,
   });
 
   final AppLocalizations l10n;
@@ -38,6 +41,11 @@ class TransactionsTotalsBar extends StatelessWidget {
   final double? secondaryBalance;
   final String? secondarySubtitle;
   final TransactionsTotalsModeSwipe? onTotalsModeSwipe;
+
+  /// When ≥ 2, shows pager dots under Income / Outcome / Balance.
+  /// Index [totalsDotsSelectedIndex] is clamped to `[0, totalsDotsCount)`.
+  final int totalsDotsCount;
+  final int totalsDotsSelectedIndex;
 
   bool get _hasSecondary =>
       secondaryIncome != null &&
@@ -104,6 +112,8 @@ class TransactionsTotalsBar extends StatelessWidget {
       );
     }
 
+    final dotsRow = _totalsDotsRow(theme);
+
     return GestureDetector(
       onHorizontalDragEnd: onTotalsModeSwipe == null
           ? null
@@ -138,6 +148,10 @@ class TransactionsTotalsBar extends StatelessWidget {
                     const SizedBox(height: 8),
                   ],
                   row(income, outcome, balance, compact: false),
+                  if (dotsRow != null) ...[
+                    const SizedBox(height: 10),
+                    dotsRow,
+                  ],
                   if (_hasSecondary) ...[
                     Divider(
                       height: 20,
@@ -167,6 +181,43 @@ class TransactionsTotalsBar extends StatelessWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget? _totalsDotsRow(ThemeData theme) {
+    if (totalsDotsCount < 2) return null;
+    final scheme = theme.colorScheme;
+    final safeIndex = totalsDotsSelectedIndex.clamp(
+      0,
+      totalsDotsCount > 1 ? totalsDotsCount - 1 : 0,
+    );
+    return ExcludeSemantics(
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: List.generate(totalsDotsCount, (i) {
+          final isOn = i == safeIndex;
+          return Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 3),
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 180),
+              curve: Curves.easeOut,
+              width: isOn ? 9 : 7,
+              height: isOn ? 9 : 7,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: isOn ? scheme.primary : Colors.transparent,
+                border: isOn
+                    ? null
+                    : Border.all(
+                        color:
+                            scheme.onSurfaceVariant.withValues(alpha: 0.42),
+                        width: 1.25,
+                      ),
+              ),
+            ),
+          );
+        }),
       ),
     );
   }
