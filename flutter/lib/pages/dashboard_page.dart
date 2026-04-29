@@ -7,6 +7,7 @@ import '../core/di/injection.dart';
 import '../features/transactions/domain/entities/transaction_entity.dart';
 import '../features/transactions/presentation/cubit/transactions_cubit.dart';
 import '../features/transactions/presentation/cubit/transactions_state.dart';
+import '../widgets/bottom_sheet_pinned_title.dart';
 import '../widgets/dashboard_month_transactions_list.dart';
 import '../widgets/monthly_category_expense_pie_chart.dart';
 import '../widgets/monthly_tag_pie_chart.dart';
@@ -114,56 +115,90 @@ class _MonthlyDashboardViewState extends State<_MonthlyDashboardView> {
     BuildContext context,
     AppLocalizations l10n,
   ) async {
-    final draft = [_includeIgnored, _useWeightedAmounts];
-
     await showModalBottomSheet<void>(
       context: context,
-      showDragHandle: true,
+      isScrollControlled: true,
+      showDragHandle: false,
       builder: (sheetContext) {
-        final bottomPad = MediaQuery.paddingOf(sheetContext).bottom;
-        return StatefulBuilder(
-          builder: (context, setModal) {
-            return Padding(
-              padding: EdgeInsets.fromLTRB(16, 0, 16, 16 + bottomPad),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.only(top: 8, bottom: 4),
-                    child: Text(
-                      l10n.monthlyDashboardOptionsSheetTitle,
-                      textAlign: TextAlign.center,
-                      style: Theme.of(context).textTheme.titleLarge,
+        final draft = [_includeIgnored, _useWeightedAmounts];
+
+        return SafeArea(
+          child: StatefulBuilder(
+            builder: (ctx, setModal) {
+              final bottomPad = MediaQuery.paddingOf(ctx).bottom;
+              return ConstrainedBox(
+                constraints: BoxConstraints(
+                  maxHeight: MediaQuery.sizeOf(ctx).height * 0.55,
+                ),
+                child: CustomScrollView(
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  slivers: [
+                    SliverAppBar(
+                      pinned: true,
+                      centerTitle: true,
+                      automaticallyImplyLeading: false,
+                      elevation: 0,
+                      scrolledUnderElevation: 4,
+                      backgroundColor: modalBottomSheetSurfaceColor(ctx),
+                      shadowColor: Theme.of(ctx).colorScheme.shadow,
+                      leading: modalBottomSheetBackButton(ctx),
+                      title: Text(
+                        l10n.monthlyDashboardOptionsSheetTitle,
+                        style: Theme.of(ctx).textTheme.titleLarge,
+                      ),
                     ),
-                  ),
-                  SwitchListTile(
-                    contentPadding: EdgeInsets.zero,
-                    title: Text(l10n.dashboardIncludeIgnoredInTotals),
-                    value: draft[0],
-                    onChanged: (v) => setModal(() => draft[0] = v),
-                  ),
-                  SwitchListTile(
-                    contentPadding: EdgeInsets.zero,
-                    title: Text(l10n.dashboardUseWeightedAmounts),
-                    value: draft[1],
-                    onChanged: (v) => setModal(() => draft[1] = v),
-                  ),
-                  const SizedBox(height: 12),
-                  FilledButton(
-                    onPressed: () {
-                      Navigator.of(sheetContext).pop();
-                      setState(() {
-                        _includeIgnored = draft[0];
-                        _useWeightedAmounts = draft[1];
-                      });
-                    },
-                    child: Text(l10n.save),
-                  ),
-                ],
-              ),
-            );
-          },
+                    SliverPadding(
+                      padding: const EdgeInsets.fromLTRB(20, 8, 20, 0),
+                      sliver: SliverToBoxAdapter(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            SwitchListTile(
+                              contentPadding: EdgeInsets.zero,
+                              title:
+                                  Text(l10n.dashboardIncludeIgnoredInTotals),
+                              value: draft[0],
+                              onChanged: (v) =>
+                                  setModal(() => draft[0] = v),
+                            ),
+                            SwitchListTile(
+                              contentPadding: EdgeInsets.zero,
+                              title:
+                                  Text(l10n.dashboardUseWeightedAmounts),
+                              value: draft[1],
+                              onChanged: (v) =>
+                                  setModal(() => draft[1] = v),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    SliverPadding(
+                      padding: EdgeInsets.fromLTRB(
+                        20,
+                        16,
+                        20,
+                        16 + bottomPad,
+                      ),
+                      sliver: SliverToBoxAdapter(
+                        child: FilledButton(
+                          onPressed: () {
+                            Navigator.of(sheetContext).pop();
+                            setState(() {
+                              _includeIgnored = draft[0];
+                              _useWeightedAmounts = draft[1];
+                            });
+                          },
+                          child: Text(l10n.save),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            },
+          ),
         );
       },
     );
