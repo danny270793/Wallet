@@ -178,6 +178,18 @@
     }
   },
   "transactions": "Transacciones",
+  "creditsNav": "Créditos",
+  "creditsTitle": "Créditos",
+  "creditsEmpty": "Aún no tienes cuotas diferidas.",
+  "creditsUntitledGroup": "Compra diferida",
+  "creditsInstallmentsCount": "{count} cuotas",
+  "@creditsInstallmentsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "transactionsSearchTooltip": "Buscar transacciones",
   "transactionsSearchHint": "Buscar por descripción",
   "transactionsSearchTypeQuery": "Escribe texto para buscar en todas tus transacciones",
