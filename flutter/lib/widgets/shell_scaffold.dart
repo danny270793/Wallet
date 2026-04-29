@@ -9,8 +9,9 @@ int walletDrawerSelectedIndex(String matchedLocation) {
   if (matchedLocation.startsWith('/cards')) return 2;
   if (matchedLocation.startsWith('/categories')) return 3;
   if (matchedLocation.startsWith('/tags')) return 4;
-  if (matchedLocation.startsWith('/dashboard/yearly')) return 6;
-  if (matchedLocation.startsWith('/dashboard/monthly')) return 5;
+  if (matchedLocation.startsWith('/assets')) return 5;
+  if (matchedLocation.startsWith('/dashboard/yearly')) return 7;
+  if (matchedLocation.startsWith('/dashboard/monthly')) return 6;
   return 0;
 }
 
@@ -46,9 +47,12 @@ class WalletNavigationDrawer extends StatelessWidget {
             router.go('/tags');
             break;
           case 5:
-            router.go('/dashboard/monthly');
+            router.go('/assets');
             break;
           case 6:
+            router.go('/dashboard/monthly');
+            break;
+          case 7:
             router.go('/dashboard/yearly');
             break;
         }
@@ -78,6 +82,11 @@ class WalletNavigationDrawer extends StatelessWidget {
           icon: const Icon(Icons.label_outline),
           selectedIcon: const Icon(Icons.label),
           label: Text(l10n.tags),
+        ),
+        NavigationDrawerDestination(
+          icon: const Icon(Icons.inventory_2_outlined),
+          selectedIcon: const Icon(Icons.inventory_2),
+          label: Text(l10n.assets),
         ),
         NavigationDrawerDestination(
           icon: const Icon(Icons.calendar_month_outlined),
