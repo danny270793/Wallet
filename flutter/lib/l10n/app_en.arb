@@ -159,6 +159,14 @@
       }
     }
   },
+  "assetSoldPerApproximateMonth": "~{amount}/mo avg. (sold)",
+  "@assetSoldPerApproximateMonth": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
   "editAsset": "Edit asset",
   "deleteAsset": "Delete asset",
   "confirmDeleteAsset": "Are you sure you want to delete \"{name}\"?",
