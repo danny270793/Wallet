@@ -1,6 +1,7 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:uuid/uuid.dart';
 import '../../../../core/calendar_months.dart';
+import '../../../../core/credit_group_description.dart';
 import '../../../../core/logger/app_logger.dart';
 import '../../../../core/split_equal_amounts.dart';
 import '../../domain/entities/transaction_entity.dart';
@@ -116,7 +117,11 @@ class TransactionsCubit extends Cubit<TransactionsState> {
             cardId: cardId,
             categoryId: categoryId,
             tagId: tagId,
-            description: description,
+            description: creditGroupPrefixedDescription(
+              oneBasedCurrent: i + 1,
+              total: deferredTermMonths,
+              userNote: description,
+            ),
             transactedAt: at,
             value: parts[i],
             ignore: ignore,
@@ -201,7 +206,11 @@ class TransactionsCubit extends Cubit<TransactionsState> {
               cardId: cardId,
               categoryId: categoryId,
               tagId: tagId,
-              description: description,
+              description: creditGroupPrefixedDescription(
+                oneBasedCurrent: i + 1,
+                total: siblings.length,
+                userNote: description,
+              ),
               transactedAt: shiftedLocal,
               value: parts[i],
               ignore: ignore,
