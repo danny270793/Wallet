@@ -501,6 +501,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'Are you sure you want to delete this transaction?';
 
   @override
+  String get confirmDeleteCreditGroupTransaction =>
+      'This installment is part of a deferred split. All installments in this group will be deleted.';
+
+  @override
   String get deleteTransferPair => 'Delete transfer';
 
   @override
@@ -554,6 +558,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get transactionAmount => 'Amount';
+
+  @override
+  String get transactionAmountCreditGroupHint =>
+      'Shown amount is the group total split evenly across installments. Saving updates every installment and shifts dates by the same amount.';
 
   @override
   String get transactionAmountInvalidNumber =>
