@@ -20,6 +20,7 @@
   "dashboardCategoryPieFilterDescription": "Choose which categories are included in the chart.",
   "dashboardCategoryPieNeedOneCategory": "Select at least one category",
   "dashboardPieDeselectAll": "Deselect all",
+  "dashboardPieSelectAll": "Select all",
   "yearlyDashboard": "Yearly dashboard",
   "yearlyDashboardIncomeByMonthTitle": "Income by month",
   "yearlyDashboardOutcomeByMonthTitle": "Outcome by month",
