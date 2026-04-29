@@ -73,74 +73,85 @@ class _YearlyDashboardViewState extends State<_YearlyDashboardView> {
               title: l10n.yearlyDashboard,
               appBarBottom: YearlyDashboardAppBarBottom(notifier: yearNotifier),
               body: switch (state) {
-                YearlyDashboardInitial() || YearlyDashboardLoading() => const Center(
-                    child: CircularProgressIndicator(),
-                  ),
+                YearlyDashboardInitial() || YearlyDashboardLoading() =>
+                  const Center(child: CircularProgressIndicator()),
                 YearlyDashboardError(:final message) => Center(
-                    child: Padding(
-                      padding: const EdgeInsets.all(24),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(message ?? l10n.unexpectedError, textAlign: TextAlign.center),
-                          const SizedBox(height: 16),
-                          FilledButton(
-                            onPressed: () =>
-                                context.read<YearlyDashboardCubit>().loadYear(visibleYear),
-                            child: const Text('Retry'),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                YearlyDashboardLoaded(:final transactions) => RefreshIndicator(
-                    onRefresh: () => context.read<YearlyDashboardCubit>().loadYear(visibleYear),
-                    child: ListView(
-                      physics: const AlwaysScrollableScrollPhysics(),
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                  child: Padding(
+                    padding: const EdgeInsets.all(24),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
                       children: [
-                        SwitchListTile(
-                          title: Text(l10n.dashboardIncludeIgnoredInTotals),
-                          value: _includeIgnored,
-                          onChanged: (v) => setState(() => _includeIgnored = v),
+                        Text(
+                          message ?? l10n.unexpectedError,
+                          textAlign: TextAlign.center,
                         ),
-                        if (!_includeIgnored)
-                          Padding(
-                            padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
-                            child: Text(
-                              l10n.transactionsTotalsExcludingIgnoredHint,
-                              style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                                  ),
-                            ),
-                          ),
-                        YearlyCumulativeNetBarChart(
-                          l10n: l10n,
-                          year: y,
-                          transactions: transactions,
-                          includeIgnored: _includeIgnored,
-                        ),
-                        YearlyWeightedNetBarChart(
-                          l10n: l10n,
-                          year: y,
-                          transactions: transactions,
-                          includeIgnored: _includeIgnored,
-                        ),
-                        YearlyWeightedIncomeBarChart(
-                          l10n: l10n,
-                          year: y,
-                          transactions: transactions,
-                          includeIgnored: _includeIgnored,
-                        ),
-                        YearlyWeightedOutcomeBarChart(
-                          l10n: l10n,
-                          year: y,
-                          transactions: transactions,
-                          includeIgnored: _includeIgnored,
+                        const SizedBox(height: 16),
+                        FilledButton(
+                          onPressed: () => context
+                              .read<YearlyDashboardCubit>()
+                              .loadYear(visibleYear),
+                          child: const Text('Retry'),
                         ),
                       ],
                     ),
                   ),
+                ),
+                YearlyDashboardLoaded(:final transactions) => RefreshIndicator(
+                  onRefresh: () => context
+                      .read<YearlyDashboardCubit>()
+                      .loadYear(visibleYear),
+                  child: ListView(
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 8,
+                    ),
+                    children: [
+                      SwitchListTile(
+                        title: Text(l10n.dashboardIncludeIgnoredInTotals),
+                        value: _includeIgnored,
+                        onChanged: (v) => setState(() => _includeIgnored = v),
+                      ),
+                      if (!_includeIgnored)
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+                          child: Text(
+                            l10n.transactionsTotalsExcludingIgnoredHint,
+                            style: Theme.of(context).textTheme.labelSmall
+                                ?.copyWith(
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.onSurfaceVariant,
+                                ),
+                          ),
+                        ),
+                      YearlyCumulativeNetBarChart(
+                        l10n: l10n,
+                        year: y,
+                        transactions: transactions,
+                        includeIgnored: _includeIgnored,
+                      ),
+                      YearlyWeightedNetBarChart(
+                        l10n: l10n,
+                        year: y,
+                        transactions: transactions,
+                        includeIgnored: _includeIgnored,
+                      ),
+                      YearlyWeightedIncomeBarChart(
+                        l10n: l10n,
+                        year: y,
+                        transactions: transactions,
+                        includeIgnored: _includeIgnored,
+                      ),
+                      YearlyWeightedOutcomeBarChart(
+                        l10n: l10n,
+                        year: y,
+                        transactions: transactions,
+                        includeIgnored: _includeIgnored,
+                      ),
+                    ],
+                  ),
+                ),
               },
             );
           },
