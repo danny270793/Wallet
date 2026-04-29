@@ -39,6 +39,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get dashboardUseWeightedAmounts => 'Weighted amounts (%)';
 
   @override
+  String get monthlyDashboardTotalsSubtitle =>
+      'Totals for the view above (filters and options).';
+
+  @override
   String get monthlyDashboardTagPieTitle => 'Expenses by tag';
 
   @override
