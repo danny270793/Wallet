@@ -2069,6 +2069,8 @@ class _TransactionDialog extends StatefulWidget {
 
 class _TransactionDialogState extends State<_TransactionDialog> {
   final _formKey = GlobalKey<FormState>();
+  final _valueFieldKey = GlobalKey<FormFieldState<String>>();
+  final _percentageFieldKey = GlobalKey<FormFieldState<String>>();
   final _paymentMethodFieldKey = GlobalKey<FormFieldState<String>>();
   final _categoryFieldKey = GlobalKey<FormFieldState<String>>();
   final _tagFieldKey = GlobalKey<FormFieldState<String>>();
@@ -2098,6 +2100,9 @@ class _TransactionDialogState extends State<_TransactionDialog> {
   Timer? _descriptionSuggestDebounce;
   List<TransactionEntity> _descriptionSuggestionMatches = const [];
   bool _descriptionSuggestLoading = false;
+  /// After selecting a suggestion, hide the list until the description text changes.
+  bool _dismissSuggestionsUntilDescriptionChange = false;
+  String? _descriptionSnapshotWhenSuggestionsDismissed;
 
   static const _descriptionSuggestDebounceMs = 400;
 
@@ -2106,10 +2111,13 @@ class _TransactionDialogState extends State<_TransactionDialog> {
     super.initState();
     final t = widget.transaction;
     _transactedAt = t?.transactedAt.toLocal() ?? DateTime.now();
-    _valueController = TextEditingController(
-      text: t != null ? t.value.toStringAsFixed(2) : '0.00',
-    );
-    _percentageController = TextEditingController(text: t != null ? t.percentage.toString() : '0');
+    if (t != null) {
+      _valueController = TextEditingController(text: t.value.toStringAsFixed(2));
+      _percentageController = TextEditingController(text: t.percentage.toString());
+    } else {
+      _valueController = TextEditingController();
+      _percentageController = TextEditingController();
+    }
     _descriptionController = TextEditingController(text: t?.description ?? '');
     _dateDisplayController = TextEditingController();
     _timeDisplayController = TextEditingController();
@@ -2124,7 +2132,21 @@ class _TransactionDialogState extends State<_TransactionDialog> {
     _loadLookups();
     _descriptionController.addListener(_onDescriptionTextChangedForSuggestions);
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) _syncDateTimeDisplay();
+      if (!mounted) return;
+      _syncDateTimeDisplay();
+      if (widget.transaction != null) return;
+      var strippedAutofillZeros = false;
+      final v = _valueController.text.trim();
+      if (v == '0' || v == '0.00' || v == '0.0' || v == '-0' || v == '-0.00' || v == '-0.0') {
+        _valueController.clear();
+        strippedAutofillZeros = true;
+      }
+      final p = _percentageController.text.trim();
+      if (p == '0' || p == '0.0') {
+        _percentageController.clear();
+        strippedAutofillZeros = true;
+      }
+      if (strippedAutofillZeros && mounted) setState(() {});
     });
   }
 
@@ -2203,12 +2225,21 @@ class _TransactionDialogState extends State<_TransactionDialog> {
 
   void _onDescriptionTextChangedForSuggestions() {
     if (widget.transaction != null) return;
+    if (_dismissSuggestionsUntilDescriptionChange) {
+      if (_descriptionController.text == _descriptionSnapshotWhenSuggestionsDismissed) {
+        return;
+      }
+      _dismissSuggestionsUntilDescriptionChange = false;
+      _descriptionSnapshotWhenSuggestionsDismissed = null;
+    }
     _descriptionSuggestDebounce?.cancel();
     final q = _descriptionController.text.trim();
     if (q.isEmpty) {
       setState(() {
         _descriptionSuggestionMatches = const [];
         _descriptionSuggestLoading = false;
+        _dismissSuggestionsUntilDescriptionChange = false;
+        _descriptionSnapshotWhenSuggestionsDismissed = null;
       });
       return;
     }
@@ -2230,6 +2261,10 @@ class _TransactionDialogState extends State<_TransactionDialog> {
   Future<void> _loadDescriptionSuggestionsRemote(String q) async {
     if (!mounted || widget.transaction != null) return;
     if (_descriptionController.text.trim() != q) return;
+    if (_dismissSuggestionsUntilDescriptionChange &&
+        _descriptionController.text == _descriptionSnapshotWhenSuggestionsDismissed) {
+      return;
+    }
     try {
       final remote = await getIt<SearchTransactionsByDescriptionUsecase>()(q, limit: 80);
       if (!mounted || widget.transaction != null) return;
@@ -2253,19 +2288,37 @@ class _TransactionDialogState extends State<_TransactionDialog> {
 
   void _applyTransactionSuggestion(TransactionEntity t) {
     if (_loadingLookups) return;
+    _descriptionSuggestDebounce?.cancel();
+    final snapshot = _descriptionController.text;
     setState(() {
-      _accountId = t.accountId;
-      _cardId = t.cardId;
-      if (_accountId != null && _cardId != null) {
-        _cardId = null;
+      if (_accountId == null && _cardId == null) {
+        _accountId = t.accountId;
+        _cardId = t.cardId;
+        if (_accountId != null && _cardId != null) {
+          _cardId = null;
+        }
       }
-      _categoryId = t.categoryId;
-      _tagId = t.tagId;
-      _percentageController.text = t.percentage.toString();
+      _categoryId ??= t.categoryId;
+      _tagId ??= t.tagId;
+      final valueRaw = _valueController.text.trim();
+      final valueParsed = _parseTransactionAmountInput(valueRaw);
+      if (valueRaw.isEmpty || valueParsed == null || valueParsed == 0) {
+        _valueController.text = t.value.toStringAsFixed(2);
+      }
+      final pct = double.tryParse(_percentageController.text.trim());
+      if (pct == null || pct == 0) {
+        _percentageController.text = t.percentage.toString();
+      }
       _syncRelationDisplays();
+      _dismissSuggestionsUntilDescriptionChange = true;
+      _descriptionSnapshotWhenSuggestionsDismissed = snapshot;
+      _descriptionSuggestionMatches = const [];
+      _descriptionSuggestLoading = false;
     });
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
+      _valueFieldKey.currentState?.validate();
+      _percentageFieldKey.currentState?.validate();
       _paymentMethodFieldKey.currentState?.validate();
       _categoryFieldKey.currentState?.validate();
       _tagFieldKey.currentState?.validate();
@@ -2274,6 +2327,10 @@ class _TransactionDialogState extends State<_TransactionDialog> {
 
   Widget _descriptionSuggestionSection(BuildContext context) {
     if (widget.transaction != null) return const SizedBox.shrink();
+    if (_dismissSuggestionsUntilDescriptionChange &&
+        _descriptionController.text == _descriptionSnapshotWhenSuggestionsDismissed) {
+      return const SizedBox.shrink();
+    }
     final q = _descriptionController.text.trim();
     if (q.isEmpty) return const SizedBox.shrink();
 
@@ -2619,7 +2676,11 @@ class _TransactionDialogState extends State<_TransactionDialog> {
                   children: [
                     Expanded(
                       child: TextFormField(
+                        key: _valueFieldKey,
                         controller: _valueController,
+                        autocorrect: false,
+                        enableSuggestions: false,
+                        autofillHints: isEdit ? null : const <String>[],
                         decoration: InputDecoration(labelText: l10n.transactionAmount),
                         keyboardType: const TextInputType.numberWithOptions(decimal: true, signed: true),
                         inputFormatters: _transactionAmountInputFormatters,
@@ -2746,7 +2807,11 @@ class _TransactionDialogState extends State<_TransactionDialog> {
                   children: [
                     Expanded(
                       child: TextFormField(
+                        key: _percentageFieldKey,
                         controller: _percentageController,
+                        autocorrect: false,
+                        enableSuggestions: false,
+                        autofillHints: isEdit ? null : const <String>[],
                         decoration: InputDecoration(labelText: l10n.transactionPercentage),
                         keyboardType: const TextInputType.numberWithOptions(decimal: true),
                         validator: (v) {
