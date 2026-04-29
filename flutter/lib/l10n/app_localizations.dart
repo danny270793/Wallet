@@ -722,6 +722,18 @@ abstract class AppLocalizations {
   /// **'No matching transactions'**
   String get transactionsSearchNoResults;
 
+  /// No description provided for @transactionSameDescriptionTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Matching past transactions'**
+  String get transactionSameDescriptionTitle;
+
+  /// No description provided for @transactionSameDescriptionHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap a row to fill payment method, category, tag, and percentage.'**
+  String get transactionSameDescriptionHint;
+
   /// No description provided for @transactionsPickMonth.
   ///
   /// In en, this message translates to:
