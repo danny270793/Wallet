@@ -33,15 +33,13 @@ class _TransactionsMonthHostState extends State<TransactionsMonthHost> {
 
   @override
   Widget build(BuildContext context) {
-    return TransactionsMonthScope(
-      notifier: _visibleMonth,
-      child: widget.child,
-    );
+    return TransactionsMonthScope(notifier: _visibleMonth, child: widget.child);
   }
 }
 
 /// Rebuild subtree when [ValueNotifier<DateTime>] (visible month) changes.
-class TransactionsMonthScope extends InheritedNotifier<ValueNotifier<DateTime>> {
+class TransactionsMonthScope
+    extends InheritedNotifier<ValueNotifier<DateTime>> {
   const TransactionsMonthScope({
     super.key,
     required ValueNotifier<DateTime> super.notifier,
@@ -134,10 +132,7 @@ class _MonthYearPickerDialogState extends State<_MonthYearPickerDialog> {
   }
 
   void _selectMonth(int month) {
-    Navigator.pop<DateTime>(
-      context,
-      DateTime(_year, month, 1),
-    );
+    Navigator.pop<DateTime>(context, DateTime(_year, month, 1));
   }
 
   @override
@@ -189,9 +184,7 @@ class _MonthYearPickerDialogState extends State<_MonthYearPickerDialog> {
                     textAlign: TextAlign.center,
                     style: theme.textTheme.headlineSmall?.copyWith(
                       fontWeight: FontWeight.w600,
-                      fontFeatures: const [
-                        FontFeature.tabularFigures(),
-                      ],
+                      fontFeatures: const [FontFeature.tabularFigures()],
                     ),
                   ),
                 ),
@@ -260,8 +253,9 @@ class _MonthYearPickerDialogState extends State<_MonthYearPickerDialog> {
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: theme.textTheme.labelMedium?.copyWith(
-                      fontWeight:
-                          selectedHere ? FontWeight.w700 : FontWeight.w500,
+                      fontWeight: selectedHere
+                          ? FontWeight.w700
+                          : FontWeight.w500,
                     ),
                   ),
                 );
@@ -275,7 +269,8 @@ class _MonthYearPickerDialogState extends State<_MonthYearPickerDialog> {
 }
 
 /// Month switcher in [AppBar.bottom] (below the route title, still part of the app bar).
-class TransactionsMonthAppBarBottom extends StatelessWidget implements PreferredSizeWidget {
+class TransactionsMonthAppBarBottom extends StatelessWidget
+    implements PreferredSizeWidget {
   const TransactionsMonthAppBarBottom({super.key, required this.notifier});
 
   final ValueNotifier<DateTime> notifier;
@@ -314,11 +309,16 @@ class TransactionsMonthAppBarBottom extends StatelessWidget implements Preferred
                     onTap: () => _pickMonthYear(context, notifier, locale),
                     customBorder: const StadiumBorder(),
                     child: Tooltip(
-                      message: AppLocalizations.of(context)!.transactionsPickMonth,
+                      message: AppLocalizations.of(
+                        context,
+                      )!.transactionsPickMonth,
                       excludeFromSemantics: true,
                       child: Center(
                         child: Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+                          padding: const EdgeInsets.symmetric(
+                            vertical: 8,
+                            horizontal: 4,
+                          ),
                           child: Text(
                             label,
                             overflow: TextOverflow.ellipsis,
@@ -358,10 +358,12 @@ class TransactionsMonthCubitSync extends StatefulWidget {
   final Widget child;
 
   @override
-  State<TransactionsMonthCubitSync> createState() => _TransactionsMonthCubitSyncState();
+  State<TransactionsMonthCubitSync> createState() =>
+      _TransactionsMonthCubitSyncState();
 }
 
-class _TransactionsMonthCubitSyncState extends State<TransactionsMonthCubitSync> {
+class _TransactionsMonthCubitSyncState
+    extends State<TransactionsMonthCubitSync> {
   ValueNotifier<DateTime>? _notifier;
   VoidCallback? _listener;
 
