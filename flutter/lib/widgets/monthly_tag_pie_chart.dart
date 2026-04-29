@@ -215,7 +215,8 @@ class _TagLegendRow extends StatelessWidget {
 ///
 /// [tagKeysFilter] is owned by the parent: null = all tags; otherwise restrict to these [TransactionEntity.tagId]s.
 ///
-/// Tapping a legend row applies the same filter as choosing only that tag in the sheet and saving.
+/// Tapping a legend row filters to that tag (same as the sheet Save with one tag selected).
+/// Tapping the lone filtered tag again clears the filter (shows all tags).
 class MonthlyTagPieChart extends StatelessWidget {
   const MonthlyTagPieChart({
     super.key,
@@ -464,7 +465,11 @@ class MonthlyTagPieChart extends StatelessWidget {
               selected: tagKeysFilter != null &&
                   tagKeysFilter!.length == 1 &&
                   tagKeysFilter!.contains(s.keyId),
-              onTap: () => onTagKeysFilterChanged({s.keyId}),
+              onTap: () {
+                final onlyThis = tagKeysFilter?.length == 1 &&
+                    tagKeysFilter!.contains(s.keyId);
+                onTagKeysFilterChanged(onlyThis ? null : {s.keyId});
+              },
             ),
         ],
       ),
