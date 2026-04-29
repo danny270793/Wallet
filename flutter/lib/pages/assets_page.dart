@@ -220,13 +220,7 @@ class _AssetTile extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.end,
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Text(
-            valueStr,
-            style: amountStyle?.copyWith(color: scheme.onSurface),
-            textAlign: TextAlign.right,
-          ),
           if (perApproxMo != null) ...[
-            const SizedBox(height: 2),
             Text(
               l10n.transactionAmountValue(
                 perApproxMo.toStringAsFixed(2),
@@ -236,7 +230,13 @@ class _AssetTile extends StatelessWidget {
               overflow: TextOverflow.ellipsis,
               textAlign: TextAlign.right,
             ),
+            const SizedBox(height: 2),
           ],
+          Text(
+            valueStr,
+            style: amountStyle?.copyWith(color: scheme.onSurface),
+            textAlign: TextAlign.right,
+          ),
         ],
       );
     }
@@ -246,16 +246,7 @@ class _AssetTile extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
-          Text(
-            '${l10n.assetSold}: '
-            '${l10n.transactionAmountValue(
-              asset.soldValue!.toStringAsFixed(2),
-            )}',
-            style: subAmountStyle?.copyWith(color: scheme.tertiary),
-            textAlign: TextAlign.right,
-          ),
           if (soldPerApproxMo != null) ...[
-            const SizedBox(height: 2),
             Text(
               l10n.transactionAmountValue(
                 soldPerApproxMo.toStringAsFixed(2),
@@ -265,7 +256,16 @@ class _AssetTile extends StatelessWidget {
               overflow: TextOverflow.ellipsis,
               textAlign: TextAlign.right,
             ),
+            const SizedBox(height: 2),
           ],
+          Text(
+            '${l10n.assetSold}: '
+            '${l10n.transactionAmountValue(
+              asset.soldValue!.toStringAsFixed(2),
+            )}',
+            style: subAmountStyle?.copyWith(color: scheme.tertiary),
+            textAlign: TextAlign.right,
+          ),
         ],
       );
     }
