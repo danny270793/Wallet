@@ -135,6 +135,24 @@
   "assets": "Activos",
   "noAssets": "No hay activos aún",
   "assetSold": "Vendido",
+  "newAsset": "Nuevo activo",
+  "assetProvider": "Proveedor",
+  "assetValue": "Valor",
+  "assetPurchaseDate": "Fecha de compra",
+  "assetEndDate": "Fecha de fin",
+  "assetSoldAmountField": "Importe de venta",
+  "assetInvalidNumber": "Introduce un número válido",
+  "assetEndBeforePurchase": "La fecha de fin debe ser igual o posterior a la de compra",
+  "editAsset": "Editar activo",
+  "deleteAsset": "Eliminar activo",
+  "confirmDeleteAsset": "¿Seguro que quieres eliminar «{name}»?",
+  "@confirmDeleteAsset": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "transactions": "Transacciones",
   "transactionsSearchTooltip": "Buscar transacciones",
   "transactionsSearchHint": "Buscar por descripción",
