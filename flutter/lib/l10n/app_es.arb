@@ -132,8 +132,6 @@
   "transactionsSearchHint": "Buscar por descripción",
   "transactionsSearchTypeQuery": "Escribe texto para buscar en todas tus transacciones",
   "transactionsSearchNoResults": "No hay transacciones que coincidan",
-  "transactionSameDescriptionTitle": "Transacciones anteriores con la misma descripción",
-  "transactionSameDescriptionHint": "Toca una fila para rellenar método de pago, categoría, etiqueta y porcentaje.",
   "transactionsPickMonth": "Elegir mes",
   "transactionsPickPreviousYear": "Año anterior",
   "transactionsPickNextYear": "Año siguiente",
