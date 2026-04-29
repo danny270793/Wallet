@@ -506,5 +506,17 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get transactionsTotalsExcludingIgnoredHint =>
-      'Excluyendo transacciones ignoradas';
+      'Ponderado excluyendo ignoradas';
+
+  @override
+  String get transactionsTotalsIncludingIgnoredHint =>
+      'Incluyendo transacciones ignoradas';
+
+  @override
+  String get transactionsTotalsNotWeightedIncludingIgnoredHint =>
+      'Sin ponderar incluyendo ignoradas';
+
+  @override
+  String get transactionsTotalsNotWeightedExcludingIgnoredHint =>
+      'Sin ponderar excluyendo ignoradas';
 }
