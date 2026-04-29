@@ -534,6 +534,15 @@ class AppLocalizationsEs extends AppLocalizations {
       'Ningún medio de pago coincide con tu búsqueda';
 
   @override
+  String get transactionDeferred => 'Diferido';
+
+  @override
+  String get transactionGraceMonths => 'Meses de gracia';
+
+  @override
+  String get transactionMesesPlazo => 'Meses plazo';
+
+  @override
   String get transactionCategory => 'Categoría';
 
   @override
