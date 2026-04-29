@@ -384,6 +384,11 @@ class AppLocalizationsEs extends AppLocalizations {
       'La fecha de fin debe ser igual o posterior a la de compra';
 
   @override
+  String assetHeldDuration(String duration) {
+    return 'Tenencia: $duration';
+  }
+
+  @override
   String get editAsset => 'Editar activo';
 
   @override
