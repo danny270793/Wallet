@@ -137,7 +137,7 @@ class _AssetsView extends StatelessWidget {
       onRefresh: pullRefresh,
       child: ListView.builder(
         physics: const AlwaysScrollableScrollPhysics(),
-        padding: const EdgeInsets.fromLTRB(0, 8, 0, 88),
+        padding: const EdgeInsets.fromLTRB(0, 0, 0, 88),
         itemCount: assets.length,
         itemBuilder: (context, index) =>
             _AssetTile(asset: assets[index]),
@@ -301,11 +301,10 @@ class _AssetTile extends StatelessWidget {
       ],
     );
 
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-      child: SwipeableListTile(
-        itemKey: asset.id,
-        tileIsThreeLine: true,
+    return SwipeableListTile(
+      itemKey: asset.id,
+      tileIsThreeLine: true,
+      contentPadding: EdgeInsets.zero,
         title: Text(
           asset.name,
           maxLines: 2,
@@ -340,7 +339,6 @@ class _AssetTile extends StatelessWidget {
           return ok ?? false;
         },
         onDelete: () => cubit.delete(id: asset.id),
-      ),
-    );
+      );
   }
 }
