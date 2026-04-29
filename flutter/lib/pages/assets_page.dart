@@ -256,18 +256,18 @@ class _AssetTile extends StatelessWidget {
     );
 
     final leadingHeld = Padding(
-      padding: const EdgeInsets.only(right: 4),
+      padding: const EdgeInsets.only(right: 2),
       child: SizedBox(
-        width: 68,
+        width: 52,
         child: Align(
           alignment: Alignment.center,
           child: Text(
             held,
-            style: theme.textTheme.labelMedium?.copyWith(
+            style: theme.textTheme.labelSmall?.copyWith(
               color: scheme.onSurfaceVariant,
               fontWeight: FontWeight.w700,
-              letterSpacing: -0.2,
-              height: 1.2,
+              letterSpacing: -0.3,
+              height: 1.15,
               fontFeatures: tabular,
             ),
             maxLines: 2,
@@ -315,7 +315,8 @@ class _AssetTile extends StatelessWidget {
       itemKey: asset.id,
       tileIsThreeLine: true,
       dense: true,
-      minLeadingWidth: 78,
+      minLeadingWidth: 54,
+      horizontalTitleGap: 8,
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       leading: leadingHeld,
       title: Text(
