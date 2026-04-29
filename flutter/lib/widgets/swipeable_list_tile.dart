@@ -17,6 +17,7 @@ class SwipeableListTile extends StatelessWidget {
     this.tileIsThreeLine = false,
     this.dense = false,
     this.minLeadingWidth,
+    this.horizontalTitleGap,
     this.contentPadding = const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
     required this.onEdit,
     required this.confirmDelete,
@@ -41,6 +42,9 @@ class SwipeableListTile extends StatelessWidget {
 
   /// Passed to inner [ListTile.minLeadingWidth] when non-null.
   final double? minLeadingWidth;
+
+  /// Passed to inner [ListTile.horizontalTitleGap] when non-null.
+  final double? horizontalTitleGap;
 
   /// Passed to inner [ListTile.contentPadding].
   final EdgeInsetsGeometry contentPadding;
@@ -67,6 +71,7 @@ class SwipeableListTile extends StatelessWidget {
       isThreeLine: tileIsThreeLine,
       dense: dense,
       minLeadingWidth: minLeadingWidth,
+      horizontalTitleGap: horizontalTitleGap,
       contentPadding: contentPadding,
       shape: RoundedRectangleBorder(borderRadius: radius),
     );
