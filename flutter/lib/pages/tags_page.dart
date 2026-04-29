@@ -159,10 +159,7 @@ class _TagTile extends StatelessWidget {
       context.push(
         Uri(
           path: '/transactions',
-          queryParameters: {
-            'tagId': tag.id,
-            'tagName': tag.name,
-          },
+          queryParameters: {'tagId': tag.id, 'tagName': tag.name},
         ).toString(),
       );
     }
@@ -189,7 +186,10 @@ class _TagTile extends StatelessWidget {
               ElevatedButton(
                 style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
                 onPressed: () => Navigator.of(dialogContext).pop(true),
-                child: Text(l10n.delete, style: const TextStyle(color: Colors.white)),
+                child: Text(
+                  l10n.delete,
+                  style: const TextStyle(color: Colors.white),
+                ),
               ),
             ],
           ),
