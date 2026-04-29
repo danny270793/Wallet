@@ -45,6 +45,11 @@ import '../../features/tags/domain/usecases/create_tag_usecase.dart';
 import '../../features/tags/domain/usecases/update_tag_usecase.dart';
 import '../../features/tags/domain/usecases/delete_tag_usecase.dart';
 import '../../features/tags/presentation/cubit/tags_cubit.dart';
+import '../../features/assets/data/datasources/assets_remote_datasource.dart';
+import '../../features/assets/data/repositories/assets_repository_impl.dart';
+import '../../features/assets/domain/repositories/assets_repository.dart';
+import '../../features/assets/domain/usecases/get_assets_usecase.dart';
+import '../../features/assets/presentation/cubit/assets_cubit.dart';
 import '../../features/transactions/data/datasources/transactions_remote_datasource.dart';
 import '../../features/transactions/data/repositories/transactions_repository_impl.dart';
 import '../../features/transactions/domain/repositories/transactions_repository.dart';
@@ -183,6 +188,18 @@ void setupDi() {
       updateTag: getIt(),
       deleteTag: getIt(),
     ),
+  );
+
+  // assets
+  getIt.registerLazySingleton<AssetsRemoteDatasource>(
+    () => AssetsSupabaseDatasource(Supabase.instance.client),
+  );
+  getIt.registerLazySingleton<AssetsRepository>(
+    () => AssetsRepositoryImpl(getIt()),
+  );
+  getIt.registerFactory<GetAssetsUsecase>(() => GetAssetsUsecase(getIt()));
+  getIt.registerFactory<AssetsCubit>(
+    () => AssetsCubit(getAssets: getIt()),
   );
 
   // transactions
