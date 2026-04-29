@@ -138,9 +138,84 @@ List<_TagSlice> _aggregateByTag(
       .toList();
 }
 
+class _TagLegendRow extends StatelessWidget {
+  const _TagLegendRow({
+    required this.label,
+    required this.expenseTotal,
+    required this.color,
+    required this.l10n,
+    required this.theme,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final String label;
+  final double expenseTotal;
+  final Color color;
+  final AppLocalizations l10n;
+  final ThemeData theme;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = theme.colorScheme;
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 4),
+      child: Material(
+        color: selected
+            ? scheme.primaryContainer.withValues(alpha: 0.45)
+            : Colors.transparent,
+        borderRadius: BorderRadius.circular(8),
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onTap: onTap,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 8),
+            child: Row(
+              children: [
+                Container(
+                  width: 12,
+                  height: 12,
+                  decoration: BoxDecoration(
+                    color: color,
+                    shape: BoxShape.circle,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    label,
+                    overflow: TextOverflow.ellipsis,
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      fontWeight:
+                          selected ? FontWeight.w600 : FontWeight.normal,
+                    ),
+                  ),
+                ),
+                Text(
+                  l10n.transactionAmountValue(
+                    expenseTotal.toStringAsFixed(2),
+                  ),
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    fontWeight: FontWeight.w600,
+                    fontFeatures: const [FontFeature.tabularFigures()],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 /// Donut chart of expense totals (negative weighted amounts) per tag; legend shows expense per tag.
 ///
 /// [tagKeysFilter] is owned by the parent: null = all tags; otherwise restrict to these [TransactionEntity.tagId]s.
+///
+/// Tapping a legend row applies the same filter as choosing only that tag in the sheet and saving.
 class MonthlyTagPieChart extends StatelessWidget {
   const MonthlyTagPieChart({
     super.key,
@@ -380,37 +455,16 @@ class MonthlyTagPieChart extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           for (final s in slices)
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 4),
-              child: Row(
-                children: [
-                  Container(
-                    width: 12,
-                    height: 12,
-                    decoration: BoxDecoration(
-                      color: s.color,
-                      shape: BoxShape.circle,
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      s.label,
-                      overflow: TextOverflow.ellipsis,
-                      style: theme.textTheme.bodyMedium,
-                    ),
-                  ),
-                  Text(
-                    l10n.transactionAmountValue(
-                      s.expenseTotal.toStringAsFixed(2),
-                    ),
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      fontWeight: FontWeight.w600,
-                      fontFeatures: const [FontFeature.tabularFigures()],
-                    ),
-                  ),
-                ],
-              ),
+            _TagLegendRow(
+              label: s.label,
+              expenseTotal: s.expenseTotal,
+              color: s.color,
+              l10n: l10n,
+              theme: theme,
+              selected: tagKeysFilter != null &&
+                  tagKeysFilter!.length == 1 &&
+                  tagKeysFilter!.contains(s.keyId),
+              onTap: () => onTagKeysFilterChanged({s.keyId}),
             ),
         ],
       ),
