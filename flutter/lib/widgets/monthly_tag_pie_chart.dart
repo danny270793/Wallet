@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:wallet/l10n/app_localizations.dart';
 
 import '../features/transactions/domain/entities/transaction_entity.dart';
+import 'bottom_sheet_pinned_title.dart';
 
 class _TagSlice {
   _TagSlice({
@@ -162,72 +163,85 @@ class MonthlyTagPieChart extends StatelessWidget {
     await showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
-      showDragHandle: true,
+      showDragHandle: false,
       builder: (ctx) {
-        final listMaxHeight = MediaQuery.sizeOf(ctx).height * 0.45;
         return SafeArea(
           child: StatefulBuilder(
             builder: (ctx, setModal) {
-              return Padding(
-                padding: const EdgeInsets.only(bottom: 16),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(20, 8, 12, 0),
-                      child: Text(
+              final bottomPad = MediaQuery.paddingOf(ctx).bottom;
+              return ConstrainedBox(
+                constraints: BoxConstraints(
+                  maxHeight: MediaQuery.sizeOf(ctx).height * 0.55,
+                ),
+                child: CustomScrollView(
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  slivers: [
+                    SliverAppBar(
+                      pinned: true,
+                      centerTitle: true,
+                      automaticallyImplyLeading: false,
+                      elevation: 0,
+                      scrolledUnderElevation: 4,
+                      backgroundColor: modalBottomSheetSurfaceColor(ctx),
+                      shadowColor: Theme.of(ctx).colorScheme.shadow,
+                      leading: modalBottomSheetBackButton(ctx),
+                      title: Text(
                         l10n.dashboardTagPieFilterTags,
-                        style: Theme.of(ctx).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
+                        style: Theme.of(ctx).textTheme.titleLarge,
                       ),
                     ),
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(20, 8, 20, 8),
-                      child: Text(
-                        l10n.dashboardTagPieFilterDescription,
-                        style: Theme.of(ctx).textTheme.bodySmall?.copyWith(
-                              color: Theme.of(ctx).colorScheme.onSurfaceVariant,
-                            ),
+                    SliverPadding(
+                      padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
+                      sliver: SliverToBoxAdapter(
+                        child: Text(
+                          l10n.dashboardTagPieFilterDescription,
+                          style: Theme.of(ctx).textTheme.bodySmall?.copyWith(
+                            color: Theme.of(ctx).colorScheme.onSurfaceVariant,
+                          ),
+                        ),
                       ),
                     ),
-                    SizedBox(
-                      height: listMaxHeight,
-                      child: ListView(
-                        children: [
-                          for (final o in options)
-                            CheckboxListTile(
-                              value: draft.contains(o.key),
-                              onChanged: (v) {
-                                setModal(() {
-                                  if (v == true) {
-                                    draft.add(o.key);
-                                  } else {
-                                    draft.remove(o.key);
-                                  }
-                                });
-                              },
-                              title: Text(o.label),
-                              controlAffinity: ListTileControlAffinity.leading,
-                            ),
-                        ],
-                      ),
+                    SliverList.list(
+                      children: [
+                        for (final o in options)
+                          CheckboxListTile(
+                            value: draft.contains(o.key),
+                            onChanged: (v) {
+                              setModal(() {
+                                if (v == true) {
+                                  draft.add(o.key);
+                                } else {
+                                  draft.remove(o.key);
+                                }
+                              });
+                            },
+                            title: Text(o.label),
+                            controlAffinity: ListTileControlAffinity.leading,
+                          ),
+                      ],
                     ),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 20),
-                      child: FilledButton(
-                        onPressed: () {
-                          if (draft.isEmpty) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text(l10n.dashboardTagPieNeedOneTag)),
+                    SliverPadding(
+                      padding: EdgeInsets.fromLTRB(20, 16, 20, 16 + bottomPad),
+                      sliver: SliverToBoxAdapter(
+                        child: FilledButton(
+                          onPressed: () {
+                            if (draft.isEmpty) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(l10n.dashboardTagPieNeedOneTag),
+                                ),
+                              );
+                              return;
+                            }
+                            onTagKeysFilterChanged(
+                              draft.length == allKeys.length
+                                  ? null
+                                  : Set<String>.from(draft),
                             );
-                            return;
-                          }
-                          onTagKeysFilterChanged(
-                            draft.length == allKeys.length ? null : Set<String>.from(draft),
-                          );
-                          Navigator.of(ctx).pop();
-                        },
-                        child: Text(l10n.save),
+                            Navigator.of(ctx).pop();
+                          },
+                          child: Text(l10n.save),
+                        ),
                       ),
                     ),
                   ],
@@ -244,10 +258,7 @@ class MonthlyTagPieChart extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
-    final options = distinctExpenseTagOptions(
-      transactions,
-      includeIgnored,
-    );
+    final options = distinctExpenseTagOptions(transactions, includeIgnored);
     final slices = _aggregateByTag(
       transactions,
       includeIgnored,
@@ -261,7 +272,9 @@ class MonthlyTagPieChart extends StatelessWidget {
         child: Text(
           l10n.dashboardTagPieNoData,
           textAlign: TextAlign.center,
-          style: theme.textTheme.bodyMedium?.copyWith(color: scheme.onSurfaceVariant),
+          style: theme.textTheme.bodyMedium?.copyWith(
+            color: scheme.onSurfaceVariant,
+          ),
         ),
       );
     }
@@ -272,7 +285,9 @@ class MonthlyTagPieChart extends StatelessWidget {
         child: Text(
           l10n.dashboardTagPieNoData,
           textAlign: TextAlign.center,
-          style: theme.textTheme.bodyMedium?.copyWith(color: scheme.onSurfaceVariant),
+          style: theme.textTheme.bodyMedium?.copyWith(
+            color: scheme.onSurfaceVariant,
+          ),
         ),
       );
     }
@@ -298,7 +313,9 @@ class MonthlyTagPieChart extends StatelessWidget {
               Expanded(
                 child: Text(
                   l10n.monthlyDashboardTagPieTitle,
-                  style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
               ),
               IconButton(
@@ -332,7 +349,10 @@ class MonthlyTagPieChart extends StatelessWidget {
                   Container(
                     width: 12,
                     height: 12,
-                    decoration: BoxDecoration(color: s.color, shape: BoxShape.circle),
+                    decoration: BoxDecoration(
+                      color: s.color,
+                      shape: BoxShape.circle,
+                    ),
                   ),
                   const SizedBox(width: 8),
                   Expanded(
@@ -343,7 +363,9 @@ class MonthlyTagPieChart extends StatelessWidget {
                     ),
                   ),
                   Text(
-                    l10n.transactionAmountValue(s.expenseTotal.toStringAsFixed(2)),
+                    l10n.transactionAmountValue(
+                      s.expenseTotal.toStringAsFixed(2),
+                    ),
                     style: theme.textTheme.bodyMedium?.copyWith(
                       fontWeight: FontWeight.w600,
                       fontFeatures: const [FontFeature.tabularFigures()],
