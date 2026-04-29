@@ -192,8 +192,8 @@ class _MonthlyDashboardViewState extends State<_MonthlyDashboardView> {
               ? TransactionsTotalsBar(
                   l10n: l10n,
                   primarySubtitle: _includeIgnored
-                      ? l10n.transactionsTotalsIncludingIgnoredHint
-                      : l10n.transactionsTotalsExcludingIgnoredHint,
+                      ? l10n.transactionsTotalsNotWeightedHint
+                      : l10n.transactionsTotalsNotWeightedExcludingIgnoredHint,
                   income: totals.income,
                   outcome: totals.outcome,
                   balance: totals.balance,
