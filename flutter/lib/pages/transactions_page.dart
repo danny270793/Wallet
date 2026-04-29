@@ -33,7 +33,6 @@ import '../widgets/tag_editor_sheet.dart';
 import '../widgets/shell_scaffold.dart';
 import '../widgets/transaction_delete_dialogs.dart';
 import '../widgets/swipeable_list_tile.dart';
-import '../widgets/transaction_month_totals.dart';
 import '../widgets/transactions_month_scope.dart';
 import '../widgets/transactions_totals_bar.dart';
 import '../widgets/bottom_sheet_pinned_title.dart';
@@ -265,118 +264,6 @@ List<_GroupedTxRow> _groupTransactionsByDay(List<TransactionEntity> list) {
     }
   }
   return entries;
-}
-
-class _TransactionsTotalsBarHost extends StatefulWidget {
-  const _TransactionsTotalsBarHost({
-    required this.l10n,
-    required this.transactions,
-  });
-
-  final AppLocalizations l10n;
-  final List<TransactionEntity> transactions;
-
-  @override
-  State<_TransactionsTotalsBarHost> createState() =>
-      _TransactionsTotalsBarHostState();
-}
-
-class _TransactionsTotalsBarHostState
-    extends State<_TransactionsTotalsBarHost> {
-  static const _kTotalsModeCount = 4;
-
-  /// Swipe cycle order (`_totalsMode` 0…3):
-  /// * Weighted — `value * percentage / 100` for **all** non–transfer-leg rows (including ignored).
-  /// * Not weighted — raw `value` for **all** such rows (including ignored).
-  /// * Weighted excluding ignored — weighted formula only for rows with `ignore == false`.
-  /// * Not weighted excluding ignored — raw `value` only for rows with `ignore == false`.
-  int _totalsMode = 0;
-
-  void _handleTotalsModeSwipe(bool forward) {
-    setState(() {
-      _totalsMode = forward
-          ? (_totalsMode + 1) % _kTotalsModeCount
-          : (_totalsMode + (_kTotalsModeCount - 1)) % _kTotalsModeCount;
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final txs = widget.transactions;
-    double weightedAmount(TransactionEntity t) =>
-        t.value * t.percentage / 100.0;
-
-    // Weighted (all transactions).
-    final totalsWeightedAll = transactionMonthTotalsBreakdown(
-      txs,
-      include: (_) => true,
-      amount: weightedAmount,
-    );
-    // Not weighted (all transactions).
-    final totalsRawValueAll = transactionMonthTotalsBreakdown(
-      txs,
-      include: (_) => true,
-      amount: (t) => t.value,
-    );
-    // Weighted excluding ignored: only ignore=false.
-    final totalsWeightedNonIgnoredOnly = transactionMonthTotalsBreakdown(
-      txs,
-      include: (t) => !t.ignore,
-      amount: weightedAmount,
-    );
-    // Not weighted excluding ignored: only ignore=false.
-    final totalsRawValueNonIgnoredOnly = transactionMonthTotalsBreakdown(
-      txs,
-      include: (t) => !t.ignore,
-      amount: (t) => t.value,
-    );
-
-    return switch (_totalsMode) {
-      0 => TransactionsTotalsBar(
-          l10n: widget.l10n,
-          primarySubtitle: widget.l10n.transactionsTotalsWeightedHint,
-          income: totalsWeightedAll.income,
-          outcome: totalsWeightedAll.outcome,
-          balance: totalsWeightedAll.balance,
-          onTotalsModeSwipe: _handleTotalsModeSwipe,
-          totalsDotsCount: _kTotalsModeCount,
-          totalsDotsSelectedIndex: _totalsMode,
-        ),
-      1 => TransactionsTotalsBar(
-          l10n: widget.l10n,
-          primarySubtitle: widget.l10n.transactionsTotalsNotWeightedHint,
-          income: totalsRawValueAll.income,
-          outcome: totalsRawValueAll.outcome,
-          balance: totalsRawValueAll.balance,
-          onTotalsModeSwipe: _handleTotalsModeSwipe,
-          totalsDotsCount: _kTotalsModeCount,
-          totalsDotsSelectedIndex: _totalsMode,
-        ),
-      2 => TransactionsTotalsBar(
-          l10n: widget.l10n,
-          primarySubtitle:
-              widget.l10n.transactionsTotalsWeightedExcludingIgnoredHint,
-          income: totalsWeightedNonIgnoredOnly.income,
-          outcome: totalsWeightedNonIgnoredOnly.outcome,
-          balance: totalsWeightedNonIgnoredOnly.balance,
-          onTotalsModeSwipe: _handleTotalsModeSwipe,
-          totalsDotsCount: _kTotalsModeCount,
-          totalsDotsSelectedIndex: _totalsMode,
-        ),
-      3 => TransactionsTotalsBar(
-          l10n: widget.l10n,
-          primarySubtitle:
-              widget.l10n.transactionsTotalsNotWeightedExcludingIgnoredHint,
-          income: totalsRawValueNonIgnoredOnly.income,
-          outcome: totalsRawValueNonIgnoredOnly.outcome,
-          balance: totalsRawValueNonIgnoredOnly.balance,
-          onTotalsModeSwipe: _handleTotalsModeSwipe,
-          totalsDotsCount: _kTotalsModeCount,
-          totalsDotsSelectedIndex: _totalsMode,
-        ),
-      _ => throw StateError('totals mode $_totalsMode'),
-    };
-  }
 }
 
 /// Speed dial: main control plus new-transaction and account transfer.
@@ -1078,7 +965,7 @@ class _TransactionsViewState extends State<_TransactionsView> {
                     showAccountTransferCreateBottomSheet(context, l10n: l10n),
               ),
               bottomNavigationBar: showTotalsBar
-                  ? _TransactionsTotalsBarHost(
+                  ? TransactionsTotalsBarHost(
                       l10n: l10n,
                       transactions: filtered,
                     )
