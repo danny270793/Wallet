@@ -180,7 +180,10 @@ class _AssetTile extends StatelessWidget {
           )
         : null;
 
-    final held = formatAssetHoldingDurationYmd(asset.boughtAt, asset.endedAt);
+    final held = formatAssetHoldingDurationYmOmitDaysWhenGrouped(
+      asset.boughtAt,
+      asset.endedAt,
+    );
     final locale = Localizations.localeOf(context).toString();
     final dateFmt = DateFormat.yMd(locale);
     String dateLine(DateTime t) => dateFmt.format(t.toLocal());
