@@ -722,6 +722,24 @@ abstract class AppLocalizations {
   /// **'Are you sure you want to delete \"{name}\"?'**
   String confirmDeleteTag(String name);
 
+  /// No description provided for @assets.
+  ///
+  /// In en, this message translates to:
+  /// **'Assets'**
+  String get assets;
+
+  /// No description provided for @noAssets.
+  ///
+  /// In en, this message translates to:
+  /// **'No assets yet'**
+  String get noAssets;
+
+  /// No description provided for @assetSold.
+  ///
+  /// In en, this message translates to:
+  /// **'Sold'**
+  String get assetSold;
+
   /// No description provided for @transactions.
   ///
   /// In en, this message translates to:
