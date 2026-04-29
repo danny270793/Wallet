@@ -52,14 +52,14 @@ List<_DashGroupedRow> _groupTransactionsByDay(List<TransactionEntity> list) {
     final dayList = byDay[d]!;
     final byGroup = <String, List<TransactionEntity>>{};
     for (final t in dayList) {
-      final g = t.transactionGroupId;
+      final g = t.transferGroupId;
       if (g != null && g.isNotEmpty) {
         byGroup.putIfAbsent(g, () => []).add(t);
       }
     }
     final usedIds = <String>{};
     for (final t in dayList) {
-      final gid = t.transactionGroupId;
+      final gid = t.transferGroupId;
       if (gid == null || gid.isEmpty) {
         entries.add(_DashTxMarker(t));
         continue;
@@ -279,7 +279,7 @@ class _DashboardTransferListTile extends StatelessWidget {
     final timeStr = DateFormat.Hm(
       locale.toString(),
     ).format(source.transactedAt.toLocal());
-    final gid = source.transactionGroupId;
+    final gid = source.transferGroupId;
     final pairKey = gid != null && gid.isNotEmpty
         ? 'pair_$gid'
         : '${source.id}|${target.id}';
