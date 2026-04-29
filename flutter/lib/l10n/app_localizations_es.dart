@@ -505,6 +505,10 @@ class AppLocalizationsEs extends AppLocalizations {
       '¿Seguro que quieres eliminar esta transacción?';
 
   @override
+  String get confirmDeleteCreditGroupTransaction =>
+      'Esta cuota forma parte de un pago diferido. Se eliminarán todas las cuotas de este grupo.';
+
+  @override
   String get deleteTransferPair => 'Eliminar transferencia';
 
   @override
@@ -557,6 +561,10 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get transactionAmount => 'Importe';
+
+  @override
+  String get transactionAmountCreditGroupHint =>
+      'El importe mostrado es el total del grupo repartido a partes iguales. Al guardar se actualizan todas las cuotas y las fechas se desplazan la misma cantidad.';
 
   @override
   String get transactionAmountInvalidNumber =>
