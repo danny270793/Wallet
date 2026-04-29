@@ -7,7 +7,7 @@ import '../core/di/injection.dart';
 import '../features/transactions/domain/entities/transaction_entity.dart';
 import '../features/transactions/presentation/cubit/transactions_cubit.dart';
 import '../features/transactions/presentation/cubit/transactions_state.dart';
-import '../widgets/bottom_sheet_pinned_title.dart';
+import '../widgets/dashboard_view_options_bottom_sheet.dart';
 import '../widgets/dashboard_month_transactions_list.dart';
 import '../widgets/monthly_category_expense_pie_chart.dart';
 import '../widgets/monthly_tag_pie_chart.dart';
@@ -115,54 +115,15 @@ class _MonthlyDashboardViewState extends State<_MonthlyDashboardView> {
     BuildContext context,
     AppLocalizations l10n,
   ) async {
-    await showModalBottomSheet<void>(
+    await showDashboardViewOptionsBottomSheet(
       context: context,
-      isScrollControlled: true,
-      showDragHandle: false,
-      builder: (sheetContext) {
-        final draft = [_includeIgnored, _useWeightedAmounts];
-
-        return SafeArea(
-          child: StatefulBuilder(
-            builder: (ctx, setModal) {
-              final bottomPad = MediaQuery.paddingOf(ctx).bottom;
-              return BottomSheetPinnedTitleScrollView(
-                title: l10n.monthlyDashboardOptionsSheetTitle,
-                padding: EdgeInsets.fromLTRB(20, 8, 20, 16 + bottomPad),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    SwitchListTile(
-                      contentPadding: EdgeInsets.zero,
-                      title: Text(l10n.dashboardIncludeIgnoredInTotals),
-                      value: draft[0],
-                      onChanged: (v) => setModal(() => draft[0] = v),
-                    ),
-                    SwitchListTile(
-                      contentPadding: EdgeInsets.zero,
-                      title: Text(l10n.dashboardUseWeightedAmounts),
-                      value: draft[1],
-                      onChanged: (v) => setModal(() => draft[1] = v),
-                    ),
-                    const SizedBox(height: 12),
-                    FilledButton(
-                      onPressed: () {
-                        Navigator.of(sheetContext).pop();
-                        setState(() {
-                          _includeIgnored = draft[0];
-                          _useWeightedAmounts = draft[1];
-                        });
-                      },
-                      child: Text(l10n.save),
-                    ),
-                  ],
-                ),
-              );
-            },
-          ),
-        );
-      },
+      l10n: l10n,
+      includeIgnored: _includeIgnored,
+      useWeightedAmounts: _useWeightedAmounts,
+      onApply: (inc, wt) => setState(() {
+        _includeIgnored = inc;
+        _useWeightedAmounts = wt;
+      }),
     );
   }
 
