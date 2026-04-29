@@ -794,6 +794,12 @@ abstract class AppLocalizations {
   /// **'Held {duration}'**
   String assetHeldDuration(String duration);
 
+  /// No description provided for @assetValuePerApproximateMonth.
+  ///
+  /// In en, this message translates to:
+  /// **'~{amount}/mo avg.'**
+  String assetValuePerApproximateMonth(String amount);
+
   /// No description provided for @editAsset.
   ///
   /// In en, this message translates to:
