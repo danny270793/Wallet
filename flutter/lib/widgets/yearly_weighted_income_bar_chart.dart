@@ -16,6 +16,7 @@ int lastMonthWithTransactionsForYear(
 }) {
   var last = 0;
   for (final t in txs) {
+    if (t.isAccountTransferLeg) continue;
     if (!includeIgnored && t.ignore) continue;
     final local = t.transactedAt.toLocal();
     if (local.year != year) continue;
@@ -34,6 +35,7 @@ List<double> weightedIncomeByMonthForYear(
 }) {
   final sums = List<double>.filled(12, 0);
   for (final t in txs) {
+    if (t.isAccountTransferLeg) continue;
     if (!includeIgnored && t.ignore) continue;
     final local = t.transactedAt.toLocal();
     if (local.year != year) continue;
@@ -52,6 +54,7 @@ List<double> weightedOutcomeByMonthForYear(
 }) {
   final sums = List<double>.filled(12, 0);
   for (final t in txs) {
+    if (t.isAccountTransferLeg) continue;
     if (!includeIgnored && t.ignore) continue;
     final local = t.transactedAt.toLocal();
     if (local.year != year) continue;
@@ -70,6 +73,7 @@ List<double> weightedNetByMonthForYear(
 }) {
   final sums = List<double>.filled(12, 0);
   for (final t in txs) {
+    if (t.isAccountTransferLeg) continue;
     if (!includeIgnored && t.ignore) continue;
     final local = t.transactedAt.toLocal();
     if (local.year != year) continue;
