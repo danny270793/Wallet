@@ -48,7 +48,9 @@ class BottomSheetPinnedTitleScrollView extends StatelessWidget {
     return Padding(
       padding: EdgeInsets.only(bottom: MediaQuery.viewInsetsOf(context).bottom),
       child: CustomScrollView(
-        physics: const AlwaysScrollableScrollPhysics(),
+        // Sizes to content so scroll-controlled modal sheets do not stretch to full height.
+        shrinkWrap: true,
+        physics: ScrollConfiguration.of(context).getScrollPhysics(context),
         slivers: [
           SliverAppBar(
             pinned: true,
