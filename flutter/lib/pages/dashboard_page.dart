@@ -42,7 +42,7 @@ class _MonthlyDashboardView extends StatefulWidget {
 }
 
 class _MonthlyDashboardViewState extends State<_MonthlyDashboardView> {
-  /// When true, ignored rows count toward income/outcome/balance.
+  /// When true, ignored rows count toward income/outcome/balance (account/card transfer legs are always excluded).
   bool _includeIgnored = true;
 
   bool _fabMenuOpen = false;
