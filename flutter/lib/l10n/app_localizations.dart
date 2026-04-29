@@ -788,6 +788,12 @@ abstract class AppLocalizations {
   /// **'End date must be on or after purchase date'**
   String get assetEndBeforePurchase;
 
+  /// No description provided for @assetHeldDuration.
+  ///
+  /// In en, this message translates to:
+  /// **'Held {duration}'**
+  String assetHeldDuration(String duration);
+
   /// No description provided for @editAsset.
   ///
   /// In en, this message translates to:
