@@ -800,6 +800,12 @@ abstract class AppLocalizations {
   /// **'~{amount}/mo avg.'**
   String assetValuePerApproximateMonth(String amount);
 
+  /// No description provided for @assetSoldPerApproximateMonth.
+  ///
+  /// In en, this message translates to:
+  /// **'~{amount}/mo avg. (sold)'**
+  String assetSoldPerApproximateMonth(String amount);
+
   /// No description provided for @editAsset.
   ///
   /// In en, this message translates to:
