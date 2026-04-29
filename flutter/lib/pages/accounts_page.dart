@@ -45,8 +45,9 @@ class _AccountsView extends StatelessWidget {
           _ => <AccountEntity>[],
         };
         final showTotalBar = accounts.isNotEmpty;
-        final totalBalance =
-            showTotalBar ? accounts.fold<double>(0, (s, a) => s + a.balance) : 0.0;
+        final totalBalance = showTotalBar
+            ? accounts.fold<double>(0, (s, a) => s + a.balance)
+            : 0.0;
 
         return ShellScaffold(
           title: l10n.accounts,
@@ -59,10 +60,7 @@ class _AccountsView extends StatelessWidget {
             child: const Icon(Icons.add),
           ),
           bottomNavigationBar: showTotalBar
-              ? WalletListBalanceTotalBar(
-                  l10n: l10n,
-                  total: totalBalance,
-                )
+              ? WalletListBalanceTotalBar(l10n: l10n, total: totalBalance)
               : null,
           body: _body(context, state, l10n),
         );
@@ -70,7 +68,11 @@ class _AccountsView extends StatelessWidget {
     );
   }
 
-  Widget _body(BuildContext context, AccountsState state, AppLocalizations l10n) {
+  Widget _body(
+    BuildContext context,
+    AccountsState state,
+    AppLocalizations l10n,
+  ) {
     Future<void> refresh() => context.read<AccountsCubit>().load();
 
     if (state is AccountsLoading || state is AccountsInitial) {
@@ -147,7 +149,6 @@ class _AccountsView extends StatelessWidget {
       ),
     );
   }
-
 }
 
 class _AccountTile extends StatelessWidget {
@@ -184,12 +185,13 @@ class _AccountTile extends StatelessWidget {
       itemKey: account.id,
       title: Text(account.name),
       subtitle: account.description != null
-          ? Text(account.description!, maxLines: 2, overflow: TextOverflow.ellipsis)
+          ? Text(
+              account.description!,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+            )
           : null,
-      trailing: WalletListBalanceAmount(
-        l10n: l10n,
-        balance: account.balance,
-      ),
+      trailing: WalletListBalanceAmount(l10n: l10n, balance: account.balance),
       onTap: openTransactions,
       onEdit: openEdit,
       confirmDelete: () async {
@@ -206,7 +208,10 @@ class _AccountTile extends StatelessWidget {
               ElevatedButton(
                 style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
                 onPressed: () => Navigator.of(dialogContext).pop(true),
-                child: Text(l10n.delete, style: const TextStyle(color: Colors.white)),
+                child: Text(
+                  l10n.delete,
+                  style: const TextStyle(color: Colors.white),
+                ),
               ),
             ],
           ),
