@@ -7,7 +7,8 @@ class CardEntity extends Equatable {
   final String? description;
   final DateTime createdAt;
   final DateTime updatedAt;
-  /// Sum of all transaction values (non-deleted); from [wallet_cards_with_balance].
+  /// Sum of transaction `value` amounts (full row amounts, not value×percentage÷100).
+  /// From [wallet_cards_with_balance].
   final double balance;
 
   const CardEntity({
