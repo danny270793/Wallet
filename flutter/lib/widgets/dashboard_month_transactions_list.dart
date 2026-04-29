@@ -254,8 +254,14 @@ class _DashboardTxListTile extends StatelessWidget {
         ],
       ),
       onEdit: openEdit,
-      confirmDelete: () => confirmDeleteTransactionDialog(context, l10n),
-      onDelete: () => cubit.delete(id: transaction.id),
+      confirmDelete:
+          transaction.creditGroupId != null && transaction.creditGroupId!.isNotEmpty
+          ? () => confirmDeleteCreditGroupTransactionDialog(context, l10n)
+          : () => confirmDeleteTransactionDialog(context, l10n),
+      onDelete: () => cubit.delete(
+        id: transaction.id,
+        creditGroupId: transaction.creditGroupId,
+      ),
     );
 
     if (transaction.ignore) {
