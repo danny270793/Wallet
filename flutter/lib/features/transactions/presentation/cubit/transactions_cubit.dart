@@ -81,7 +81,7 @@ class TransactionsCubit extends Cubit<TransactionsState> {
     required double value,
     required bool ignore,
     required double percentage,
-    String? transactionGroupId,
+    String? transferGroupId,
   }) async {
     final current = _currentTransactions();
     AppLogger.debug('creating transaction');
@@ -96,7 +96,7 @@ class TransactionsCubit extends Cubit<TransactionsState> {
         value: value,
         ignore: ignore,
         percentage: percentage,
-        transactionGroupId: transactionGroupId,
+        transferGroupId: transferGroupId,
       );
       AppLogger.info('transaction created');
       await _refetchCurrentMonthQuietly();
@@ -117,7 +117,7 @@ class TransactionsCubit extends Cubit<TransactionsState> {
     required double value,
     required bool ignore,
     required double percentage,
-    String? transactionGroupId,
+    String? transferGroupId,
   }) async {
     final current = _currentTransactions();
     AppLogger.debug('updating transaction: $id');
@@ -133,7 +133,7 @@ class TransactionsCubit extends Cubit<TransactionsState> {
         value: value,
         ignore: ignore,
         percentage: percentage,
-        transactionGroupId: transactionGroupId,
+        transferGroupId: transferGroupId,
       );
       AppLogger.info('transaction updated: $id');
       await _refetchCurrentMonthQuietly();
@@ -187,8 +187,8 @@ class TransactionsCubit extends Cubit<TransactionsState> {
     required bool ignore,
   }) async {
     final current = _currentTransactions();
-    final gid = source.transactionGroupId;
-    if (gid == null || gid.isEmpty || gid != target.transactionGroupId) {
+    final gid = source.transferGroupId;
+    if (gid == null || gid.isEmpty || gid != target.transferGroupId) {
       AppLogger.error('updateAccountTransfer: invalid or mismatched group id');
       emit(TransactionsActionError(current));
       return false;
@@ -206,7 +206,7 @@ class TransactionsCubit extends Cubit<TransactionsState> {
         value: -amount,
         ignore: ignore,
         percentage: source.percentage,
-        transactionGroupId: gid,
+        transferGroupId: gid,
       );
       await _updateTransaction(
         id: target.id,
@@ -219,7 +219,7 @@ class TransactionsCubit extends Cubit<TransactionsState> {
         value: amount,
         ignore: ignore,
         percentage: target.percentage,
-        transactionGroupId: gid,
+        transferGroupId: gid,
       );
       AppLogger.info('transfer updated');
       await _refetchCurrentMonthQuietly();
