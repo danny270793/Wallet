@@ -3,7 +3,8 @@ import 'package:wallet/l10n/app_localizations.dart';
 
 import 'wallet_dual_balance_trailing.dart';
 
-/// Bottom summary: income (sum of positive amounts), outcome (sum of absolute negatives), net balance.
+/// Bottom summary: income (sum of positive amounts), outcome (sum of absolute negatives),
+/// net balance. Transfer legs ([TransactionEntity.isAccountTransferLeg]) are not included upstream.
 /// [onDoubleTap] toggles including vs excluding ignored transactions.
 class TransactionsTotalsBar extends StatelessWidget {
   const TransactionsTotalsBar({
