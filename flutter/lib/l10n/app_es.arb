@@ -143,7 +143,6 @@
   "assetSoldAmountField": "Importe de venta",
   "assetInvalidNumber": "Introduce un número válido",
   "assetEndBeforePurchase": "La fecha de fin debe ser igual o posterior a la de compra",
-  "assetPickEndDateFirst": "Elige primero la fecha de fin antes de la hora.",
   "editAsset": "Editar activo",
   "deleteAsset": "Eliminar activo",
   "confirmDeleteAsset": "¿Seguro que quieres eliminar «{name}»?",
