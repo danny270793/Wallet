@@ -135,6 +135,24 @@
   "assets": "Assets",
   "noAssets": "No assets yet",
   "assetSold": "Sold",
+  "newAsset": "New asset",
+  "assetProvider": "Provider",
+  "assetValue": "Value",
+  "assetPurchaseDate": "Purchase date",
+  "assetEndDate": "End date",
+  "assetSoldAmountField": "Sold amount",
+  "assetInvalidNumber": "Enter a valid number",
+  "assetEndBeforePurchase": "End date must be on or after purchase date",
+  "editAsset": "Edit asset",
+  "deleteAsset": "Delete asset",
+  "confirmDeleteAsset": "Are you sure you want to delete \"{name}\"?",
+  "@confirmDeleteAsset": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "transactions": "Transactions",
   "transactionsSearchTooltip": "Search transactions",
   "transactionsSearchHint": "Search by description",
