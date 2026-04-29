@@ -740,6 +740,72 @@ abstract class AppLocalizations {
   /// **'Sold'**
   String get assetSold;
 
+  /// No description provided for @newAsset.
+  ///
+  /// In en, this message translates to:
+  /// **'New asset'**
+  String get newAsset;
+
+  /// No description provided for @assetProvider.
+  ///
+  /// In en, this message translates to:
+  /// **'Provider'**
+  String get assetProvider;
+
+  /// No description provided for @assetValue.
+  ///
+  /// In en, this message translates to:
+  /// **'Value'**
+  String get assetValue;
+
+  /// No description provided for @assetPurchaseDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Purchase date'**
+  String get assetPurchaseDate;
+
+  /// No description provided for @assetEndDate.
+  ///
+  /// In en, this message translates to:
+  /// **'End date'**
+  String get assetEndDate;
+
+  /// No description provided for @assetSoldAmountField.
+  ///
+  /// In en, this message translates to:
+  /// **'Sold amount'**
+  String get assetSoldAmountField;
+
+  /// No description provided for @assetInvalidNumber.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a valid number'**
+  String get assetInvalidNumber;
+
+  /// No description provided for @assetEndBeforePurchase.
+  ///
+  /// In en, this message translates to:
+  /// **'End date must be on or after purchase date'**
+  String get assetEndBeforePurchase;
+
+  /// No description provided for @editAsset.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit asset'**
+  String get editAsset;
+
+  /// No description provided for @deleteAsset.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete asset'**
+  String get deleteAsset;
+
+  /// No description provided for @confirmDeleteAsset.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to delete \"{name}\"?'**
+  String confirmDeleteAsset(String name);
+
   /// No description provided for @transactions.
   ///
   /// In en, this message translates to:
