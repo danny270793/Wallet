@@ -384,6 +384,10 @@ class AppLocalizationsEs extends AppLocalizations {
       'La fecha de fin debe ser igual o posterior a la de compra';
 
   @override
+  String get assetPickEndDateFirst =>
+      'Elige primero la fecha de fin antes de la hora.';
+
+  @override
   String get editAsset => 'Editar activo';
 
   @override
