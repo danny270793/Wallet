@@ -382,6 +382,11 @@ class AppLocalizationsEn extends AppLocalizations {
       'End date must be on or after purchase date';
 
   @override
+  String assetHeldDuration(String duration) {
+    return 'Held $duration';
+  }
+
+  @override
   String get editAsset => 'Edit asset';
 
   @override
