@@ -10,7 +10,6 @@
   "monthlyDashboardTransactionsListTitle": "Transacciones",
   "dashboardIncludeIgnoredInTotals": "Incluir transacciones ignoradas",
   "dashboardUseWeightedAmounts": "Importes ponderados (%)",
-  "monthlyDashboardTotalsSubtitle": "Totales de la vista de arriba (filtros y opciones).",
   "monthlyDashboardTagPieTitle": "Gastos por etiqueta",
   "monthlyDashboardCategoryPieTitle": "Gastos por categoría",
   "dashboardCategoryPieNoData": "No hay gastos con categoría que mostrar este mes con el filtro actual.",
