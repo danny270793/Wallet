@@ -231,14 +231,14 @@ List<_GroupedTxRow> _groupTransactionsByDay(List<TransactionEntity> list) {
     final dayList = byDay[d]!;
     final byGroup = <String, List<TransactionEntity>>{};
     for (final t in dayList) {
-      final g = t.transactionGroupId;
+      final g = t.transferGroupId;
       if (g != null && g.isNotEmpty) {
         byGroup.putIfAbsent(g, () => []).add(t);
       }
     }
     final usedIds = <String>{};
     for (final t in dayList) {
-      final gid = t.transactionGroupId;
+      final gid = t.transferGroupId;
       if (gid == null || gid.isEmpty) {
         entries.add(_TxMarker(t));
         continue;
@@ -1605,7 +1605,7 @@ class _TransferPairTile extends StatelessWidget {
     final amountStr = l10n.transactionAmountValue(
       target.value.toStringAsFixed(2),
     );
-    final gid = source.transactionGroupId;
+    final gid = source.transferGroupId;
     String payLabel(TransactionEntity t) => t.accountName ?? t.cardName ?? '—';
 
     final title = Text(
@@ -3051,7 +3051,7 @@ class _TransactionDialogState extends State<_TransactionDialog> {
           value: value,
           ignore: _ignore,
           percentage: pct,
-          transactionGroupId: widget.transaction!.transactionGroupId,
+          transferGroupId: widget.transaction!.transferGroupId,
         );
       }
     } finally {
