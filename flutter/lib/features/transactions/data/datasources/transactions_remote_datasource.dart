@@ -11,6 +11,9 @@ abstract class TransactionsRemoteDatasource {
 
   /// All-time search on [description] (case-insensitive substring). RLS limits to current user.
   Future<List<TransactionEntity>> searchTransactionsByDescription(String query, {int limit = 200});
+
+  /// All rows sharing [creditGroupId] (deleted rows excluded).
+  Future<List<TransactionEntity>> getTransactionsByCreditGroupId(String creditGroupId);
   Future<TransactionEntity> createTransaction({
     String? accountId,
     String? cardId,
@@ -70,6 +73,19 @@ wallet_tags(name)
         .gte('transactedAt', startUtc)
         .lt('transactedAt', endUtc)
         .order('transactedAt', ascending: false);
+    return (data as List).map((e) => TransactionEntity.fromJson(e as Map<String, dynamic>)).toList();
+  }
+
+  @override
+  Future<List<TransactionEntity>> getTransactionsByCreditGroupId(String creditGroupId) async {
+    if (creditGroupId.isEmpty) return [];
+    AppLogger.debug('getTransactionsByCreditGroupId');
+    final data = await _client
+        .from('wallet_transactions')
+        .select(_transactionSelectEmbedded)
+        .eq('creditGroupId', creditGroupId)
+        .isFilter('deletedAt', null)
+        .order('transactedAt', ascending: true);
     return (data as List).map((e) => TransactionEntity.fromJson(e as Map<String, dynamic>)).toList();
   }
 
