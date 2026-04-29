@@ -1173,7 +1173,7 @@ class _TransactionsViewState extends State<_TransactionsView> {
   }
 }
 
-void showTransactionEditorBottomSheet(
+Future<void> showTransactionEditorBottomSheet(
   BuildContext context, {
   required AppLocalizations l10n,
   required TransactionsCubit cubit,
@@ -1183,7 +1183,7 @@ void showTransactionEditorBottomSheet(
   String? preferredCategoryId,
   String? preferredTagId,
 }) {
-  showModalBottomSheet<void>(
+  return showModalBottomSheet<void>(
     context: context,
     isScrollControlled: true,
     useSafeArea: true,
