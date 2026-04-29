@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 import 'package:wallet/l10n/app_localizations.dart';
+import '../core/credit_group_description.dart';
 import '../core/di/injection.dart';
 import '../features/accounts/domain/usecases/get_accounts_usecase.dart';
 import '../features/accounts/domain/entities/account_entity.dart';
@@ -2393,7 +2394,13 @@ class _TransactionDialogState extends State<_TransactionDialog> {
       _valueController = TextEditingController();
       _percentageController = TextEditingController();
     }
-    _descriptionController = TextEditingController(text: t?.description ?? '');
+    _descriptionController = TextEditingController(
+      text: (t != null &&
+              t.creditGroupId != null &&
+              t.creditGroupId!.isNotEmpty)
+          ? stripLeadingCreditInstallmentDescription(t.description)
+          : (t?.description ?? ''),
+    );
     _dateDisplayController = TextEditingController();
     _timeDisplayController = TextEditingController();
     _paymentMethodDisplayController = TextEditingController();
