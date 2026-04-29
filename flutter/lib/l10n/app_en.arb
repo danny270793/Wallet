@@ -132,6 +132,9 @@
       }
     }
   },
+  "assets": "Assets",
+  "noAssets": "No assets yet",
+  "assetSold": "Sold",
   "transactions": "Transactions",
   "transactionsSearchTooltip": "Search transactions",
   "transactionsSearchHint": "Search by description",
