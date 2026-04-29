@@ -180,8 +180,6 @@ class _AssetTile extends StatelessWidget {
           )
         : null;
     final held = formatAssetHoldingDurationYmd(asset.boughtAt, asset.endedAt);
-    final heldLabel = l10n.assetHeldDuration(held);
-
     final locale = Localizations.localeOf(context).toString();
     final dateFmt = DateFormat.yMd(locale);
     String dateLine(DateTime t) => dateFmt.format(t.toLocal());
@@ -275,17 +273,34 @@ class _AssetTile extends StatelessWidget {
       );
     }
 
-    Widget metaLine() => Text.rich(
-      TextSpan(
-        style: muted(0.88),
-        children: [
-          TextSpan(text: heldLabel),
-          TextSpan(text: ' · ', style: muted(0.55)),
-          TextSpan(text: period),
-        ],
-      ),
-      maxLines: 3,
+    Widget metaLine() => Text(
+      period,
+      style: muted(0.88),
+      maxLines: 2,
       overflow: TextOverflow.ellipsis,
+    );
+
+    final leadingHeld = Padding(
+      padding: const EdgeInsets.only(right: 4),
+      child: SizedBox(
+        width: 68,
+        child: Align(
+          alignment: Alignment.center,
+          child: Text(
+            held,
+            style: theme.textTheme.labelMedium?.copyWith(
+              color: scheme.onSurfaceVariant,
+              fontWeight: FontWeight.w700,
+              letterSpacing: -0.2,
+              height: 1.2,
+              fontFeatures: tabular,
+            ),
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            textAlign: TextAlign.center,
+          ),
+        ),
+      ),
     );
 
     void openEdit() {
@@ -325,7 +340,9 @@ class _AssetTile extends StatelessWidget {
       itemKey: asset.id,
       tileIsThreeLine: true,
       dense: true,
+      minLeadingWidth: 78,
       contentPadding: EdgeInsets.zero,
+      leading: leadingHeld,
       title: Text(
         asset.name,
         maxLines: 2,
