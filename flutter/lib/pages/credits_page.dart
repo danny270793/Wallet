@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:intl/intl.dart';
 import 'package:wallet/l10n/app_localizations.dart';
 
 import '../core/di/injection.dart';
@@ -48,6 +47,17 @@ List<String> _relationNames(TransactionEntity t) => [
   if (t.tagName?.isNotEmpty == true) t.tagName!,
 ];
 
+double _weighted(TransactionEntity t) => t.value * t.percentage / 100.0;
+
+/// Installment is treated as already posted when its local calendar date is on or before today.
+bool _installmentIsPaidThroughToday(TransactionEntity t) {
+  final now = DateTime.now();
+  final local = t.transactedAt.toLocal();
+  final d = DateTime(local.year, local.month, local.day);
+  final today = DateTime(now.year, now.month, now.day);
+  return !d.isAfter(today);
+}
+
 class _CreditGroupTile extends StatelessWidget {
   const _CreditGroupTile({
     required this.cubit,
@@ -67,26 +77,27 @@ class _CreditGroupTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final locale = Localizations.localeOf(context);
     final first = rows.first;
 
-    final totalWeighted = rows.fold<double>(
-      0,
-      (a, t) => a + t.value * t.percentage / 100.0,
-    );
     final totalRaw = rows.fold<double>(0, (a, t) => a + t.value);
     final groupPartialPct = rows.any(
       (t) => (t.percentage - 100.0).abs() > 0.01,
     );
 
-    Color weightedColor() {
-      if (totalWeighted > 0) return const Color(0xFF1B8736);
-      if (totalWeighted < 0) return theme.colorScheme.error;
-      return theme.colorScheme.onSurfaceVariant;
+    double paidWeighted = 0;
+    double pendingWeighted = 0;
+    for (final t in rows) {
+      final w = _weighted(t);
+      if (_installmentIsPaidThroughToday(t)) {
+        paidWeighted += w;
+      } else {
+        pendingWeighted += w;
+      }
     }
 
+    const paidGreen = Color(0xFF1B8736);
+
     final relationNames = _relationNames(first);
-    final localTime = first.transactedAt.toLocal();
 
     Widget titleSection() {
       final chunks = <Widget>[];
@@ -199,16 +210,28 @@ class _CreditGroupTile extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.end,
       children: [
-        Text(
-          l10n.transactionAmountValue(totalWeighted.toStringAsFixed(2)),
-          style: theme.textTheme.titleMedium?.copyWith(
-            fontWeight: FontWeight.w700,
-            color: weightedColor(),
-            height: 1.2,
+        if (pendingWeighted.abs() > 0.005) ...[
+          Text(
+            l10n.transactionAmountValue(pendingWeighted.toStringAsFixed(2)),
+            style: theme.textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.w700,
+              color: theme.colorScheme.error,
+              height: 1.2,
+            ),
           ),
-        ),
+          if (paidWeighted.abs() > 0.005) const SizedBox(height: 4),
+        ],
+        if (paidWeighted.abs() > 0.005)
+          Text(
+            l10n.transactionAmountValue(paidWeighted.toStringAsFixed(2)),
+            style: theme.textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.w700,
+              color: paidGreen,
+              height: 1.2,
+            ),
+          ),
         if (groupPartialPct) ...[
-          const SizedBox(height: 2),
+          const SizedBox(height: 4),
           Text(
             l10n.transactionAmountValue(totalRaw.toStringAsFixed(2)),
             style: theme.textTheme.bodySmall?.copyWith(
@@ -220,14 +243,6 @@ class _CreditGroupTile extends StatelessWidget {
             ),
           ),
         ],
-        const SizedBox(height: 4),
-        Text(
-          DateFormat.Hm(locale.toString()).format(localTime),
-          style: theme.textTheme.bodySmall?.copyWith(
-            color: theme.colorScheme.onSurfaceVariant,
-            fontFeatures: const [FontFeature.tabularFigures()],
-          ),
-        ),
       ],
     );
 
