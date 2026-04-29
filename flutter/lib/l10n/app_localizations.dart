@@ -1007,8 +1007,26 @@ abstract class AppLocalizations {
   /// No description provided for @transactionsTotalsExcludingIgnoredHint.
   ///
   /// In en, this message translates to:
-  /// **'Excluding ignored transactions'**
+  /// **'Weighted excluding ignored'**
   String get transactionsTotalsExcludingIgnoredHint;
+
+  /// No description provided for @transactionsTotalsIncludingIgnoredHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Including ignored transactions'**
+  String get transactionsTotalsIncludingIgnoredHint;
+
+  /// No description provided for @transactionsTotalsNotWeightedIncludingIgnoredHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Not weighted including ignored'**
+  String get transactionsTotalsNotWeightedIncludingIgnoredHint;
+
+  /// No description provided for @transactionsTotalsNotWeightedExcludingIgnoredHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Not weighted excluding ignored'**
+  String get transactionsTotalsNotWeightedExcludingIgnoredHint;
 }
 
 class _AppLocalizationsDelegate
