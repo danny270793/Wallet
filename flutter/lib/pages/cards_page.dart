@@ -58,8 +58,9 @@ class _CardsView extends StatelessWidget {
           _ => <CardEntity>[],
         };
         final showTotalBar = cards.isNotEmpty;
-        final totalBalance =
-            showTotalBar ? cards.fold<double>(0, (s, c) => s + c.balance) : 0.0;
+        final totalBalance = showTotalBar
+            ? cards.fold<double>(0, (s, c) => s + c.balance)
+            : 0.0;
 
         return ShellScaffold(
           title: l10n.cards,
@@ -68,10 +69,7 @@ class _CardsView extends StatelessWidget {
             child: const Icon(Icons.add),
           ),
           bottomNavigationBar: showTotalBar
-              ? WalletListBalanceTotalBar(
-                  l10n: l10n,
-                  total: totalBalance,
-                )
+              ? WalletListBalanceTotalBar(l10n: l10n, total: totalBalance)
               : null,
           body: _body(context, state, l10n),
         );
@@ -175,10 +173,7 @@ class _CardTile extends StatelessWidget {
       context.push(
         Uri(
           path: '/transactions',
-          queryParameters: {
-            'cardId': card.id,
-            'cardName': card.name,
-          },
+          queryParameters: {'cardId': card.id, 'cardName': card.name},
         ).toString(),
       );
     }
@@ -187,12 +182,13 @@ class _CardTile extends StatelessWidget {
       itemKey: card.id,
       title: Text(card.name),
       subtitle: card.description != null
-          ? Text(card.description!, maxLines: 2, overflow: TextOverflow.ellipsis)
+          ? Text(
+              card.description!,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+            )
           : null,
-      trailing: WalletListBalanceAmount(
-        l10n: l10n,
-        balance: card.balance,
-      ),
+      trailing: WalletListBalanceAmount(l10n: l10n, balance: card.balance),
       onTap: openTransactions,
       onEdit: openEdit,
       confirmDelete: () async {
@@ -209,7 +205,10 @@ class _CardTile extends StatelessWidget {
               ElevatedButton(
                 style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
                 onPressed: () => Navigator.of(dialogContext).pop(true),
-                child: Text(l10n.delete, style: const TextStyle(color: Colors.white)),
+                child: Text(
+                  l10n.delete,
+                  style: const TextStyle(color: Colors.white),
+                ),
               ),
             ],
           ),
