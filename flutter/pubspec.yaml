@@ -55,6 +55,9 @@ dev_dependencies:
   # package. See that file for information about deactivating specific lint
   # rules and activating additional ones.
   flutter_lints: ^6.0.0
+  # Launcher display name (replaces unmaintained flutter_launcher_name, which does not support Dart 3).
+  # Apply after editing the quoted name: dart run rename_app:main all="Wallet"
+  rename_app: ^1.6.5
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
