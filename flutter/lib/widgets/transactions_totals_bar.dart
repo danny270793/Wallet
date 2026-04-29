@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:wallet/l10n/app_localizations.dart';
 
+import '../features/transactions/domain/entities/transaction_entity.dart';
+import 'transaction_month_totals.dart';
+
 import 'wallet_dual_balance_trailing.dart';
 
 /// Swipe horizontally (with enough speed) on the totals bar to move to next ([forward] true)
@@ -220,5 +223,115 @@ class TransactionsTotalsBar extends StatelessWidget {
         }),
       ),
     );
+  }
+}
+
+/// Same four-mode totals bar as the transactions list: swipe horizontally (or use the dots)
+/// between weighted vs raw amounts, with or without ignored rows.
+class TransactionsTotalsBarHost extends StatefulWidget {
+  const TransactionsTotalsBarHost({
+    super.key,
+    required this.l10n,
+    required this.transactions,
+  });
+
+  final AppLocalizations l10n;
+  final List<TransactionEntity> transactions;
+
+  @override
+  State<TransactionsTotalsBarHost> createState() =>
+      _TransactionsTotalsBarHostState();
+}
+
+class _TransactionsTotalsBarHostState extends State<TransactionsTotalsBarHost> {
+  static const _kTotalsModeCount = 4;
+
+  /// Swipe cycle order (`_totalsMode` 0…3):
+  /// * Weighted — `value * percentage / 100` for **all** non–transfer-leg rows (including ignored).
+  /// * Not weighted — raw `value` for **all** such rows (including ignored).
+  /// * Weighted excluding ignored — weighted formula only for rows with `ignore == false`.
+  /// * Not weighted excluding ignored — raw `value` only for rows with `ignore == false`.
+  int _totalsMode = 0;
+
+  void _handleTotalsModeSwipe(bool forward) {
+    setState(() {
+      _totalsMode = forward
+          ? (_totalsMode + 1) % _kTotalsModeCount
+          : (_totalsMode + (_kTotalsModeCount - 1)) % _kTotalsModeCount;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final txs = widget.transactions;
+    double weightedAmount(TransactionEntity t) =>
+        t.value * t.percentage / 100.0;
+
+    final totalsWeightedAll = transactionMonthTotalsBreakdown(
+      txs,
+      include: (_) => true,
+      amount: weightedAmount,
+    );
+    final totalsRawValueAll = transactionMonthTotalsBreakdown(
+      txs,
+      include: (_) => true,
+      amount: (t) => t.value,
+    );
+    final totalsWeightedNonIgnoredOnly = transactionMonthTotalsBreakdown(
+      txs,
+      include: (t) => !t.ignore,
+      amount: weightedAmount,
+    );
+    final totalsRawValueNonIgnoredOnly = transactionMonthTotalsBreakdown(
+      txs,
+      include: (t) => !t.ignore,
+      amount: (t) => t.value,
+    );
+
+    return switch (_totalsMode) {
+      0 => TransactionsTotalsBar(
+          l10n: widget.l10n,
+          primarySubtitle: widget.l10n.transactionsTotalsWeightedHint,
+          income: totalsWeightedAll.income,
+          outcome: totalsWeightedAll.outcome,
+          balance: totalsWeightedAll.balance,
+          onTotalsModeSwipe: _handleTotalsModeSwipe,
+          totalsDotsCount: _kTotalsModeCount,
+          totalsDotsSelectedIndex: _totalsMode,
+        ),
+      1 => TransactionsTotalsBar(
+          l10n: widget.l10n,
+          primarySubtitle: widget.l10n.transactionsTotalsNotWeightedHint,
+          income: totalsRawValueAll.income,
+          outcome: totalsRawValueAll.outcome,
+          balance: totalsRawValueAll.balance,
+          onTotalsModeSwipe: _handleTotalsModeSwipe,
+          totalsDotsCount: _kTotalsModeCount,
+          totalsDotsSelectedIndex: _totalsMode,
+        ),
+      2 => TransactionsTotalsBar(
+          l10n: widget.l10n,
+          primarySubtitle:
+              widget.l10n.transactionsTotalsWeightedExcludingIgnoredHint,
+          income: totalsWeightedNonIgnoredOnly.income,
+          outcome: totalsWeightedNonIgnoredOnly.outcome,
+          balance: totalsWeightedNonIgnoredOnly.balance,
+          onTotalsModeSwipe: _handleTotalsModeSwipe,
+          totalsDotsCount: _kTotalsModeCount,
+          totalsDotsSelectedIndex: _totalsMode,
+        ),
+      3 => TransactionsTotalsBar(
+          l10n: widget.l10n,
+          primarySubtitle:
+              widget.l10n.transactionsTotalsNotWeightedExcludingIgnoredHint,
+          income: totalsRawValueNonIgnoredOnly.income,
+          outcome: totalsRawValueNonIgnoredOnly.outcome,
+          balance: totalsRawValueNonIgnoredOnly.balance,
+          onTotalsModeSwipe: _handleTotalsModeSwipe,
+          totalsDotsCount: _kTotalsModeCount,
+          totalsDotsSelectedIndex: _totalsMode,
+        ),
+      _ => throw StateError('totals mode $_totalsMode'),
+    };
   }
 }
