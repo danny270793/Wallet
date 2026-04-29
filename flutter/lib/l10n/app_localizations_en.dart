@@ -30,6 +30,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get monthlyDashboard => 'Monthly dashboard';
 
   @override
+  String get monthlyDashboardConfigureTooltip => 'Charts and totals options';
+
+  @override
+  String get monthlyDashboardOptionsSheetTitle => 'View options';
+
+  @override
   String get monthlyDashboardTransactionsListTitle => 'Transactions';
 
   @override
