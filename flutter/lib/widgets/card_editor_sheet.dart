@@ -19,17 +19,11 @@ Future<void> showCardEditorBottomSheet(
     isScrollControlled: true,
     useSafeArea: true,
     showDragHandle: false,
-    builder: (sheetContext) {
+    builder: (_) {
       final child = CardEditorSheet(l10n: l10n, card: card);
-      final wrapped = cubit != null
+      return cubit != null
           ? BlocProvider.value(value: cubit, child: child)
           : BlocProvider(create: (_) => getIt<CardsCubit>(), child: child);
-      return Padding(
-        padding: EdgeInsets.only(
-          bottom: MediaQuery.viewInsetsOf(sheetContext).bottom,
-        ),
-        child: wrapped,
-      );
     },
   );
 }
