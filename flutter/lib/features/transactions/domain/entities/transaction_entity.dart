@@ -78,6 +78,10 @@ class TransactionEntity extends Equatable {
     return null;
   }
 
+  /// True when this row is part of an account/card transfer (paired legs share [transactionGroupId]).
+  bool get isAccountTransferLeg =>
+      transactionGroupId != null && transactionGroupId!.isNotEmpty;
+
   @override
   List<Object?> get props => [
     id,
