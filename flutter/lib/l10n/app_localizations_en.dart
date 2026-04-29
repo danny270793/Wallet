@@ -502,16 +502,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get transactionsTotalBalance => 'Balance';
 
   @override
-  String get transactionsTotalsExcludingIgnoredHint =>
+  String get transactionsTotalsWeightedHint => 'Weighted';
+
+  @override
+  String get transactionsTotalsWeightedExcludingIgnoredHint =>
       'Weighted excluding ignored';
 
   @override
-  String get transactionsTotalsIncludingIgnoredHint =>
-      'Including ignored transactions';
-
-  @override
-  String get transactionsTotalsNotWeightedIncludingIgnoredHint =>
-      'Not weighted including ignored';
+  String get transactionsTotalsNotWeightedHint => 'Not weighted';
 
   @override
   String get transactionsTotalsNotWeightedExcludingIgnoredHint =>
