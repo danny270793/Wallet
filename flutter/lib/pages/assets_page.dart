@@ -154,12 +154,19 @@ class _AssetTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final cubit = context.read<AssetsCubit>();
-    final scheme = Theme.of(context).colorScheme;
-    final muted = Theme.of(context).textTheme.bodySmall?.copyWith(
-      color: scheme.onSurfaceVariant,
-    );
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final tabular = const [FontFeature.tabularFigures()];
 
-    final valueStr = l10n.transactionAmountValue(asset.value.toStringAsFixed(2));
+    TextStyle? muted([double? alpha]) =>
+        theme.textTheme.bodySmall?.copyWith(
+          color: scheme.onSurfaceVariant.withValues(alpha: alpha ?? 1),
+          height: 1.28,
+          fontFeatures: tabular,
+        );
+
+    final valueStr =
+        l10n.transactionAmountValue(asset.value.toStringAsFixed(2));
     final perApproxMo = assetValuePerApproximateCalendarMonth(
       asset.value,
       asset.boughtAt,
@@ -183,6 +190,85 @@ class _AssetTile extends StatelessWidget {
         ? '${dateLine(asset.boughtAt)} → ${dateLine(asset.endedAt!)}'
         : dateLine(asset.boughtAt);
 
+    final titleStyle = theme.textTheme.titleMedium?.copyWith(
+      fontWeight: FontWeight.w600,
+      letterSpacing: -0.25,
+      height: 1.25,
+    );
+    final amountStyle = theme.textTheme.titleSmall?.copyWith(
+      fontWeight: FontWeight.w700,
+      letterSpacing: -0.2,
+      height: 1.2,
+      fontFeatures: tabular,
+    );
+    final subAmountStyle = muted(0.95)?.copyWith(
+      fontWeight: FontWeight.w500,
+      fontSize:
+          ((muted(null)?.fontSize ?? 13) + 0.25).clamp(12.5, 14.5),
+      height: 1.22,
+    );
+
+    Widget amountColumn() {
+      return Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: [
+          Text(valueStr, style: amountStyle?.copyWith(color: scheme.onSurface)),
+          if (perApproxMo != null) ...[
+            const SizedBox(height: 3),
+            Text(
+              l10n.assetValuePerApproximateMonth(
+                l10n.transactionAmountValue(
+                  perApproxMo.toStringAsFixed(2),
+                ),
+              ),
+              style: subAmountStyle,
+              textAlign: TextAlign.right,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ],
+          if (asset.soldValue != null) ...[
+            const SizedBox(height: 9),
+            Text(
+              '${l10n.assetSold}: '
+              '${l10n.transactionAmountValue(
+                asset.soldValue!.toStringAsFixed(2),
+              )}',
+              style: subAmountStyle?.copyWith(color: scheme.tertiary),
+              textAlign: TextAlign.right,
+            ),
+            if (soldPerApproxMo != null) ...[
+              const SizedBox(height: 2),
+              Text(
+                l10n.assetSoldPerApproximateMonth(
+                  l10n.transactionAmountValue(
+                    soldPerApproxMo.toStringAsFixed(2),
+                  ),
+                ),
+                style: subAmountStyle,
+                textAlign: TextAlign.right,
+                maxLines: 2,
+              ),
+            ],
+          ],
+        ],
+      );
+    }
+
+    Widget metaLine() => Text.rich(
+      TextSpan(
+        style: muted(0.88),
+        children: [
+          TextSpan(text: heldLabel),
+          TextSpan(text: ' · ', style: muted(0.55)),
+          TextSpan(text: period),
+        ],
+      ),
+      maxLines: 3,
+      overflow: TextOverflow.ellipsis,
+    );
+
     void openEdit() {
       showAssetEditorBottomSheet(
         context,
@@ -192,70 +278,79 @@ class _AssetTile extends StatelessWidget {
       );
     }
 
+    final provider = asset.provider.trim();
+    final subtitle = Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        if (provider.isNotEmpty) ...[
+          Text(provider, style: muted(0.92), maxLines: 2),
+          const SizedBox(height: 8),
+        ],
+        metaLine(),
+      ],
+    );
+
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-      child: SwipeableListTile(
-        itemKey: asset.id,
-        tileIsThreeLine: true,
-        title: Text(asset.name),
-        subtitle: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            if (asset.provider.trim().isNotEmpty) Text(asset.provider.trim(), style: muted),
-            Text(valueStr),
-            if (perApproxMo != null)
-              Text(
-                l10n.assetValuePerApproximateMonth(
-                  l10n.transactionAmountValue(perApproxMo.toStringAsFixed(2)),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+      child: Material(
+        color: scheme.surfaceContainerLow,
+        elevation: 0,
+        shadowColor: Colors.transparent,
+        clipBehavior: Clip.antiAlias,
+        borderRadius: BorderRadius.circular(14),
+        child: SwipeableListTile(
+          itemKey: asset.id,
+          tileIsThreeLine: true,
+          // Amounts stay in title row — ListTile [trailing] max height (~56px)
+          // overflows multi-line Columns.
+          title: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: Text(
+                  asset.name,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: titleStyle,
                 ),
-                style: muted,
               ),
-            if (asset.soldValue != null) ...[
-              Text(
-                '${l10n.assetSold}: '
-                '${l10n.transactionAmountValue(asset.soldValue!.toStringAsFixed(2))}',
-                style: muted,
+              const SizedBox(width: 8),
+              ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 148),
+                child: amountColumn(),
               ),
-              if (soldPerApproxMo != null)
-                Text(
-                  l10n.assetSoldPerApproximateMonth(
-                    l10n.transactionAmountValue(
-                      soldPerApproxMo.toStringAsFixed(2),
+            ],
+          ),
+          subtitle: subtitle,
+          onEdit: openEdit,
+          confirmDelete: () async {
+            final ok = await showDialog<bool>(
+              context: context,
+              builder: (dialogContext) => AlertDialog(
+                title: Text(l10n.deleteAsset),
+                content: Text(l10n.confirmDeleteAsset(asset.name)),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.of(dialogContext).pop(false),
+                    child: Text(l10n.cancel),
+                  ),
+                  ElevatedButton(
+                    style:
+                        ElevatedButton.styleFrom(backgroundColor: Colors.red),
+                    onPressed: () => Navigator.of(dialogContext).pop(true),
+                    child: Text(
+                      l10n.delete,
+                      style: const TextStyle(color: Colors.white),
                     ),
                   ),
-                  style: muted,
-                ),
-            ],
-            Text(heldLabel, style: muted),
-            Text(period, style: muted),
-          ],
+                ],
+              ),
+            );
+            return ok ?? false;
+          },
+          onDelete: () => cubit.delete(id: asset.id),
         ),
-        onEdit: openEdit,
-        confirmDelete: () async {
-          final ok = await showDialog<bool>(
-            context: context,
-            builder: (dialogContext) => AlertDialog(
-              title: Text(l10n.deleteAsset),
-              content: Text(l10n.confirmDeleteAsset(asset.name)),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.of(dialogContext).pop(false),
-                  child: Text(l10n.cancel),
-                ),
-                ElevatedButton(
-                  style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-                  onPressed: () => Navigator.of(dialogContext).pop(true),
-                  child: Text(
-                    l10n.delete,
-                    style: const TextStyle(color: Colors.white),
-                  ),
-                ),
-              ],
-            ),
-          );
-          return ok ?? false;
-        },
-        onDelete: () => cubit.delete(id: asset.id),
       ),
     );
   }
