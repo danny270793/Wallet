@@ -73,11 +73,15 @@ class _AccountsView extends StatelessWidget {
     AccountsState state,
     AppLocalizations l10n,
   ) {
-    Future<void> refresh() => context.read<AccountsCubit>().load();
+    Future<void> pullRefresh() =>
+        context.read<AccountsCubit>().load(showLoading: false);
+
+    Future<void> reloadWithOverlay() =>
+        context.read<AccountsCubit>().load(showLoading: true);
 
     if (state is AccountsLoading || state is AccountsInitial) {
       return RefreshIndicator(
-        onRefresh: refresh,
+        onRefresh: pullRefresh,
         child: ListView(
           physics: const AlwaysScrollableScrollPhysics(),
           children: [
@@ -92,7 +96,7 @@ class _AccountsView extends StatelessWidget {
 
     if (state is AccountsError) {
       return RefreshIndicator(
-        onRefresh: refresh,
+        onRefresh: pullRefresh,
         child: ListView(
           physics: const AlwaysScrollableScrollPhysics(),
           children: [
@@ -105,7 +109,7 @@ class _AccountsView extends StatelessWidget {
                     Text(l10n.unexpectedError),
                     const SizedBox(height: 12),
                     ElevatedButton(
-                      onPressed: refresh,
+                      onPressed: reloadWithOverlay,
                       child: const Text('Retry'),
                     ),
                   ],
@@ -125,7 +129,7 @@ class _AccountsView extends StatelessWidget {
 
     if (accounts.isEmpty) {
       return RefreshIndicator(
-        onRefresh: refresh,
+        onRefresh: pullRefresh,
         child: ListView(
           physics: const AlwaysScrollableScrollPhysics(),
           padding: const EdgeInsets.only(bottom: 88),
@@ -140,7 +144,7 @@ class _AccountsView extends StatelessWidget {
     }
 
     return RefreshIndicator(
-      onRefresh: refresh,
+      onRefresh: pullRefresh,
       child: ListView.builder(
         physics: const AlwaysScrollableScrollPhysics(),
         padding: const EdgeInsets.only(bottom: 8),
