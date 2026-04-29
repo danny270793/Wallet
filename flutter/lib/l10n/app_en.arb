@@ -193,8 +193,8 @@
   "transactionsTotalIncome": "Income",
   "transactionsTotalOutcome": "Outcome",
   "transactionsTotalBalance": "Balance",
-  "transactionsTotalsExcludingIgnoredHint": "Weighted excluding ignored",
-  "transactionsTotalsIncludingIgnoredHint": "Including ignored transactions",
-  "transactionsTotalsNotWeightedIncludingIgnoredHint": "Not weighted including ignored",
+  "transactionsTotalsWeightedHint": "Weighted",
+  "transactionsTotalsWeightedExcludingIgnoredHint": "Weighted excluding ignored",
+  "transactionsTotalsNotWeightedHint": "Not weighted",
   "transactionsTotalsNotWeightedExcludingIgnoredHint": "Not weighted excluding ignored"
 }
