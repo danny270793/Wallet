@@ -172,14 +172,6 @@ class _AssetTile extends StatelessWidget {
       asset.boughtAt,
       asset.endedAt,
     );
-    final soldPerApproxMo = asset.soldValue != null
-        ? assetValuePerApproximateCalendarMonth(
-            asset.soldValue!,
-            asset.boughtAt,
-            asset.endedAt,
-          )
-        : null;
-
     final held = formatAssetHoldingDurationYmOmitDaysWhenGrouped(
       asset.boughtAt,
       asset.endedAt,
@@ -245,31 +237,13 @@ class _AssetTile extends StatelessWidget {
     }
 
     Widget soldOnlyColumn() {
-      return Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.end,
-        children: [
-          if (soldPerApproxMo != null) ...[
-            Text(
-              l10n.transactionAmountValue(
-                soldPerApproxMo.toStringAsFixed(2),
-              ),
-              style: moOnlyStyle?.copyWith(color: scheme.tertiary.withValues(alpha: 0.95)),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              textAlign: TextAlign.right,
-            ),
-            const SizedBox(height: 2),
-          ],
-          Text(
-            '${l10n.assetSold}: '
-            '${l10n.transactionAmountValue(
-              asset.soldValue!.toStringAsFixed(2),
-            )}',
-            style: subAmountStyle?.copyWith(color: scheme.tertiary),
-            textAlign: TextAlign.right,
-          ),
-        ],
+      return Text(
+        '${l10n.assetSold}: '
+        '${l10n.transactionAmountValue(
+          asset.soldValue!.toStringAsFixed(2),
+        )}',
+        style: subAmountStyle?.copyWith(color: scheme.tertiary),
+        textAlign: TextAlign.right,
       );
     }
 
