@@ -23,6 +23,10 @@ class TransactionsRepositoryImpl implements TransactionsRepository {
       _datasource.getTransactionsByCreditGroupId(creditGroupId);
 
   @override
+  Future<List<TransactionEntity>> listTransactionsHavingCreditGroup() =>
+      _datasource.listTransactionsHavingCreditGroup();
+
+  @override
   Future<TransactionEntity> createTransaction({
     String? accountId,
     String? cardId,
