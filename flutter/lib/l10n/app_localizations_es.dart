@@ -425,8 +425,8 @@ class AppLocalizationsEs extends AppLocalizations {
   String get creditsUntitledGroup => 'Compra diferida';
 
   @override
-  String creditsInstallmentsCount(int count) {
-    return '$count cuotas';
+  String creditsInstallmentsWithPending(int count, int pending) {
+    return '$count cuotas - $pending pendientes';
   }
 
   @override
