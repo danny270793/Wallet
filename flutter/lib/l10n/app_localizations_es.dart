@@ -37,6 +37,9 @@ class AppLocalizationsEs extends AppLocalizations {
       'Incluir transacciones ignoradas';
 
   @override
+  String get dashboardUseWeightedAmounts => 'Importes ponderados (%)';
+
+  @override
   String get monthlyDashboardTagPieTitle => 'Gastos por etiqueta';
 
   @override
