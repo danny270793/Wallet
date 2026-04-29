@@ -543,6 +543,13 @@ class AppLocalizationsEs extends AppLocalizations {
   String get transactionMesesPlazo => 'Meses plazo';
 
   @override
+  String get transactionGraceMonthsInvalid =>
+      'Los meses de gracia deben ser 0 o más';
+
+  @override
+  String get transactionTermMonthsInvalid => 'Indica al menos 2 meses de plazo';
+
+  @override
   String get transactionCategory => 'Categoría';
 
   @override
