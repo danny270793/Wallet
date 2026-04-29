@@ -348,6 +348,15 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get assets => 'Assets';
+
+  @override
+  String get noAssets => 'No assets yet';
+
+  @override
+  String get assetSold => 'Sold';
+
+  @override
   String get transactions => 'Transactions';
 
   @override
