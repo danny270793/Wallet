@@ -196,18 +196,17 @@ class _AssetTile extends StatelessWidget {
       height: 1.22,
     );
 
-    final moHighlightStyle = theme.textTheme.titleSmall?.copyWith(
+    final trailingMoAsTitle = theme.textTheme.titleMedium?.copyWith(
       color: scheme.primary,
       fontWeight: FontWeight.w700,
       letterSpacing: -0.2,
       height: 1.2,
       fontFeatures: tabular,
     );
-    /// Total position value — subdued vs highlighted /mo figure above.
-    final trailingTotalStyle = theme.textTheme.bodyLarge?.copyWith(
+    final trailingTotalAsSubtitle = theme.textTheme.bodySmall?.copyWith(
       color: scheme.onSurfaceVariant.withValues(alpha: 0.95),
       fontWeight: FontWeight.w400,
-      height: 1.25,
+      height: 1.35,
       fontFeatures: tabular,
     );
 
@@ -222,16 +221,16 @@ class _AssetTile extends StatelessWidget {
               l10n.transactionAmountValue(
                 perApproxMo.toStringAsFixed(2),
               ),
-              style: moHighlightStyle,
+              style: trailingMoAsTitle,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               textAlign: TextAlign.right,
             ),
-            const SizedBox(height: 4),
+            const SizedBox(height: 2),
           ],
           Text(
             valueStr,
-            style: trailingTotalStyle,
+            style: trailingTotalAsSubtitle,
             textAlign: TextAlign.right,
           ),
         ],
