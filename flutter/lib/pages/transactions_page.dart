@@ -1929,11 +1929,11 @@ class _TransactionTile extends StatelessWidget {
     return tile;
   }
 
-  /// Account, card, category, tag labels from embedded FK names (aligned with datasource order).
+  /// Category, then account/card, then tag — displayed as one line joined with middots.
   static List<String> _relationNames(TransactionEntity t) => [
+    if (t.categoryName?.isNotEmpty == true) t.categoryName!,
     if (t.accountName?.isNotEmpty == true) t.accountName!,
     if (t.cardName?.isNotEmpty == true) t.cardName!,
-    if (t.categoryName?.isNotEmpty == true) t.categoryName!,
     if (t.tagName?.isNotEmpty == true) t.tagName!,
   ];
 }
