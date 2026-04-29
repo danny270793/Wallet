@@ -4,6 +4,10 @@ import '../features/transactions/domain/entities/transaction_entity.dart';
 ///
 /// Rows with [TransactionEntity.isAccountTransferLeg] are omitted (transfer pairs do not count
 /// toward income/outcome/net).
+///
+/// Typical [amount] functions: raw `TransactionEntity.value`, or weighted
+/// `value * percentage / 100`. Typical [include]: all rows (`true`), or only those with
+/// `ignore == false` for “excluding ignored”.
 ({double income, double outcome, double balance})
 transactionMonthTotalsBreakdown(
   Iterable<TransactionEntity> txs, {
