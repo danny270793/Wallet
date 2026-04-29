@@ -8,6 +8,7 @@ import 'pages/accounts_page.dart';
 import 'pages/cards_page.dart';
 import 'pages/categories_page.dart';
 import 'pages/tags_page.dart';
+import 'pages/assets_page.dart';
 import 'pages/transactions_page.dart';
 import 'pages/settings_page.dart';
 import 'pages/legal_info_page.dart';
@@ -58,6 +59,7 @@ final router = GoRouter(
         GoRoute(path: '/cards', builder: (context, state) => const CardsPage()),
         GoRoute(path: '/categories', builder: (context, state) => const CategoriesPage()),
         GoRoute(path: '/tags', builder: (context, state) => const TagsPage()),
+        GoRoute(path: '/assets', builder: (context, state) => const AssetsPage()),
         GoRoute(
           path: '/transactions',
           builder: (context, state) {
