@@ -201,6 +201,20 @@ class MonthlyTagPieChart extends StatelessWidget {
                         ),
                       ),
                     ),
+                    SliverPadding(
+                      padding: const EdgeInsets.fromLTRB(12, 0, 12, 0),
+                      sliver: SliverToBoxAdapter(
+                        child: Align(
+                          alignment: Alignment.centerRight,
+                          child: TextButton(
+                            onPressed: () {
+                              setModal(() => draft.clear());
+                            },
+                            child: Text(l10n.dashboardPieDeselectAll),
+                          ),
+                        ),
+                      ),
+                    ),
                     SliverList.list(
                       children: [
                         for (final o in options)
