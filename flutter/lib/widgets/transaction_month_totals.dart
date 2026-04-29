@@ -1,6 +1,9 @@
 import '../features/transactions/domain/entities/transaction_entity.dart';
 
 /// Income (positive weighted sums), outcome (absolute negatives), net balance for a set of transactions.
+///
+/// Rows with [TransactionEntity.isAccountTransferLeg] are omitted (transfer pairs do not count
+/// toward income/outcome/net).
 ({double income, double outcome, double balance})
 transactionMonthTotalsBreakdown(
   Iterable<TransactionEntity> txs, {
@@ -11,6 +14,7 @@ transactionMonthTotalsBreakdown(
   var outcome = 0.0;
   var balance = 0.0;
   for (final t in txs) {
+    if (t.isAccountTransferLeg) continue;
     if (!include(t)) continue;
     final v = amount(t);
     balance += v;
