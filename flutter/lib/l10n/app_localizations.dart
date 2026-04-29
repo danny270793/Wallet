@@ -152,6 +152,12 @@ abstract class AppLocalizations {
   /// **'Include ignored transactions'**
   String get dashboardIncludeIgnoredInTotals;
 
+  /// No description provided for @dashboardUseWeightedAmounts.
+  ///
+  /// In en, this message translates to:
+  /// **'Weighted amounts (%)'**
+  String get dashboardUseWeightedAmounts;
+
   /// No description provided for @monthlyDashboardTagPieTitle.
   ///
   /// In en, this message translates to:
