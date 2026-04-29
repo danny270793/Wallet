@@ -83,24 +83,25 @@ class _MonthlyDashboardViewState extends State<_MonthlyDashboardView> {
     }).toList();
   }
 
-  /// When either filter is active, excluded ignored rows respect [_includeIgnored].
+  /// Respects [_includeIgnored] and optional tag/category pie filters.
   List<TransactionEntity> _transactionsForDashboardList(
     List<TransactionEntity> txs,
     Set<String>? tagKeysFilter,
     Set<String>? categoryKeysFilter,
   ) {
-    if (tagKeysFilter == null && categoryKeysFilter == null) return txs;
     return txs.where((t) {
       if (!_includeIgnored && t.ignore) return false;
       if (tagKeysFilter != null) {
         final tid = t.tagId;
-        if (tid == null || tid.isEmpty || !tagKeysFilter.contains(tid))
+        if (tid == null || tid.isEmpty || !tagKeysFilter.contains(tid)) {
           return false;
+        }
       }
       if (categoryKeysFilter != null) {
         final cid = t.categoryId;
-        if (cid == null || cid.isEmpty || !categoryKeysFilter.contains(cid))
+        if (cid == null || cid.isEmpty || !categoryKeysFilter.contains(cid)) {
           return false;
+        }
       }
       return true;
     }).toList();
@@ -126,25 +127,25 @@ class _MonthlyDashboardViewState extends State<_MonthlyDashboardView> {
       },
       builder: (context, state) {
         final txs = _monthTransactions(state);
-        // Pies always aggregate expenses including ignored rows; prune filters together so tag/category stay valid.
+        // Prune filters using the same ignored basis as pies and list.
         var categoryFilter = pruneCategoryKeysFilter(
           txs,
-          true,
+          _includeIgnored,
           _categoryKeysFilter,
         );
         var tagFilter = pruneTagKeysFilter(
           _filterByCategory(txs, categoryFilter),
-          true,
+          _includeIgnored,
           _tagKeysFilter,
         );
         categoryFilter = pruneCategoryKeysFilter(
           _filterByTag(txs, tagFilter),
-          true,
+          _includeIgnored,
           _categoryKeysFilter,
         );
         tagFilter = pruneTagKeysFilter(
           _filterByCategory(txs, categoryFilter),
-          true,
+          _includeIgnored,
           _tagKeysFilter,
         );
         if (!setEquals(tagFilter, _tagKeysFilter) ||
@@ -317,7 +318,7 @@ class _MonthlyDashboardViewState extends State<_MonthlyDashboardView> {
                 MonthlyTagPieChart(
                   l10n: l10n,
                   transactions: tagPieTransactions,
-                  includeIgnored: true,
+                  includeIgnored: _includeIgnored,
                   tagKeysFilter: tagKeysFilter,
                   onTagKeysFilterChanged: (v) =>
                       setState(() => _tagKeysFilter = v),
@@ -325,7 +326,7 @@ class _MonthlyDashboardViewState extends State<_MonthlyDashboardView> {
                 MonthlyCategoryExpensePieChart(
                   l10n: l10n,
                   transactions: categoryPieTransactions,
-                  includeIgnored: true,
+                  includeIgnored: _includeIgnored,
                   categoryKeysFilter: categoryKeysFilter,
                   onCategoryKeysFilterChanged: (v) =>
                       setState(() => _categoryKeysFilter = v),
