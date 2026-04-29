@@ -3,11 +3,7 @@ import 'package:package_info_plus/package_info_plus.dart';
 import 'package:wallet/l10n/app_localizations.dart';
 
 /// Static information screens linked from Settings → About.
-enum LegalInfoKind {
-  about,
-  privacy,
-  terms,
-}
+enum LegalInfoKind { about, privacy, terms }
 
 class LegalInfoPage extends StatelessWidget {
   const LegalInfoPage({super.key, required this.kind});
@@ -290,10 +286,7 @@ class _TermsBody extends StatelessWidget {
 }
 
 class _PolicySection extends StatelessWidget {
-  const _PolicySection({
-    required this.title,
-    required this.body,
-  });
+  const _PolicySection({required this.title, required this.body});
 
   final String title;
   final String body;
@@ -357,25 +350,21 @@ class _PolicyCallout extends StatelessWidget {
             decoration: BoxDecoration(
               color: scheme.surfaceContainerHighest,
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: scheme.outlineVariant.withValues(alpha: 0.5)),
+              border: Border.all(
+                color: scheme.outlineVariant.withValues(alpha: 0.5),
+              ),
             ),
             child: Padding(
               padding: const EdgeInsets.all(16),
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Icon(
-                    icon,
-                    size: 24,
-                    color: scheme.primary,
-                  ),
+                  Icon(icon, size: 24, color: scheme.primary),
                   const SizedBox(width: 14),
                   Expanded(
                     child: SelectableText(
                       body,
-                      style: theme.textTheme.bodyLarge?.copyWith(
-                        height: 1.45,
-                      ),
+                      style: theme.textTheme.bodyLarge?.copyWith(height: 1.45),
                     ),
                   ),
                 ],
@@ -389,10 +378,7 @@ class _PolicyCallout extends StatelessWidget {
 }
 
 class _AboutBullet extends StatelessWidget {
-  const _AboutBullet({
-    required this.icon,
-    required this.text,
-  });
+  const _AboutBullet({required this.icon, required this.text});
 
   final IconData icon;
   final String text;

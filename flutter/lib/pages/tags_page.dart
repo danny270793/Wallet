@@ -64,11 +64,15 @@ class _TagsView extends StatelessWidget {
   }
 
   Widget _body(BuildContext context, TagsState state, AppLocalizations l10n) {
-    Future<void> refresh() => context.read<TagsCubit>().load();
+    Future<void> pullRefresh() =>
+        context.read<TagsCubit>().load(showLoading: false);
+
+    Future<void> reloadWithOverlay() =>
+        context.read<TagsCubit>().load(showLoading: true);
 
     if (state is TagsLoading || state is TagsInitial) {
       return RefreshIndicator(
-        onRefresh: refresh,
+        onRefresh: pullRefresh,
         child: ListView(
           physics: const AlwaysScrollableScrollPhysics(),
           children: [
@@ -83,7 +87,7 @@ class _TagsView extends StatelessWidget {
 
     if (state is TagsError) {
       return RefreshIndicator(
-        onRefresh: refresh,
+        onRefresh: pullRefresh,
         child: ListView(
           physics: const AlwaysScrollableScrollPhysics(),
           children: [
@@ -96,7 +100,7 @@ class _TagsView extends StatelessWidget {
                     Text(l10n.unexpectedError),
                     const SizedBox(height: 12),
                     ElevatedButton(
-                      onPressed: refresh,
+                      onPressed: reloadWithOverlay,
                       child: const Text('Retry'),
                     ),
                   ],
@@ -116,7 +120,7 @@ class _TagsView extends StatelessWidget {
 
     if (tags.isEmpty) {
       return RefreshIndicator(
-        onRefresh: refresh,
+        onRefresh: pullRefresh,
         child: ListView(
           physics: const AlwaysScrollableScrollPhysics(),
           padding: const EdgeInsets.only(bottom: 88),
@@ -131,7 +135,7 @@ class _TagsView extends StatelessWidget {
     }
 
     return RefreshIndicator(
-      onRefresh: refresh,
+      onRefresh: pullRefresh,
       child: ListView.builder(
         physics: const AlwaysScrollableScrollPhysics(),
         padding: const EdgeInsets.only(bottom: 88),
@@ -159,10 +163,7 @@ class _TagTile extends StatelessWidget {
       context.push(
         Uri(
           path: '/transactions',
-          queryParameters: {
-            'tagId': tag.id,
-            'tagName': tag.name,
-          },
+          queryParameters: {'tagId': tag.id, 'tagName': tag.name},
         ).toString(),
       );
     }
@@ -189,7 +190,10 @@ class _TagTile extends StatelessWidget {
               ElevatedButton(
                 style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
                 onPressed: () => Navigator.of(dialogContext).pop(true),
-                child: Text(l10n.delete, style: const TextStyle(color: Colors.white)),
+                child: Text(
+                  l10n.delete,
+                  style: const TextStyle(color: Colors.white),
+                ),
               ),
             ],
           ),

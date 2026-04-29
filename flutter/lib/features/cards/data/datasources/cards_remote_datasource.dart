@@ -16,10 +16,10 @@ class CardsSupabaseDatasource implements CardsRemoteDatasource {
   @override
   Future<List<CardEntity>> getCards() async {
     AppLogger.debug('getCards called');
-    final data = await _client
-        .from('wallet_cards_with_balance')
-        .select()
-        .isFilter('deletedAt', null)
+    final data = await _client.from('wallet_cards_with_balance').select(
+          // Explicit columns: omit legacy balanceWeighted if present on older deployments.
+          'id, userId, name, description, createdAt, updatedAt, deletedAt, balance',
+        ).isFilter('deletedAt', null)
         .order('createdAt');
     return (data as List).map((e) => CardEntity.fromJson(e as Map<String, dynamic>)).toList();
   }

@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:wallet/l10n/app_localizations.dart';
 
 import '../features/transactions/domain/entities/transaction_entity.dart';
+import 'bottom_sheet_pinned_title.dart';
 
 class _CategorySlice {
   _CategorySlice({
@@ -40,12 +41,14 @@ List<Color> _palette(ColorScheme scheme, int n) {
   return out;
 }
 
-double _weighted(TransactionEntity t) => t.value * t.percentage / 100.0;
+double _effectiveTxAmount(TransactionEntity t, bool useWeighted) =>
+    useWeighted ? t.value * t.percentage / 100.0 : t.value;
 
 /// Categories that appear on at least one expense row in [txs] (same basis as the category pie).
 List<({String key, String label})> distinctExpenseCategoryOptions(
   List<TransactionEntity> txs,
   bool includeIgnored,
+  bool useWeighted,
 ) {
   bool include(TransactionEntity t) => includeIgnored || !t.ignore;
   final labels = <String, String>{};
@@ -55,7 +58,7 @@ List<({String key, String label})> distinctExpenseCategoryOptions(
     if (!include(t)) continue;
     final id = t.categoryId;
     if (id == null || id.isEmpty) continue;
-    if (_weighted(t) >= 0) continue;
+    if (_effectiveTxAmount(t, useWeighted) >= 0) continue;
     seen.add(id);
     if (t.categoryName != null && t.categoryName!.isNotEmpty) {
       labels[id] = t.categoryName!;
@@ -76,9 +79,14 @@ Set<String>? pruneCategoryKeysFilter(
   List<TransactionEntity> txs,
   bool includeIgnored,
   Set<String>? current,
+  bool useWeighted,
 ) {
   if (current == null) return null;
-  final options = distinctExpenseCategoryOptions(txs, includeIgnored);
+  final options = distinctExpenseCategoryOptions(
+    txs,
+    includeIgnored,
+    useWeighted,
+  );
   final valid = options.map((o) => o.key).toSet();
   final pruned = current.intersection(valid);
   if (pruned.isEmpty || pruned.length == valid.length) return null;
@@ -89,6 +97,7 @@ List<_CategorySlice> _aggregateExpenseByCategory(
   List<TransactionEntity> txs,
   bool includeIgnored,
   ColorScheme scheme, {
+  required bool useWeighted,
   Set<String>? categoryKeysFilter,
 }) {
   bool include(TransactionEntity t) => includeIgnored || !t.ignore;
@@ -100,8 +109,9 @@ List<_CategorySlice> _aggregateExpenseByCategory(
     if (!include(t)) continue;
     final id = t.categoryId;
     if (id == null || id.isEmpty) continue;
-    if (categoryKeysFilter != null && !categoryKeysFilter.contains(id)) continue;
-    final w = _weighted(t);
+    if (categoryKeysFilter != null && !categoryKeysFilter.contains(id))
+      continue;
+    final w = _effectiveTxAmount(t, useWeighted);
     if (w >= 0) continue;
     final expense = -w;
     sums[id] = (sums[id] ?? 0) + expense;
@@ -142,6 +152,7 @@ class MonthlyCategoryExpensePieChart extends StatelessWidget {
     required this.l10n,
     required this.transactions,
     required this.includeIgnored,
+    required this.useWeightedAmounts,
     required this.categoryKeysFilter,
     required this.onCategoryKeysFilterChanged,
   });
@@ -149,6 +160,7 @@ class MonthlyCategoryExpensePieChart extends StatelessWidget {
   final AppLocalizations l10n;
   final List<TransactionEntity> transactions;
   final bool includeIgnored;
+  final bool useWeightedAmounts;
   final Set<String>? categoryKeysFilter;
   final ValueChanged<Set<String>?> onCategoryKeysFilterChanged;
 
@@ -162,72 +174,113 @@ class MonthlyCategoryExpensePieChart extends StatelessWidget {
     await showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
-      showDragHandle: true,
+      showDragHandle: false,
       builder: (ctx) {
-        final listMaxHeight = MediaQuery.sizeOf(ctx).height * 0.45;
         return SafeArea(
           child: StatefulBuilder(
             builder: (ctx, setModal) {
-              return Padding(
-                padding: const EdgeInsets.only(bottom: 16),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(20, 8, 12, 0),
-                      child: Text(
+              final bottomPad = MediaQuery.paddingOf(ctx).bottom;
+              return ConstrainedBox(
+                constraints: BoxConstraints(
+                  maxHeight: MediaQuery.sizeOf(ctx).height * 0.55,
+                ),
+                child: CustomScrollView(
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  slivers: [
+                    SliverAppBar(
+                      pinned: true,
+                      centerTitle: true,
+                      automaticallyImplyLeading: false,
+                      elevation: 0,
+                      scrolledUnderElevation: 4,
+                      backgroundColor: modalBottomSheetSurfaceColor(ctx),
+                      shadowColor: Theme.of(ctx).colorScheme.shadow,
+                      leading: modalBottomSheetBackButton(ctx),
+                      title: Text(
                         l10n.dashboardCategoryPieFilterCategories,
-                        style: Theme.of(ctx).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
+                        style: Theme.of(ctx).textTheme.titleLarge,
                       ),
                     ),
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(20, 8, 20, 8),
-                      child: Text(
-                        l10n.dashboardCategoryPieFilterDescription,
-                        style: Theme.of(ctx).textTheme.bodySmall?.copyWith(
-                              color: Theme.of(ctx).colorScheme.onSurfaceVariant,
-                            ),
+                    SliverPadding(
+                      padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
+                      sliver: SliverToBoxAdapter(
+                        child: Text(
+                          l10n.dashboardCategoryPieFilterDescription,
+                          style: Theme.of(ctx).textTheme.bodySmall?.copyWith(
+                            color: Theme.of(ctx).colorScheme.onSurfaceVariant,
+                          ),
+                        ),
                       ),
                     ),
-                    SizedBox(
-                      height: listMaxHeight,
-                      child: ListView(
-                        children: [
-                          for (final o in options)
-                            CheckboxListTile(
-                              value: draft.contains(o.key),
-                              onChanged: (v) {
+                    SliverPadding(
+                      padding: const EdgeInsets.fromLTRB(8, 0, 8, 0),
+                      sliver: SliverToBoxAdapter(
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            TextButton(
+                              onPressed: () {
                                 setModal(() {
-                                  if (v == true) {
-                                    draft.add(o.key);
-                                  } else {
-                                    draft.remove(o.key);
-                                  }
+                                  draft
+                                    ..clear()
+                                    ..addAll(allKeys);
                                 });
                               },
-                              title: Text(o.label),
-                              controlAffinity: ListTileControlAffinity.leading,
+                              child: Text(l10n.dashboardPieSelectAll),
                             ),
-                        ],
+                            TextButton(
+                              onPressed: () {
+                                setModal(() => draft.clear());
+                              },
+                              child: Text(l10n.dashboardPieDeselectAll),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 20),
-                      child: FilledButton(
-                        onPressed: () {
-                          if (draft.isEmpty) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text(l10n.dashboardCategoryPieNeedOneCategory)),
+                    SliverList.list(
+                      children: [
+                        for (final o in options)
+                          CheckboxListTile(
+                            value: draft.contains(o.key),
+                            onChanged: (v) {
+                              setModal(() {
+                                if (v == true) {
+                                  draft.add(o.key);
+                                } else {
+                                  draft.remove(o.key);
+                                }
+                              });
+                            },
+                            title: Text(o.label),
+                            controlAffinity: ListTileControlAffinity.leading,
+                          ),
+                      ],
+                    ),
+                    SliverPadding(
+                      padding: EdgeInsets.fromLTRB(20, 16, 20, 16 + bottomPad),
+                      sliver: SliverToBoxAdapter(
+                        child: FilledButton(
+                          onPressed: () {
+                            if (draft.isEmpty) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(
+                                    l10n.dashboardCategoryPieNeedOneCategory,
+                                  ),
+                                ),
+                              );
+                              return;
+                            }
+                            onCategoryKeysFilterChanged(
+                              draft.length == allKeys.length
+                                  ? null
+                                  : Set<String>.from(draft),
                             );
-                            return;
-                          }
-                          onCategoryKeysFilterChanged(
-                            draft.length == allKeys.length ? null : Set<String>.from(draft),
-                          );
-                          Navigator.of(ctx).pop();
-                        },
-                        child: Text(l10n.save),
+                            Navigator.of(ctx).pop();
+                          },
+                          child: Text(l10n.save),
+                        ),
                       ),
                     ),
                   ],
@@ -247,11 +300,13 @@ class MonthlyCategoryExpensePieChart extends StatelessWidget {
     final options = distinctExpenseCategoryOptions(
       transactions,
       includeIgnored,
+      useWeightedAmounts,
     );
     final slices = _aggregateExpenseByCategory(
       transactions,
       includeIgnored,
       scheme,
+      useWeighted: useWeightedAmounts,
       categoryKeysFilter: categoryKeysFilter,
     );
 
@@ -261,7 +316,9 @@ class MonthlyCategoryExpensePieChart extends StatelessWidget {
         child: Text(
           l10n.dashboardCategoryPieNoData,
           textAlign: TextAlign.center,
-          style: theme.textTheme.bodyMedium?.copyWith(color: scheme.onSurfaceVariant),
+          style: theme.textTheme.bodyMedium?.copyWith(
+            color: scheme.onSurfaceVariant,
+          ),
         ),
       );
     }
@@ -272,7 +329,9 @@ class MonthlyCategoryExpensePieChart extends StatelessWidget {
         child: Text(
           l10n.dashboardCategoryPieNoData,
           textAlign: TextAlign.center,
-          style: theme.textTheme.bodyMedium?.copyWith(color: scheme.onSurfaceVariant),
+          style: theme.textTheme.bodyMedium?.copyWith(
+            color: scheme.onSurfaceVariant,
+          ),
         ),
       );
     }
@@ -298,7 +357,9 @@ class MonthlyCategoryExpensePieChart extends StatelessWidget {
               Expanded(
                 child: Text(
                   l10n.monthlyDashboardCategoryPieTitle,
-                  style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
               ),
               IconButton(
@@ -332,7 +393,10 @@ class MonthlyCategoryExpensePieChart extends StatelessWidget {
                   Container(
                     width: 12,
                     height: 12,
-                    decoration: BoxDecoration(color: s.color, shape: BoxShape.circle),
+                    decoration: BoxDecoration(
+                      color: s.color,
+                      shape: BoxShape.circle,
+                    ),
                   ),
                   const SizedBox(width: 8),
                   Expanded(
@@ -343,7 +407,9 @@ class MonthlyCategoryExpensePieChart extends StatelessWidget {
                     ),
                   ),
                   Text(
-                    l10n.transactionAmountValue(s.expenseTotal.toStringAsFixed(2)),
+                    l10n.transactionAmountValue(
+                      s.expenseTotal.toStringAsFixed(2),
+                    ),
                     style: theme.textTheme.bodyMedium?.copyWith(
                       fontWeight: FontWeight.w600,
                       fontFeatures: const [FontFeature.tabularFigures()],

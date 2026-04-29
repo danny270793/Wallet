@@ -25,9 +25,9 @@ class TagsCubit extends Cubit<TagsState> {
         _deleteTag = deleteTag,
         super(const TagsInitial());
 
-  Future<void> load() async {
+  Future<void> load({bool showLoading = true}) async {
     AppLogger.debug('loading tags');
-    emit(const TagsLoading());
+    if (showLoading) emit(const TagsLoading());
     try {
       final tags = sortedByName(await _getTags(), (t) => t.name);
       AppLogger.info('tags loaded: ${tags.length}');

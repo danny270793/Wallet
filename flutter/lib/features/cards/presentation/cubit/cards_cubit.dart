@@ -29,9 +29,9 @@ class CardsCubit extends Cubit<CardsState> {
         _adjustBalanceViaTransaction = adjustBalanceViaTransaction,
         super(const CardsInitial());
 
-  Future<void> load() async {
+  Future<void> load({bool showLoading = true}) async {
     AppLogger.debug('loading cards');
-    emit(const CardsLoading());
+    if (showLoading) emit(const CardsLoading());
     try {
       final cards = sortedByName(await _getCards(), (c) => c.name);
       AppLogger.info('cards loaded: ${cards.length}');

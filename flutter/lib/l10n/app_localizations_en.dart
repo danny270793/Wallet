@@ -30,10 +30,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String get monthlyDashboard => 'Monthly dashboard';
 
   @override
+  String get monthlyDashboardConfigureTooltip => 'Charts and totals options';
+
+  @override
+  String get monthlyDashboardOptionsSheetTitle => 'View options';
+
+  @override
   String get monthlyDashboardTransactionsListTitle => 'Transactions';
 
   @override
   String get dashboardIncludeIgnoredInTotals => 'Include ignored transactions';
+
+  @override
+  String get dashboardUseWeightedAmounts => 'Weighted amounts (%)';
 
   @override
   String get monthlyDashboardTagPieTitle => 'Expenses by tag';
@@ -69,6 +78,12 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get dashboardCategoryPieNeedOneCategory =>
       'Select at least one category';
+
+  @override
+  String get dashboardPieDeselectAll => 'Deselect all';
+
+  @override
+  String get dashboardPieSelectAll => 'Select all';
 
   @override
   String get yearlyDashboard => 'Yearly dashboard';
@@ -333,7 +348,84 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get assets => 'Assets';
+
+  @override
+  String get noAssets => 'No assets yet';
+
+  @override
+  String get assetSold => 'Sold';
+
+  @override
+  String get newAsset => 'New asset';
+
+  @override
+  String get assetProvider => 'Provider';
+
+  @override
+  String get assetValue => 'Value';
+
+  @override
+  String get assetPurchaseDate => 'Purchase date';
+
+  @override
+  String get assetEndDate => 'End date';
+
+  @override
+  String get assetSoldAmountField => 'Sold amount';
+
+  @override
+  String get assetInvalidNumber => 'Enter a valid number';
+
+  @override
+  String get assetEndBeforePurchase =>
+      'End date must be on or after purchase date';
+
+  @override
+  String assetHeldDuration(String duration) {
+    return 'Held $duration';
+  }
+
+  @override
+  String assetValuePerApproximateMonth(String amount) {
+    return '~$amount/mo avg.';
+  }
+
+  @override
+  String assetSoldPerApproximateMonth(String amount) {
+    return '~$amount/mo avg. (sold)';
+  }
+
+  @override
+  String get editAsset => 'Edit asset';
+
+  @override
+  String get deleteAsset => 'Delete asset';
+
+  @override
+  String confirmDeleteAsset(String name) {
+    return 'Are you sure you want to delete \"$name\"?';
+  }
+
+  @override
   String get transactions => 'Transactions';
+
+  @override
+  String get creditsNav => 'Credits';
+
+  @override
+  String get creditsTitle => 'Credits';
+
+  @override
+  String get creditsEmpty => 'No deferred credit installments yet.';
+
+  @override
+  String get creditsUntitledGroup => 'Deferred purchase';
+
+  @override
+  String creditsInstallmentsWithPending(int count, int pending) {
+    return '$count installments - $pending pending';
+  }
 
   @override
   String get transactionsSearchTooltip => 'Search transactions';
@@ -426,6 +518,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'Are you sure you want to delete this transaction?';
 
   @override
+  String get confirmDeleteCreditGroupTransaction =>
+      'This installment is part of a deferred split. All installments in this group will be deleted.';
+
+  @override
   String get deleteTransferPair => 'Delete transfer';
 
   @override
@@ -455,6 +551,23 @@ class AppLocalizationsEn extends AppLocalizations {
       'No payment methods match your search';
 
   @override
+  String get transactionDeferred => 'Deferred';
+
+  @override
+  String get transactionGraceMonths => 'Grace months';
+
+  @override
+  String get transactionMesesPlazo => 'Term (months)';
+
+  @override
+  String get transactionGraceMonthsInvalid =>
+      'Grace months must be 0 or greater';
+
+  @override
+  String get transactionTermMonthsInvalid =>
+      'Enter at least 2 installment months';
+
+  @override
   String get transactionCategory => 'Category';
 
   @override
@@ -462,6 +575,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get transactionAmount => 'Amount';
+
+  @override
+  String get transactionAmountCreditGroupHint =>
+      'Shown amount is the group total split evenly across installments. Saving updates every installment and shifts dates by the same amount.';
 
   @override
   String get transactionAmountInvalidNumber =>
@@ -502,6 +619,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get transactionsTotalBalance => 'Balance';
 
   @override
-  String get transactionsTotalsExcludingIgnoredHint =>
-      'Excluding ignored transactions';
+  String get transactionsTotalsWeightedHint => 'Weighted';
+
+  @override
+  String get transactionsTotalsWeightedExcludingIgnoredHint =>
+      'Weighted excluding ignored';
+
+  @override
+  String get transactionsTotalsNotWeightedHint => 'Not weighted';
+
+  @override
+  String get transactionsTotalsNotWeightedExcludingIgnoredHint =>
+      'Not weighted excluding ignored';
 }

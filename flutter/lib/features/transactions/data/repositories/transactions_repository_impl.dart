@@ -19,6 +19,14 @@ class TransactionsRepositoryImpl implements TransactionsRepository {
       _datasource.searchTransactionsByDescription(query, limit: limit);
 
   @override
+  Future<List<TransactionEntity>> getTransactionsByCreditGroupId(String creditGroupId) =>
+      _datasource.getTransactionsByCreditGroupId(creditGroupId);
+
+  @override
+  Future<List<TransactionEntity>> listTransactionsHavingCreditGroup() =>
+      _datasource.listTransactionsHavingCreditGroup();
+
+  @override
   Future<TransactionEntity> createTransaction({
     String? accountId,
     String? cardId,
@@ -29,7 +37,8 @@ class TransactionsRepositoryImpl implements TransactionsRepository {
     required double value,
     required bool ignore,
     required double percentage,
-    String? transactionGroupId,
+    String? transferGroupId,
+    String? creditGroupId,
   }) =>
       _datasource.createTransaction(
         accountId: accountId,
@@ -41,7 +50,8 @@ class TransactionsRepositoryImpl implements TransactionsRepository {
         value: value,
         ignore: ignore,
         percentage: percentage,
-        transactionGroupId: transactionGroupId,
+        transferGroupId: transferGroupId,
+        creditGroupId: creditGroupId,
       );
 
   @override
@@ -56,7 +66,8 @@ class TransactionsRepositoryImpl implements TransactionsRepository {
     required double value,
     required bool ignore,
     required double percentage,
-    String? transactionGroupId,
+    String? transferGroupId,
+    String? creditGroupId,
   }) =>
       _datasource.updateTransaction(
         id: id,
@@ -69,7 +80,8 @@ class TransactionsRepositoryImpl implements TransactionsRepository {
         value: value,
         ignore: ignore,
         percentage: percentage,
-        transactionGroupId: transactionGroupId,
+        transferGroupId: transferGroupId,
+        creditGroupId: creditGroupId,
       );
 
   @override

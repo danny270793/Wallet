@@ -4,6 +4,7 @@ import 'package:wallet/l10n/app_localizations.dart';
 
 import '../core/di/injection.dart';
 import '../features/transactions/presentation/cubit/yearly_dashboard_cubit.dart';
+import '../widgets/dashboard_view_options_bottom_sheet.dart';
 import '../widgets/shell_scaffold.dart';
 import '../widgets/yearly_dashboard_scope.dart';
 import '../widgets/yearly_weighted_income_bar_chart.dart';
@@ -33,8 +34,11 @@ class _YearlyDashboardViewState extends State<_YearlyDashboardView> {
   ValueNotifier<DateTime>? _yearNotifier;
   bool _listenerAttached = false;
 
-  /// When true, ignored rows count toward monthly income bars (matches monthly dashboard switch).
+  /// When true, ignored rows count toward yearly chart bars.
   bool _includeIgnored = true;
+
+  /// When true, monthly bars use `value × percentage`; when false, raw row value.
+  bool _useWeightedAmounts = true;
 
   @override
   void didChangeDependencies() {
@@ -72,75 +76,91 @@ class _YearlyDashboardViewState extends State<_YearlyDashboardView> {
             return ShellScaffold(
               title: l10n.yearlyDashboard,
               appBarBottom: YearlyDashboardAppBarBottom(notifier: yearNotifier),
-              body: switch (state) {
-                YearlyDashboardInitial() || YearlyDashboardLoading() => const Center(
-                    child: CircularProgressIndicator(),
-                  ),
-                YearlyDashboardError(:final message) => Center(
-                    child: Padding(
-                      padding: const EdgeInsets.all(24),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(message ?? l10n.unexpectedError, textAlign: TextAlign.center),
-                          const SizedBox(height: 16),
-                          FilledButton(
-                            onPressed: () =>
-                                context.read<YearlyDashboardCubit>().loadYear(visibleYear),
-                            child: const Text('Retry'),
-                          ),
-                        ],
+              appBarActionsBeforeSettings: switch (state) {
+                YearlyDashboardLoaded() => <Widget>[
+                    IconButton(
+                      icon: const Icon(Icons.tune_rounded),
+                      tooltip: l10n.monthlyDashboardConfigureTooltip,
+                      onPressed: () => showDashboardViewOptionsBottomSheet(
+                        context: context,
+                        l10n: l10n,
+                        includeIgnored: _includeIgnored,
+                        useWeightedAmounts: _useWeightedAmounts,
+                        onApply: (inc, wt) => setState(() {
+                          _includeIgnored = inc;
+                          _useWeightedAmounts = wt;
+                        }),
                       ),
                     ),
-                  ),
-                YearlyDashboardLoaded(:final transactions) => RefreshIndicator(
-                    onRefresh: () => context.read<YearlyDashboardCubit>().loadYear(visibleYear),
-                    child: ListView(
-                      physics: const AlwaysScrollableScrollPhysics(),
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                  ],
+                _ => null,
+              },
+              body: switch (state) {
+                YearlyDashboardInitial() || YearlyDashboardLoading() =>
+                  const Center(child: CircularProgressIndicator()),
+                YearlyDashboardError(:final message) => Center(
+                  child: Padding(
+                    padding: const EdgeInsets.all(24),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
                       children: [
-                        SwitchListTile(
-                          title: Text(l10n.dashboardIncludeIgnoredInTotals),
-                          value: _includeIgnored,
-                          onChanged: (v) => setState(() => _includeIgnored = v),
+                        Text(
+                          message ?? l10n.unexpectedError,
+                          textAlign: TextAlign.center,
                         ),
-                        if (!_includeIgnored)
-                          Padding(
-                            padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
-                            child: Text(
-                              l10n.transactionsTotalsExcludingIgnoredHint,
-                              style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                                  ),
-                            ),
-                          ),
-                        YearlyCumulativeNetBarChart(
-                          l10n: l10n,
-                          year: y,
-                          transactions: transactions,
-                          includeIgnored: _includeIgnored,
-                        ),
-                        YearlyWeightedNetBarChart(
-                          l10n: l10n,
-                          year: y,
-                          transactions: transactions,
-                          includeIgnored: _includeIgnored,
-                        ),
-                        YearlyWeightedIncomeBarChart(
-                          l10n: l10n,
-                          year: y,
-                          transactions: transactions,
-                          includeIgnored: _includeIgnored,
-                        ),
-                        YearlyWeightedOutcomeBarChart(
-                          l10n: l10n,
-                          year: y,
-                          transactions: transactions,
-                          includeIgnored: _includeIgnored,
+                        const SizedBox(height: 16),
+                        FilledButton(
+                          onPressed: () => context
+                              .read<YearlyDashboardCubit>()
+                              .loadYear(visibleYear),
+                          child: const Text('Retry'),
                         ),
                       ],
                     ),
                   ),
+                ),
+                YearlyDashboardLoaded(:final transactions) => RefreshIndicator(
+                  onRefresh: () => context
+                      .read<YearlyDashboardCubit>()
+                      .loadYear(visibleYear),
+                  child: ListView(
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 8,
+                    ),
+                    children: [
+                      YearlyCumulativeNetBarChart(
+                        l10n: l10n,
+                        year: y,
+                        transactions: transactions,
+                        includeIgnored: _includeIgnored,
+                        useWeightedAmounts: _useWeightedAmounts,
+                      ),
+                      YearlyWeightedNetBarChart(
+                        l10n: l10n,
+                        year: y,
+                        transactions: transactions,
+                        includeIgnored: _includeIgnored,
+                        useWeightedAmounts: _useWeightedAmounts,
+                      ),
+                      YearlyWeightedIncomeBarChart(
+                        l10n: l10n,
+                        year: y,
+                        transactions: transactions,
+                        includeIgnored: _includeIgnored,
+                        useWeightedAmounts: _useWeightedAmounts,
+                      ),
+                      YearlyWeightedOutcomeBarChart(
+                        l10n: l10n,
+                        year: y,
+                        transactions: transactions,
+                        includeIgnored: _includeIgnored,
+                        useWeightedAmounts: _useWeightedAmounts,
+                      ),
+                    ],
+                  ),
+                ),
               },
             );
           },

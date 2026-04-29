@@ -3,7 +3,7 @@ import 'package:uuid/uuid.dart';
 import 'create_transaction_usecase.dart';
 
 /// Creates two ledger rows: outflow on the source leg, inflow on the target leg.
-/// Each leg sets exactly one of accountId or cardId. Both rows share [transactionGroupId] (new UUID).
+/// Each leg sets exactly one of accountId or cardId. Both rows share [transferGroupId] (new UUID).
 class CreateAccountTransferUsecase {
   static const transferDescription = 'Transfer';
 
@@ -41,7 +41,7 @@ class CreateAccountTransferUsecase {
       value: -amount,
       ignore: false,
       percentage: 100,
-      transactionGroupId: groupId,
+      transferGroupId: groupId,
     );
     await _createTransaction(
       accountId: targetAccountId,
@@ -51,7 +51,7 @@ class CreateAccountTransferUsecase {
       value: amount,
       ignore: false,
       percentage: 100,
-      transactionGroupId: groupId,
+      transferGroupId: groupId,
     );
   }
 }

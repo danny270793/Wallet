@@ -7,7 +7,7 @@ Color walletListBalanceColor(ThemeData theme, double v) {
   return theme.colorScheme.onSurface;
 }
 
-/// Trailing amount for account/card rows (sum of transaction values).
+/// Trailing amount for account/card rows (sum of transaction `value`, full amounts).
 class WalletListBalanceAmount extends StatelessWidget {
   const WalletListBalanceAmount({
     super.key,

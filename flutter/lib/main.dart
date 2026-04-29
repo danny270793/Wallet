@@ -70,6 +70,9 @@ class App extends StatelessWidget {
           theme: ThemeData(
             colorScheme: ColorScheme.fromSeed(seedColor: seed),
             useMaterial3: true,
+            bottomSheetTheme: const BottomSheetThemeData(
+              clipBehavior: Clip.antiAlias,
+            ),
           ),
           darkTheme: ThemeData(
             colorScheme: ColorScheme.fromSeed(
@@ -77,6 +80,9 @@ class App extends StatelessWidget {
               brightness: Brightness.dark,
             ),
             useMaterial3: true,
+            bottomSheetTheme: const BottomSheetThemeData(
+              clipBehavior: Clip.antiAlias,
+            ),
           ),
           themeMode: appTheme.themeMode,
           routerConfig: router,

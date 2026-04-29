@@ -1,11 +1,16 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:uuid/uuid.dart';
+import '../../../../core/calendar_months.dart';
+import '../../../../core/credit_group_description.dart';
 import '../../../../core/logger/app_logger.dart';
+import '../../../../core/split_equal_amounts.dart';
 import '../../domain/entities/transaction_entity.dart';
 import '../../domain/usecases/get_transactions_usecase.dart';
 import '../../domain/usecases/create_transaction_usecase.dart';
 import '../../domain/usecases/update_transaction_usecase.dart';
 import '../../domain/usecases/delete_transaction_usecase.dart';
 import '../../domain/usecases/create_account_transfer_usecase.dart';
+import '../../domain/usecases/get_transactions_by_credit_group_id_usecase.dart';
 import 'transactions_state.dart';
 
 class TransactionsCubit extends Cubit<TransactionsState> {
@@ -14,6 +19,7 @@ class TransactionsCubit extends Cubit<TransactionsState> {
   final UpdateTransactionUsecase _updateTransaction;
   final DeleteTransactionUsecase _deleteTransaction;
   final CreateAccountTransferUsecase _createAccountTransfer;
+  final GetTransactionsByCreditGroupIdUsecase _getTransactionsByCreditGroupId;
 
   TransactionsCubit({
     required GetTransactionsUsecase getTransactions,
@@ -21,11 +27,13 @@ class TransactionsCubit extends Cubit<TransactionsState> {
     required UpdateTransactionUsecase updateTransaction,
     required DeleteTransactionUsecase deleteTransaction,
     required CreateAccountTransferUsecase createAccountTransfer,
+    required GetTransactionsByCreditGroupIdUsecase getTransactionsByCreditGroupId,
   })  : _getTransactions = getTransactions,
         _createTransaction = createTransaction,
         _updateTransaction = updateTransaction,
         _deleteTransaction = deleteTransaction,
         _createAccountTransfer = createAccountTransfer,
+        _getTransactionsByCreditGroupId = getTransactionsByCreditGroupId,
         super(const TransactionsInitial());
 
   /// Last month that was requested via [loadForMonth] (normalized local day 1).
@@ -81,23 +89,61 @@ class TransactionsCubit extends Cubit<TransactionsState> {
     required double value,
     required bool ignore,
     required double percentage,
-    String? transactionGroupId,
+    String? transferGroupId,
+    bool deferredCredit = false,
+    int deferredGraceMonths = 0,
+    int deferredTermMonths = 1,
   }) async {
     final current = _currentTransactions();
     AppLogger.debug('creating transaction');
+    final graceMonths =
+        deferredGraceMonths.clamp(0, 1200);
+    final useDeferred = deferredCredit &&
+        cardId != null &&
+        deferredTermMonths >= 2;
+
     try {
-      await _createTransaction(
-        accountId: accountId,
-        cardId: cardId,
-        categoryId: categoryId,
-        tagId: tagId,
-        description: description,
-        transactedAt: transactedAt,
-        value: value,
-        ignore: ignore,
-        percentage: percentage,
-        transactionGroupId: transactionGroupId,
-      );
+      if (useDeferred) {
+        final uuid = const Uuid().v4();
+        final parts = splitEqualAmountParts(value, deferredTermMonths);
+        final anchor = transactedAt;
+        for (var i = 0; i < deferredTermMonths; i++) {
+          final at = addCalendarMonths(
+            anchor,
+            graceMonths + i,
+          );
+          await _createTransaction(
+            accountId: accountId,
+            cardId: cardId,
+            categoryId: categoryId,
+            tagId: tagId,
+            description: creditGroupPrefixedDescription(
+              oneBasedCurrent: i + 1,
+              total: deferredTermMonths,
+              userNote: description,
+            ),
+            transactedAt: at,
+            value: parts[i],
+            ignore: ignore,
+            percentage: percentage,
+            transferGroupId: transferGroupId,
+            creditGroupId: uuid,
+          );
+        }
+      } else {
+        await _createTransaction(
+          accountId: accountId,
+          cardId: cardId,
+          categoryId: categoryId,
+          tagId: tagId,
+          description: description,
+          transactedAt: transactedAt,
+          value: value,
+          ignore: ignore,
+          percentage: percentage,
+          transferGroupId: transferGroupId,
+        );
+      }
       AppLogger.info('transaction created');
       await _refetchCurrentMonthQuietly();
     } catch (e, s) {
@@ -117,25 +163,81 @@ class TransactionsCubit extends Cubit<TransactionsState> {
     required double value,
     required bool ignore,
     required double percentage,
-    String? transactionGroupId,
+    String? transferGroupId,
+    String? creditGroupId,
   }) async {
     final current = _currentTransactions();
     AppLogger.debug('updating transaction: $id');
     try {
-      await _updateTransaction(
-        id: id,
-        accountId: accountId,
-        cardId: cardId,
-        categoryId: categoryId,
-        tagId: tagId,
-        description: description,
-        transactedAt: transactedAt,
-        value: value,
-        ignore: ignore,
-        percentage: percentage,
-        transactionGroupId: transactionGroupId,
-      );
-      AppLogger.info('transaction updated: $id');
+      if (creditGroupId != null && creditGroupId.isNotEmpty) {
+        final siblings = await _getTransactionsByCreditGroupId(creditGroupId);
+        if (siblings.isEmpty) {
+          await _updateTransaction(
+            id: id,
+            accountId: accountId,
+            cardId: cardId,
+            categoryId: categoryId,
+            tagId: tagId,
+            description: description,
+            transactedAt: transactedAt,
+            value: value,
+            ignore: ignore,
+            percentage: percentage,
+            transferGroupId: transferGroupId,
+            creditGroupId: creditGroupId,
+          );
+        } else {
+          siblings.sort((a, b) => a.transactedAt.compareTo(b.transactedAt));
+          var anchor = siblings.first;
+          for (final e in siblings) {
+            if (e.id == id) {
+              anchor = e;
+              break;
+            }
+          }
+          final delta = transactedAt.difference(anchor.transactedAt.toLocal());
+          final parts = splitEqualAmountParts(value, siblings.length);
+          for (var i = 0; i < siblings.length; i++) {
+            final s = siblings[i];
+            final shiftedLocal = s.transactedAt.toLocal().add(delta);
+            await _updateTransaction(
+              id: s.id,
+              accountId: accountId,
+              cardId: cardId,
+              categoryId: categoryId,
+              tagId: tagId,
+              description: creditGroupPrefixedDescription(
+                oneBasedCurrent: i + 1,
+                total: siblings.length,
+                userNote: description,
+              ),
+              transactedAt: shiftedLocal,
+              value: parts[i],
+              ignore: ignore,
+              percentage: percentage,
+              transferGroupId: s.transferGroupId,
+              creditGroupId: creditGroupId,
+            );
+          }
+          AppLogger.info('credit group updated ($creditGroupId): ${siblings.length} rows');
+        }
+      } else {
+        await _updateTransaction(
+          id: id,
+          accountId: accountId,
+          cardId: cardId,
+          categoryId: categoryId,
+          tagId: tagId,
+          description: description,
+          transactedAt: transactedAt,
+          value: value,
+          ignore: ignore,
+          percentage: percentage,
+          transferGroupId: transferGroupId,
+          creditGroupId: creditGroupId,
+        );
+        AppLogger.info('transaction updated: $id');
+      }
       await _refetchCurrentMonthQuietly();
     } catch (e, s) {
       AppLogger.error('failed to update transaction', e, s);
@@ -187,8 +289,8 @@ class TransactionsCubit extends Cubit<TransactionsState> {
     required bool ignore,
   }) async {
     final current = _currentTransactions();
-    final gid = source.transactionGroupId;
-    if (gid == null || gid.isEmpty || gid != target.transactionGroupId) {
+    final gid = source.transferGroupId;
+    if (gid == null || gid.isEmpty || gid != target.transferGroupId) {
       AppLogger.error('updateAccountTransfer: invalid or mismatched group id');
       emit(TransactionsActionError(current));
       return false;
@@ -206,7 +308,8 @@ class TransactionsCubit extends Cubit<TransactionsState> {
         value: -amount,
         ignore: ignore,
         percentage: source.percentage,
-        transactionGroupId: gid,
+        transferGroupId: gid,
+        creditGroupId: source.creditGroupId,
       );
       await _updateTransaction(
         id: target.id,
@@ -219,7 +322,8 @@ class TransactionsCubit extends Cubit<TransactionsState> {
         value: amount,
         ignore: ignore,
         percentage: target.percentage,
-        transactionGroupId: gid,
+        transferGroupId: gid,
+        creditGroupId: target.creditGroupId,
       );
       AppLogger.info('transfer updated');
       await _refetchCurrentMonthQuietly();
@@ -231,12 +335,22 @@ class TransactionsCubit extends Cubit<TransactionsState> {
     }
   }
 
-  Future<bool> delete({required String id}) async {
+  Future<bool> delete({required String id, String? creditGroupId}) async {
     final current = _currentTransactions();
     AppLogger.debug('deleting transaction: $id');
     try {
-      await _deleteTransaction(id: id);
-      AppLogger.info('transaction deleted: $id');
+      final idsToDelete = <String>{};
+      idsToDelete.add(id);
+      if (creditGroupId != null && creditGroupId.isNotEmpty) {
+        final group = await _getTransactionsByCreditGroupId(creditGroupId);
+        for (final t in group) {
+          idsToDelete.add(t.id);
+        }
+      }
+      for (final delId in idsToDelete) {
+        await _deleteTransaction(id: delId);
+      }
+      AppLogger.info('transaction deleted: $idsToDelete');
       await _refetchCurrentMonthQuietly();
       return true;
     } catch (e, s) {

@@ -45,11 +45,21 @@ import '../../features/tags/domain/usecases/create_tag_usecase.dart';
 import '../../features/tags/domain/usecases/update_tag_usecase.dart';
 import '../../features/tags/domain/usecases/delete_tag_usecase.dart';
 import '../../features/tags/presentation/cubit/tags_cubit.dart';
+import '../../features/assets/data/datasources/assets_remote_datasource.dart';
+import '../../features/assets/data/repositories/assets_repository_impl.dart';
+import '../../features/assets/domain/repositories/assets_repository.dart';
+import '../../features/assets/domain/usecases/create_asset_usecase.dart';
+import '../../features/assets/domain/usecases/delete_asset_usecase.dart';
+import '../../features/assets/domain/usecases/get_assets_usecase.dart';
+import '../../features/assets/domain/usecases/update_asset_usecase.dart';
+import '../../features/assets/presentation/cubit/assets_cubit.dart';
 import '../../features/transactions/data/datasources/transactions_remote_datasource.dart';
 import '../../features/transactions/data/repositories/transactions_repository_impl.dart';
 import '../../features/transactions/domain/repositories/transactions_repository.dart';
 import '../../features/transactions/domain/usecases/get_transactions_usecase.dart';
 import '../../features/transactions/domain/usecases/get_transactions_for_year_usecase.dart';
+import '../../features/transactions/domain/usecases/get_transactions_by_credit_group_id_usecase.dart';
+import '../../features/transactions/domain/usecases/list_transactions_having_credit_group_usecase.dart';
 import '../../features/transactions/domain/usecases/search_transactions_by_description_usecase.dart';
 import '../../features/transactions/domain/usecases/create_transaction_usecase.dart';
 import '../../features/transactions/domain/usecases/create_account_transfer_usecase.dart';
@@ -185,6 +195,26 @@ void setupDi() {
     ),
   );
 
+  // assets
+  getIt.registerLazySingleton<AssetsRemoteDatasource>(
+    () => AssetsSupabaseDatasource(Supabase.instance.client),
+  );
+  getIt.registerLazySingleton<AssetsRepository>(
+    () => AssetsRepositoryImpl(getIt()),
+  );
+  getIt.registerFactory<GetAssetsUsecase>(() => GetAssetsUsecase(getIt()));
+  getIt.registerFactory<CreateAssetUsecase>(() => CreateAssetUsecase(getIt()));
+  getIt.registerFactory<UpdateAssetUsecase>(() => UpdateAssetUsecase(getIt()));
+  getIt.registerFactory<DeleteAssetUsecase>(() => DeleteAssetUsecase(getIt()));
+  getIt.registerFactory<AssetsCubit>(
+    () => AssetsCubit(
+      getAssets: getIt(),
+      createAsset: getIt(),
+      updateAsset: getIt(),
+      deleteAsset: getIt(),
+    ),
+  );
+
   // transactions
   getIt.registerLazySingleton<TransactionsRemoteDatasource>(
     () => TransactionsSupabaseDatasource(Supabase.instance.client),
@@ -201,6 +231,12 @@ void setupDi() {
   getIt.registerFactory<CreateAccountTransferUsecase>(() => CreateAccountTransferUsecase(getIt()));
   getIt.registerFactory<UpdateTransactionUsecase>(() => UpdateTransactionUsecase(getIt()));
   getIt.registerFactory<DeleteTransactionUsecase>(() => DeleteTransactionUsecase(getIt()));
+  getIt.registerFactory<GetTransactionsByCreditGroupIdUsecase>(
+    () => GetTransactionsByCreditGroupIdUsecase(getIt()),
+  );
+  getIt.registerFactory<ListTransactionsHavingCreditGroupUsecase>(
+    () => ListTransactionsHavingCreditGroupUsecase(getIt()),
+  );
   getIt.registerFactory<TransactionsCubit>(
     () => TransactionsCubit(
       getTransactions: getIt(),
@@ -208,6 +244,7 @@ void setupDi() {
       updateTransaction: getIt(),
       deleteTransaction: getIt(),
       createAccountTransfer: getIt(),
+      getTransactionsByCreditGroupId: getIt(),
     ),
   );
   getIt.registerFactory<YearlyDashboardCubit>(() => YearlyDashboardCubit(getIt()));

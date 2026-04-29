@@ -16,7 +16,8 @@ class UpdateTransactionUsecase {
     required double value,
     required bool ignore,
     required double percentage,
-    String? transactionGroupId,
+    String? transferGroupId,
+    String? creditGroupId,
   }) =>
       _repository.updateTransaction(
         id: id,
@@ -29,6 +30,7 @@ class UpdateTransactionUsecase {
         value: value,
         ignore: ignore,
         percentage: percentage,
-        transactionGroupId: transactionGroupId,
+        transferGroupId: transferGroupId,
+        creditGroupId: creditGroupId,
       );
 }

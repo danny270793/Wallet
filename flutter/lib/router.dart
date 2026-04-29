@@ -1,3 +1,4 @@
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'pages/splash_page.dart';
@@ -8,6 +9,10 @@ import 'pages/accounts_page.dart';
 import 'pages/cards_page.dart';
 import 'pages/categories_page.dart';
 import 'pages/tags_page.dart';
+import 'pages/assets_page.dart';
+import 'core/di/injection.dart';
+import 'features/transactions/presentation/cubit/transactions_cubit.dart';
+import 'pages/credits_page.dart';
 import 'pages/transactions_page.dart';
 import 'pages/settings_page.dart';
 import 'pages/legal_info_page.dart';
@@ -52,12 +57,20 @@ final router = GoRouter(
     ShellRoute(
       builder: (context, state, child) => child,
       routes: [
+        GoRoute(
+          path: '/credits',
+          builder: (context, state) => BlocProvider(
+            create: (_) => getIt<TransactionsCubit>(),
+            child: const CreditsPage(),
+          ),
+        ),
         GoRoute(path: '/dashboard/monthly', builder: (context, state) => const DashboardPage()),
         GoRoute(path: '/dashboard/yearly', builder: (context, state) => const YearlyDashboardPage()),
         GoRoute(path: '/accounts', builder: (context, state) => const AccountsPage()),
         GoRoute(path: '/cards', builder: (context, state) => const CardsPage()),
         GoRoute(path: '/categories', builder: (context, state) => const CategoriesPage()),
         GoRoute(path: '/tags', builder: (context, state) => const TagsPage()),
+        GoRoute(path: '/assets', builder: (context, state) => const AssetsPage()),
         GoRoute(
           path: '/transactions',
           builder: (context, state) {

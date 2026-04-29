@@ -140,6 +140,18 @@ abstract class AppLocalizations {
   /// **'Monthly dashboard'**
   String get monthlyDashboard;
 
+  /// No description provided for @monthlyDashboardConfigureTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Charts and totals options'**
+  String get monthlyDashboardConfigureTooltip;
+
+  /// No description provided for @monthlyDashboardOptionsSheetTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'View options'**
+  String get monthlyDashboardOptionsSheetTitle;
+
   /// No description provided for @monthlyDashboardTransactionsListTitle.
   ///
   /// In en, this message translates to:
@@ -151,6 +163,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Include ignored transactions'**
   String get dashboardIncludeIgnoredInTotals;
+
+  /// No description provided for @dashboardUseWeightedAmounts.
+  ///
+  /// In en, this message translates to:
+  /// **'Weighted amounts (%)'**
+  String get dashboardUseWeightedAmounts;
 
   /// No description provided for @monthlyDashboardTagPieTitle.
   ///
@@ -211,6 +229,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Select at least one category'**
   String get dashboardCategoryPieNeedOneCategory;
+
+  /// No description provided for @dashboardPieDeselectAll.
+  ///
+  /// In en, this message translates to:
+  /// **'Deselect all'**
+  String get dashboardPieDeselectAll;
+
+  /// No description provided for @dashboardPieSelectAll.
+  ///
+  /// In en, this message translates to:
+  /// **'Select all'**
+  String get dashboardPieSelectAll;
 
   /// No description provided for @yearlyDashboard.
   ///
@@ -692,11 +722,143 @@ abstract class AppLocalizations {
   /// **'Are you sure you want to delete \"{name}\"?'**
   String confirmDeleteTag(String name);
 
+  /// No description provided for @assets.
+  ///
+  /// In en, this message translates to:
+  /// **'Assets'**
+  String get assets;
+
+  /// No description provided for @noAssets.
+  ///
+  /// In en, this message translates to:
+  /// **'No assets yet'**
+  String get noAssets;
+
+  /// No description provided for @assetSold.
+  ///
+  /// In en, this message translates to:
+  /// **'Sold'**
+  String get assetSold;
+
+  /// No description provided for @newAsset.
+  ///
+  /// In en, this message translates to:
+  /// **'New asset'**
+  String get newAsset;
+
+  /// No description provided for @assetProvider.
+  ///
+  /// In en, this message translates to:
+  /// **'Provider'**
+  String get assetProvider;
+
+  /// No description provided for @assetValue.
+  ///
+  /// In en, this message translates to:
+  /// **'Value'**
+  String get assetValue;
+
+  /// No description provided for @assetPurchaseDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Purchase date'**
+  String get assetPurchaseDate;
+
+  /// No description provided for @assetEndDate.
+  ///
+  /// In en, this message translates to:
+  /// **'End date'**
+  String get assetEndDate;
+
+  /// No description provided for @assetSoldAmountField.
+  ///
+  /// In en, this message translates to:
+  /// **'Sold amount'**
+  String get assetSoldAmountField;
+
+  /// No description provided for @assetInvalidNumber.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a valid number'**
+  String get assetInvalidNumber;
+
+  /// No description provided for @assetEndBeforePurchase.
+  ///
+  /// In en, this message translates to:
+  /// **'End date must be on or after purchase date'**
+  String get assetEndBeforePurchase;
+
+  /// No description provided for @assetHeldDuration.
+  ///
+  /// In en, this message translates to:
+  /// **'Held {duration}'**
+  String assetHeldDuration(String duration);
+
+  /// No description provided for @assetValuePerApproximateMonth.
+  ///
+  /// In en, this message translates to:
+  /// **'~{amount}/mo avg.'**
+  String assetValuePerApproximateMonth(String amount);
+
+  /// No description provided for @assetSoldPerApproximateMonth.
+  ///
+  /// In en, this message translates to:
+  /// **'~{amount}/mo avg. (sold)'**
+  String assetSoldPerApproximateMonth(String amount);
+
+  /// No description provided for @editAsset.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit asset'**
+  String get editAsset;
+
+  /// No description provided for @deleteAsset.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete asset'**
+  String get deleteAsset;
+
+  /// No description provided for @confirmDeleteAsset.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to delete \"{name}\"?'**
+  String confirmDeleteAsset(String name);
+
   /// No description provided for @transactions.
   ///
   /// In en, this message translates to:
   /// **'Transactions'**
   String get transactions;
+
+  /// No description provided for @creditsNav.
+  ///
+  /// In en, this message translates to:
+  /// **'Credits'**
+  String get creditsNav;
+
+  /// No description provided for @creditsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Credits'**
+  String get creditsTitle;
+
+  /// No description provided for @creditsEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No deferred credit installments yet.'**
+  String get creditsEmpty;
+
+  /// No description provided for @creditsUntitledGroup.
+  ///
+  /// In en, this message translates to:
+  /// **'Deferred purchase'**
+  String get creditsUntitledGroup;
+
+  /// No description provided for @creditsInstallmentsWithPending.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} installments - {pending} pending'**
+  String creditsInstallmentsWithPending(int count, int pending);
 
   /// No description provided for @transactionsSearchTooltip.
   ///
@@ -866,6 +1028,12 @@ abstract class AppLocalizations {
   /// **'Are you sure you want to delete this transaction?'**
   String get confirmDeleteTransaction;
 
+  /// No description provided for @confirmDeleteCreditGroupTransaction.
+  ///
+  /// In en, this message translates to:
+  /// **'This installment is part of a deferred split. All installments in this group will be deleted.'**
+  String get confirmDeleteCreditGroupTransaction;
+
   /// No description provided for @deleteTransferPair.
   ///
   /// In en, this message translates to:
@@ -920,6 +1088,36 @@ abstract class AppLocalizations {
   /// **'No payment methods match your search'**
   String get transactionPaymentMethodSearchNoResults;
 
+  /// No description provided for @transactionDeferred.
+  ///
+  /// In en, this message translates to:
+  /// **'Deferred'**
+  String get transactionDeferred;
+
+  /// No description provided for @transactionGraceMonths.
+  ///
+  /// In en, this message translates to:
+  /// **'Grace months'**
+  String get transactionGraceMonths;
+
+  /// No description provided for @transactionMesesPlazo.
+  ///
+  /// In en, this message translates to:
+  /// **'Term (months)'**
+  String get transactionMesesPlazo;
+
+  /// No description provided for @transactionGraceMonthsInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'Grace months must be 0 or greater'**
+  String get transactionGraceMonthsInvalid;
+
+  /// No description provided for @transactionTermMonthsInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter at least 2 installment months'**
+  String get transactionTermMonthsInvalid;
+
   /// No description provided for @transactionCategory.
   ///
   /// In en, this message translates to:
@@ -937,6 +1135,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Amount'**
   String get transactionAmount;
+
+  /// No description provided for @transactionAmountCreditGroupHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Shown amount is the group total split evenly across installments. Saving updates every installment and shifts dates by the same amount.'**
+  String get transactionAmountCreditGroupHint;
 
   /// No description provided for @transactionAmountInvalidNumber.
   ///
@@ -1004,11 +1208,29 @@ abstract class AppLocalizations {
   /// **'Balance'**
   String get transactionsTotalBalance;
 
-  /// No description provided for @transactionsTotalsExcludingIgnoredHint.
+  /// No description provided for @transactionsTotalsWeightedHint.
   ///
   /// In en, this message translates to:
-  /// **'Excluding ignored transactions'**
-  String get transactionsTotalsExcludingIgnoredHint;
+  /// **'Weighted'**
+  String get transactionsTotalsWeightedHint;
+
+  /// No description provided for @transactionsTotalsWeightedExcludingIgnoredHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Weighted excluding ignored'**
+  String get transactionsTotalsWeightedExcludingIgnoredHint;
+
+  /// No description provided for @transactionsTotalsNotWeightedHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Not weighted'**
+  String get transactionsTotalsNotWeightedHint;
+
+  /// No description provided for @transactionsTotalsNotWeightedExcludingIgnoredHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Not weighted excluding ignored'**
+  String get transactionsTotalsNotWeightedExcludingIgnoredHint;
 }
 
 class _AppLocalizationsDelegate

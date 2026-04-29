@@ -14,6 +14,11 @@ class SwipeableListTile extends StatelessWidget {
     this.trailing,
     this.onTap,
     this.enabled = true,
+    this.tileIsThreeLine = false,
+    this.dense = false,
+    this.minLeadingWidth,
+    this.horizontalTitleGap,
+    this.contentPadding = const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
     required this.onEdit,
     required this.confirmDelete,
     required this.onDelete,
@@ -25,11 +30,29 @@ class SwipeableListTile extends StatelessWidget {
   final Widget? leading;
   final Widget? trailing;
   final VoidCallback? onTap;
+
   /// When false, tile uses disabled colors (e.g. ignored transactions).
   final bool enabled;
+
+  /// Passed to inner [ListTile.isThreeLine].
+  final bool tileIsThreeLine;
+
+  /// Passed to inner [ListTile.dense].
+  final bool dense;
+
+  /// Passed to inner [ListTile.minLeadingWidth] when non-null.
+  final double? minLeadingWidth;
+
+  /// Passed to inner [ListTile.horizontalTitleGap] when non-null.
+  final double? horizontalTitleGap;
+
+  /// Passed to inner [ListTile.contentPadding].
+  final EdgeInsetsGeometry contentPadding;
   final VoidCallback onEdit;
+
   /// Return true to allow delete dismiss after user confirms in dialog.
   final Future<bool> Function() confirmDelete;
+
   /// Runs after [confirmDelete] returns true. Return false to keep the row (e.g. server delete failed).
   final Future<bool> Function() onDelete;
 
@@ -39,15 +62,19 @@ class SwipeableListTile extends StatelessWidget {
     final radius = BorderRadius.circular(14);
 
     final tile = ListTile(
-        leading: leading,
-        title: title,
-        subtitle: subtitle,
-        trailing: trailing,
-        onTap: onTap,
-        enabled: enabled,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
-        shape: RoundedRectangleBorder(borderRadius: radius),
-      );
+      leading: leading,
+      title: title,
+      subtitle: subtitle,
+      trailing: trailing,
+      onTap: onTap,
+      enabled: enabled,
+      isThreeLine: tileIsThreeLine,
+      dense: dense,
+      minLeadingWidth: minLeadingWidth,
+      horizontalTitleGap: horizontalTitleGap,
+      contentPadding: contentPadding,
+      shape: RoundedRectangleBorder(borderRadius: radius),
+    );
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 0, vertical: 0),
@@ -80,7 +107,11 @@ class SwipeableListTile extends StatelessWidget {
             alignment: Alignment.centerLeft,
             child: Padding(
               padding: const EdgeInsets.only(left: 20),
-              child: Icon(Icons.delete_outline_rounded, color: theme.colorScheme.onErrorContainer, size: 28),
+              child: Icon(
+                Icons.delete_outline_rounded,
+                color: theme.colorScheme.onErrorContainer,
+                size: 28,
+              ),
             ),
           ),
         ),
@@ -93,7 +124,11 @@ class SwipeableListTile extends StatelessWidget {
             alignment: Alignment.centerRight,
             child: Padding(
               padding: const EdgeInsets.only(right: 20),
-              child: Icon(Icons.edit_rounded, color: theme.colorScheme.onPrimaryContainer, size: 28),
+              child: Icon(
+                Icons.edit_rounded,
+                color: theme.colorScheme.onPrimaryContainer,
+                size: 28,
+              ),
             ),
           ),
         ),
@@ -105,4 +140,3 @@ class SwipeableListTile extends StatelessWidget {
 
 /// Slightly lower than default so short swipes still register.
 const double _kDismissThreshold = 0.28;
-

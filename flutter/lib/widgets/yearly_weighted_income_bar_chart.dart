@@ -7,6 +7,9 @@ import '../features/transactions/domain/entities/transaction_entity.dart';
 
 double _weighted(TransactionEntity t) => t.value * t.percentage / 100.0;
 
+double _effectiveAmount(TransactionEntity t, bool useWeightedAmounts) =>
+    useWeightedAmounts ? _weighted(t) : t.value;
+
 /// Latest calendar month in [year] (1–12) that has at least one counted transaction,
 /// or 0 if none. Uses local dates; respects [includeIgnored] the same as other yearly charts.
 int lastMonthWithTransactionsForYear(
@@ -16,6 +19,7 @@ int lastMonthWithTransactionsForYear(
 }) {
   var last = 0;
   for (final t in txs) {
+    if (t.isAccountTransferLeg) continue;
     if (!includeIgnored && t.ignore) continue;
     final local = t.transactedAt.toLocal();
     if (local.year != year) continue;
@@ -25,55 +29,59 @@ int lastMonthWithTransactionsForYear(
   return last;
 }
 
-/// Per calendar month (local), sum of positive weighted amounts.
-/// When [includeIgnored] is false, skips [TransactionEntity.ignore].
+/// Per calendar month (local), sum of positive effective amounts.
+/// When [useWeightedAmounts] is true, amounts are `value × percentage`; otherwise raw [TransactionEntity.value].
 List<double> weightedIncomeByMonthForYear(
   List<TransactionEntity> txs,
   int year, {
   required bool includeIgnored,
+  required bool useWeightedAmounts,
 }) {
   final sums = List<double>.filled(12, 0);
   for (final t in txs) {
+    if (t.isAccountTransferLeg) continue;
     if (!includeIgnored && t.ignore) continue;
     final local = t.transactedAt.toLocal();
     if (local.year != year) continue;
-    final w = _weighted(t);
+    final w = _effectiveAmount(t, useWeightedAmounts);
     if (w > 0) sums[local.month - 1] += w;
   }
   return sums;
 }
 
-/// Per calendar month (local), sum of absolute negative weighted amounts (outcome / outflow).
-/// When [includeIgnored] is false, skips [TransactionEntity.ignore].
+/// Per calendar month (local), sum of absolute negative effective amounts (outcome / outflow).
 List<double> weightedOutcomeByMonthForYear(
   List<TransactionEntity> txs,
   int year, {
   required bool includeIgnored,
+  required bool useWeightedAmounts,
 }) {
   final sums = List<double>.filled(12, 0);
   for (final t in txs) {
+    if (t.isAccountTransferLeg) continue;
     if (!includeIgnored && t.ignore) continue;
     final local = t.transactedAt.toLocal();
     if (local.year != year) continue;
-    final w = _weighted(t);
+    final w = _effectiveAmount(t, useWeightedAmounts);
     if (w < 0) sums[local.month - 1] += -w;
   }
   return sums;
 }
 
-/// Per calendar month (local), net weighted amount (sum of signed weighted values).
-/// Same as income totals minus outcome totals per month. When [includeIgnored] is false, skips ignored rows.
+/// Per calendar month (local), net effective amount (sum of signed values).
 List<double> weightedNetByMonthForYear(
   List<TransactionEntity> txs,
   int year, {
   required bool includeIgnored,
+  required bool useWeightedAmounts,
 }) {
   final sums = List<double>.filled(12, 0);
   for (final t in txs) {
+    if (t.isAccountTransferLeg) continue;
     if (!includeIgnored && t.ignore) continue;
     final local = t.transactedAt.toLocal();
     if (local.year != year) continue;
-    sums[local.month - 1] += _weighted(t);
+    sums[local.month - 1] += _effectiveAmount(t, useWeightedAmounts);
   }
   return sums;
 }
@@ -83,8 +91,14 @@ List<double> weightedCumulativeNetByMonthForYear(
   List<TransactionEntity> txs,
   int year, {
   required bool includeIgnored,
+  required bool useWeightedAmounts,
 }) {
-  final monthly = weightedNetByMonthForYear(txs, year, includeIgnored: includeIgnored);
+  final monthly = weightedNetByMonthForYear(
+    txs,
+    year,
+    includeIgnored: includeIgnored,
+    useWeightedAmounts: useWeightedAmounts,
+  );
   final out = List<double>.filled(12, 0);
   var sum = 0.0;
   for (var i = 0; i < 12; i++) {
@@ -100,9 +114,19 @@ List<double> _cumulativeNetMonthlyBarsWithTrailingZeros(
   List<TransactionEntity> txs,
   int year, {
   required bool includeIgnored,
+  required bool useWeightedAmounts,
 }) {
-  final full = weightedCumulativeNetByMonthForYear(txs, year, includeIgnored: includeIgnored);
-  final last = lastMonthWithTransactionsForYear(txs, year, includeIgnored: includeIgnored);
+  final full = weightedCumulativeNetByMonthForYear(
+    txs,
+    year,
+    includeIgnored: includeIgnored,
+    useWeightedAmounts: useWeightedAmounts,
+  );
+  final last = lastMonthWithTransactionsForYear(
+    txs,
+    year,
+    includeIgnored: includeIgnored,
+  );
   if (last == 0) return full;
   return List<double>.generate(12, (i) => i < last ? full[i] : 0.0);
 }
@@ -115,12 +139,14 @@ class YearlyWeightedIncomeBarChart extends StatelessWidget {
     required this.year,
     required this.transactions,
     required this.includeIgnored,
+    required this.useWeightedAmounts,
   });
 
   final AppLocalizations l10n;
   final int year;
   final List<TransactionEntity> transactions;
   final bool includeIgnored;
+  final bool useWeightedAmounts;
 
   @override
   Widget build(BuildContext context) {
@@ -129,6 +155,7 @@ class YearlyWeightedIncomeBarChart extends StatelessWidget {
       transactions,
       year,
       includeIgnored: includeIgnored,
+      useWeightedAmounts: useWeightedAmounts,
     );
     return _YearlyMonthlyBarChartCore(
       l10n: l10n,
@@ -149,12 +176,14 @@ class YearlyWeightedOutcomeBarChart extends StatelessWidget {
     required this.year,
     required this.transactions,
     required this.includeIgnored,
+    required this.useWeightedAmounts,
   });
 
   final AppLocalizations l10n;
   final int year;
   final List<TransactionEntity> transactions;
   final bool includeIgnored;
+  final bool useWeightedAmounts;
 
   @override
   Widget build(BuildContext context) {
@@ -163,6 +192,7 @@ class YearlyWeightedOutcomeBarChart extends StatelessWidget {
       transactions,
       year,
       includeIgnored: includeIgnored,
+      useWeightedAmounts: useWeightedAmounts,
     );
     return _YearlyMonthlyBarChartCore(
       l10n: l10n,
@@ -183,12 +213,14 @@ class YearlyWeightedNetBarChart extends StatelessWidget {
     required this.year,
     required this.transactions,
     required this.includeIgnored,
+    required this.useWeightedAmounts,
   });
 
   final AppLocalizations l10n;
   final int year;
   final List<TransactionEntity> transactions;
   final bool includeIgnored;
+  final bool useWeightedAmounts;
 
   @override
   Widget build(BuildContext context) {
@@ -197,6 +229,7 @@ class YearlyWeightedNetBarChart extends StatelessWidget {
       transactions,
       year,
       includeIgnored: includeIgnored,
+      useWeightedAmounts: useWeightedAmounts,
     );
     return _YearlyMonthlyBarChartCore(
       l10n: l10n,
@@ -217,12 +250,14 @@ class YearlyCumulativeNetBarChart extends StatelessWidget {
     required this.year,
     required this.transactions,
     required this.includeIgnored,
+    required this.useWeightedAmounts,
   });
 
   final AppLocalizations l10n;
   final int year;
   final List<TransactionEntity> transactions;
   final bool includeIgnored;
+  final bool useWeightedAmounts;
 
   @override
   Widget build(BuildContext context) {
@@ -231,6 +266,7 @@ class YearlyCumulativeNetBarChart extends StatelessWidget {
       transactions,
       year,
       includeIgnored: includeIgnored,
+      useWeightedAmounts: useWeightedAmounts,
     );
     return _YearlyMonthlyBarChartCore(
       l10n: l10n,
@@ -294,7 +330,9 @@ class _YearlyMonthlyBarChartCore extends StatelessWidget {
         maxY = 0;
         minY = minVal * 1.15;
         final span = maxY - minY;
-        gridInterval = span > 0 ? (span / 4).clamp(0.25, double.infinity) : 0.25;
+        gridInterval = span > 0
+            ? (span / 4).clamp(0.25, double.infinity)
+            : 0.25;
       }
     } else {
       var maxPos = 0.0;
@@ -315,7 +353,9 @@ class _YearlyMonthlyBarChartCore extends StatelessWidget {
         maxY = top;
         minY = bottom;
         final span = maxY - minY;
-        gridInterval = span > 0 ? (span / 4).clamp(0.25, double.infinity) : 0.25;
+        gridInterval = span > 0
+            ? (span / 4).clamp(0.25, double.infinity)
+            : 0.25;
       }
     }
 
@@ -328,7 +368,8 @@ class _YearlyMonthlyBarChartCore extends StatelessWidget {
       if (kind == _YearlyBarKind.net) {
         final v = rodToY[i];
         if (v > 0) return const BorderRadius.vertical(top: Radius.circular(4));
-        if (v < 0) return const BorderRadius.vertical(bottom: Radius.circular(4));
+        if (v < 0)
+          return const BorderRadius.vertical(bottom: Radius.circular(4));
         return BorderRadius.circular(2);
       }
       return kind == _YearlyBarKind.income
@@ -352,7 +393,9 @@ class _YearlyMonthlyBarChartCore extends StatelessWidget {
         children: [
           Text(
             title,
-            style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
+            style: theme.textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.w600,
+            ),
           ),
           const SizedBox(height: 16),
           SizedBox(
@@ -380,22 +423,29 @@ class _YearlyMonthlyBarChartCore extends StatelessWidget {
                 ),
                 titlesData: FlTitlesData(
                   show: true,
-                  topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                  rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                  topTitles: const AxisTitles(
+                    sideTitles: SideTitles(showTitles: false),
+                  ),
+                  rightTitles: const AxisTitles(
+                    sideTitles: SideTitles(showTitles: false),
+                  ),
                   bottomTitles: AxisTitles(
                     sideTitles: SideTitles(
                       showTitles: true,
                       reservedSize: 28,
                       getTitlesWidget: (value, meta) {
                         final i = value.toInt();
-                        if (i < 0 || i >= monthCount) return const SizedBox.shrink();
+                        if (i < 0 || i >= monthCount)
+                          return const SizedBox.shrink();
                         return Padding(
                           padding: const EdgeInsets.only(top: 8),
                           child: Text(
                             monthLabels[i],
                             style: theme.textTheme.labelSmall?.copyWith(
                               color: scheme.onSurfaceVariant,
-                              fontFeatures: const [FontFeature.tabularFigures()],
+                              fontFeatures: const [
+                                FontFeature.tabularFigures(),
+                              ],
                             ),
                           ),
                         );
@@ -408,7 +458,8 @@ class _YearlyMonthlyBarChartCore extends StatelessWidget {
                       reservedSize: 44,
                       interval: gridInterval,
                       getTitlesWidget: (value, meta) {
-                        if (value < minY * 1.001 - 1e-9 || value > maxY * 1.001 + 1e-9) {
+                        if (value < minY * 1.001 - 1e-9 ||
+                            value > maxY * 1.001 + 1e-9) {
                           return const SizedBox.shrink();
                         }
                         final label = value == value.roundToDouble()
@@ -447,7 +498,9 @@ class _YearlyMonthlyBarChartCore extends StatelessWidget {
                         borderRadius: barRadiusForIndex(i),
                         label: BarChartRodLabel(
                           show: rodToY[i].abs() >= 1e-9,
-                          text: l10n.transactionAmountValue(rodToY[i].toStringAsFixed(2)),
+                          text: l10n.transactionAmountValue(
+                            rodToY[i].toStringAsFixed(2),
+                          ),
                           style: theme.textTheme.labelSmall?.copyWith(
                             color: scheme.onSurface,
                             fontWeight: FontWeight.w600,

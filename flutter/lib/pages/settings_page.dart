@@ -7,6 +7,7 @@ import '../core/locale/app_locale_controller.dart';
 import '../core/theme/app_theme_controller.dart';
 import '../features/auth/presentation/cubit/settings_cubit.dart';
 import '../features/auth/presentation/cubit/settings_state.dart';
+import '../widgets/bottom_sheet_pinned_title.dart';
 
 String _languageOptionLabel(AppLocalizations l10n, AppLanguagePreference p) =>
     switch (p) {
@@ -29,41 +30,32 @@ Future<void> _showLanguagePickerSheet(
 ) async {
   await showModalBottomSheet<void>(
     context: context,
-    showDragHandle: true,
-    builder: (sheetContext) {
-      final theme = Theme.of(sheetContext);
-      return SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(20, 8, 20, 4),
-              child: Text(
-                l10n.settingsLanguage,
-                style: theme.textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
+    showDragHandle: false,
+    isScrollControlled: true,
+    builder: (sheetContext) => BottomSheetPinnedTitleScrollView(
+      padding: EdgeInsets.zero,
+      title: l10n.settingsLanguage,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          for (final option in AppLanguagePreference.values)
+            ListTile(
+              title: Text(_languageOptionLabel(l10n, option)),
+              trailing: ctrl.preference == option
+                  ? Icon(
+                      Icons.check,
+                      color: Theme.of(sheetContext).colorScheme.primary,
+                    )
+                  : null,
+              onTap: () async {
+                await ctrl.setPreference(option);
+                if (sheetContext.mounted) Navigator.of(sheetContext).pop();
+              },
             ),
-            ...AppLanguagePreference.values.map((option) {
-              final selected = ctrl.preference == option;
-              return ListTile(
-                title: Text(_languageOptionLabel(l10n, option)),
-                trailing: selected
-                    ? Icon(Icons.check, color: theme.colorScheme.primary)
-                    : null,
-                onTap: () async {
-                  await ctrl.setPreference(option);
-                  if (sheetContext.mounted) Navigator.of(sheetContext).pop();
-                },
-              );
-            }),
-            const SizedBox(height: 8),
-          ],
-        ),
-      );
-    },
+        ],
+      ),
+    ),
   );
 }
 
@@ -74,41 +66,32 @@ Future<void> _showThemePickerSheet(
 ) async {
   await showModalBottomSheet<void>(
     context: context,
-    showDragHandle: true,
-    builder: (sheetContext) {
-      final theme = Theme.of(sheetContext);
-      return SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(20, 8, 20, 4),
-              child: Text(
-                l10n.settingsTheme,
-                style: theme.textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
+    showDragHandle: false,
+    isScrollControlled: true,
+    builder: (sheetContext) => BottomSheetPinnedTitleScrollView(
+      padding: EdgeInsets.zero,
+      title: l10n.settingsTheme,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          for (final option in AppThemePreference.values)
+            ListTile(
+              title: Text(_themeOptionLabel(l10n, option)),
+              trailing: ctrl.preference == option
+                  ? Icon(
+                      Icons.check,
+                      color: Theme.of(sheetContext).colorScheme.primary,
+                    )
+                  : null,
+              onTap: () async {
+                await ctrl.setPreference(option);
+                if (sheetContext.mounted) Navigator.of(sheetContext).pop();
+              },
             ),
-            ...AppThemePreference.values.map((option) {
-              final selected = ctrl.preference == option;
-              return ListTile(
-                title: Text(_themeOptionLabel(l10n, option)),
-                trailing: selected
-                    ? Icon(Icons.check, color: theme.colorScheme.primary)
-                    : null,
-                onTap: () async {
-                  await ctrl.setPreference(option);
-                  if (sheetContext.mounted) Navigator.of(sheetContext).pop();
-                },
-              );
-            }),
-            const SizedBox(height: 8),
-          ],
-        ),
-      );
-    },
+        ],
+      ),
+    ),
   );
 }
 
@@ -156,7 +139,8 @@ class SettingsPage extends StatelessWidget {
                         _languageOptionLabel(l10n, ctrl.preference),
                       ),
                       trailing: const Icon(Icons.chevron_right),
-                      onTap: () => _showLanguagePickerSheet(context, l10n, ctrl),
+                      onTap: () =>
+                          _showLanguagePickerSheet(context, l10n, ctrl),
                     );
                   },
                 ),
@@ -171,9 +155,7 @@ class SettingsPage extends StatelessWidget {
                         color: theme.colorScheme.onSurfaceVariant,
                       ),
                       title: Text(l10n.settingsTheme),
-                      subtitle: Text(
-                        _themeOptionLabel(l10n, ctrl.preference),
-                      ),
+                      subtitle: Text(_themeOptionLabel(l10n, ctrl.preference)),
                       trailing: const Icon(Icons.chevron_right),
                       onTap: () => _showThemePickerSheet(context, l10n, ctrl),
                     );
@@ -248,7 +230,8 @@ class SettingsPage extends StatelessWidget {
                             )
                           : FilledButton.icon(
                               style: signOutStyle,
-                              onPressed: () => context.read<SettingsCubit>().signOut(),
+                              onPressed: () =>
+                                  context.read<SettingsCubit>().signOut(),
                               icon: const Icon(Icons.logout_rounded),
                               label: Text(l10n.signOut),
                             ),

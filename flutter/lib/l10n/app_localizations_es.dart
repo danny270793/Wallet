@@ -30,11 +30,21 @@ class AppLocalizationsEs extends AppLocalizations {
   String get monthlyDashboard => 'Panel mensual';
 
   @override
+  String get monthlyDashboardConfigureTooltip =>
+      'Opciones de gráficos y totales';
+
+  @override
+  String get monthlyDashboardOptionsSheetTitle => 'Opciones de vista';
+
+  @override
   String get monthlyDashboardTransactionsListTitle => 'Transacciones';
 
   @override
   String get dashboardIncludeIgnoredInTotals =>
       'Incluir transacciones ignoradas';
+
+  @override
+  String get dashboardUseWeightedAmounts => 'Importes ponderados (%)';
 
   @override
   String get monthlyDashboardTagPieTitle => 'Gastos por etiqueta';
@@ -70,6 +80,12 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get dashboardCategoryPieNeedOneCategory =>
       'Selecciona al menos una categoría';
+
+  @override
+  String get dashboardPieDeselectAll => 'Deseleccionar todo';
+
+  @override
+  String get dashboardPieSelectAll => 'Seleccionar todo';
 
   @override
   String get yearlyDashboard => 'Panel anual';
@@ -334,7 +350,84 @@ class AppLocalizationsEs extends AppLocalizations {
   }
 
   @override
+  String get assets => 'Activos';
+
+  @override
+  String get noAssets => 'No hay activos aún';
+
+  @override
+  String get assetSold => 'Vendido';
+
+  @override
+  String get newAsset => 'Nuevo activo';
+
+  @override
+  String get assetProvider => 'Proveedor';
+
+  @override
+  String get assetValue => 'Valor';
+
+  @override
+  String get assetPurchaseDate => 'Fecha de compra';
+
+  @override
+  String get assetEndDate => 'Fecha de fin';
+
+  @override
+  String get assetSoldAmountField => 'Importe de venta';
+
+  @override
+  String get assetInvalidNumber => 'Introduce un número válido';
+
+  @override
+  String get assetEndBeforePurchase =>
+      'La fecha de fin debe ser igual o posterior a la de compra';
+
+  @override
+  String assetHeldDuration(String duration) {
+    return 'Tenencia: $duration';
+  }
+
+  @override
+  String assetValuePerApproximateMonth(String amount) {
+    return '~$amount/mes (prom.)';
+  }
+
+  @override
+  String assetSoldPerApproximateMonth(String amount) {
+    return '~$amount/mes (venta prom.)';
+  }
+
+  @override
+  String get editAsset => 'Editar activo';
+
+  @override
+  String get deleteAsset => 'Eliminar activo';
+
+  @override
+  String confirmDeleteAsset(String name) {
+    return '¿Seguro que quieres eliminar «$name»?';
+  }
+
+  @override
   String get transactions => 'Transacciones';
+
+  @override
+  String get creditsNav => 'Créditos';
+
+  @override
+  String get creditsTitle => 'Créditos';
+
+  @override
+  String get creditsEmpty => 'Aún no tienes cuotas diferidas.';
+
+  @override
+  String get creditsUntitledGroup => 'Compra diferida';
+
+  @override
+  String creditsInstallmentsWithPending(int count, int pending) {
+    return '$count cuotas - $pending pendientes';
+  }
 
   @override
   String get transactionsSearchTooltip => 'Buscar transacciones';
@@ -429,6 +522,10 @@ class AppLocalizationsEs extends AppLocalizations {
       '¿Seguro que quieres eliminar esta transacción?';
 
   @override
+  String get confirmDeleteCreditGroupTransaction =>
+      'Esta cuota forma parte de un pago diferido. Se eliminarán todas las cuotas de este grupo.';
+
+  @override
   String get deleteTransferPair => 'Eliminar transferencia';
 
   @override
@@ -458,6 +555,22 @@ class AppLocalizationsEs extends AppLocalizations {
       'Ningún medio de pago coincide con tu búsqueda';
 
   @override
+  String get transactionDeferred => 'Diferido';
+
+  @override
+  String get transactionGraceMonths => 'Meses de gracia';
+
+  @override
+  String get transactionMesesPlazo => 'Meses plazo';
+
+  @override
+  String get transactionGraceMonthsInvalid =>
+      'Los meses de gracia deben ser 0 o más';
+
+  @override
+  String get transactionTermMonthsInvalid => 'Indica al menos 2 meses de plazo';
+
+  @override
   String get transactionCategory => 'Categoría';
 
   @override
@@ -465,6 +578,10 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get transactionAmount => 'Importe';
+
+  @override
+  String get transactionAmountCreditGroupHint =>
+      'El importe mostrado es el total del grupo repartido a partes iguales. Al guardar se actualizan todas las cuotas y las fechas se desplazan la misma cantidad.';
 
   @override
   String get transactionAmountInvalidNumber =>
@@ -505,6 +622,16 @@ class AppLocalizationsEs extends AppLocalizations {
   String get transactionsTotalBalance => 'Saldo';
 
   @override
-  String get transactionsTotalsExcludingIgnoredHint =>
-      'Excluyendo transacciones ignoradas';
+  String get transactionsTotalsWeightedHint => 'Ponderado';
+
+  @override
+  String get transactionsTotalsWeightedExcludingIgnoredHint =>
+      'Ponderado excluyendo ignoradas';
+
+  @override
+  String get transactionsTotalsNotWeightedHint => 'Sin ponderar';
+
+  @override
+  String get transactionsTotalsNotWeightedExcludingIgnoredHint =>
+      'Sin ponderar excluyendo ignoradas';
 }

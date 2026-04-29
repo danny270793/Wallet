@@ -29,9 +29,9 @@ class AccountsCubit extends Cubit<AccountsState> {
         _adjustBalanceViaTransaction = adjustBalanceViaTransaction,
         super(const AccountsInitial());
 
-  Future<void> load() async {
+  Future<void> load({bool showLoading = true}) async {
     AppLogger.debug('loading accounts');
-    emit(const AccountsLoading());
+    if (showLoading) emit(const AccountsLoading());
     try {
       final accounts = sortedByName(await _getAccounts(), (a) => a.name);
       AppLogger.info('accounts loaded: ${accounts.length}');

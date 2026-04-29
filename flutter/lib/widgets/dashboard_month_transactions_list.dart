@@ -52,14 +52,14 @@ List<_DashGroupedRow> _groupTransactionsByDay(List<TransactionEntity> list) {
     final dayList = byDay[d]!;
     final byGroup = <String, List<TransactionEntity>>{};
     for (final t in dayList) {
-      final g = t.transactionGroupId;
+      final g = t.transferGroupId;
       if (g != null && g.isNotEmpty) {
         byGroup.putIfAbsent(g, () => []).add(t);
       }
     }
     final usedIds = <String>{};
     for (final t in dayList) {
-      final gid = t.transactionGroupId;
+      final gid = t.transferGroupId;
       if (gid == null || gid.isEmpty) {
         entries.add(_DashTxMarker(t));
         continue;
@@ -89,11 +89,11 @@ List<_DashGroupedRow> _groupTransactionsByDay(List<TransactionEntity> list) {
 }
 
 List<String> _relationNames(TransactionEntity t) => [
-      if (t.accountName?.isNotEmpty == true) t.accountName!,
-      if (t.cardName?.isNotEmpty == true) t.cardName!,
-      if (t.categoryName?.isNotEmpty == true) t.categoryName!,
-      if (t.tagName?.isNotEmpty == true) t.tagName!,
-    ];
+  if (t.categoryName?.isNotEmpty == true) t.categoryName!,
+  if (t.accountName?.isNotEmpty == true) t.accountName!,
+  if (t.cardName?.isNotEmpty == true) t.cardName!,
+  if (t.tagName?.isNotEmpty == true) t.tagName!,
+];
 
 /// Grouped month transactions for the dashboard (same grouping as the transactions page).
 class DashboardMonthTransactionsList extends StatelessWidget {
@@ -102,11 +102,13 @@ class DashboardMonthTransactionsList extends StatelessWidget {
     required this.l10n,
     required this.transactions,
     required this.visibleMonth,
+    required this.useWeightedAmounts,
   });
 
   final AppLocalizations l10n;
   final List<TransactionEntity> transactions;
   final DateTime visibleMonth;
+  final bool useWeightedAmounts;
 
   @override
   Widget build(BuildContext context) {
@@ -119,7 +121,9 @@ class DashboardMonthTransactionsList extends StatelessWidget {
         child: Text(
           l10n.noTransactionsInMonth(monthYear),
           textAlign: TextAlign.center,
-          style: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+          style: theme.textTheme.bodyMedium?.copyWith(
+            color: theme.colorScheme.onSurfaceVariant,
+          ),
         ),
       );
     }
@@ -133,29 +137,33 @@ class DashboardMonthTransactionsList extends StatelessWidget {
           padding: const EdgeInsets.fromLTRB(8, 20, 8, 8),
           child: Text(
             l10n.monthlyDashboardTransactionsListTitle,
-            style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
+            style: theme.textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.w600,
+            ),
           ),
         ),
         for (final row in rows)
           switch (row) {
             _DashDayMarker(:final day) => Padding(
-                padding: const EdgeInsets.fromLTRB(16, 12, 16, 6),
-                child: Align(
-                  alignment: Alignment.centerLeft,
-                  child: Text(
-                    DateFormat('yyyy-MM-dd').format(day),
-                    style: theme.textTheme.titleSmall?.copyWith(
-                      color: theme.colorScheme.onSurfaceVariant,
-                      fontWeight: FontWeight.w600,
-                    ),
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 6),
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  DateFormat('yyyy-MM-dd').format(day),
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
               ),
+            ),
             _DashTxMarker(:final transaction) => _DashboardTxListTile(
-                transaction: transaction,
-                l10n: l10n,
-              ),
-            _DashTransferPairMarker(:final source, :final target) => _DashboardTransferListTile(
+              transaction: transaction,
+              l10n: l10n,
+              useWeightedAmounts: useWeightedAmounts,
+            ),
+            _DashTransferPairMarker(:final source, :final target) =>
+              _DashboardTransferListTile(
                 source: source,
                 target: target,
                 l10n: l10n,
@@ -167,10 +175,15 @@ class DashboardMonthTransactionsList extends StatelessWidget {
 }
 
 class _DashboardTxListTile extends StatelessWidget {
-  const _DashboardTxListTile({required this.transaction, required this.l10n});
+  const _DashboardTxListTile({
+    required this.transaction,
+    required this.l10n,
+    required this.useWeightedAmounts,
+  });
 
   final TransactionEntity transaction;
   final AppLocalizations l10n;
+  final bool useWeightedAmounts;
 
   @override
   Widget build(BuildContext context) {
@@ -178,13 +191,17 @@ class _DashboardTxListTile extends StatelessWidget {
     final theme = Theme.of(context);
     final locale = Localizations.localeOf(context);
     final weighted = transaction.value * transaction.percentage / 100.0;
+    final displayAmount =
+        useWeightedAmounts ? weighted : transaction.value;
     final relations = _relationNames(transaction);
-    final desc = transaction.description?.isNotEmpty == true ? transaction.description! : l10n.none;
+    final desc = transaction.description?.isNotEmpty == true
+        ? transaction.description!
+        : l10n.none;
     final sub = relations.isNotEmpty ? relations.join(' · ') : null;
 
     Color amountColor() {
-      if (weighted > 0) return const Color(0xFF1B8736);
-      if (weighted < 0) return theme.colorScheme.error;
+      if (displayAmount > 0) return const Color(0xFF1B8736);
+      if (displayAmount < 0) return theme.colorScheme.error;
       return theme.colorScheme.onSurfaceVariant;
     }
 
@@ -203,7 +220,9 @@ class _DashboardTxListTile extends StatelessWidget {
       subtitle: sub != null
           ? Text(sub, maxLines: 2, overflow: TextOverflow.ellipsis)
           : Text(
-              DateFormat.Hm(locale.toString()).format(transaction.transactedAt.toLocal()),
+              DateFormat.Hm(
+                locale.toString(),
+              ).format(transaction.transactedAt.toLocal()),
               style: theme.textTheme.bodySmall?.copyWith(
                 color: theme.colorScheme.onSurfaceVariant,
                 fontFeatures: const [FontFeature.tabularFigures()],
@@ -215,7 +234,7 @@ class _DashboardTxListTile extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           Text(
-            l10n.transactionAmountValue(weighted.toStringAsFixed(2)),
+            l10n.transactionAmountValue(displayAmount.toStringAsFixed(2)),
             style: theme.textTheme.titleSmall?.copyWith(
               fontWeight: FontWeight.w700,
               color: amountColor(),
@@ -224,7 +243,9 @@ class _DashboardTxListTile extends StatelessWidget {
           ),
           if (sub != null)
             Text(
-              DateFormat.Hm(locale.toString()).format(transaction.transactedAt.toLocal()),
+              DateFormat.Hm(
+                locale.toString(),
+              ).format(transaction.transactedAt.toLocal()),
               style: theme.textTheme.bodySmall?.copyWith(
                 color: theme.colorScheme.onSurfaceVariant,
                 fontFeatures: const [FontFeature.tabularFigures()],
@@ -233,8 +254,14 @@ class _DashboardTxListTile extends StatelessWidget {
         ],
       ),
       onEdit: openEdit,
-      confirmDelete: () => confirmDeleteTransactionDialog(context, l10n),
-      onDelete: () => cubit.delete(id: transaction.id),
+      confirmDelete:
+          transaction.creditGroupId != null && transaction.creditGroupId!.isNotEmpty
+          ? () => confirmDeleteCreditGroupTransactionDialog(context, l10n)
+          : () => confirmDeleteTransactionDialog(context, l10n),
+      onDelete: () => cubit.delete(
+        id: transaction.id,
+        creditGroupId: transaction.creditGroupId,
+      ),
     );
 
     if (transaction.ignore) {
@@ -262,10 +289,16 @@ class _DashboardTransferListTile extends StatelessWidget {
     final theme = Theme.of(context);
     final locale = Localizations.localeOf(context);
     String payLabel(TransactionEntity t) => t.accountName ?? t.cardName ?? '—';
-    final amountStr = l10n.transactionAmountValue(target.value.toStringAsFixed(2));
-    final timeStr = DateFormat.Hm(locale.toString()).format(source.transactedAt.toLocal());
-    final gid = source.transactionGroupId;
-    final pairKey = gid != null && gid.isNotEmpty ? 'pair_$gid' : '${source.id}|${target.id}';
+    final amountStr = l10n.transactionAmountValue(
+      target.value.toStringAsFixed(2),
+    );
+    final timeStr = DateFormat.Hm(
+      locale.toString(),
+    ).format(source.transactedAt.toLocal());
+    final gid = source.transferGroupId;
+    final pairKey = gid != null && gid.isNotEmpty
+        ? 'pair_$gid'
+        : '${source.id}|${target.id}';
 
     void openEdit() {
       showAccountTransferEditorBottomSheet(
@@ -278,7 +311,10 @@ class _DashboardTransferListTile extends StatelessWidget {
 
     Widget tile = SwipeableListTile(
       itemKey: pairKey,
-      leading: Icon(Icons.swap_vert_rounded, color: theme.colorScheme.onSurfaceVariant),
+      leading: Icon(
+        Icons.swap_vert_rounded,
+        color: theme.colorScheme.onSurfaceVariant,
+      ),
       title: Text(
         payLabel(target),
         maxLines: 1,
@@ -292,7 +328,9 @@ class _DashboardTransferListTile extends StatelessWidget {
             payLabel(source),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
           ),
           Text(
             timeStr,

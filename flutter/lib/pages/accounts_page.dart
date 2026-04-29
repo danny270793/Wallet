@@ -45,8 +45,9 @@ class _AccountsView extends StatelessWidget {
           _ => <AccountEntity>[],
         };
         final showTotalBar = accounts.isNotEmpty;
-        final totalBalance =
-            showTotalBar ? accounts.fold<double>(0, (s, a) => s + a.balance) : 0.0;
+        final totalBalance = showTotalBar
+            ? accounts.fold<double>(0, (s, a) => s + a.balance)
+            : 0.0;
 
         return ShellScaffold(
           title: l10n.accounts,
@@ -59,10 +60,7 @@ class _AccountsView extends StatelessWidget {
             child: const Icon(Icons.add),
           ),
           bottomNavigationBar: showTotalBar
-              ? WalletListBalanceTotalBar(
-                  l10n: l10n,
-                  total: totalBalance,
-                )
+              ? WalletListBalanceTotalBar(l10n: l10n, total: totalBalance)
               : null,
           body: _body(context, state, l10n),
         );
@@ -70,12 +68,20 @@ class _AccountsView extends StatelessWidget {
     );
   }
 
-  Widget _body(BuildContext context, AccountsState state, AppLocalizations l10n) {
-    Future<void> refresh() => context.read<AccountsCubit>().load();
+  Widget _body(
+    BuildContext context,
+    AccountsState state,
+    AppLocalizations l10n,
+  ) {
+    Future<void> pullRefresh() =>
+        context.read<AccountsCubit>().load(showLoading: false);
+
+    Future<void> reloadWithOverlay() =>
+        context.read<AccountsCubit>().load(showLoading: true);
 
     if (state is AccountsLoading || state is AccountsInitial) {
       return RefreshIndicator(
-        onRefresh: refresh,
+        onRefresh: pullRefresh,
         child: ListView(
           physics: const AlwaysScrollableScrollPhysics(),
           children: [
@@ -90,7 +96,7 @@ class _AccountsView extends StatelessWidget {
 
     if (state is AccountsError) {
       return RefreshIndicator(
-        onRefresh: refresh,
+        onRefresh: pullRefresh,
         child: ListView(
           physics: const AlwaysScrollableScrollPhysics(),
           children: [
@@ -103,7 +109,7 @@ class _AccountsView extends StatelessWidget {
                     Text(l10n.unexpectedError),
                     const SizedBox(height: 12),
                     ElevatedButton(
-                      onPressed: refresh,
+                      onPressed: reloadWithOverlay,
                       child: const Text('Retry'),
                     ),
                   ],
@@ -123,7 +129,7 @@ class _AccountsView extends StatelessWidget {
 
     if (accounts.isEmpty) {
       return RefreshIndicator(
-        onRefresh: refresh,
+        onRefresh: pullRefresh,
         child: ListView(
           physics: const AlwaysScrollableScrollPhysics(),
           padding: const EdgeInsets.only(bottom: 88),
@@ -138,7 +144,7 @@ class _AccountsView extends StatelessWidget {
     }
 
     return RefreshIndicator(
-      onRefresh: refresh,
+      onRefresh: pullRefresh,
       child: ListView.builder(
         physics: const AlwaysScrollableScrollPhysics(),
         padding: const EdgeInsets.only(bottom: 8),
@@ -147,7 +153,6 @@ class _AccountsView extends StatelessWidget {
       ),
     );
   }
-
 }
 
 class _AccountTile extends StatelessWidget {
@@ -184,12 +189,13 @@ class _AccountTile extends StatelessWidget {
       itemKey: account.id,
       title: Text(account.name),
       subtitle: account.description != null
-          ? Text(account.description!, maxLines: 2, overflow: TextOverflow.ellipsis)
+          ? Text(
+              account.description!,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+            )
           : null,
-      trailing: WalletListBalanceAmount(
-        l10n: l10n,
-        balance: account.balance,
-      ),
+      trailing: WalletListBalanceAmount(l10n: l10n, balance: account.balance),
       onTap: openTransactions,
       onEdit: openEdit,
       confirmDelete: () async {
@@ -206,7 +212,10 @@ class _AccountTile extends StatelessWidget {
               ElevatedButton(
                 style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
                 onPressed: () => Navigator.of(dialogContext).pop(true),
-                child: Text(l10n.delete, style: const TextStyle(color: Colors.white)),
+                child: Text(
+                  l10n.delete,
+                  style: const TextStyle(color: Colors.white),
+                ),
               ),
             ],
           ),

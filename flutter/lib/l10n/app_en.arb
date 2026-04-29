@@ -7,8 +7,11 @@
   "fieldRequired": "Required",
   "unexpectedError": "An unexpected error occurred",
   "monthlyDashboard": "Monthly dashboard",
+  "monthlyDashboardConfigureTooltip": "Charts and totals options",
+  "monthlyDashboardOptionsSheetTitle": "View options",
   "monthlyDashboardTransactionsListTitle": "Transactions",
   "dashboardIncludeIgnoredInTotals": "Include ignored transactions",
+  "dashboardUseWeightedAmounts": "Weighted amounts (%)",
   "monthlyDashboardTagPieTitle": "Expenses by tag",
   "monthlyDashboardCategoryPieTitle": "Expenses by category",
   "dashboardCategoryPieNoData": "No categorized expenses to show for this month with the current filter.",
@@ -19,6 +22,8 @@
   "dashboardCategoryPieFilterCategories": "Filter categories",
   "dashboardCategoryPieFilterDescription": "Choose which categories are included in the chart.",
   "dashboardCategoryPieNeedOneCategory": "Select at least one category",
+  "dashboardPieDeselectAll": "Deselect all",
+  "dashboardPieSelectAll": "Select all",
   "yearlyDashboard": "Yearly dashboard",
   "yearlyDashboardIncomeByMonthTitle": "Income by month",
   "yearlyDashboardOutcomeByMonthTitle": "Outcome by month",
@@ -127,7 +132,67 @@
       }
     }
   },
+  "assets": "Assets",
+  "noAssets": "No assets yet",
+  "assetSold": "Sold",
+  "newAsset": "New asset",
+  "assetProvider": "Provider",
+  "assetValue": "Value",
+  "assetPurchaseDate": "Purchase date",
+  "assetEndDate": "End date",
+  "assetSoldAmountField": "Sold amount",
+  "assetInvalidNumber": "Enter a valid number",
+  "assetEndBeforePurchase": "End date must be on or after purchase date",
+  "assetHeldDuration": "Held {duration}",
+  "@assetHeldDuration": {
+    "placeholders": {
+      "duration": {
+        "type": "String"
+      }
+    }
+  },
+  "assetValuePerApproximateMonth": "~{amount}/mo avg.",
+  "@assetValuePerApproximateMonth": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "assetSoldPerApproximateMonth": "~{amount}/mo avg. (sold)",
+  "@assetSoldPerApproximateMonth": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "editAsset": "Edit asset",
+  "deleteAsset": "Delete asset",
+  "confirmDeleteAsset": "Are you sure you want to delete \"{name}\"?",
+  "@confirmDeleteAsset": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "transactions": "Transactions",
+  "creditsNav": "Credits",
+  "creditsTitle": "Credits",
+  "creditsEmpty": "No deferred credit installments yet.",
+  "creditsUntitledGroup": "Deferred purchase",
+  "creditsInstallmentsWithPending": "{count} installments - {pending} pending",
+  "@creditsInstallmentsWithPending": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "pending": {
+        "type": "int"
+      }
+    }
+  },
   "transactionsSearchTooltip": "Search transactions",
   "transactionsSearchHint": "Search by description",
   "transactionsSearchTypeQuery": "Enter text to search all your transactions",
@@ -163,6 +228,7 @@
   "editTransaction": "Edit transaction",
   "deleteTransaction": "Delete transaction",
   "confirmDeleteTransaction": "Are you sure you want to delete this transaction?",
+  "confirmDeleteCreditGroupTransaction": "This installment is part of a deferred split. All installments in this group will be deleted.",
   "deleteTransferPair": "Delete transfer",
   "confirmDeleteTransferPair": "This removes both sides of the transfer from the ledger.",
   "none": "None",
@@ -172,9 +238,15 @@
   "transactionPaymentMethod": "Payment method",
   "paymentMethodAddChoiceTitle": "Add account or card",
   "transactionPaymentMethodSearchNoResults": "No payment methods match your search",
+  "transactionDeferred": "Deferred",
+  "transactionGraceMonths": "Grace months",
+  "transactionMesesPlazo": "Term (months)",
+  "transactionGraceMonthsInvalid": "Grace months must be 0 or greater",
+  "transactionTermMonthsInvalid": "Enter at least 2 installment months",
   "transactionCategory": "Category",
   "transactionTag": "Tag",
   "transactionAmount": "Amount",
+  "transactionAmountCreditGroupHint": "Shown amount is the group total split evenly across installments. Saving updates every installment and shifts dates by the same amount.",
   "transactionAmountInvalidNumber": "Enter a valid number (optional minus sign and decimals)",
   "transactionAmountMustBeNonZero": "Amount cannot be zero",
   "transferAmountMustBePositive": "Enter an amount greater than zero",
@@ -193,5 +265,8 @@
   "transactionsTotalIncome": "Income",
   "transactionsTotalOutcome": "Outcome",
   "transactionsTotalBalance": "Balance",
-  "transactionsTotalsExcludingIgnoredHint": "Excluding ignored transactions"
+  "transactionsTotalsWeightedHint": "Weighted",
+  "transactionsTotalsWeightedExcludingIgnoredHint": "Weighted excluding ignored",
+  "transactionsTotalsNotWeightedHint": "Not weighted",
+  "transactionsTotalsNotWeightedExcludingIgnoredHint": "Not weighted excluding ignored"
 }

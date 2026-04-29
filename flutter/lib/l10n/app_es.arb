@@ -7,8 +7,11 @@
   "fieldRequired": "Obligatorio",
   "unexpectedError": "Ocurrió un error inesperado",
   "monthlyDashboard": "Panel mensual",
+  "monthlyDashboardConfigureTooltip": "Opciones de gráficos y totales",
+  "monthlyDashboardOptionsSheetTitle": "Opciones de vista",
   "monthlyDashboardTransactionsListTitle": "Transacciones",
   "dashboardIncludeIgnoredInTotals": "Incluir transacciones ignoradas",
+  "dashboardUseWeightedAmounts": "Importes ponderados (%)",
   "monthlyDashboardTagPieTitle": "Gastos por etiqueta",
   "monthlyDashboardCategoryPieTitle": "Gastos por categoría",
   "dashboardCategoryPieNoData": "No hay gastos con categoría que mostrar este mes con el filtro actual.",
@@ -19,6 +22,8 @@
   "dashboardCategoryPieFilterCategories": "Filtrar categorías",
   "dashboardCategoryPieFilterDescription": "Elige qué categorías incluir en el gráfico.",
   "dashboardCategoryPieNeedOneCategory": "Selecciona al menos una categoría",
+  "dashboardPieDeselectAll": "Deseleccionar todo",
+  "dashboardPieSelectAll": "Seleccionar todo",
   "yearlyDashboard": "Panel anual",
   "yearlyDashboardIncomeByMonthTitle": "Ingresos por mes",
   "yearlyDashboardOutcomeByMonthTitle": "Gastos por mes",
@@ -127,7 +132,67 @@
       }
     }
   },
+  "assets": "Activos",
+  "noAssets": "No hay activos aún",
+  "assetSold": "Vendido",
+  "newAsset": "Nuevo activo",
+  "assetProvider": "Proveedor",
+  "assetValue": "Valor",
+  "assetPurchaseDate": "Fecha de compra",
+  "assetEndDate": "Fecha de fin",
+  "assetSoldAmountField": "Importe de venta",
+  "assetInvalidNumber": "Introduce un número válido",
+  "assetEndBeforePurchase": "La fecha de fin debe ser igual o posterior a la de compra",
+  "assetHeldDuration": "Tenencia: {duration}",
+  "@assetHeldDuration": {
+    "placeholders": {
+      "duration": {
+        "type": "String"
+      }
+    }
+  },
+  "assetValuePerApproximateMonth": "~{amount}/mes (prom.)",
+  "@assetValuePerApproximateMonth": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "assetSoldPerApproximateMonth": "~{amount}/mes (venta prom.)",
+  "@assetSoldPerApproximateMonth": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "editAsset": "Editar activo",
+  "deleteAsset": "Eliminar activo",
+  "confirmDeleteAsset": "¿Seguro que quieres eliminar «{name}»?",
+  "@confirmDeleteAsset": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "transactions": "Transacciones",
+  "creditsNav": "Créditos",
+  "creditsTitle": "Créditos",
+  "creditsEmpty": "Aún no tienes cuotas diferidas.",
+  "creditsUntitledGroup": "Compra diferida",
+  "creditsInstallmentsWithPending": "{count} cuotas - {pending} pendientes",
+  "@creditsInstallmentsWithPending": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "pending": {
+        "type": "int"
+      }
+    }
+  },
   "transactionsSearchTooltip": "Buscar transacciones",
   "transactionsSearchHint": "Buscar por descripción",
   "transactionsSearchTypeQuery": "Escribe texto para buscar en todas tus transacciones",
@@ -163,6 +228,7 @@
   "editTransaction": "Editar transacción",
   "deleteTransaction": "Eliminar transacción",
   "confirmDeleteTransaction": "¿Seguro que quieres eliminar esta transacción?",
+  "confirmDeleteCreditGroupTransaction": "Esta cuota forma parte de un pago diferido. Se eliminarán todas las cuotas de este grupo.",
   "deleteTransferPair": "Eliminar transferencia",
   "confirmDeleteTransferPair": "Esto eliminará ambos apuntes de la transferencia del registro.",
   "none": "Ninguno",
@@ -172,9 +238,15 @@
   "transactionPaymentMethod": "Medio de pago",
   "paymentMethodAddChoiceTitle": "Añadir cuenta o tarjeta",
   "transactionPaymentMethodSearchNoResults": "Ningún medio de pago coincide con tu búsqueda",
+  "transactionDeferred": "Diferido",
+  "transactionGraceMonths": "Meses de gracia",
+  "transactionMesesPlazo": "Meses plazo",
+  "transactionGraceMonthsInvalid": "Los meses de gracia deben ser 0 o más",
+  "transactionTermMonthsInvalid": "Indica al menos 2 meses de plazo",
   "transactionCategory": "Categoría",
   "transactionTag": "Etiqueta",
   "transactionAmount": "Importe",
+  "transactionAmountCreditGroupHint": "El importe mostrado es el total del grupo repartido a partes iguales. Al guardar se actualizan todas las cuotas y las fechas se desplazan la misma cantidad.",
   "transactionAmountInvalidNumber": "Introduce un número válido (signo y decimales opcionales)",
   "transactionAmountMustBeNonZero": "El importe no puede ser cero",
   "transferAmountMustBePositive": "Introduce un importe mayor que cero",
@@ -193,5 +265,8 @@
   "transactionsTotalIncome": "Ingresos",
   "transactionsTotalOutcome": "Gastos",
   "transactionsTotalBalance": "Saldo",
-  "transactionsTotalsExcludingIgnoredHint": "Excluyendo transacciones ignoradas"
+  "transactionsTotalsWeightedHint": "Ponderado",
+  "transactionsTotalsWeightedExcludingIgnoredHint": "Ponderado excluyendo ignoradas",
+  "transactionsTotalsNotWeightedHint": "Sin ponderar",
+  "transactionsTotalsNotWeightedExcludingIgnoredHint": "Sin ponderar excluyendo ignoradas"
 }

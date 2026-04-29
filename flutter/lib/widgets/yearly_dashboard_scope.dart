@@ -30,10 +30,7 @@ class _YearlyDashboardHostState extends State<YearlyDashboardHost> {
 
   @override
   Widget build(BuildContext context) {
-    return YearlyDashboardScope(
-      notifier: _visibleYear,
-      child: widget.child,
-    );
+    return YearlyDashboardScope(notifier: _visibleYear, child: widget.child);
   }
 }
 
@@ -45,7 +42,8 @@ class YearlyDashboardScope extends InheritedNotifier<ValueNotifier<DateTime>> {
   });
 
   static ValueNotifier<DateTime> of(BuildContext context) {
-    final scope = context.dependOnInheritedWidgetOfExactType<YearlyDashboardScope>();
+    final scope = context
+        .dependOnInheritedWidgetOfExactType<YearlyDashboardScope>();
     assert(scope != null, 'YearlyDashboardScope not found');
     return scope!.notifier!;
   }
@@ -109,7 +107,10 @@ class _YearListPickerDialogState extends State<_YearListPickerDialog> {
     if (!mounted || !_controller.hasClients) return;
     final y = widget.initialYear.clamp(widget.minYear, widget.maxYear);
     final indexFromTop = widget.maxYear - y;
-    final offset = (indexFromTop * _itemHeight).clamp(0.0, _controller.position.maxScrollExtent);
+    final offset = (indexFromTop * _itemHeight).clamp(
+      0.0,
+      _controller.position.maxScrollExtent,
+    );
     _controller.jumpTo(offset);
   }
 
@@ -145,7 +146,9 @@ class _YearListPickerDialogState extends State<_YearListPickerDialog> {
                   child: Text(
                     DateFormat.y(loc).format(DateTime(year)),
                     style: theme.textTheme.titleSmall?.copyWith(
-                      fontWeight: selectedHere ? FontWeight.w700 : FontWeight.w500,
+                      fontWeight: selectedHere
+                          ? FontWeight.w700
+                          : FontWeight.w500,
                       color: selectedHere ? primary : null,
                       fontFeatures: const [FontFeature.tabularFigures()],
                     ),
@@ -161,7 +164,8 @@ class _YearListPickerDialogState extends State<_YearListPickerDialog> {
 }
 
 /// Year switcher below the app bar title (same layout as [TransactionsMonthAppBarBottom], year only).
-class YearlyDashboardAppBarBottom extends StatelessWidget implements PreferredSizeWidget {
+class YearlyDashboardAppBarBottom extends StatelessWidget
+    implements PreferredSizeWidget {
   const YearlyDashboardAppBarBottom({super.key, required this.notifier});
 
   final ValueNotifier<DateTime> notifier;
@@ -212,7 +216,10 @@ class YearlyDashboardAppBarBottom extends StatelessWidget implements PreferredSi
                       excludeFromSemantics: true,
                       child: Center(
                         child: Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+                          padding: const EdgeInsets.symmetric(
+                            vertical: 8,
+                            horizontal: 4,
+                          ),
                           child: Text(
                             label,
                             overflow: TextOverflow.ellipsis,
@@ -220,7 +227,9 @@ class YearlyDashboardAppBarBottom extends StatelessWidget implements PreferredSi
                             style: theme.textTheme.titleSmall?.copyWith(
                               fontWeight: FontWeight.w600,
                               letterSpacing: 0.25,
-                              fontFeatures: const [FontFeature.tabularFigures()],
+                              fontFeatures: const [
+                                FontFeature.tabularFigures(),
+                              ],
                             ),
                           ),
                         ),

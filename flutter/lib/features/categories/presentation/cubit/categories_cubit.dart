@@ -25,9 +25,9 @@ class CategoriesCubit extends Cubit<CategoriesState> {
         _deleteCategory = deleteCategory,
         super(const CategoriesInitial());
 
-  Future<void> load() async {
+  Future<void> load({bool showLoading = true}) async {
     AppLogger.debug('loading categories');
-    emit(const CategoriesLoading());
+    if (showLoading) emit(const CategoriesLoading());
     try {
       final categories = sortedByName(await _getCategories(), (c) => c.name);
       AppLogger.info('categories loaded: ${categories.length}');

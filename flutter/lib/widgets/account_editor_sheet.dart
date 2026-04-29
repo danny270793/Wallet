@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:wallet/l10n/app_localizations.dart';
 
 import '../core/di/injection.dart';
+import 'bottom_sheet_pinned_title.dart';
 import '../features/accounts/domain/entities/account_entity.dart';
 import '../features/accounts/presentation/cubit/accounts_cubit.dart';
 
@@ -17,28 +18,18 @@ Future<void> showAccountEditorBottomSheet(
     context: context,
     isScrollControlled: true,
     useSafeArea: true,
-    showDragHandle: true,
-    builder: (sheetContext) {
+    showDragHandle: false,
+    builder: (_) {
       final child = AccountEditorSheet(l10n: l10n, account: account);
-      final wrapped = cubit != null
+      return cubit != null
           ? BlocProvider.value(value: cubit, child: child)
           : BlocProvider(create: (_) => getIt<AccountsCubit>(), child: child);
-      return Padding(
-        padding: EdgeInsets.only(
-          bottom: MediaQuery.viewInsetsOf(sheetContext).bottom,
-        ),
-        child: wrapped,
-      );
     },
   );
 }
 
 class AccountEditorSheet extends StatefulWidget {
-  const AccountEditorSheet({
-    super.key,
-    required this.l10n,
-    this.account,
-  });
+  const AccountEditorSheet({super.key, required this.l10n, this.account});
 
   final AppLocalizations l10n;
   final AccountEntity? account;
@@ -58,7 +49,9 @@ class _AccountEditorSheetState extends State<AccountEditorSheet> {
   void initState() {
     super.initState();
     _nameController = TextEditingController(text: widget.account?.name ?? '');
-    _descriptionController = TextEditingController(text: widget.account?.description ?? '');
+    _descriptionController = TextEditingController(
+      text: widget.account?.description ?? '',
+    );
     if (widget.account != null) {
       _balanceController = TextEditingController(
         text: widget.account!.balance.toStringAsFixed(2),
@@ -79,8 +72,9 @@ class _AccountEditorSheetState extends State<AccountEditorSheet> {
     setState(() => _loading = true);
     final cubit = context.read<AccountsCubit>();
     final name = _nameController.text.trim();
-    final description =
-        _descriptionController.text.trim().isEmpty ? null : _descriptionController.text.trim();
+    final description = _descriptionController.text.trim().isEmpty
+        ? null
+        : _descriptionController.text.trim();
     try {
       if (widget.account == null) {
         await cubit.create(name: name, description: description);
@@ -109,7 +103,8 @@ class _AccountEditorSheetState extends State<AccountEditorSheet> {
           TextFormField(
             controller: _nameController,
             decoration: InputDecoration(labelText: l10n.accountName),
-            validator: (v) => (v == null || v.trim().isEmpty) ? l10n.fieldRequired : null,
+            validator: (v) =>
+                (v == null || v.trim().isEmpty) ? l10n.fieldRequired : null,
             autofocus: true,
             textInputAction: TextInputAction.next,
           ),
@@ -118,10 +113,14 @@ class _AccountEditorSheetState extends State<AccountEditorSheet> {
             TextFormField(
               controller: _balanceController,
               decoration: InputDecoration(labelText: l10n.accountBalance),
-              keyboardType: const TextInputType.numberWithOptions(decimal: true, signed: true),
+              keyboardType: const TextInputType.numberWithOptions(
+                decimal: true,
+                signed: true,
+              ),
               validator: (v) {
                 if (v == null || v.trim().isEmpty) return l10n.fieldRequired;
-                if (double.tryParse(v.trim()) == null) return l10n.fieldRequired;
+                if (double.tryParse(v.trim()) == null)
+                  return l10n.fieldRequired;
                 return null;
               },
               textInputAction: TextInputAction.next,
@@ -147,7 +146,9 @@ class _AccountEditorSheetState extends State<AccountEditorSheet> {
         onPressed: _loading ? null : _submit,
         style: FilledButton.styleFrom(
           minimumSize: const Size(double.infinity, 48),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
         ),
         child: _loading
             ? SizedBox(
@@ -166,26 +167,18 @@ class _AccountEditorSheetState extends State<AccountEditorSheet> {
   @override
   Widget build(BuildContext context) {
     final l10n = widget.l10n;
-    final theme = Theme.of(context);
     final title = widget.account == null ? l10n.newAccount : l10n.editAccount;
 
-    return SingleChildScrollView(
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Text(
-              title,
-              style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w600),
-            ),
-            const SizedBox(height: 16),
-            _formFields(l10n),
-            const SizedBox(height: 24),
-            _submitPrimaryButton(l10n),
-          ],
-        ),
+    return BottomSheetPinnedTitleScrollView(
+      title: title,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          _formFields(l10n),
+          const SizedBox(height: 24),
+          _submitPrimaryButton(l10n),
+        ],
       ),
     );
   }

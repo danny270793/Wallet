@@ -5,12 +5,14 @@ import 'package:wallet/l10n/app_localizations.dart';
 /// Drawer destination index aligned with [WalletNavigationDrawer] items.
 int walletDrawerSelectedIndex(String matchedLocation) {
   if (matchedLocation.startsWith('/transactions')) return 0;
-  if (matchedLocation.startsWith('/accounts')) return 1;
-  if (matchedLocation.startsWith('/cards')) return 2;
-  if (matchedLocation.startsWith('/categories')) return 3;
-  if (matchedLocation.startsWith('/tags')) return 4;
-  if (matchedLocation.startsWith('/dashboard/yearly')) return 6;
-  if (matchedLocation.startsWith('/dashboard/monthly')) return 5;
+  if (matchedLocation.startsWith('/credits')) return 1;
+  if (matchedLocation.startsWith('/accounts')) return 2;
+  if (matchedLocation.startsWith('/cards')) return 3;
+  if (matchedLocation.startsWith('/categories')) return 4;
+  if (matchedLocation.startsWith('/tags')) return 5;
+  if (matchedLocation.startsWith('/assets')) return 6;
+  if (matchedLocation.startsWith('/dashboard/yearly')) return 8;
+  if (matchedLocation.startsWith('/dashboard/monthly')) return 7;
   return 0;
 }
 
@@ -34,21 +36,27 @@ class WalletNavigationDrawer extends StatelessWidget {
             router.go('/transactions');
             break;
           case 1:
-            router.go('/accounts');
+            router.go('/credits');
             break;
           case 2:
-            router.go('/cards');
+            router.go('/accounts');
             break;
           case 3:
-            router.go('/categories');
+            router.go('/cards');
             break;
           case 4:
-            router.go('/tags');
+            router.go('/categories');
             break;
           case 5:
-            router.go('/dashboard/monthly');
+            router.go('/tags');
             break;
           case 6:
+            router.go('/assets');
+            break;
+          case 7:
+            router.go('/dashboard/monthly');
+            break;
+          case 8:
             router.go('/dashboard/yearly');
             break;
         }
@@ -58,6 +66,11 @@ class WalletNavigationDrawer extends StatelessWidget {
           icon: const Icon(Icons.receipt_long_outlined),
           selectedIcon: const Icon(Icons.receipt_long),
           label: Text(l10n.transactions),
+        ),
+        NavigationDrawerDestination(
+          icon: const Icon(Icons.payment_outlined),
+          selectedIcon: const Icon(Icons.payment),
+          label: Text(l10n.creditsNav),
         ),
         NavigationDrawerDestination(
           icon: const Icon(Icons.account_balance_wallet_outlined),
@@ -80,6 +93,11 @@ class WalletNavigationDrawer extends StatelessWidget {
           label: Text(l10n.tags),
         ),
         NavigationDrawerDestination(
+          icon: const Icon(Icons.inventory_2_outlined),
+          selectedIcon: const Icon(Icons.inventory_2),
+          label: Text(l10n.assets),
+        ),
+        NavigationDrawerDestination(
           icon: const Icon(Icons.calendar_month_outlined),
           selectedIcon: const Icon(Icons.calendar_month),
           label: Text(l10n.monthlyDashboard),
@@ -99,11 +117,13 @@ class ShellScaffold extends StatelessWidget {
   final String title;
   final PreferredSizeWidget? appBarBottom;
   final Widget body;
+
   /// When false, no navigation drawer is shown and the app bar uses a back control if the route can pop.
   final bool useDrawer;
   final Widget? bottomNavigationBar;
   final Widget? floatingActionButton;
   final FloatingActionButtonLocation? floatingActionButtonLocation;
+
   /// Shown before the settings action (e.g. search on transactions).
   final List<Widget>? appBarActionsBeforeSettings;
 

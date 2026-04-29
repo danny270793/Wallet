@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:wallet/l10n/app_localizations.dart';
 
 import '../core/di/injection.dart';
+import 'bottom_sheet_pinned_title.dart';
 import '../features/cards/domain/entities/card_entity.dart';
 import '../features/cards/presentation/cubit/cards_cubit.dart';
 
@@ -17,28 +18,18 @@ Future<void> showCardEditorBottomSheet(
     context: context,
     isScrollControlled: true,
     useSafeArea: true,
-    showDragHandle: true,
-    builder: (sheetContext) {
+    showDragHandle: false,
+    builder: (_) {
       final child = CardEditorSheet(l10n: l10n, card: card);
-      final wrapped = cubit != null
+      return cubit != null
           ? BlocProvider.value(value: cubit, child: child)
           : BlocProvider(create: (_) => getIt<CardsCubit>(), child: child);
-      return Padding(
-        padding: EdgeInsets.only(
-          bottom: MediaQuery.viewInsetsOf(sheetContext).bottom,
-        ),
-        child: wrapped,
-      );
     },
   );
 }
 
 class CardEditorSheet extends StatefulWidget {
-  const CardEditorSheet({
-    super.key,
-    required this.l10n,
-    this.card,
-  });
+  const CardEditorSheet({super.key, required this.l10n, this.card});
 
   final AppLocalizations l10n;
   final CardEntity? card;
@@ -58,7 +49,9 @@ class _CardEditorSheetState extends State<CardEditorSheet> {
   void initState() {
     super.initState();
     _nameController = TextEditingController(text: widget.card?.name ?? '');
-    _descriptionController = TextEditingController(text: widget.card?.description ?? '');
+    _descriptionController = TextEditingController(
+      text: widget.card?.description ?? '',
+    );
     if (widget.card != null) {
       _balanceController = TextEditingController(
         text: widget.card!.balance.toStringAsFixed(2),
@@ -79,8 +72,9 @@ class _CardEditorSheetState extends State<CardEditorSheet> {
     setState(() => _loading = true);
     final cubit = context.read<CardsCubit>();
     final name = _nameController.text.trim();
-    final description =
-        _descriptionController.text.trim().isEmpty ? null : _descriptionController.text.trim();
+    final description = _descriptionController.text.trim().isEmpty
+        ? null
+        : _descriptionController.text.trim();
     try {
       if (widget.card == null) {
         await cubit.create(name: name, description: description);
@@ -109,7 +103,8 @@ class _CardEditorSheetState extends State<CardEditorSheet> {
           TextFormField(
             controller: _nameController,
             decoration: InputDecoration(labelText: l10n.accountName),
-            validator: (v) => (v == null || v.trim().isEmpty) ? l10n.fieldRequired : null,
+            validator: (v) =>
+                (v == null || v.trim().isEmpty) ? l10n.fieldRequired : null,
             autofocus: true,
             textInputAction: TextInputAction.next,
           ),
@@ -118,10 +113,14 @@ class _CardEditorSheetState extends State<CardEditorSheet> {
             TextFormField(
               controller: _balanceController,
               decoration: InputDecoration(labelText: l10n.accountBalance),
-              keyboardType: const TextInputType.numberWithOptions(decimal: true, signed: true),
+              keyboardType: const TextInputType.numberWithOptions(
+                decimal: true,
+                signed: true,
+              ),
               validator: (v) {
                 if (v == null || v.trim().isEmpty) return l10n.fieldRequired;
-                if (double.tryParse(v.trim()) == null) return l10n.fieldRequired;
+                if (double.tryParse(v.trim()) == null)
+                  return l10n.fieldRequired;
                 return null;
               },
               textInputAction: TextInputAction.next,
@@ -147,7 +146,9 @@ class _CardEditorSheetState extends State<CardEditorSheet> {
         onPressed: _loading ? null : _submit,
         style: FilledButton.styleFrom(
           minimumSize: const Size(double.infinity, 48),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
         ),
         child: _loading
             ? SizedBox(
@@ -166,26 +167,18 @@ class _CardEditorSheetState extends State<CardEditorSheet> {
   @override
   Widget build(BuildContext context) {
     final l10n = widget.l10n;
-    final theme = Theme.of(context);
     final title = widget.card == null ? l10n.newCard : l10n.editCard;
 
-    return SingleChildScrollView(
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Text(
-              title,
-              style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w600),
-            ),
-            const SizedBox(height: 16),
-            _formFields(l10n),
-            const SizedBox(height: 24),
-            _submitPrimaryButton(l10n),
-          ],
-        ),
+    return BottomSheetPinnedTitleScrollView(
+      title: title,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          _formFields(l10n),
+          const SizedBox(height: 24),
+          _submitPrimaryButton(l10n),
+        ],
       ),
     );
   }
