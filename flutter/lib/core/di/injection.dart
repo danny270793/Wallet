@@ -48,7 +48,10 @@ import '../../features/tags/presentation/cubit/tags_cubit.dart';
 import '../../features/assets/data/datasources/assets_remote_datasource.dart';
 import '../../features/assets/data/repositories/assets_repository_impl.dart';
 import '../../features/assets/domain/repositories/assets_repository.dart';
+import '../../features/assets/domain/usecases/create_asset_usecase.dart';
+import '../../features/assets/domain/usecases/delete_asset_usecase.dart';
 import '../../features/assets/domain/usecases/get_assets_usecase.dart';
+import '../../features/assets/domain/usecases/update_asset_usecase.dart';
 import '../../features/assets/presentation/cubit/assets_cubit.dart';
 import '../../features/transactions/data/datasources/transactions_remote_datasource.dart';
 import '../../features/transactions/data/repositories/transactions_repository_impl.dart';
@@ -198,8 +201,16 @@ void setupDi() {
     () => AssetsRepositoryImpl(getIt()),
   );
   getIt.registerFactory<GetAssetsUsecase>(() => GetAssetsUsecase(getIt()));
+  getIt.registerFactory<CreateAssetUsecase>(() => CreateAssetUsecase(getIt()));
+  getIt.registerFactory<UpdateAssetUsecase>(() => UpdateAssetUsecase(getIt()));
+  getIt.registerFactory<DeleteAssetUsecase>(() => DeleteAssetUsecase(getIt()));
   getIt.registerFactory<AssetsCubit>(
-    () => AssetsCubit(getAssets: getIt()),
+    () => AssetsCubit(
+      getAssets: getIt(),
+      createAsset: getIt(),
+      updateAsset: getIt(),
+      deleteAsset: getIt(),
+    ),
   );
 
   // transactions
