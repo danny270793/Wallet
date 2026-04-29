@@ -160,6 +160,11 @@ class _AssetTile extends StatelessWidget {
     );
 
     final valueStr = l10n.transactionAmountValue(asset.value.toStringAsFixed(2));
+    final perApproxMo = assetValuePerApproximateCalendarMonth(
+      asset.value,
+      asset.boughtAt,
+      asset.endedAt,
+    );
     final held = formatAssetHoldingDurationYmd(asset.boughtAt, asset.endedAt);
     final heldLabel = l10n.assetHeldDuration(held);
 
@@ -191,6 +196,13 @@ class _AssetTile extends StatelessWidget {
           children: [
             if (asset.provider.trim().isNotEmpty) Text(asset.provider.trim(), style: muted),
             Text(valueStr),
+            if (perApproxMo != null)
+              Text(
+                l10n.assetValuePerApproximateMonth(
+                  l10n.transactionAmountValue(perApproxMo.toStringAsFixed(2)),
+                ),
+                style: muted,
+              ),
             Text(heldLabel, style: muted),
             Text(period, style: muted),
             if (asset.soldValue != null)
