@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:wallet/l10n/app_localizations.dart';
 
-/// Drawer destination index aligned with [WalletNavigationDrawer] items.
+/// Drawer destination index aligned with [WalletNavigationDrawer] destinations.
+/// Indices `7` and `8` are monthly and yearly dashboard when the dashboards section is expanded.
 int walletDrawerSelectedIndex(String matchedLocation) {
   if (matchedLocation.startsWith('/transactions')) return 0;
   if (matchedLocation.startsWith('/credits')) return 1;
@@ -17,18 +18,45 @@ int walletDrawerSelectedIndex(String matchedLocation) {
 }
 
 /// Shared drawer for main shell destinations.
-class WalletNavigationDrawer extends StatelessWidget {
-  final int selectedIndex;
+class WalletNavigationDrawer extends StatefulWidget {
+  final String matchedLocation;
 
-  const WalletNavigationDrawer({super.key, required this.selectedIndex});
+  const WalletNavigationDrawer({super.key, required this.matchedLocation});
+
+  @override
+  State<WalletNavigationDrawer> createState() => _WalletNavigationDrawerState();
+}
+
+class _WalletNavigationDrawerState extends State<WalletNavigationDrawer> {
+  /// When true, monthly/yearly destinations are omitted while not viewing a dashboard route.
+  bool _userCollapsedDashboards = false;
+
+  bool get _onDashboardRoute {
+    final loc = widget.matchedLocation;
+    return loc.startsWith('/dashboard/monthly') ||
+        loc.startsWith('/dashboard/yearly');
+  }
+
+  bool get _showDashboardSubs => _onDashboardRoute || !_userCollapsedDashboards;
+
+  void _toggleDashboardSection() {
+    if (_onDashboardRoute) return;
+    setState(() => _userCollapsedDashboards = !_userCollapsedDashboards);
+  }
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final router = GoRouter.of(context);
+    final selected = walletDrawerSelectedIndex(widget.matchedLocation);
+
+    int? drawerSelectedIndex = selected;
+    if (!_showDashboardSubs && selected >= 7) {
+      drawerSelectedIndex = -1;
+    }
 
     return NavigationDrawer(
-      selectedIndex: selectedIndex,
+      selectedIndex: drawerSelectedIndex,
       onDestinationSelected: (index) {
         Scaffold.of(context).closeDrawer();
         switch (index) {
@@ -97,16 +125,32 @@ class WalletNavigationDrawer extends StatelessWidget {
           selectedIcon: const Icon(Icons.inventory_2),
           label: Text(l10n.assets),
         ),
-        NavigationDrawerDestination(
-          icon: const Icon(Icons.calendar_month_outlined),
-          selectedIcon: const Icon(Icons.calendar_month),
-          label: Text(l10n.monthlyDashboard),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 4),
+          child: ListTile(
+            leading: const Icon(Icons.space_dashboard_outlined),
+            title: Text(l10n.navigationDashboards),
+            trailing: ExpandIcon(
+              isExpanded: _showDashboardSubs,
+              onPressed: _onDashboardRoute
+                  ? null
+                  : (_) => _toggleDashboardSection(),
+            ),
+            onTap: _onDashboardRoute ? null : _toggleDashboardSection,
+          ),
         ),
-        NavigationDrawerDestination(
-          icon: const Icon(Icons.date_range_outlined),
-          selectedIcon: const Icon(Icons.date_range),
-          label: Text(l10n.yearlyDashboard),
-        ),
+        if (_showDashboardSubs) ...[
+          NavigationDrawerDestination(
+            icon: const Icon(Icons.calendar_month_outlined),
+            selectedIcon: const Icon(Icons.calendar_month),
+            label: Text(l10n.monthlyDashboard),
+          ),
+          NavigationDrawerDestination(
+            icon: const Icon(Icons.date_range_outlined),
+            selectedIcon: const Icon(Icons.date_range),
+            label: Text(l10n.yearlyDashboard),
+          ),
+        ],
       ],
     );
   }
@@ -145,9 +189,7 @@ class ShellScaffold extends StatelessWidget {
 
     return Scaffold(
       drawer: useDrawer
-          ? WalletNavigationDrawer(
-              selectedIndex: walletDrawerSelectedIndex(location),
-            )
+          ? WalletNavigationDrawer(matchedLocation: location)
           : null,
       appBar: AppBar(
         title: Text(title),

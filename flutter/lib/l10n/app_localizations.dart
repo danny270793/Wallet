@@ -272,6 +272,12 @@ abstract class AppLocalizations {
   /// **'Cumulative balance by month'**
   String get yearlyDashboardCumulativeByMonthTitle;
 
+  /// No description provided for @navigationDashboards.
+  ///
+  /// In en, this message translates to:
+  /// **'Dashboards'**
+  String get navigationDashboards;
+
   /// No description provided for @settings.
   ///
   /// In en, this message translates to:
