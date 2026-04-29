@@ -1192,21 +1192,6 @@ List<TransactionEntity> _localTransactionsMatchingDescription(
       .toList();
 }
 
-List<TransactionEntity> _transactionsExactDescriptionMatch(
-  Iterable<TransactionEntity> candidates,
-  String query, {
-  String? excludeId,
-}) {
-  final norm = query.trim().toLowerCase();
-  if (norm.isEmpty) return [];
-  return candidates
-      .where((t) {
-        if (excludeId != null && t.id == excludeId) return false;
-        return (t.description ?? '').trim().toLowerCase() == norm;
-      })
-      .toList();
-}
-
 List<TransactionEntity> _mergeTransactionListsByIdNewestFirst(
   List<TransactionEntity> a,
   List<TransactionEntity> b,
@@ -2111,7 +2096,7 @@ class _TransactionDialogState extends State<_TransactionDialog> {
   String? _tagId;
 
   Timer? _descriptionSuggestDebounce;
-  List<TransactionEntity> _descriptionExactMatches = const [];
+  List<TransactionEntity> _descriptionSuggestionMatches = const [];
   bool _descriptionSuggestLoading = false;
 
   static const _descriptionSuggestDebounceMs = 400;
@@ -2222,18 +2207,18 @@ class _TransactionDialogState extends State<_TransactionDialog> {
     final q = _descriptionController.text.trim();
     if (q.isEmpty) {
       setState(() {
-        _descriptionExactMatches = const [];
+        _descriptionSuggestionMatches = const [];
         _descriptionSuggestLoading = false;
       });
       return;
     }
     final local = switch (widget.cubit.state) {
       TransactionsLoaded(:final transactions) =>
-        _transactionsExactDescriptionMatch(transactions, q),
+        _localTransactionsMatchingDescription(transactions, q),
       _ => <TransactionEntity>[],
     };
     setState(() {
-      _descriptionExactMatches = local;
+      _descriptionSuggestionMatches = local;
       _descriptionSuggestLoading = true;
     });
     _descriptionSuggestDebounce = Timer(
@@ -2249,15 +2234,14 @@ class _TransactionDialogState extends State<_TransactionDialog> {
       final remote = await getIt<SearchTransactionsByDescriptionUsecase>()(q, limit: 80);
       if (!mounted || widget.transaction != null) return;
       if (_descriptionController.text.trim() != q) return;
-      final exactRemote = _transactionsExactDescriptionMatch(remote, q);
       final local = switch (widget.cubit.state) {
         TransactionsLoaded(:final transactions) =>
-          _transactionsExactDescriptionMatch(transactions, q),
+            _localTransactionsMatchingDescription(transactions, q),
         _ => <TransactionEntity>[],
       };
-      final merged = _mergeTransactionListsByIdNewestFirst(local, exactRemote);
+      final merged = _mergeTransactionListsByIdNewestFirst(local, remote);
       setState(() {
-        _descriptionExactMatches = merged;
+        _descriptionSuggestionMatches = merged;
         _descriptionSuggestLoading = false;
       });
     } catch (_) {
@@ -2301,7 +2285,7 @@ class _TransactionDialogState extends State<_TransactionDialog> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        if (_descriptionSuggestLoading && _descriptionExactMatches.isEmpty)
+        if (_descriptionSuggestLoading && _descriptionSuggestionMatches.isEmpty)
           const Padding(
             padding: EdgeInsets.symmetric(vertical: 12),
             child: Center(
@@ -2312,7 +2296,7 @@ class _TransactionDialogState extends State<_TransactionDialog> {
               ),
             ),
           )
-        else if (!_descriptionSuggestLoading && _descriptionExactMatches.isEmpty)
+        else if (!_descriptionSuggestLoading && _descriptionSuggestionMatches.isEmpty)
           Padding(
             padding: const EdgeInsets.only(top: 4, bottom: 4),
             child: Text(
@@ -2332,9 +2316,9 @@ class _TransactionDialogState extends State<_TransactionDialog> {
                 Expanded(
                   child: ListView.builder(
                     padding: EdgeInsets.zero,
-                    itemCount: _descriptionExactMatches.length,
+                    itemCount: _descriptionSuggestionMatches.length,
                     itemBuilder: (context, i) {
-                      final t = _descriptionExactMatches[i];
+                      final t = _descriptionSuggestionMatches[i];
                       final desc = t.description?.isNotEmpty == true ? t.description! : l10n.none;
                       final weighted = t.value * t.percentage / 100.0;
                       final amt = l10n.transactionAmountValue(weighted.toStringAsFixed(2));
