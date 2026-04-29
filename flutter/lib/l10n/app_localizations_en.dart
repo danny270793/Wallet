@@ -530,6 +530,15 @@ class AppLocalizationsEn extends AppLocalizations {
       'No payment methods match your search';
 
   @override
+  String get transactionDeferred => 'Deferred';
+
+  @override
+  String get transactionGraceMonths => 'Grace months';
+
+  @override
+  String get transactionMesesPlazo => 'Term (months)';
+
+  @override
   String get transactionCategory => 'Category';
 
   @override
