@@ -20,6 +20,7 @@
   "dashboardCategoryPieFilterDescription": "Elige qué categorías incluir en el gráfico.",
   "dashboardCategoryPieNeedOneCategory": "Selecciona al menos una categoría",
   "dashboardPieDeselectAll": "Deseleccionar todo",
+  "dashboardPieSelectAll": "Seleccionar todo",
   "yearlyDashboard": "Panel anual",
   "yearlyDashboardIncomeByMonthTitle": "Ingresos por mes",
   "yearlyDashboardOutcomeByMonthTitle": "Gastos por mes",
