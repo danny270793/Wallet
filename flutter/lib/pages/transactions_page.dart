@@ -2301,19 +2301,6 @@ class _TransactionDialogState extends State<_TransactionDialog> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        const SizedBox(height: 8),
-        Text(
-          l10n.transactionSameDescriptionTitle,
-          style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
-        ),
-        const SizedBox(height: 4),
-        Text(
-          l10n.transactionSameDescriptionHint,
-          style: theme.textTheme.bodySmall?.copyWith(
-            color: theme.colorScheme.onSurfaceVariant,
-          ),
-        ),
-        const SizedBox(height: 8),
         if (_descriptionSuggestLoading && _descriptionExactMatches.isEmpty)
           const Padding(
             padding: EdgeInsets.symmetric(vertical: 12),
