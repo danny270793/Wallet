@@ -10,6 +10,7 @@
   "monthlyDashboardTransactionsListTitle": "Transactions",
   "dashboardIncludeIgnoredInTotals": "Include ignored transactions",
   "dashboardUseWeightedAmounts": "Weighted amounts (%)",
+  "monthlyDashboardTotalsSubtitle": "Totals for the view above (filters and options).",
   "monthlyDashboardTagPieTitle": "Expenses by tag",
   "monthlyDashboardCategoryPieTitle": "Expenses by category",
   "dashboardCategoryPieNoData": "No categorized expenses to show for this month with the current filter.",
