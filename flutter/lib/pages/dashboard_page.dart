@@ -11,7 +11,6 @@ import '../widgets/dashboard_month_transactions_list.dart';
 import '../widgets/monthly_category_expense_pie_chart.dart';
 import '../widgets/monthly_tag_pie_chart.dart';
 import '../widgets/shell_scaffold.dart';
-import '../widgets/transaction_month_totals.dart';
 import '../widgets/transactions_month_scope.dart';
 import '../widgets/transactions_totals_bar.dart';
 import 'transactions_page.dart'
@@ -168,12 +167,6 @@ class _MonthlyDashboardViewState extends State<_MonthlyDashboardView> {
         final showBar =
             state is TransactionsLoaded || state is TransactionsActionError;
 
-        final totals = transactionMonthTotalsBreakdown(
-          txs,
-          include: _includeIgnored ? (_) => true : (t) => !t.ignore,
-          amount: (t) => t.value,
-        );
-
         final preferredTagId = tagFilter != null && tagFilter.length == 1
             ? tagFilter.first
             : null;
@@ -187,15 +180,7 @@ class _MonthlyDashboardViewState extends State<_MonthlyDashboardView> {
           title: l10n.monthlyDashboard,
           appBarBottom: TransactionsMonthAppBarBottom(notifier: monthNotifier),
           bottomNavigationBar: showBar
-              ? TransactionsTotalsBar(
-                  l10n: l10n,
-                  primarySubtitle: _includeIgnored
-                      ? l10n.transactionsTotalsNotWeightedHint
-                      : l10n.transactionsTotalsNotWeightedExcludingIgnoredHint,
-                  income: totals.income,
-                  outcome: totals.outcome,
-                  balance: totals.balance,
-                )
+              ? TransactionsTotalsBarHost(l10n: l10n, transactions: txs)
               : null,
           floatingActionButton: showBar
               ? TransactionsExpandableFab(
