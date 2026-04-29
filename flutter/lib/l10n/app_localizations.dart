@@ -140,6 +140,18 @@ abstract class AppLocalizations {
   /// **'Monthly dashboard'**
   String get monthlyDashboard;
 
+  /// No description provided for @monthlyDashboardConfigureTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Charts and totals options'**
+  String get monthlyDashboardConfigureTooltip;
+
+  /// No description provided for @monthlyDashboardOptionsSheetTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'View options'**
+  String get monthlyDashboardOptionsSheetTitle;
+
   /// No description provided for @monthlyDashboardTransactionsListTitle.
   ///
   /// In en, this message translates to:
