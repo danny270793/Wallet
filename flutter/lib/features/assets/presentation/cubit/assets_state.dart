@@ -30,3 +30,11 @@ class AssetsError extends AssetsState {
   @override
   List<Object?> get props => [message];
 }
+
+/// Create failed; list is unchanged so the UI can keep showing prior data.
+class AssetsActionError extends AssetsState {
+  final List<AssetEntity> assets;
+  const AssetsActionError(this.assets);
+  @override
+  List<Object?> get props => [assets];
+}
