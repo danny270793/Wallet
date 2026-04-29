@@ -19,17 +19,11 @@ Future<void> showAccountEditorBottomSheet(
     isScrollControlled: true,
     useSafeArea: true,
     showDragHandle: false,
-    builder: (sheetContext) {
+    builder: (_) {
       final child = AccountEditorSheet(l10n: l10n, account: account);
-      final wrapped = cubit != null
+      return cubit != null
           ? BlocProvider.value(value: cubit, child: child)
           : BlocProvider(create: (_) => getIt<AccountsCubit>(), child: child);
-      return Padding(
-        padding: EdgeInsets.only(
-          bottom: MediaQuery.viewInsetsOf(sheetContext).bottom,
-        ),
-        child: wrapped,
-      );
     },
   );
 }
