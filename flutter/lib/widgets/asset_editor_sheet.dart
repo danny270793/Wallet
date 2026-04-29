@@ -45,15 +45,19 @@ class _AssetEditorSheetState extends State<AssetEditorSheet> {
   late final TextEditingController _valueController;
   late final TextEditingController _soldController;
 
-  late final TextEditingController _boughtDateDisplayController;
-  late final TextEditingController _boughtTimeDisplayController;
-  late final TextEditingController _endedDateDisplayController;
-  late final TextEditingController _endedTimeDisplayController;
+  late final TextEditingController _boughtDisplayController;
+  late final TextEditingController _endedDisplayController;
 
-  /// Local wall time (matches transaction picker behavior).
+  /// Calendar date only (midnight local).
   late DateTime _boughtAt;
   DateTime? _endedAt;
   bool _loading = false;
+
+  static DateTime _dateOnly(DateTime d) => DateTime(d.year, d.month, d.day);
+
+  /// Noon local when persisting avoids timezone boundary issues vs DB timestamptz.
+  static DateTime _noonLocalOn(DateTime dateOnly) =>
+      DateTime(dateOnly.year, dateOnly.month, dateOnly.day, 12);
 
   @override
   void initState() {
@@ -66,23 +70,22 @@ class _AssetEditorSheetState extends State<AssetEditorSheet> {
       _soldController = TextEditingController(
         text: a.soldValue != null ? a.soldValue!.toStringAsFixed(2) : '',
       );
-      _boughtAt = a.boughtAt.toLocal();
-      _endedAt = a.endedAt?.toLocal();
+      final lb = a.boughtAt.toLocal();
+      _boughtAt = _dateOnly(lb);
+      _endedAt = a.endedAt == null ? null : _dateOnly(a.endedAt!.toLocal());
     } else {
       _nameController = TextEditingController();
       _providerController = TextEditingController();
       _valueController = TextEditingController(text: '0');
       _soldController = TextEditingController();
-      _boughtAt = DateTime.now();
+      _boughtAt = _dateOnly(DateTime.now());
     }
-    _boughtDateDisplayController = TextEditingController();
-    _boughtTimeDisplayController = TextEditingController();
-    _endedDateDisplayController = TextEditingController();
-    _endedTimeDisplayController = TextEditingController();
+    _boughtDisplayController = TextEditingController();
+    _endedDisplayController = TextEditingController();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
-      _syncBoughtDateTimeDisplay();
-      _syncEndedDateTimeDisplay();
+      _syncBoughtDisplay();
+      _syncEndedDisplay();
     });
   }
 
@@ -92,32 +95,24 @@ class _AssetEditorSheetState extends State<AssetEditorSheet> {
     _providerController.dispose();
     _valueController.dispose();
     _soldController.dispose();
-    _boughtDateDisplayController.dispose();
-    _boughtTimeDisplayController.dispose();
-    _endedDateDisplayController.dispose();
-    _endedTimeDisplayController.dispose();
+    _boughtDisplayController.dispose();
+    _endedDisplayController.dispose();
     super.dispose();
   }
 
-  void _syncBoughtDateTimeDisplay() {
+  void _syncBoughtDisplay() {
     final locale = Localizations.localeOf(context).toString();
-    _boughtDateDisplayController.text = DateFormat.yMd(locale).format(_boughtAt);
-    _boughtTimeDisplayController.text = DateFormat.Hm(locale).format(_boughtAt);
+    _boughtDisplayController.text = DateFormat.yMd(locale).format(_boughtAt);
   }
 
-  void _syncEndedDateTimeDisplay() {
+  void _syncEndedDisplay() {
     final e = _endedAt;
     final locale = Localizations.localeOf(context).toString();
-    if (e == null) {
-      _endedDateDisplayController.text = '';
-      _endedTimeDisplayController.text = '';
-    } else {
-      _endedDateDisplayController.text = DateFormat.yMd(locale).format(e);
-      _endedTimeDisplayController.text = DateFormat.Hm(locale).format(e);
-    }
+    _endedDisplayController.text =
+        e == null ? '' : DateFormat.yMd(locale).format(e);
   }
 
-  Future<void> _pickBoughtDate() async {
+  Future<void> _pickBought() async {
     final d = await showDatePicker(
       context: context,
       initialDate: _boughtAt,
@@ -126,95 +121,36 @@ class _AssetEditorSheetState extends State<AssetEditorSheet> {
     );
     if (d == null || !mounted) return;
     setState(() {
-      _boughtAt = DateTime(
-        d.year,
-        d.month,
-        d.day,
-        _boughtAt.hour,
-        _boughtAt.minute,
-      );
+      _boughtAt = DateTime(d.year, d.month, d.day);
       if (_endedAt != null && _endedAt!.isBefore(_boughtAt)) {
         _endedAt = null;
       }
     });
-    _syncBoughtDateTimeDisplay();
-    _syncEndedDateTimeDisplay();
+    _syncBoughtDisplay();
+    _syncEndedDisplay();
   }
 
-  Future<void> _pickBoughtTime() async {
-    final time = await showTimePicker(
-      context: context,
-      initialTime: TimeOfDay.fromDateTime(_boughtAt),
-    );
-    if (time == null || !mounted) return;
-    setState(() {
-      _boughtAt = DateTime(
-        _boughtAt.year,
-        _boughtAt.month,
-        _boughtAt.day,
-        time.hour,
-        time.minute,
-      );
-      if (_endedAt != null && _endedAt!.isBefore(_boughtAt)) {
-        _endedAt = null;
-      }
-    });
-    _syncBoughtDateTimeDisplay();
-    _syncEndedDateTimeDisplay();
-  }
-
-  Future<void> _pickEndedDate() async {
+  Future<void> _pickEnded() async {
     final initial = _endedAt ?? _boughtAt;
     final d = await showDatePicker(
       context: context,
       initialDate: initial,
-      firstDate: DateTime(_boughtAt.year, _boughtAt.month, _boughtAt.day),
+      firstDate: _boughtAt,
       lastDate: DateTime(2100),
     );
     if (d == null || !mounted) return;
-
-    final hour = (_endedAt ?? _boughtAt).hour;
-    final minute = (_endedAt ?? _boughtAt).minute;
     setState(() {
-      _endedAt = DateTime(d.year, d.month, d.day, hour, minute);
+      _endedAt = DateTime(d.year, d.month, d.day);
       if (_endedAt!.isBefore(_boughtAt)) {
         _endedAt = _boughtAt;
       }
     });
-    _syncEndedDateTimeDisplay();
-  }
-
-  Future<void> _pickEndedTime() async {
-    if (_endedAt == null) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(widget.l10n.assetPickEndDateFirst)),
-      );
-      return;
-    }
-    final time = await showTimePicker(
-      context: context,
-      initialTime: TimeOfDay.fromDateTime(_endedAt!),
-    );
-    if (time == null || !mounted) return;
-    setState(() {
-      _endedAt = DateTime(
-        _endedAt!.year,
-        _endedAt!.month,
-        _endedAt!.day,
-        time.hour,
-        time.minute,
-      );
-      if (_endedAt!.isBefore(_boughtAt)) {
-        _endedAt = _boughtAt;
-      }
-    });
-    _syncEndedDateTimeDisplay();
+    _syncEndedDisplay();
   }
 
   void _clearEnded() {
     setState(() => _endedAt = null);
-    _syncEndedDateTimeDisplay();
+    _syncEndedDisplay();
   }
 
   Future<void> _submit() async {
@@ -252,6 +188,9 @@ class _AssetEditorSheetState extends State<AssetEditorSheet> {
     final cubit = context.read<AssetsCubit>();
     final name = _nameController.text.trim();
     final provider = _providerController.text.trim();
+    final bought = _noonLocalOn(_boughtAt);
+    final end = ended == null ? null : _noonLocalOn(ended);
+
     try {
       final existing = widget.asset;
       if (existing == null) {
@@ -259,8 +198,8 @@ class _AssetEditorSheetState extends State<AssetEditorSheet> {
           name: name,
           provider: provider,
           value: v,
-          boughtAt: _boughtAt,
-          endedAt: ended,
+          boughtAt: bought,
+          endedAt: end,
           soldValue: sold,
         );
       } else {
@@ -269,136 +208,14 @@ class _AssetEditorSheetState extends State<AssetEditorSheet> {
           name: name,
           provider: provider,
           value: v,
-          boughtAt: _boughtAt,
-          endedAt: ended,
+          boughtAt: bought,
+          endedAt: end,
           soldValue: sold,
         );
       }
     } finally {
       if (mounted) Navigator.of(context).pop();
     }
-  }
-
-  Widget _formFields(AppLocalizations l10n) {
-    final isCreate = widget.asset == null;
-
-    Widget dateTimeRow({
-      required TextEditingController dateController,
-      required TextEditingController timeController,
-      required VoidCallback onDate,
-      required VoidCallback onTime,
-      List<Widget>? trailing,
-    }) {
-      return Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Expanded(
-            child: TextFormField(
-              readOnly: true,
-              enableInteractiveSelection: false,
-              showCursor: false,
-              controller: dateController,
-              decoration: InputDecoration(
-                labelText: l10n.transferDateLabel,
-                suffixIcon: const Icon(Icons.calendar_today_outlined, size: 20),
-              ),
-              onTap: onDate,
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: TextFormField(
-              readOnly: true,
-              enableInteractiveSelection: false,
-              showCursor: false,
-              controller: timeController,
-              decoration: InputDecoration(
-                labelText: l10n.transferTimeLabel,
-                suffixIcon: const Icon(Icons.schedule, size: 20),
-              ),
-              onTap: onTime,
-            ),
-          ),
-          ...?trailing,
-        ],
-      );
-    }
-
-    return Form(
-      key: _formKey,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          TextFormField(
-            controller: _nameController,
-            decoration: InputDecoration(labelText: l10n.accountName),
-            validator: (v) =>
-                (v == null || v.trim().isEmpty) ? l10n.fieldRequired : null,
-            autofocus: isCreate,
-            textInputAction: TextInputAction.next,
-          ),
-          const SizedBox(height: 12),
-          TextFormField(
-            controller: _providerController,
-            decoration: InputDecoration(labelText: l10n.assetProvider),
-            textInputAction: TextInputAction.next,
-          ),
-          const SizedBox(height: 12),
-          TextFormField(
-            controller: _valueController,
-            decoration: InputDecoration(labelText: l10n.assetValue),
-            keyboardType: const TextInputType.numberWithOptions(decimal: true),
-            textInputAction: TextInputAction.next,
-            validator: (s) {
-              if (s == null || s.trim().isEmpty) return l10n.fieldRequired;
-              if (double.tryParse(s.trim().replaceAll(',', '.')) == null) {
-                return l10n.assetInvalidNumber;
-              }
-              return null;
-            },
-          ),
-          const SizedBox(height: 16),
-          Text(
-            l10n.assetPurchaseDate,
-            style: Theme.of(context).textTheme.titleSmall,
-          ),
-          const SizedBox(height: 8),
-          dateTimeRow(
-            dateController: _boughtDateDisplayController,
-            timeController: _boughtTimeDisplayController,
-            onDate: _pickBoughtDate,
-            onTime: _pickBoughtTime,
-          ),
-          const SizedBox(height: 16),
-          Text(
-            l10n.assetEndDate,
-            style: Theme.of(context).textTheme.titleSmall,
-          ),
-          const SizedBox(height: 8),
-          dateTimeRow(
-            dateController: _endedDateDisplayController,
-            timeController: _endedTimeDisplayController,
-            onDate: _pickEndedDate,
-            onTime: _pickEndedTime,
-            trailing: [
-              if (_endedAt != null)
-                IconButton(
-                  icon: const Icon(Icons.clear_rounded),
-                  tooltip: MaterialLocalizations.of(context).cancelButtonLabel,
-                  onPressed: _clearEnded,
-                ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          TextFormField(
-            controller: _soldController,
-            decoration: InputDecoration(labelText: l10n.assetSoldAmountField),
-            keyboardType: const TextInputType.numberWithOptions(decimal: true),
-          ),
-        ],
-      ),
-    );
   }
 
   @override
@@ -416,7 +233,90 @@ class _AssetEditorSheetState extends State<AssetEditorSheet> {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          _formFields(l10n),
+          Form(
+            key: _formKey,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                TextFormField(
+                  controller: _nameController,
+                  decoration: InputDecoration(labelText: l10n.accountName),
+                  validator: (v) =>
+                      (v == null || v.trim().isEmpty) ? l10n.fieldRequired : null,
+                  autofocus: isCreate,
+                  textInputAction: TextInputAction.next,
+                ),
+                const SizedBox(height: 12),
+                TextFormField(
+                  controller: _providerController,
+                  decoration: InputDecoration(labelText: l10n.assetProvider),
+                  textInputAction: TextInputAction.next,
+                ),
+                const SizedBox(height: 12),
+                TextFormField(
+                  controller: _valueController,
+                  decoration: InputDecoration(labelText: l10n.assetValue),
+                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                  textInputAction: TextInputAction.next,
+                  validator: (s) {
+                    if (s == null || s.trim().isEmpty) return l10n.fieldRequired;
+                    if (double.tryParse(s.trim().replaceAll(',', '.')) == null) {
+                      return l10n.assetInvalidNumber;
+                    }
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 16),
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      child: TextFormField(
+                        readOnly: true,
+                        enableInteractiveSelection: false,
+                        showCursor: false,
+                        controller: _boughtDisplayController,
+                        decoration: InputDecoration(
+                          labelText: l10n.assetPurchaseDate,
+                          suffixIcon: const Icon(Icons.calendar_today_outlined, size: 20),
+                        ),
+                        onTap: _pickBought,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: TextFormField(
+                        readOnly: true,
+                        enableInteractiveSelection: false,
+                        showCursor: false,
+                        controller: _endedDisplayController,
+                        decoration: InputDecoration(
+                          labelText: l10n.assetEndDate,
+                          hintText: '—',
+                          suffixIcon:
+                              Icon(_endedAt != null ? Icons.event : Icons.event_outlined, size: 20),
+                        ),
+                        onTap: _pickEnded,
+                      ),
+                    ),
+                    if (_endedAt != null)
+                      IconButton(
+                        icon: const Icon(Icons.clear_rounded),
+                        tooltip: MaterialLocalizations.of(context).cancelButtonLabel,
+                        onPressed: _clearEnded,
+                      ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                TextFormField(
+                  controller: _soldController,
+                  decoration: InputDecoration(labelText: l10n.assetSoldAmountField),
+                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                ),
+              ],
+            ),
+          ),
           const SizedBox(height: 24),
           SizedBox(
             width: double.infinity,
