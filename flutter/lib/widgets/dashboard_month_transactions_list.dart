@@ -89,9 +89,9 @@ List<_DashGroupedRow> _groupTransactionsByDay(List<TransactionEntity> list) {
 }
 
 List<String> _relationNames(TransactionEntity t) => [
+  if (t.categoryName?.isNotEmpty == true) t.categoryName!,
   if (t.accountName?.isNotEmpty == true) t.accountName!,
   if (t.cardName?.isNotEmpty == true) t.cardName!,
-  if (t.categoryName?.isNotEmpty == true) t.categoryName!,
   if (t.tagName?.isNotEmpty == true) t.tagName!,
 ];
 
