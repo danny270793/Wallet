@@ -16,6 +16,7 @@ class CreateTransactionUsecase {
     required bool ignore,
     required double percentage,
     String? transferGroupId,
+    String? creditGroupId,
   }) =>
       _repository.createTransaction(
         accountId: accountId,
@@ -28,5 +29,6 @@ class CreateTransactionUsecase {
         ignore: ignore,
         percentage: percentage,
         transferGroupId: transferGroupId,
+        creditGroupId: creditGroupId,
       );
 }
