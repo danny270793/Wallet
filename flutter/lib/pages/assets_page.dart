@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import 'package:wallet/l10n/app_localizations.dart';
 
 import '../core/di/injection.dart';
+import '../core/format_asset_holding_duration.dart';
 import '../features/assets/domain/entities/asset_entity.dart';
 import '../features/assets/presentation/cubit/assets_cubit.dart';
 import '../features/assets/presentation/cubit/assets_state.dart';
@@ -159,6 +160,9 @@ class _AssetTile extends StatelessWidget {
     );
 
     final valueStr = l10n.transactionAmountValue(asset.value.toStringAsFixed(2));
+    final held = formatAssetHoldingDurationYmd(asset.boughtAt, asset.endedAt);
+    final heldLabel = l10n.assetHeldDuration(held);
+
     final locale = Localizations.localeOf(context).toString();
     final dateFmt = DateFormat.yMd(locale);
     String dateLine(DateTime t) => dateFmt.format(t.toLocal());
@@ -187,6 +191,7 @@ class _AssetTile extends StatelessWidget {
           children: [
             if (asset.provider.trim().isNotEmpty) Text(asset.provider.trim(), style: muted),
             Text(valueStr),
+            Text(heldLabel, style: muted),
             Text(period, style: muted),
             if (asset.soldValue != null)
               Text(
