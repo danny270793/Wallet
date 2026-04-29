@@ -16,10 +16,10 @@ class AccountsSupabaseDatasource implements AccountsRemoteDatasource {
   @override
   Future<List<AccountEntity>> getAccounts() async {
     AppLogger.debug('getAccounts called');
-    final data = await _client
-        .from('wallet_accounts_with_balance')
-        .select()
-        .isFilter('deletedAt', null)
+    final data = await _client.from('wallet_accounts_with_balance').select(
+          // Explicit columns: omit legacy balanceWeighted if present on older deployments.
+          'id, userId, name, description, createdAt, updatedAt, deletedAt, balance',
+        ).isFilter('deletedAt', null)
         .order('createdAt');
     return (data as List).map((e) => AccountEntity.fromJson(e as Map<String, dynamic>)).toList();
   }
