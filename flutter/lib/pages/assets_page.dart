@@ -165,6 +165,13 @@ class _AssetTile extends StatelessWidget {
       asset.boughtAt,
       asset.endedAt,
     );
+    final soldPerApproxMo = asset.soldValue != null
+        ? assetValuePerApproximateCalendarMonth(
+            asset.soldValue!,
+            asset.boughtAt,
+            asset.endedAt,
+          )
+        : null;
     final held = formatAssetHoldingDurationYmd(asset.boughtAt, asset.endedAt);
     final heldLabel = l10n.assetHeldDuration(held);
 
@@ -203,14 +210,24 @@ class _AssetTile extends StatelessWidget {
                 ),
                 style: muted,
               ),
-            Text(heldLabel, style: muted),
-            Text(period, style: muted),
-            if (asset.soldValue != null)
+            if (asset.soldValue != null) ...[
               Text(
                 '${l10n.assetSold}: '
                 '${l10n.transactionAmountValue(asset.soldValue!.toStringAsFixed(2))}',
                 style: muted,
               ),
+              if (soldPerApproxMo != null)
+                Text(
+                  l10n.assetSoldPerApproximateMonth(
+                    l10n.transactionAmountValue(
+                      soldPerApproxMo.toStringAsFixed(2),
+                    ),
+                  ),
+                  style: muted,
+                ),
+            ],
+            Text(heldLabel, style: muted),
+            Text(period, style: muted),
           ],
         ),
         onEdit: openEdit,
