@@ -3,9 +3,16 @@ import 'package:wallet/l10n/app_localizations.dart';
 
 import 'wallet_dual_balance_trailing.dart';
 
+/// Swipe horizontally (with enough speed) on the totals bar to move to next ([forward] true)
+/// or previous ([forward] false) mode.
+typedef TransactionsTotalsModeSwipe = void Function(bool forward);
+
+/// Minimum horizontal swipe speed (pixels per second on [DragEndDetails]) to cycle mode.
+const double kTransactionsTotalsSwipeMinVelocityPxPerSec = 280;
+
 /// Bottom summary: income (sum of positive amounts), outcome (sum of absolute negatives),
 /// net balance. Transfer legs ([TransactionEntity.isAccountTransferLeg]) are not included upstream.
-/// [onDoubleTap] toggles including vs excluding ignored transactions.
+/// When [onTotalsModeSwipe] is set, swipe left goes to next option, swipe right to previous.
 class TransactionsTotalsBar extends StatelessWidget {
   const TransactionsTotalsBar({
     super.key,
@@ -18,7 +25,7 @@ class TransactionsTotalsBar extends StatelessWidget {
     this.secondaryOutcome,
     this.secondaryBalance,
     this.secondarySubtitle,
-    this.onDoubleTap,
+    this.onTotalsModeSwipe,
   });
 
   final AppLocalizations l10n;
@@ -30,7 +37,7 @@ class TransactionsTotalsBar extends StatelessWidget {
   final double? secondaryOutcome;
   final double? secondaryBalance;
   final String? secondarySubtitle;
-  final VoidCallback? onDoubleTap;
+  final TransactionsTotalsModeSwipe? onTotalsModeSwipe;
 
   bool get _hasSecondary =>
       secondaryIncome != null &&
@@ -98,7 +105,16 @@ class TransactionsTotalsBar extends StatelessWidget {
     }
 
     return GestureDetector(
-      onDoubleTap: onDoubleTap,
+      onHorizontalDragEnd: onTotalsModeSwipe == null
+          ? null
+          : (details) {
+              final vx = details.velocity.pixelsPerSecond.dx;
+              if (vx.abs() < kTransactionsTotalsSwipeMinVelocityPxPerSec) {
+                return;
+              }
+              // Leftward drag (negative vx) moves to next option (LTR pattern).
+              onTotalsModeSwipe!(vx < 0);
+            },
       behavior: HitTestBehavior.opaque,
       child: Material(
         color: theme.colorScheme.surfaceContainerHighest,
