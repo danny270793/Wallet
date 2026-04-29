@@ -7,7 +7,9 @@ import '../core/di/injection.dart';
 import '../features/assets/domain/entities/asset_entity.dart';
 import '../features/assets/presentation/cubit/assets_cubit.dart';
 import '../features/assets/presentation/cubit/assets_state.dart';
+import '../widgets/asset_editor_sheet.dart';
 import '../widgets/shell_scaffold.dart';
+import '../widgets/swipeable_list_tile.dart';
 
 class AssetsPage extends StatelessWidget {
   const AssetsPage({super.key});
@@ -28,10 +30,25 @@ class _AssetsView extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
 
-    return BlocBuilder<AssetsCubit, AssetsState>(
+    return BlocConsumer<AssetsCubit, AssetsState>(
+      listener: (context, state) {
+        if (state is AssetsActionError) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(l10n.unexpectedError)),
+          );
+        }
+      },
       builder: (context, state) {
         return ShellScaffold(
           title: l10n.assets,
+          floatingActionButton: FloatingActionButton(
+            onPressed: () => showAssetEditorBottomSheet(
+              context,
+              l10n,
+              cubit: context.read<AssetsCubit>(),
+            ),
+            child: const Icon(Icons.add),
+          ),
           body: _body(context, state, l10n),
         );
       },
@@ -54,6 +71,7 @@ class _AssetsView extends StatelessWidget {
         onRefresh: pullRefresh,
         child: ListView(
           physics: const AlwaysScrollableScrollPhysics(),
+          padding: const EdgeInsets.only(bottom: 88),
           children: [
             SizedBox(
               height: MediaQuery.sizeOf(context).height * 0.35,
@@ -69,6 +87,7 @@ class _AssetsView extends StatelessWidget {
         onRefresh: pullRefresh,
         child: ListView(
           physics: const AlwaysScrollableScrollPhysics(),
+          padding: const EdgeInsets.only(bottom: 88),
           children: [
             SizedBox(
               height: MediaQuery.sizeOf(context).height * 0.35,
@@ -93,6 +112,7 @@ class _AssetsView extends StatelessWidget {
 
     final assets = switch (state) {
       AssetsLoaded(:final assets) => assets,
+      AssetsActionError(:final assets) => assets,
       _ => <AssetEntity>[],
     };
 
@@ -116,7 +136,7 @@ class _AssetsView extends StatelessWidget {
       onRefresh: pullRefresh,
       child: ListView.builder(
         physics: const AlwaysScrollableScrollPhysics(),
-        padding: const EdgeInsets.symmetric(vertical: 8),
+        padding: const EdgeInsets.fromLTRB(0, 8, 0, 88),
         itemCount: assets.length,
         itemBuilder: (context, index) =>
             _AssetTile(asset: assets[index]),
@@ -132,20 +152,32 @@ class _AssetTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final cubit = context.read<AssetsCubit>();
     final scheme = Theme.of(context).colorScheme;
     final muted = Theme.of(context).textTheme.bodySmall?.copyWith(
       color: scheme.onSurfaceVariant,
     );
-    final dateFmt = DateFormat.yMMMd();
 
     final valueStr = l10n.transactionAmountValue(asset.value.toStringAsFixed(2));
+    final dateFmt = DateFormat.yMMMd();
     final period = asset.endedAt != null
         ? '${dateFmt.format(asset.boughtAt)} → ${dateFmt.format(asset.endedAt!)}'
         : dateFmt.format(asset.boughtAt);
 
-    return Card(
-      margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-      child: ListTile(
+    void openEdit() {
+      showAssetEditorBottomSheet(
+        context,
+        l10n,
+        cubit: cubit,
+        asset: asset,
+      );
+    }
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      child: SwipeableListTile(
+        itemKey: asset.id,
+        tileIsThreeLine: true,
         title: Text(asset.name),
         subtitle: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -161,7 +193,32 @@ class _AssetTile extends StatelessWidget {
               ),
           ],
         ),
-        isThreeLine: true,
+        onEdit: openEdit,
+        confirmDelete: () async {
+          final ok = await showDialog<bool>(
+            context: context,
+            builder: (dialogContext) => AlertDialog(
+              title: Text(l10n.deleteAsset),
+              content: Text(l10n.confirmDeleteAsset(asset.name)),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(dialogContext).pop(false),
+                  child: Text(l10n.cancel),
+                ),
+                ElevatedButton(
+                  style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+                  onPressed: () => Navigator.of(dialogContext).pop(true),
+                  child: Text(
+                    l10n.delete,
+                    style: const TextStyle(color: Colors.white),
+                  ),
+                ),
+              ],
+            ),
+          );
+          return ok ?? false;
+        },
+        onDelete: () => cubit.delete(id: asset.id),
       ),
     );
   }
