@@ -4,6 +4,7 @@ import 'package:wallet/l10n/app_localizations.dart';
 
 import '../core/di/injection.dart';
 import '../features/transactions/presentation/cubit/yearly_dashboard_cubit.dart';
+import '../widgets/dashboard_view_options_bottom_sheet.dart';
 import '../widgets/shell_scaffold.dart';
 import '../widgets/yearly_dashboard_scope.dart';
 import '../widgets/yearly_weighted_income_bar_chart.dart';
@@ -33,8 +34,11 @@ class _YearlyDashboardViewState extends State<_YearlyDashboardView> {
   ValueNotifier<DateTime>? _yearNotifier;
   bool _listenerAttached = false;
 
-  /// When true, ignored rows count toward monthly income bars (matches monthly dashboard switch).
+  /// When true, ignored rows count toward yearly chart bars.
   bool _includeIgnored = true;
+
+  /// When true, monthly bars use `value × percentage`; when false, raw row value.
+  bool _useWeightedAmounts = true;
 
   @override
   void didChangeDependencies() {
@@ -72,6 +76,25 @@ class _YearlyDashboardViewState extends State<_YearlyDashboardView> {
             return ShellScaffold(
               title: l10n.yearlyDashboard,
               appBarBottom: YearlyDashboardAppBarBottom(notifier: yearNotifier),
+              appBarActionsBeforeSettings: switch (state) {
+                YearlyDashboardLoaded() => <Widget>[
+                    IconButton(
+                      icon: const Icon(Icons.tune_rounded),
+                      tooltip: l10n.monthlyDashboardConfigureTooltip,
+                      onPressed: () => showDashboardViewOptionsBottomSheet(
+                        context: context,
+                        l10n: l10n,
+                        includeIgnored: _includeIgnored,
+                        useWeightedAmounts: _useWeightedAmounts,
+                        onApply: (inc, wt) => setState(() {
+                          _includeIgnored = inc;
+                          _useWeightedAmounts = wt;
+                        }),
+                      ),
+                    ),
+                  ],
+                _ => null,
+              },
               body: switch (state) {
                 YearlyDashboardInitial() || YearlyDashboardLoading() =>
                   const Center(child: CircularProgressIndicator()),
@@ -107,47 +130,33 @@ class _YearlyDashboardViewState extends State<_YearlyDashboardView> {
                       vertical: 8,
                     ),
                     children: [
-                      SwitchListTile(
-                        title: Text(l10n.dashboardIncludeIgnoredInTotals),
-                        value: _includeIgnored,
-                        onChanged: (v) => setState(() => _includeIgnored = v),
-                      ),
-                      if (!_includeIgnored)
-                        Padding(
-                          padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
-                          child: Text(
-                            l10n.transactionsTotalsNotWeightedExcludingIgnoredHint,
-                            style: Theme.of(context).textTheme.labelSmall
-                                ?.copyWith(
-                                  color: Theme.of(
-                                    context,
-                                  ).colorScheme.onSurfaceVariant,
-                                ),
-                          ),
-                        ),
                       YearlyCumulativeNetBarChart(
                         l10n: l10n,
                         year: y,
                         transactions: transactions,
                         includeIgnored: _includeIgnored,
+                        useWeightedAmounts: _useWeightedAmounts,
                       ),
                       YearlyWeightedNetBarChart(
                         l10n: l10n,
                         year: y,
                         transactions: transactions,
                         includeIgnored: _includeIgnored,
+                        useWeightedAmounts: _useWeightedAmounts,
                       ),
                       YearlyWeightedIncomeBarChart(
                         l10n: l10n,
                         year: y,
                         transactions: transactions,
                         includeIgnored: _includeIgnored,
+                        useWeightedAmounts: _useWeightedAmounts,
                       ),
                       YearlyWeightedOutcomeBarChart(
                         l10n: l10n,
                         year: y,
                         transactions: transactions,
                         includeIgnored: _includeIgnored,
+                        useWeightedAmounts: _useWeightedAmounts,
                       ),
                     ],
                   ),
