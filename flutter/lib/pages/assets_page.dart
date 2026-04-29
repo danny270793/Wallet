@@ -189,13 +189,6 @@ class _AssetTile extends StatelessWidget {
       letterSpacing: -0.25,
       height: 1.25,
     );
-    final subAmountStyle = muted(0.95)?.copyWith(
-      fontWeight: FontWeight.w500,
-      fontSize:
-          ((muted(null)?.fontSize ?? 13) + 0.25).clamp(12.5, 14.5),
-      height: 1.22,
-    );
-
     final trailingMoAsTitle = theme.textTheme.titleMedium?.copyWith(
       color: scheme.primary,
       fontWeight: FontWeight.w700,
@@ -234,17 +227,6 @@ class _AssetTile extends StatelessWidget {
             textAlign: TextAlign.right,
           ),
         ],
-      );
-    }
-
-    Widget soldOnlyColumn() {
-      return Text(
-        '${l10n.assetSold}: '
-        '${l10n.transactionAmountValue(
-          asset.soldValue!.toStringAsFixed(2),
-        )}',
-        style: subAmountStyle?.copyWith(color: scheme.tertiary),
-        textAlign: TextAlign.right,
       );
     }
 
@@ -294,20 +276,23 @@ class _AssetTile extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       mainAxisSize: MainAxisSize.min,
       children: [
-        if (hasSold)
-          Align(
-            alignment: Alignment.centerRight,
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 168),
-              child: soldOnlyColumn(),
-            ),
-          ),
         if (provider.isNotEmpty) ...[
-          if (hasSold) const SizedBox(height: 8),
           Text(provider, style: muted(0.92), maxLines: 2),
+          const SizedBox(height: 6),
         ],
-        SizedBox(height: (hasSold || provider.isNotEmpty) ? 6 : 0),
         metaLine(),
+        if (hasSold) ...[
+          const SizedBox(height: 6),
+          Text(
+            '${l10n.assetSold}: '
+            '${l10n.transactionAmountValue(
+              asset.soldValue!.toStringAsFixed(2),
+            )}',
+            style: muted(0.92),
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ],
       ],
     );
 
