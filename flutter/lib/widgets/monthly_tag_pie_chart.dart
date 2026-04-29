@@ -41,12 +41,14 @@ List<Color> _palette(ColorScheme scheme, int n) {
   return out;
 }
 
-double _weighted(TransactionEntity t) => t.value * t.percentage / 100.0;
+double _effectiveTxAmount(TransactionEntity t, bool useWeighted) =>
+    useWeighted ? t.value * t.percentage / 100.0 : t.value;
 
 /// Tags that appear on at least one expense row in [txs] (same basis as the tag pie).
 List<({String key, String label})> distinctExpenseTagOptions(
   List<TransactionEntity> txs,
   bool includeIgnored,
+  bool useWeighted,
 ) {
   bool include(TransactionEntity t) => includeIgnored || !t.ignore;
   final labels = <String, String>{};
@@ -56,7 +58,7 @@ List<({String key, String label})> distinctExpenseTagOptions(
     if (!include(t)) continue;
     final id = t.tagId;
     if (id == null || id.isEmpty) continue;
-    if (_weighted(t) >= 0) continue;
+    if (_effectiveTxAmount(t, useWeighted) >= 0) continue;
     seen.add(id);
     if (t.tagName != null && t.tagName!.isNotEmpty) {
       labels[id] = t.tagName!;
@@ -77,9 +79,10 @@ Set<String>? pruneTagKeysFilter(
   List<TransactionEntity> txs,
   bool includeIgnored,
   Set<String>? current,
+  bool useWeighted,
 ) {
   if (current == null) return null;
-  final options = distinctExpenseTagOptions(txs, includeIgnored);
+  final options = distinctExpenseTagOptions(txs, includeIgnored, useWeighted);
   final valid = options.map((o) => o.key).toSet();
   final pruned = current.intersection(valid);
   if (pruned.isEmpty || pruned.length == valid.length) return null;
@@ -90,6 +93,7 @@ List<_TagSlice> _aggregateByTag(
   List<TransactionEntity> txs,
   bool includeIgnored,
   ColorScheme scheme, {
+  required bool useWeighted,
   Set<String>? tagKeysFilter,
 }) {
   bool include(TransactionEntity t) => includeIgnored || !t.ignore;
@@ -102,7 +106,7 @@ List<_TagSlice> _aggregateByTag(
     final id = t.tagId;
     if (id == null || id.isEmpty) continue;
     if (tagKeysFilter != null && !tagKeysFilter.contains(id)) continue;
-    final w = _weighted(t);
+    final w = _effectiveTxAmount(t, useWeighted);
     if (w >= 0) continue;
     final expense = -w;
     sums[id] = (sums[id] ?? 0) + expense;
@@ -143,6 +147,7 @@ class MonthlyTagPieChart extends StatelessWidget {
     required this.l10n,
     required this.transactions,
     required this.includeIgnored,
+    required this.useWeightedAmounts,
     required this.tagKeysFilter,
     required this.onTagKeysFilterChanged,
   });
@@ -150,6 +155,8 @@ class MonthlyTagPieChart extends StatelessWidget {
   final AppLocalizations l10n;
   final List<TransactionEntity> transactions;
   final bool includeIgnored;
+  /// When true, pies use `value × percentage`; when false, full row [TransactionEntity.value].
+  final bool useWeightedAmounts;
   final Set<String>? tagKeysFilter;
   final ValueChanged<Set<String>?> onTagKeysFilterChanged;
 
@@ -284,11 +291,16 @@ class MonthlyTagPieChart extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
-    final options = distinctExpenseTagOptions(transactions, includeIgnored);
+    final options = distinctExpenseTagOptions(
+      transactions,
+      includeIgnored,
+      useWeightedAmounts,
+    );
     final slices = _aggregateByTag(
       transactions,
       includeIgnored,
       scheme,
+      useWeighted: useWeightedAmounts,
       tagKeysFilter: tagKeysFilter,
     );
 
