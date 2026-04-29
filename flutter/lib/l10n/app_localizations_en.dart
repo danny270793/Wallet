@@ -71,6 +71,9 @@ class AppLocalizationsEn extends AppLocalizations {
       'Select at least one category';
 
   @override
+  String get dashboardPieDeselectAll => 'Deselect all';
+
+  @override
   String get yearlyDashboard => 'Yearly dashboard';
 
   @override
