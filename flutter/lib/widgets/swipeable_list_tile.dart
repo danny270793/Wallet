@@ -15,6 +15,7 @@ class SwipeableListTile extends StatelessWidget {
     this.onTap,
     this.enabled = true,
     this.tileIsThreeLine = false,
+    this.dense = false,
     this.contentPadding = const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
     required this.onEdit,
     required this.confirmDelete,
@@ -33,6 +34,9 @@ class SwipeableListTile extends StatelessWidget {
 
   /// Passed to inner [ListTile.isThreeLine].
   final bool tileIsThreeLine;
+
+  /// Passed to inner [ListTile.dense].
+  final bool dense;
 
   /// Passed to inner [ListTile.contentPadding].
   final EdgeInsetsGeometry contentPadding;
@@ -57,6 +61,7 @@ class SwipeableListTile extends StatelessWidget {
       onTap: onTap,
       enabled: enabled,
       isThreeLine: tileIsThreeLine,
+      dense: dense,
       contentPadding: contentPadding,
       shape: RoundedRectangleBorder(borderRadius: radius),
     );
