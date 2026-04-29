@@ -907,20 +907,23 @@ class _TransactionsViewState extends State<_TransactionsView> {
               body: Stack(
                 fit: StackFit.expand,
                 children: [
-                  _body(
-                    context,
-                    state,
-                    l10n,
-                    visibleMonth,
-                    monthNotifier,
-                    filtered,
+                  IgnorePointer(
+                    ignoring: _fabMenuOpen,
+                    child: _body(
+                      context,
+                      state,
+                      l10n,
+                      visibleMonth,
+                      monthNotifier,
+                      filtered,
+                    ),
                   ),
                   if (_fabMenuOpen)
                     Positioned.fill(
                       child: GestureDetector(
                         behavior: HitTestBehavior.opaque,
                         onTap: () => setState(() => _fabMenuOpen = false),
-                        child: const SizedBox.expand(),
+                        child: const ColoredBox(color: Colors.transparent),
                       ),
                     ),
                 ],
@@ -1187,6 +1190,36 @@ List<TransactionEntity> _localTransactionsMatchingDescription(
   return transactions
       .where((t) => (t.description ?? '').toLowerCase().contains(needle))
       .toList();
+}
+
+List<TransactionEntity> _transactionsExactDescriptionMatch(
+  Iterable<TransactionEntity> candidates,
+  String query, {
+  String? excludeId,
+}) {
+  final norm = query.trim().toLowerCase();
+  if (norm.isEmpty) return [];
+  return candidates
+      .where((t) {
+        if (excludeId != null && t.id == excludeId) return false;
+        return (t.description ?? '').trim().toLowerCase() == norm;
+      })
+      .toList();
+}
+
+List<TransactionEntity> _mergeTransactionListsByIdNewestFirst(
+  List<TransactionEntity> a,
+  List<TransactionEntity> b,
+) {
+  final byId = <String, TransactionEntity>{};
+  for (final t in a) {
+    byId[t.id] = t;
+  }
+  for (final t in b) {
+    byId[t.id] = t;
+  }
+  final out = byId.values.toList()..sort((x, y) => y.transactedAt.compareTo(x.transactedAt));
+  return out;
 }
 
 class _TransactionSearchBody extends StatefulWidget {
@@ -2077,6 +2110,12 @@ class _TransactionDialogState extends State<_TransactionDialog> {
   String? _categoryId;
   String? _tagId;
 
+  Timer? _descriptionSuggestDebounce;
+  List<TransactionEntity> _descriptionExactMatches = const [];
+  bool _descriptionSuggestLoading = false;
+
+  static const _descriptionSuggestDebounceMs = 400;
+
   @override
   void initState() {
     super.initState();
@@ -2098,6 +2137,7 @@ class _TransactionDialogState extends State<_TransactionDialog> {
     _categoryId = t?.categoryId ?? widget.preferredCategoryId;
     _tagId = t?.tagId ?? widget.preferredTagId;
     _loadLookups();
+    _descriptionController.addListener(_onDescriptionTextChangedForSuggestions);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) _syncDateTimeDisplay();
     });
@@ -2176,8 +2216,171 @@ class _TransactionDialogState extends State<_TransactionDialog> {
     _tagDisplayController.text = tagName(_tagId) ?? '';
   }
 
+  void _onDescriptionTextChangedForSuggestions() {
+    if (widget.transaction != null) return;
+    _descriptionSuggestDebounce?.cancel();
+    final q = _descriptionController.text.trim();
+    if (q.isEmpty) {
+      setState(() {
+        _descriptionExactMatches = const [];
+        _descriptionSuggestLoading = false;
+      });
+      return;
+    }
+    final local = switch (widget.cubit.state) {
+      TransactionsLoaded(:final transactions) =>
+        _transactionsExactDescriptionMatch(transactions, q),
+      _ => <TransactionEntity>[],
+    };
+    setState(() {
+      _descriptionExactMatches = local;
+      _descriptionSuggestLoading = true;
+    });
+    _descriptionSuggestDebounce = Timer(
+      const Duration(milliseconds: _descriptionSuggestDebounceMs),
+      () => _loadDescriptionSuggestionsRemote(q),
+    );
+  }
+
+  Future<void> _loadDescriptionSuggestionsRemote(String q) async {
+    if (!mounted || widget.transaction != null) return;
+    if (_descriptionController.text.trim() != q) return;
+    try {
+      final remote = await getIt<SearchTransactionsByDescriptionUsecase>()(q, limit: 80);
+      if (!mounted || widget.transaction != null) return;
+      if (_descriptionController.text.trim() != q) return;
+      final exactRemote = _transactionsExactDescriptionMatch(remote, q);
+      final local = switch (widget.cubit.state) {
+        TransactionsLoaded(:final transactions) =>
+          _transactionsExactDescriptionMatch(transactions, q),
+        _ => <TransactionEntity>[],
+      };
+      final merged = _mergeTransactionListsByIdNewestFirst(local, exactRemote);
+      setState(() {
+        _descriptionExactMatches = merged;
+        _descriptionSuggestLoading = false;
+      });
+    } catch (_) {
+      if (!mounted || widget.transaction != null) return;
+      if (_descriptionController.text.trim() != q) return;
+      setState(() => _descriptionSuggestLoading = false);
+    }
+  }
+
+  void _applyTransactionSuggestion(TransactionEntity t) {
+    if (_loadingLookups) return;
+    setState(() {
+      _accountId = t.accountId;
+      _cardId = t.cardId;
+      if (_accountId != null && _cardId != null) {
+        _cardId = null;
+      }
+      _categoryId = t.categoryId;
+      _tagId = t.tagId;
+      _percentageController.text = t.percentage.toString();
+      _syncRelationDisplays();
+    });
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      _paymentMethodFieldKey.currentState?.validate();
+      _categoryFieldKey.currentState?.validate();
+      _tagFieldKey.currentState?.validate();
+    });
+  }
+
+  Widget _descriptionSuggestionSection(BuildContext context) {
+    if (widget.transaction != null) return const SizedBox.shrink();
+    final q = _descriptionController.text.trim();
+    if (q.isEmpty) return const SizedBox.shrink();
+
+    final theme = Theme.of(context);
+    final l10n = widget.l10n;
+    final locale = Localizations.localeOf(context).toString();
+    final dateFmt = DateFormat.yMMMd(locale).add_Hm();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        const SizedBox(height: 8),
+        Text(
+          l10n.transactionSameDescriptionTitle,
+          style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          l10n.transactionSameDescriptionHint,
+          style: theme.textTheme.bodySmall?.copyWith(
+            color: theme.colorScheme.onSurfaceVariant,
+          ),
+        ),
+        const SizedBox(height: 8),
+        if (_descriptionSuggestLoading && _descriptionExactMatches.isEmpty)
+          const Padding(
+            padding: EdgeInsets.symmetric(vertical: 12),
+            child: Center(
+              child: SizedBox(
+                width: 24,
+                height: 24,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              ),
+            ),
+          )
+        else if (!_descriptionSuggestLoading && _descriptionExactMatches.isEmpty)
+          Padding(
+            padding: const EdgeInsets.only(top: 4, bottom: 4),
+            child: Text(
+              l10n.transactionsSearchNoResults,
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
+          )
+        else
+          SizedBox(
+            height: 220,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                if (_descriptionSuggestLoading) const LinearProgressIndicator(minHeight: 2),
+                Expanded(
+                  child: ListView.builder(
+                    padding: EdgeInsets.zero,
+                    itemCount: _descriptionExactMatches.length,
+                    itemBuilder: (context, i) {
+                      final t = _descriptionExactMatches[i];
+                      final desc = t.description?.isNotEmpty == true ? t.description! : l10n.none;
+                      final weighted = t.value * t.percentage / 100.0;
+                      final amt = l10n.transactionAmountValue(weighted.toStringAsFixed(2));
+                      final pay = t.accountName ?? t.cardName ?? l10n.none;
+                      final sub = '${dateFmt.format(t.transactedAt.toLocal())} · $pay';
+                      return ListTile(
+                        dense: true,
+                        visualDensity: VisualDensity.compact,
+                        title: Text(desc, maxLines: 1, overflow: TextOverflow.ellipsis),
+                        subtitle: Text(sub, maxLines: 2, overflow: TextOverflow.ellipsis),
+                        trailing: Text(
+                          amt,
+                          style: theme.textTheme.titleSmall?.copyWith(
+                            fontWeight: FontWeight.w600,
+                            fontFeatures: const [FontFeature.tabularFigures()],
+                          ),
+                        ),
+                        onTap: _loadingLookups ? null : () => _applyTransactionSuggestion(t),
+                      );
+                    },
+                  ),
+                ),
+              ],
+            ),
+          ),
+      ],
+    );
+  }
+
   @override
   void dispose() {
+    _descriptionSuggestDebounce?.cancel();
+    _descriptionController.removeListener(_onDescriptionTextChangedForSuggestions);
     _valueController.dispose();
     _percentageController.dispose();
     _descriptionController.dispose();
@@ -2438,6 +2641,7 @@ class _TransactionDialogState extends State<_TransactionDialog> {
                   maxLines: 1,
                   textInputAction: TextInputAction.next,
                 ),
+                _descriptionSuggestionSection(context),
                 const SizedBox(height: 16),
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
