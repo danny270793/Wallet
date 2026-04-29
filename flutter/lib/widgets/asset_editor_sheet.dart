@@ -44,11 +44,16 @@ class _AssetEditorSheetState extends State<AssetEditorSheet> {
   late final TextEditingController _providerController;
   late final TextEditingController _valueController;
   late final TextEditingController _soldController;
+
+  late final TextEditingController _boughtDateDisplayController;
+  late final TextEditingController _boughtTimeDisplayController;
+  late final TextEditingController _endedDateDisplayController;
+  late final TextEditingController _endedTimeDisplayController;
+
+  /// Local wall time (matches transaction picker behavior).
   late DateTime _boughtAt;
   DateTime? _endedAt;
   bool _loading = false;
-
-  static DateTime _dateOnly(DateTime d) => DateTime(d.year, d.month, d.day);
 
   @override
   void initState() {
@@ -61,15 +66,24 @@ class _AssetEditorSheetState extends State<AssetEditorSheet> {
       _soldController = TextEditingController(
         text: a.soldValue != null ? a.soldValue!.toStringAsFixed(2) : '',
       );
-      _boughtAt = _dateOnly(a.boughtAt);
-      _endedAt = a.endedAt == null ? null : _dateOnly(a.endedAt!);
+      _boughtAt = a.boughtAt.toLocal();
+      _endedAt = a.endedAt?.toLocal();
     } else {
       _nameController = TextEditingController();
       _providerController = TextEditingController();
       _valueController = TextEditingController(text: '0');
       _soldController = TextEditingController();
-      _boughtAt = _dateOnly(DateTime.now());
+      _boughtAt = DateTime.now();
     }
+    _boughtDateDisplayController = TextEditingController();
+    _boughtTimeDisplayController = TextEditingController();
+    _endedDateDisplayController = TextEditingController();
+    _endedTimeDisplayController = TextEditingController();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      _syncBoughtDateTimeDisplay();
+      _syncEndedDateTimeDisplay();
+    });
   }
 
   @override
@@ -78,10 +92,32 @@ class _AssetEditorSheetState extends State<AssetEditorSheet> {
     _providerController.dispose();
     _valueController.dispose();
     _soldController.dispose();
+    _boughtDateDisplayController.dispose();
+    _boughtTimeDisplayController.dispose();
+    _endedDateDisplayController.dispose();
+    _endedTimeDisplayController.dispose();
     super.dispose();
   }
 
-  Future<void> _pickBought() async {
+  void _syncBoughtDateTimeDisplay() {
+    final locale = Localizations.localeOf(context).toString();
+    _boughtDateDisplayController.text = DateFormat.yMd(locale).format(_boughtAt);
+    _boughtTimeDisplayController.text = DateFormat.Hm(locale).format(_boughtAt);
+  }
+
+  void _syncEndedDateTimeDisplay() {
+    final e = _endedAt;
+    final locale = Localizations.localeOf(context).toString();
+    if (e == null) {
+      _endedDateDisplayController.text = '';
+      _endedTimeDisplayController.text = '';
+    } else {
+      _endedDateDisplayController.text = DateFormat.yMd(locale).format(e);
+      _endedTimeDisplayController.text = DateFormat.Hm(locale).format(e);
+    }
+  }
+
+  Future<void> _pickBoughtDate() async {
     final d = await showDatePicker(
       context: context,
       initialDate: _boughtAt,
@@ -90,22 +126,95 @@ class _AssetEditorSheetState extends State<AssetEditorSheet> {
     );
     if (d == null || !mounted) return;
     setState(() {
-      _boughtAt = _dateOnly(d);
+      _boughtAt = DateTime(
+        d.year,
+        d.month,
+        d.day,
+        _boughtAt.hour,
+        _boughtAt.minute,
+      );
       if (_endedAt != null && _endedAt!.isBefore(_boughtAt)) {
         _endedAt = null;
       }
     });
+    _syncBoughtDateTimeDisplay();
+    _syncEndedDateTimeDisplay();
   }
 
-  Future<void> _pickEnded() async {
+  Future<void> _pickBoughtTime() async {
+    final time = await showTimePicker(
+      context: context,
+      initialTime: TimeOfDay.fromDateTime(_boughtAt),
+    );
+    if (time == null || !mounted) return;
+    setState(() {
+      _boughtAt = DateTime(
+        _boughtAt.year,
+        _boughtAt.month,
+        _boughtAt.day,
+        time.hour,
+        time.minute,
+      );
+      if (_endedAt != null && _endedAt!.isBefore(_boughtAt)) {
+        _endedAt = null;
+      }
+    });
+    _syncBoughtDateTimeDisplay();
+    _syncEndedDateTimeDisplay();
+  }
+
+  Future<void> _pickEndedDate() async {
+    final initial = _endedAt ?? _boughtAt;
     final d = await showDatePicker(
       context: context,
-      initialDate: _endedAt ?? _boughtAt,
-      firstDate: _boughtAt,
+      initialDate: initial,
+      firstDate: DateTime(_boughtAt.year, _boughtAt.month, _boughtAt.day),
       lastDate: DateTime(2100),
     );
     if (d == null || !mounted) return;
-    setState(() => _endedAt = _dateOnly(d));
+
+    final hour = (_endedAt ?? _boughtAt).hour;
+    final minute = (_endedAt ?? _boughtAt).minute;
+    setState(() {
+      _endedAt = DateTime(d.year, d.month, d.day, hour, minute);
+      if (_endedAt!.isBefore(_boughtAt)) {
+        _endedAt = _boughtAt;
+      }
+    });
+    _syncEndedDateTimeDisplay();
+  }
+
+  Future<void> _pickEndedTime() async {
+    if (_endedAt == null) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(widget.l10n.assetPickEndDateFirst)),
+      );
+      return;
+    }
+    final time = await showTimePicker(
+      context: context,
+      initialTime: TimeOfDay.fromDateTime(_endedAt!),
+    );
+    if (time == null || !mounted) return;
+    setState(() {
+      _endedAt = DateTime(
+        _endedAt!.year,
+        _endedAt!.month,
+        _endedAt!.day,
+        time.hour,
+        time.minute,
+      );
+      if (_endedAt!.isBefore(_boughtAt)) {
+        _endedAt = _boughtAt;
+      }
+    });
+    _syncEndedDateTimeDisplay();
+  }
+
+  void _clearEnded() {
+    setState(() => _endedAt = null);
+    _syncEndedDateTimeDisplay();
   }
 
   Future<void> _submit() async {
@@ -143,10 +252,6 @@ class _AssetEditorSheetState extends State<AssetEditorSheet> {
     final cubit = context.read<AssetsCubit>();
     final name = _nameController.text.trim();
     final provider = _providerController.text.trim();
-    final bought = DateTime(_boughtAt.year, _boughtAt.month, _boughtAt.day, 12);
-    final end = ended == null
-        ? null
-        : DateTime(ended.year, ended.month, ended.day, 12);
     try {
       final existing = widget.asset;
       if (existing == null) {
@@ -154,8 +259,8 @@ class _AssetEditorSheetState extends State<AssetEditorSheet> {
           name: name,
           provider: provider,
           value: v,
-          boughtAt: bought,
-          endedAt: end,
+          boughtAt: _boughtAt,
+          endedAt: ended,
           soldValue: sold,
         );
       } else {
@@ -164,8 +269,8 @@ class _AssetEditorSheetState extends State<AssetEditorSheet> {
           name: name,
           provider: provider,
           value: v,
-          boughtAt: bought,
-          endedAt: end,
+          boughtAt: _boughtAt,
+          endedAt: ended,
           soldValue: sold,
         );
       }
@@ -174,37 +279,56 @@ class _AssetEditorSheetState extends State<AssetEditorSheet> {
     }
   }
 
-  Widget _buildField({
-    required IconData icon,
-    required String label,
-    required String value,
-    required VoidCallback onTap,
-    VoidCallback? onClear,
-  }) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(8),
-      child: InputDecorator(
-        decoration: InputDecoration(
-          labelText: label,
-          border: const OutlineInputBorder(),
-          prefixIcon: Icon(icon),
-          suffixIcon: onClear != null
-              ? IconButton(icon: const Icon(Icons.clear), onPressed: onClear)
-              : null,
-        ),
-        child: Text(value, style: Theme.of(context).textTheme.bodyLarge),
-      ),
-    );
-  }
-
   Widget _formFields(AppLocalizations l10n) {
-    final dateFmt = DateFormat.yMMMd();
     final isCreate = widget.asset == null;
+
+    Widget dateTimeRow({
+      required TextEditingController dateController,
+      required TextEditingController timeController,
+      required VoidCallback onDate,
+      required VoidCallback onTime,
+      List<Widget>? trailing,
+    }) {
+      return Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Expanded(
+            child: TextFormField(
+              readOnly: true,
+              enableInteractiveSelection: false,
+              showCursor: false,
+              controller: dateController,
+              decoration: InputDecoration(
+                labelText: l10n.transferDateLabel,
+                suffixIcon: const Icon(Icons.calendar_today_outlined, size: 20),
+              ),
+              onTap: onDate,
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: TextFormField(
+              readOnly: true,
+              enableInteractiveSelection: false,
+              showCursor: false,
+              controller: timeController,
+              decoration: InputDecoration(
+                labelText: l10n.transferTimeLabel,
+                suffixIcon: const Icon(Icons.schedule, size: 20),
+              ),
+              onTap: onTime,
+            ),
+          ),
+          ...?trailing,
+        ],
+      );
+    }
+
     return Form(
       key: _formKey,
       child: Column(
         mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           TextFormField(
             controller: _nameController,
@@ -214,13 +338,13 @@ class _AssetEditorSheetState extends State<AssetEditorSheet> {
             autofocus: isCreate,
             textInputAction: TextInputAction.next,
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 12),
           TextFormField(
             controller: _providerController,
             decoration: InputDecoration(labelText: l10n.assetProvider),
             textInputAction: TextInputAction.next,
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 12),
           TextFormField(
             controller: _valueController,
             decoration: InputDecoration(labelText: l10n.assetValue),
@@ -234,24 +358,39 @@ class _AssetEditorSheetState extends State<AssetEditorSheet> {
               return null;
             },
           ),
-          const SizedBox(height: 8),
-          _buildField(
-            icon: Icons.calendar_today_outlined,
-            label: l10n.assetPurchaseDate,
-            value: dateFmt.format(_boughtAt),
-            onTap: _pickBought,
+          const SizedBox(height: 16),
+          Text(
+            l10n.assetPurchaseDate,
+            style: Theme.of(context).textTheme.titleSmall,
           ),
           const SizedBox(height: 8),
-          _buildField(
-            icon: Icons.event_outlined,
-            label: l10n.assetEndDate,
-            value: _endedAt == null ? '—' : dateFmt.format(_endedAt!),
-            onTap: _pickEnded,
-            onClear: _endedAt == null
-                ? null
-                : () => setState(() => _endedAt = null),
+          dateTimeRow(
+            dateController: _boughtDateDisplayController,
+            timeController: _boughtTimeDisplayController,
+            onDate: _pickBoughtDate,
+            onTime: _pickBoughtTime,
+          ),
+          const SizedBox(height: 16),
+          Text(
+            l10n.assetEndDate,
+            style: Theme.of(context).textTheme.titleSmall,
           ),
           const SizedBox(height: 8),
+          dateTimeRow(
+            dateController: _endedDateDisplayController,
+            timeController: _endedTimeDisplayController,
+            onDate: _pickEndedDate,
+            onTime: _pickEndedTime,
+            trailing: [
+              if (_endedAt != null)
+                IconButton(
+                  icon: const Icon(Icons.clear_rounded),
+                  tooltip: MaterialLocalizations.of(context).cancelButtonLabel,
+                  onPressed: _clearEnded,
+                ),
+            ],
+          ),
+          const SizedBox(height: 12),
           TextFormField(
             controller: _soldController,
             decoration: InputDecoration(labelText: l10n.assetSoldAmountField),
@@ -268,10 +407,10 @@ class _AssetEditorSheetState extends State<AssetEditorSheet> {
     final theme = Theme.of(context);
     final isCreate = widget.asset == null;
     final title = isCreate ? l10n.newAsset : l10n.editAsset;
-    final submitLabel =
-        isCreate ? l10n.accountSubmitCreate : l10n.save;
+    final submitLabel = isCreate ? l10n.accountSubmitCreate : l10n.save;
 
     return BottomSheetPinnedTitleScrollView(
+      padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
       title: title,
       child: Column(
         mainAxisSize: MainAxisSize.min,
