@@ -21,7 +21,7 @@ abstract class TransactionsRemoteDatasource {
     required double value,
     required bool ignore,
     required double percentage,
-    String? transactionGroupId,
+    String? transferGroupId,
   });
   Future<TransactionEntity> updateTransaction({
     required String id,
@@ -34,7 +34,7 @@ abstract class TransactionsRemoteDatasource {
     required double value,
     required bool ignore,
     required double percentage,
-    String? transactionGroupId,
+    String? transferGroupId,
   });
   Future<void> deleteTransaction({required String id});
 }
@@ -117,7 +117,7 @@ wallet_tags(name)
     required double value,
     required bool ignore,
     required double percentage,
-    String? transactionGroupId,
+    String? transferGroupId,
   }) async {
     AppLogger.debug('createTransaction called');
     final row = <String, dynamic>{
@@ -131,7 +131,7 @@ wallet_tags(name)
       if (categoryId != null) 'categoryId': categoryId,
       if (tagId != null) 'tagId': tagId,
       if (description != null) 'description': description,
-      if (transactionGroupId != null) 'transactionGroupId': transactionGroupId,
+      if (transferGroupId != null) 'transferGroupId': transferGroupId,
     };
     final data = await _client.from('wallet_transactions').insert(row).select(_transactionSelectEmbedded).single();
     return TransactionEntity.fromJson(data);
@@ -149,7 +149,7 @@ wallet_tags(name)
     required double value,
     required bool ignore,
     required double percentage,
-    String? transactionGroupId,
+    String? transferGroupId,
   }) async {
     AppLogger.debug('updateTransaction called: $id');
     final data = await _client
@@ -164,7 +164,7 @@ wallet_tags(name)
           'value': value,
           'ignore': ignore,
           'percentage': percentage,
-          'transactionGroupId': transactionGroupId,
+          'transferGroupId': transferGroupId,
         })
         .eq('id', id)
         .select(_transactionSelectEmbedded)
