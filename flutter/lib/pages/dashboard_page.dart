@@ -173,9 +173,6 @@ class _MonthlyDashboardViewState extends State<_MonthlyDashboardView> {
           amount: (t) => t.value,
         );
 
-        Future<void> refresh() =>
-            context.read<TransactionsCubit>().loadForMonth(monthNotifier.value);
-
         final preferredTagId = tagFilter != null && tagFilter.length == 1
             ? tagFilter.first
             : null;
@@ -222,8 +219,7 @@ class _MonthlyDashboardViewState extends State<_MonthlyDashboardView> {
             context,
             state,
             l10n,
-            refresh,
-            monthNotifier.value,
+            monthNotifier,
             tagFilter,
             categoryFilter,
             tagPieTxs,
@@ -239,17 +235,30 @@ class _MonthlyDashboardViewState extends State<_MonthlyDashboardView> {
     BuildContext context,
     TransactionsState state,
     AppLocalizations l10n,
-    Future<void> Function() refresh,
-    DateTime visibleMonth,
+    ValueNotifier<DateTime> monthNotifier,
     Set<String>? tagKeysFilter,
     Set<String>? categoryKeysFilter,
     List<TransactionEntity> tagPieTransactions,
     List<TransactionEntity> categoryPieTransactions,
     List<TransactionEntity> listTransactions,
   ) {
+    Future<void> pullRefresh() =>
+        context.read<TransactionsCubit>().loadForMonth(
+              monthNotifier.value,
+              showLoading: false,
+            );
+
+    Future<void> reloadWithOverlay() =>
+        context.read<TransactionsCubit>().loadForMonth(
+              monthNotifier.value,
+              showLoading: true,
+            );
+
+    final visibleMonth = monthNotifier.value;
+
     if (state is TransactionsLoading || state is TransactionsInitial) {
       return RefreshIndicator(
-        onRefresh: refresh,
+        onRefresh: pullRefresh,
         child: ListView(
           physics: const AlwaysScrollableScrollPhysics(),
           children: [
@@ -264,7 +273,7 @@ class _MonthlyDashboardViewState extends State<_MonthlyDashboardView> {
 
     if (state is TransactionsError) {
       return RefreshIndicator(
-        onRefresh: refresh,
+        onRefresh: pullRefresh,
         child: ListView(
           physics: const AlwaysScrollableScrollPhysics(),
           children: [
@@ -277,7 +286,7 @@ class _MonthlyDashboardViewState extends State<_MonthlyDashboardView> {
                     Text(state.message ?? l10n.unexpectedError),
                     const SizedBox(height: 12),
                     ElevatedButton(
-                      onPressed: refresh,
+                      onPressed: reloadWithOverlay,
                       child: const Text('Retry'),
                     ),
                   ],
@@ -290,7 +299,7 @@ class _MonthlyDashboardViewState extends State<_MonthlyDashboardView> {
     }
 
     return RefreshIndicator(
-      onRefresh: refresh,
+      onRefresh: pullRefresh,
       child: Stack(
         fit: StackFit.expand,
         children: [
