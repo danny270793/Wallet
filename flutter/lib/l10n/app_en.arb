@@ -225,6 +225,8 @@
   "transactionDeferred": "Deferred",
   "transactionGraceMonths": "Grace months",
   "transactionMesesPlazo": "Term (months)",
+  "transactionGraceMonthsInvalid": "Grace months must be 0 or greater",
+  "transactionTermMonthsInvalid": "Enter at least 2 installment months",
   "transactionCategory": "Category",
   "transactionTag": "Tag",
   "transactionAmount": "Amount",
