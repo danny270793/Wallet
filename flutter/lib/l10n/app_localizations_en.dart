@@ -423,8 +423,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get creditsUntitledGroup => 'Deferred purchase';
 
   @override
-  String creditsInstallmentsCount(int count) {
-    return '$count installments';
+  String creditsInstallmentsWithPending(int count, int pending) {
+    return '$count installments - $pending pending';
   }
 
   @override
