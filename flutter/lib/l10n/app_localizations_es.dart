@@ -351,6 +351,14 @@ class AppLocalizationsEs extends AppLocalizations {
       'No hay transacciones que coincidan';
 
   @override
+  String get transactionSameDescriptionTitle =>
+      'Transacciones anteriores con la misma descripción';
+
+  @override
+  String get transactionSameDescriptionHint =>
+      'Toca una fila para rellenar método de pago, categoría, etiqueta y porcentaje.';
+
+  @override
   String get transactionsPickMonth => 'Elegir mes';
 
   @override
