@@ -40,6 +40,10 @@ class AppLocalizationsEs extends AppLocalizations {
   String get dashboardUseWeightedAmounts => 'Importes ponderados (%)';
 
   @override
+  String get monthlyDashboardTotalsSubtitle =>
+      'Totales de la vista de arriba (filtros y opciones).';
+
+  @override
   String get monthlyDashboardTagPieTitle => 'Gastos por etiqueta';
 
   @override
