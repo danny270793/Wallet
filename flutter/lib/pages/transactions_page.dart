@@ -283,14 +283,16 @@ class _TransactionsTotalsBarHost extends StatefulWidget {
 
 class _TransactionsTotalsBarHostState
     extends State<_TransactionsTotalsBarHost> {
-  /// 0 weighted excl. ignored; 1 weighted all; 2 full amount incl.; 3 full amount excl. ignored.
+  static const _kTotalsModeCount = 4;
+
+  /// Modes: 0 weighted (all); 1 weighted excl. ignored; 2 full value all; 3 full value excl. ignored.
   int _totalsMode = 0;
 
   void _handleTotalsModeSwipe(bool forward) {
     setState(() {
       _totalsMode = forward
-          ? (_totalsMode + 1) % 4
-          : (_totalsMode + 3) % 4;
+          ? (_totalsMode + 1) % _kTotalsModeCount
+          : (_totalsMode + (_kTotalsModeCount - 1)) % _kTotalsModeCount;
     });
   }
 
@@ -323,30 +325,34 @@ class _TransactionsTotalsBarHostState
     return switch (_totalsMode) {
       0 => TransactionsTotalsBar(
           l10n: widget.l10n,
-          primarySubtitle:
-              widget.l10n.transactionsTotalsExcludingIgnoredHint,
-          income: weightedExcludingIgnored.income,
-          outcome: weightedExcludingIgnored.outcome,
-          balance: weightedExcludingIgnored.balance,
-          onTotalsModeSwipe: _handleTotalsModeSwipe,
-        ),
-      1 => TransactionsTotalsBar(
-          l10n: widget.l10n,
-          primarySubtitle:
-              widget.l10n.transactionsTotalsIncludingIgnoredHint,
+          primarySubtitle: widget.l10n.transactionsTotalsWeightedHint,
           income: weightedAll.income,
           outcome: weightedAll.outcome,
           balance: weightedAll.balance,
           onTotalsModeSwipe: _handleTotalsModeSwipe,
+          totalsDotsCount: _kTotalsModeCount,
+          totalsDotsSelectedIndex: _totalsMode,
+        ),
+      1 => TransactionsTotalsBar(
+          l10n: widget.l10n,
+          primarySubtitle:
+              widget.l10n.transactionsTotalsWeightedExcludingIgnoredHint,
+          income: weightedExcludingIgnored.income,
+          outcome: weightedExcludingIgnored.outcome,
+          balance: weightedExcludingIgnored.balance,
+          onTotalsModeSwipe: _handleTotalsModeSwipe,
+          totalsDotsCount: _kTotalsModeCount,
+          totalsDotsSelectedIndex: _totalsMode,
         ),
       2 => TransactionsTotalsBar(
           l10n: widget.l10n,
-          primarySubtitle:
-              widget.l10n.transactionsTotalsNotWeightedIncludingIgnoredHint,
+          primarySubtitle: widget.l10n.transactionsTotalsNotWeightedHint,
           income: notWeightedIncludingIgnored.income,
           outcome: notWeightedIncludingIgnored.outcome,
           balance: notWeightedIncludingIgnored.balance,
           onTotalsModeSwipe: _handleTotalsModeSwipe,
+          totalsDotsCount: _kTotalsModeCount,
+          totalsDotsSelectedIndex: _totalsMode,
         ),
       3 => TransactionsTotalsBar(
           l10n: widget.l10n,
@@ -356,6 +362,8 @@ class _TransactionsTotalsBarHostState
           outcome: notWeightedExcludingIgnored.outcome,
           balance: notWeightedExcludingIgnored.balance,
           onTotalsModeSwipe: _handleTotalsModeSwipe,
+          totalsDotsCount: _kTotalsModeCount,
+          totalsDotsSelectedIndex: _totalsMode,
         ),
       _ => throw StateError('totals mode $_totalsMode'),
     };
