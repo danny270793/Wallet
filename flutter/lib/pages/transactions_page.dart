@@ -1147,12 +1147,21 @@ class _TransactionsViewState extends State<_TransactionsView> {
     ValueNotifier<DateTime> monthNotifier,
     List<TransactionEntity> filteredList,
   ) {
-    Future<void> refresh() =>
-        context.read<TransactionsCubit>().loadForMonth(monthNotifier.value);
+    Future<void> pullRefresh() =>
+        context.read<TransactionsCubit>().loadForMonth(
+              monthNotifier.value,
+              showLoading: false,
+            );
+
+    Future<void> reloadWithOverlay() =>
+        context.read<TransactionsCubit>().loadForMonth(
+              monthNotifier.value,
+              showLoading: true,
+            );
 
     if (state is TransactionsLoading || state is TransactionsInitial) {
       return RefreshIndicator(
-        onRefresh: refresh,
+        onRefresh: pullRefresh,
         child: ListView(
           physics: const AlwaysScrollableScrollPhysics(),
           children: [
@@ -1167,7 +1176,7 @@ class _TransactionsViewState extends State<_TransactionsView> {
 
     if (state is TransactionsError) {
       return RefreshIndicator(
-        onRefresh: refresh,
+        onRefresh: pullRefresh,
         child: ListView(
           physics: const AlwaysScrollableScrollPhysics(),
           children: [
@@ -1180,7 +1189,7 @@ class _TransactionsViewState extends State<_TransactionsView> {
                     Text(l10n.unexpectedError),
                     const SizedBox(height: 12),
                     ElevatedButton(
-                      onPressed: refresh,
+                      onPressed: reloadWithOverlay,
                       child: const Text('Retry'),
                     ),
                   ],
@@ -1197,7 +1206,7 @@ class _TransactionsViewState extends State<_TransactionsView> {
       l10n,
       visibleMonth,
       filteredList,
-      refresh,
+      pullRefresh,
       context.read<TransactionsCubit>(),
     );
   }
