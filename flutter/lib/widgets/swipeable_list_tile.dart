@@ -14,6 +14,7 @@ class SwipeableListTile extends StatelessWidget {
     this.trailing,
     this.onTap,
     this.enabled = true,
+    this.tileIsThreeLine = false,
     required this.onEdit,
     required this.confirmDelete,
     required this.onDelete,
@@ -28,6 +29,9 @@ class SwipeableListTile extends StatelessWidget {
 
   /// When false, tile uses disabled colors (e.g. ignored transactions).
   final bool enabled;
+
+  /// Passed to inner [ListTile.isThreeLine].
+  final bool tileIsThreeLine;
   final VoidCallback onEdit;
 
   /// Return true to allow delete dismiss after user confirms in dialog.
@@ -48,6 +52,7 @@ class SwipeableListTile extends StatelessWidget {
       trailing: trailing,
       onTap: onTap,
       enabled: enabled,
+      isThreeLine: tileIsThreeLine,
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
       shape: RoundedRectangleBorder(borderRadius: radius),
     );
