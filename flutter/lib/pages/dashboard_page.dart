@@ -200,7 +200,6 @@ class _MonthlyDashboardViewState extends State<_MonthlyDashboardView> {
           bottomNavigationBar: showBar
               ? TransactionsTotalsBar(
                   l10n: l10n,
-                  primarySubtitle: l10n.monthlyDashboardTotalsSubtitle,
                   income: dashboardViewTotals.income,
                   outcome: dashboardViewTotals.outcome,
                   balance: dashboardViewTotals.balance,
