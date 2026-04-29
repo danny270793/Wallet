@@ -193,5 +193,8 @@
   "transactionsTotalIncome": "Ingresos",
   "transactionsTotalOutcome": "Gastos",
   "transactionsTotalBalance": "Saldo",
-  "transactionsTotalsExcludingIgnoredHint": "Excluyendo transacciones ignoradas"
+  "transactionsTotalsExcludingIgnoredHint": "Ponderado excluyendo ignoradas",
+  "transactionsTotalsIncludingIgnoredHint": "Incluyendo transacciones ignoradas",
+  "transactionsTotalsNotWeightedIncludingIgnoredHint": "Sin ponderar incluyendo ignoradas",
+  "transactionsTotalsNotWeightedExcludingIgnoredHint": "Sin ponderar excluyendo ignoradas"
 }
