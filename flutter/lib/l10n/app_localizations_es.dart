@@ -350,6 +350,15 @@ class AppLocalizationsEs extends AppLocalizations {
   }
 
   @override
+  String get assets => 'Activos';
+
+  @override
+  String get noAssets => 'No hay activos aún';
+
+  @override
+  String get assetSold => 'Vendido';
+
+  @override
   String get transactions => 'Transacciones';
 
   @override
