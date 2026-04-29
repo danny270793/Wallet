@@ -349,13 +349,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get transactionsSearchNoResults => 'No matching transactions';
 
   @override
-  String get transactionSameDescriptionTitle => 'Matching past transactions';
-
-  @override
-  String get transactionSameDescriptionHint =>
-      'Tap a row to fill payment method, category, tag, and percentage.';
-
-  @override
   String get transactionsPickMonth => 'Choose month';
 
   @override
