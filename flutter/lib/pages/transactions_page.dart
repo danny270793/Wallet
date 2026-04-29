@@ -16,6 +16,7 @@ import '../features/categories/domain/entities/category_entity.dart';
 import '../features/tags/domain/entities/tag_entity.dart';
 import '../features/transactions/domain/entities/transaction_entity.dart';
 import '../features/transactions/domain/usecases/search_transactions_by_description_usecase.dart';
+import '../features/transactions/domain/usecases/get_transactions_by_credit_group_id_usecase.dart';
 import '../features/transactions/presentation/cubit/transactions_cubit.dart';
 import '../features/transactions/presentation/cubit/transactions_state.dart';
 import '../features/categories/domain/usecases/delete_category_usecase.dart';
@@ -1804,8 +1805,14 @@ class _TransactionTile extends StatelessWidget {
       trailing: trailingPrices,
       onTap: onTap,
       onEdit: openEdit,
-      confirmDelete: () => confirmDeleteTransactionDialog(context, l10n),
-      onDelete: () => cubit.delete(id: transaction.id),
+      confirmDelete:
+          transaction.creditGroupId != null && transaction.creditGroupId!.isNotEmpty
+          ? () => confirmDeleteCreditGroupTransactionDialog(context, l10n)
+          : () => confirmDeleteTransactionDialog(context, l10n),
+      onDelete: () => cubit.delete(
+        id: transaction.id,
+        creditGroupId: transaction.creditGroupId,
+      ),
     );
 
     if (transaction.ignore) {
@@ -2357,6 +2364,9 @@ class _TransactionDialogState extends State<_TransactionDialog> {
   late final TextEditingController _graceMonthsController;
   late final TextEditingController _termMonthsController;
 
+  /// True while fetching group installments to show summed amount (edit + creditGroupId).
+  bool _loadingCreditGroupTotal = false;
+
   Timer? _descriptionSuggestDebounce;
   List<TransactionEntity> _descriptionSuggestionMatches = const [];
   bool _descriptionSuggestLoading = false;
@@ -2396,11 +2406,17 @@ class _TransactionDialogState extends State<_TransactionDialog> {
     _cardId = t?.cardId ?? widget.preferredCardId;
     _categoryId = t?.categoryId ?? widget.preferredCategoryId;
     _tagId = t?.tagId ?? widget.preferredTagId;
+    _loadingCreditGroupTotal = t?.creditGroupId != null && t!.creditGroupId!.isNotEmpty;
+
     _loadLookups();
     _descriptionController.addListener(_onDescriptionTextChangedForSuggestions);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       _syncDateTimeDisplay();
+      if (widget.transaction?.creditGroupId != null &&
+          widget.transaction!.creditGroupId!.isNotEmpty) {
+        Future.microtask(() => _loadCreditGroupTotal());
+      }
       if (widget.transaction != null) return;
       var strippedAutofillZeros = false;
       final v = _valueController.text.trim();
@@ -2451,6 +2467,24 @@ class _TransactionDialogState extends State<_TransactionDialog> {
     } catch (_) {
       if (mounted) {
         setState(() => _loadingLookups = false);
+      }
+    }
+  }
+
+  Future<void> _loadCreditGroupTotal() async {
+    final gid = widget.transaction?.creditGroupId;
+    if (gid == null || gid.isEmpty || !mounted) return;
+    try {
+      final list = await getIt<GetTransactionsByCreditGroupIdUsecase>()(gid);
+      if (!mounted) return;
+      final sum = list.fold<double>(0, (a, e) => a + e.value);
+      setState(() {
+        _valueController.text = sum.toStringAsFixed(2);
+        _loadingCreditGroupTotal = false;
+      });
+    } catch (_) {
+      if (mounted) {
+        setState(() => _loadingCreditGroupTotal = false);
       }
     }
   }
@@ -3097,31 +3131,70 @@ class _TransactionDialogState extends State<_TransactionDialog> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Expanded(
-                      child: TextFormField(
-                        key: _valueFieldKey,
-                        controller: _valueController,
-                        autocorrect: false,
-                        enableSuggestions: false,
-                        autofillHints: isEdit ? null : const <String>[],
-                        decoration: InputDecoration(
-                          labelText: l10n.transactionAmount,
-                        ),
-                        keyboardType: const TextInputType.numberWithOptions(
-                          decimal: true,
-                          signed: true,
-                        ),
-                        inputFormatters: _transactionAmountInputFormatters,
-                        validator: (v) {
-                          if (v == null || v.trim().isEmpty)
-                            return l10n.fieldRequired;
-                          final amt = _parseTransactionAmountInput(v);
-                          if (amt == null)
-                            return l10n.transactionAmountInvalidNumber;
-                          if (amt == 0)
-                            return l10n.transactionAmountMustBeNonZero;
-                          return null;
-                        },
-                      ),
+                      child: (_loadingCreditGroupTotal &&
+                              isEdit &&
+                              widget.transaction?.creditGroupId != null &&
+                              widget.transaction!.creditGroupId!.isNotEmpty)
+                          ? InputDecorator(
+                              decoration: InputDecoration(
+                                labelText: l10n.transactionAmount,
+                                helperText:
+                                    l10n.transactionAmountCreditGroupHint,
+                              ),
+                              child: const SizedBox(
+                                height: 40,
+                                child: Center(
+                                  child: SizedBox(
+                                    width: 22,
+                                    height: 22,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            )
+                          : TextFormField(
+                              key: _valueFieldKey,
+                              controller: _valueController,
+                              autocorrect: false,
+                              enableSuggestions: false,
+                              autofillHints: isEdit ? null : const <String>[],
+                              decoration: InputDecoration(
+                                labelText: l10n.transactionAmount,
+                                helperText:
+                                    (isEdit &&
+                                        widget.transaction?.creditGroupId !=
+                                            null &&
+                                        widget
+                                            .transaction!
+                                            .creditGroupId!
+                                            .isNotEmpty)
+                                        ? l10n.transactionAmountCreditGroupHint
+                                        : null,
+                              ),
+                              keyboardType:
+                                  const TextInputType.numberWithOptions(
+                                decimal: true,
+                                signed: true,
+                              ),
+                              inputFormatters:
+                                  _transactionAmountInputFormatters,
+                              validator: (v) {
+                                if (v == null || v.trim().isEmpty) {
+                                  return l10n.fieldRequired;
+                                }
+                                final amt =
+                                    _parseTransactionAmountInput(v);
+                                if (amt == null) {
+                                  return l10n.transactionAmountInvalidNumber;
+                                }
+                                if (amt == 0) {
+                                  return l10n.transactionAmountMustBeNonZero;
+                                }
+                                return null;
+                              },
+                            ),
                     ),
                     const SizedBox(width: 12),
                     Expanded(
