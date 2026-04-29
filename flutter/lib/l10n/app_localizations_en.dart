@@ -102,6 +102,9 @@ class AppLocalizationsEn extends AppLocalizations {
       'Cumulative balance by month';
 
   @override
+  String get navigationDashboards => 'Dashboards';
+
+  @override
   String get settings => 'Settings';
 
   @override
