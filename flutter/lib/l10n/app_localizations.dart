@@ -830,6 +830,36 @@ abstract class AppLocalizations {
   /// **'Transactions'**
   String get transactions;
 
+  /// No description provided for @creditsNav.
+  ///
+  /// In en, this message translates to:
+  /// **'Credits'**
+  String get creditsNav;
+
+  /// No description provided for @creditsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Credits'**
+  String get creditsTitle;
+
+  /// No description provided for @creditsEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No deferred credit installments yet.'**
+  String get creditsEmpty;
+
+  /// No description provided for @creditsUntitledGroup.
+  ///
+  /// In en, this message translates to:
+  /// **'Deferred purchase'**
+  String get creditsUntitledGroup;
+
+  /// No description provided for @creditsInstallmentsCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} installments'**
+  String creditsInstallmentsCount(int count);
+
   /// No description provided for @transactionsSearchTooltip.
   ///
   /// In en, this message translates to:
