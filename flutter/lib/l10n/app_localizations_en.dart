@@ -382,9 +382,6 @@ class AppLocalizationsEn extends AppLocalizations {
       'End date must be on or after purchase date';
 
   @override
-  String get assetPickEndDateFirst => 'Pick the end date before the end time.';
-
-  @override
   String get editAsset => 'Edit asset';
 
   @override
