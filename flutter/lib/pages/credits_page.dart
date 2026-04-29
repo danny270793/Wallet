@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:wallet/l10n/app_localizations.dart';
 
+import '../core/credit_group_description.dart';
 import '../core/di/injection.dart';
 import '../features/transactions/domain/entities/transaction_entity.dart';
 import '../features/transactions/domain/usecases/list_transactions_having_credit_group_usecase.dart';
@@ -86,12 +87,14 @@ class _CreditGroupTile extends StatelessWidget {
 
     double paidWeighted = 0;
     double pendingWeighted = 0;
+    var pendingInstallmentCount = 0;
     for (final t in rows) {
       final w = _weighted(t);
       if (_installmentIsPaidThroughToday(t)) {
         paidWeighted += w;
       } else {
         pendingWeighted += w;
+        pendingInstallmentCount++;
       }
     }
 
@@ -101,8 +104,9 @@ class _CreditGroupTile extends StatelessWidget {
 
     Widget titleSection() {
       final chunks = <Widget>[];
-      final desc = first.description;
-      final hasDesc = desc != null && desc.isNotEmpty;
+      final displayDesc =
+          stripLeadingCreditInstallmentDescription(first.description).trim();
+      final hasDesc = displayDesc.isNotEmpty;
 
       if (!hasDesc && (first.percentage - 100.0).abs() <= 0.01) {
         chunks.add(
@@ -132,7 +136,7 @@ class _CreditGroupTile extends StatelessWidget {
                     ),
                   ),
                   TextSpan(
-                    text: desc,
+                    text: displayDesc,
                     style: theme.textTheme.bodyLarge?.copyWith(
                       fontWeight: FontWeight.w500,
                     ),
@@ -146,7 +150,7 @@ class _CreditGroupTile extends StatelessWidget {
         } else {
           chunks.add(
             Text(
-              desc,
+              displayDesc,
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
               style: theme.textTheme.bodyLarge?.copyWith(
@@ -188,7 +192,10 @@ class _CreditGroupTile extends StatelessWidget {
         Padding(
           padding: EdgeInsets.only(top: chunks.isNotEmpty ? 4 : 0),
           child: Text(
-            l10n.creditsInstallmentsCount(rows.length),
+            l10n.creditsInstallmentsWithPending(
+              rows.length,
+              pendingInstallmentCount,
+            ),
             style: theme.textTheme.bodySmall?.copyWith(
               color: theme.colorScheme.onSurfaceVariant,
             ),
@@ -223,7 +230,9 @@ class _CreditGroupTile extends StatelessWidget {
         ],
         if (paidWeighted.abs() > 0.005)
           Text(
-            l10n.transactionAmountValue(paidWeighted.toStringAsFixed(2)),
+            l10n.transactionAmountValue(
+              paidWeighted.abs().toStringAsFixed(2),
+            ),
             style: theme.textTheme.titleMedium?.copyWith(
               fontWeight: FontWeight.w700,
               color: paidGreen,
