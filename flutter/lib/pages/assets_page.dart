@@ -280,77 +280,66 @@ class _AssetTile extends StatelessWidget {
 
     final provider = asset.provider.trim();
     final subtitle = Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       mainAxisSize: MainAxisSize.min,
       children: [
+        // Amounts live in [subtitle], not beside [title] inside ListTile — the
+        // title row constrains its children to ~kMinInteractiveDimension tall.
+        Align(
+          alignment: Alignment.centerRight,
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 168),
+            child: amountColumn(),
+          ),
+        ),
         if (provider.isNotEmpty) ...[
-          Text(provider, style: muted(0.92), maxLines: 2),
           const SizedBox(height: 8),
+          Text(provider, style: muted(0.92), maxLines: 2),
         ],
+        const SizedBox(height: 6),
         metaLine(),
       ],
     );
 
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-      child: Material(
-        color: scheme.surfaceContainerLow,
-        elevation: 0,
-        shadowColor: Colors.transparent,
-        clipBehavior: Clip.antiAlias,
-        borderRadius: BorderRadius.circular(14),
-        child: SwipeableListTile(
-          itemKey: asset.id,
-          tileIsThreeLine: true,
-          // Amounts stay in title row — ListTile [trailing] max height (~56px)
-          // overflows multi-line Columns.
-          title: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(
-                child: Text(
-                  asset.name,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: titleStyle,
-                ),
-              ),
-              const SizedBox(width: 8),
-              ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 148),
-                child: amountColumn(),
-              ),
-            ],
-          ),
-          subtitle: subtitle,
-          onEdit: openEdit,
-          confirmDelete: () async {
-            final ok = await showDialog<bool>(
-              context: context,
-              builder: (dialogContext) => AlertDialog(
-                title: Text(l10n.deleteAsset),
-                content: Text(l10n.confirmDeleteAsset(asset.name)),
-                actions: [
-                  TextButton(
-                    onPressed: () => Navigator.of(dialogContext).pop(false),
-                    child: Text(l10n.cancel),
-                  ),
-                  ElevatedButton(
-                    style:
-                        ElevatedButton.styleFrom(backgroundColor: Colors.red),
-                    onPressed: () => Navigator.of(dialogContext).pop(true),
-                    child: Text(
-                      l10n.delete,
-                      style: const TextStyle(color: Colors.white),
-                    ),
-                  ),
-                ],
-              ),
-            );
-            return ok ?? false;
-          },
-          onDelete: () => cubit.delete(id: asset.id),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      child: SwipeableListTile(
+        itemKey: asset.id,
+        tileIsThreeLine: true,
+        title: Text(
+          asset.name,
+          maxLines: 2,
+          overflow: TextOverflow.ellipsis,
+          style: titleStyle,
         ),
+        subtitle: subtitle,
+        onEdit: openEdit,
+        confirmDelete: () async {
+          final ok = await showDialog<bool>(
+            context: context,
+            builder: (dialogContext) => AlertDialog(
+              title: Text(l10n.deleteAsset),
+              content: Text(l10n.confirmDeleteAsset(asset.name)),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(dialogContext).pop(false),
+                  child: Text(l10n.cancel),
+                ),
+                ElevatedButton(
+                  style:
+                      ElevatedButton.styleFrom(backgroundColor: Colors.red),
+                  onPressed: () => Navigator.of(dialogContext).pop(true),
+                  child: Text(
+                    l10n.delete,
+                    style: const TextStyle(color: Colors.white),
+                  ),
+                ),
+              ],
+            ),
+          );
+          return ok ?? false;
+        },
+        onDelete: () => cubit.delete(id: asset.id),
       ),
     );
   }
