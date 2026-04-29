@@ -103,6 +103,9 @@ class AppLocalizationsEs extends AppLocalizations {
   String get yearlyDashboardCumulativeByMonthTitle => 'Saldo acumulado por mes';
 
   @override
+  String get navigationDashboards => 'Paneles';
+
+  @override
   String get settings => 'Ajustes';
 
   @override
