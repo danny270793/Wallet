@@ -167,11 +167,10 @@ class _MonthlyDashboardViewState extends State<_MonthlyDashboardView> {
         final showBar =
             state is TransactionsLoaded || state is TransactionsActionError;
 
-        double weighted(TransactionEntity t) => t.value * t.percentage / 100.0;
         final totals = transactionMonthTotalsBreakdown(
           txs,
           include: _includeIgnored ? (_) => true : (t) => !t.ignore,
-          amount: weighted,
+          amount: (t) => t.value,
         );
 
         Future<void> refresh() =>
@@ -192,6 +191,9 @@ class _MonthlyDashboardViewState extends State<_MonthlyDashboardView> {
           bottomNavigationBar: showBar
               ? TransactionsTotalsBar(
                   l10n: l10n,
+                  primarySubtitle: _includeIgnored
+                      ? l10n.transactionsTotalsIncludingIgnoredHint
+                      : l10n.transactionsTotalsExcludingIgnoredHint,
                   income: totals.income,
                   outcome: totals.outcome,
                   balance: totals.balance,
@@ -303,16 +305,6 @@ class _MonthlyDashboardViewState extends State<_MonthlyDashboardView> {
                   value: _includeIgnored,
                   onChanged: (v) => setState(() => _includeIgnored = v),
                 ),
-                if (!_includeIgnored)
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
-                    child: Text(
-                      l10n.transactionsTotalsExcludingIgnoredHint,
-                      style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                        color: Theme.of(context).colorScheme.onSurfaceVariant,
-                      ),
-                    ),
-                  ),
                 MonthlyTagPieChart(
                   l10n: l10n,
                   transactions: tagPieTransactions,
