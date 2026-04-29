@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:wallet/l10n/app_localizations.dart';
 
 import '../core/di/injection.dart';
+import 'bottom_sheet_pinned_title.dart';
 import '../features/tags/domain/entities/tag_entity.dart';
 import '../features/tags/presentation/cubit/tags_cubit.dart';
 
@@ -17,7 +18,7 @@ Future<void> showTagEditorBottomSheet(
     context: context,
     isScrollControlled: true,
     useSafeArea: true,
-    showDragHandle: true,
+    showDragHandle: false,
     builder: (sheetContext) {
       final child = TagEditorSheet(l10n: l10n, tag: tag);
       final wrapped = cubit != null
@@ -34,11 +35,7 @@ Future<void> showTagEditorBottomSheet(
 }
 
 class TagEditorSheet extends StatefulWidget {
-  const TagEditorSheet({
-    super.key,
-    required this.l10n,
-    this.tag,
-  });
+  const TagEditorSheet({super.key, required this.l10n, this.tag});
 
   final AppLocalizations l10n;
   final TagEntity? tag;
@@ -57,7 +54,9 @@ class _TagEditorSheetState extends State<TagEditorSheet> {
   void initState() {
     super.initState();
     _nameController = TextEditingController(text: widget.tag?.name ?? '');
-    _descriptionController = TextEditingController(text: widget.tag?.description ?? '');
+    _descriptionController = TextEditingController(
+      text: widget.tag?.description ?? '',
+    );
   }
 
   @override
@@ -72,13 +71,18 @@ class _TagEditorSheetState extends State<TagEditorSheet> {
     setState(() => _loading = true);
     final cubit = context.read<TagsCubit>();
     final name = _nameController.text.trim();
-    final description =
-        _descriptionController.text.trim().isEmpty ? null : _descriptionController.text.trim();
+    final description = _descriptionController.text.trim().isEmpty
+        ? null
+        : _descriptionController.text.trim();
     try {
       if (widget.tag == null) {
         await cubit.create(name: name, description: description);
       } else {
-        await cubit.update(id: widget.tag!.id, name: name, description: description);
+        await cubit.update(
+          id: widget.tag!.id,
+          name: name,
+          description: description,
+        );
       }
     } finally {
       if (mounted) Navigator.of(context).pop();
@@ -94,7 +98,8 @@ class _TagEditorSheetState extends State<TagEditorSheet> {
           TextFormField(
             controller: _nameController,
             decoration: InputDecoration(labelText: l10n.accountName),
-            validator: (v) => (v == null || v.trim().isEmpty) ? l10n.fieldRequired : null,
+            validator: (v) =>
+                (v == null || v.trim().isEmpty) ? l10n.fieldRequired : null,
             autofocus: true,
             textInputAction: TextInputAction.next,
           ),
@@ -118,7 +123,9 @@ class _TagEditorSheetState extends State<TagEditorSheet> {
         onPressed: _loading ? null : _submit,
         style: FilledButton.styleFrom(
           minimumSize: const Size(double.infinity, 48),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
         ),
         child: _loading
             ? SizedBox(
@@ -137,26 +144,18 @@ class _TagEditorSheetState extends State<TagEditorSheet> {
   @override
   Widget build(BuildContext context) {
     final l10n = widget.l10n;
-    final theme = Theme.of(context);
     final title = widget.tag == null ? l10n.newTag : l10n.editTag;
 
-    return SingleChildScrollView(
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Text(
-              title,
-              style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w600),
-            ),
-            const SizedBox(height: 16),
-            _formFields(l10n),
-            const SizedBox(height: 24),
-            _submitPrimaryButton(l10n),
-          ],
-        ),
+    return BottomSheetPinnedTitleScrollView(
+      title: title,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          _formFields(l10n),
+          const SizedBox(height: 24),
+          _submitPrimaryButton(l10n),
+        ],
       ),
     );
   }
