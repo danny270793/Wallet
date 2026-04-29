@@ -143,6 +143,14 @@
   "assetSoldAmountField": "Importe de venta",
   "assetInvalidNumber": "Introduce un número válido",
   "assetEndBeforePurchase": "La fecha de fin debe ser igual o posterior a la de compra",
+  "assetHeldDuration": "Tenencia: {duration}",
+  "@assetHeldDuration": {
+    "placeholders": {
+      "duration": {
+        "type": "String"
+      }
+    }
+  },
   "editAsset": "Editar activo",
   "deleteAsset": "Eliminar activo",
   "confirmDeleteAsset": "¿Seguro que quieres eliminar «{name}»?",
