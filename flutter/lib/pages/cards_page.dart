@@ -78,11 +78,15 @@ class _CardsView extends StatelessWidget {
   }
 
   Widget _body(BuildContext context, CardsState state, AppLocalizations l10n) {
-    Future<void> refresh() => context.read<CardsCubit>().load();
+    Future<void> pullRefresh() =>
+        context.read<CardsCubit>().load(showLoading: false);
+
+    Future<void> reloadWithOverlay() =>
+        context.read<CardsCubit>().load(showLoading: true);
 
     if (state is CardsLoading || state is CardsInitial) {
       return RefreshIndicator(
-        onRefresh: refresh,
+        onRefresh: pullRefresh,
         child: ListView(
           physics: const AlwaysScrollableScrollPhysics(),
           children: [
@@ -97,7 +101,7 @@ class _CardsView extends StatelessWidget {
 
     if (state is CardsError) {
       return RefreshIndicator(
-        onRefresh: refresh,
+        onRefresh: pullRefresh,
         child: ListView(
           physics: const AlwaysScrollableScrollPhysics(),
           children: [
@@ -110,7 +114,7 @@ class _CardsView extends StatelessWidget {
                     Text(l10n.unexpectedError),
                     const SizedBox(height: 12),
                     ElevatedButton(
-                      onPressed: refresh,
+                      onPressed: reloadWithOverlay,
                       child: const Text('Retry'),
                     ),
                   ],
@@ -130,7 +134,7 @@ class _CardsView extends StatelessWidget {
 
     if (cards.isEmpty) {
       return RefreshIndicator(
-        onRefresh: refresh,
+        onRefresh: pullRefresh,
         child: ListView(
           physics: const AlwaysScrollableScrollPhysics(),
           padding: const EdgeInsets.only(bottom: 88),
@@ -145,7 +149,7 @@ class _CardsView extends StatelessWidget {
     }
 
     return RefreshIndicator(
-      onRefresh: refresh,
+      onRefresh: pullRefresh,
       child: ListView.builder(
         physics: const AlwaysScrollableScrollPhysics(),
         padding: const EdgeInsets.only(bottom: 8),
