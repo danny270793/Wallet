@@ -392,6 +392,11 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String assetSoldPerApproximateMonth(String amount) {
+    return '~$amount/mo avg. (sold)';
+  }
+
+  @override
   String get editAsset => 'Edit asset';
 
   @override
