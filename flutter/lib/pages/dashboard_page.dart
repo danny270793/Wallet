@@ -44,6 +44,9 @@ class _MonthlyDashboardViewState extends State<_MonthlyDashboardView> {
   /// When true, ignored rows count toward income/outcome/balance (account/card transfer legs are always excluded).
   bool _includeIgnored = true;
 
+  /// When true, list row amounts mirror `value × percentage`; when false, full row value.
+  bool _useWeightedAmounts = true;
+
   bool _fabMenuOpen = false;
 
   /// Same semantics as [MonthlyTagPieChart.tagKeysFilter]: null = all tags.
@@ -131,21 +134,25 @@ class _MonthlyDashboardViewState extends State<_MonthlyDashboardView> {
           txs,
           _includeIgnored,
           _categoryKeysFilter,
+          _useWeightedAmounts,
         );
         var tagFilter = pruneTagKeysFilter(
           _filterByCategory(txs, categoryFilter),
           _includeIgnored,
           _tagKeysFilter,
+          _useWeightedAmounts,
         );
         categoryFilter = pruneCategoryKeysFilter(
           _filterByTag(txs, tagFilter),
           _includeIgnored,
           _categoryKeysFilter,
+          _useWeightedAmounts,
         );
         tagFilter = pruneTagKeysFilter(
           _filterByCategory(txs, categoryFilter),
           _includeIgnored,
           _tagKeysFilter,
+          _useWeightedAmounts,
         );
         if (!setEquals(tagFilter, _tagKeysFilter) ||
             !setEquals(categoryFilter, _categoryKeysFilter)) {
@@ -300,10 +307,16 @@ class _MonthlyDashboardViewState extends State<_MonthlyDashboardView> {
                   value: _includeIgnored,
                   onChanged: (v) => setState(() => _includeIgnored = v),
                 ),
+                SwitchListTile(
+                  title: Text(l10n.dashboardUseWeightedAmounts),
+                  value: _useWeightedAmounts,
+                  onChanged: (v) => setState(() => _useWeightedAmounts = v),
+                ),
                 MonthlyTagPieChart(
                   l10n: l10n,
                   transactions: tagPieTransactions,
                   includeIgnored: _includeIgnored,
+                  useWeightedAmounts: _useWeightedAmounts,
                   tagKeysFilter: tagKeysFilter,
                   onTagKeysFilterChanged: (v) =>
                       setState(() => _tagKeysFilter = v),
@@ -312,6 +325,7 @@ class _MonthlyDashboardViewState extends State<_MonthlyDashboardView> {
                   l10n: l10n,
                   transactions: categoryPieTransactions,
                   includeIgnored: _includeIgnored,
+                  useWeightedAmounts: _useWeightedAmounts,
                   categoryKeysFilter: categoryKeysFilter,
                   onCategoryKeysFilterChanged: (v) =>
                       setState(() => _categoryKeysFilter = v),
@@ -320,6 +334,7 @@ class _MonthlyDashboardViewState extends State<_MonthlyDashboardView> {
                   l10n: l10n,
                   transactions: listTransactions,
                   visibleMonth: visibleMonth,
+                  useWeightedAmounts: _useWeightedAmounts,
                 ),
               ],
             ),
