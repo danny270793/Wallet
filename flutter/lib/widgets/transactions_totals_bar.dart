@@ -32,7 +32,9 @@ class TransactionsTotalsBar extends StatelessWidget {
   final VoidCallback? onDoubleTap;
 
   bool get _hasSecondary =>
-      secondaryIncome != null && secondaryOutcome != null && secondaryBalance != null;
+      secondaryIncome != null &&
+      secondaryOutcome != null &&
+      secondaryBalance != null;
 
   @override
   Widget build(BuildContext context) {
@@ -80,8 +82,16 @@ class TransactionsTotalsBar extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           column(incStr, l10n.transactionsTotalIncome, const Color(0xFF1B8736)),
-          column(outStr, l10n.transactionsTotalOutcome, theme.colorScheme.error),
-          column(balStr, l10n.transactionsTotalBalance, walletListBalanceColor(theme, bal)),
+          column(
+            outStr,
+            l10n.transactionsTotalOutcome,
+            theme.colorScheme.error,
+          ),
+          column(
+            balStr,
+            l10n.transactionsTotalBalance,
+            walletListBalanceColor(theme, bal),
+          ),
         ],
       );
     }
@@ -112,7 +122,11 @@ class TransactionsTotalsBar extends StatelessWidget {
                   ],
                   row(income, outcome, balance, compact: false),
                   if (_hasSecondary) ...[
-                    Divider(height: 20, thickness: 1, color: theme.dividerColor),
+                    Divider(
+                      height: 20,
+                      thickness: 1,
+                      color: theme.dividerColor,
+                    ),
                     if (secondarySubtitle != null) ...[
                       Text(
                         secondarySubtitle!,
@@ -124,7 +138,12 @@ class TransactionsTotalsBar extends StatelessWidget {
                       ),
                       const SizedBox(height: 8),
                     ],
-                    row(secondaryIncome!, secondaryOutcome!, secondaryBalance!, compact: true),
+                    row(
+                      secondaryIncome!,
+                      secondaryOutcome!,
+                      secondaryBalance!,
+                      compact: true,
+                    ),
                   ],
                 ],
               ),
