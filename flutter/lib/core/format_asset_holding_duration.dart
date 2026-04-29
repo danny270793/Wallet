@@ -88,6 +88,44 @@ String formatAssetHoldingDurationYmd(DateTime boughtAt, DateTime? endedAt) {
   return parts.join(' ');
 }
 
+/// Like [formatAssetHoldingDurationYmd] but drops the trailing **`Nd`** part when **`Ny`** or **`Nm`** is shown
+/// (`1y 2m 3d` → `1y 2m`). Pure sub-month holdings still show **`Nd`** (`14d`).
+String formatAssetHoldingDurationYmOmitDaysWhenGrouped(
+  DateTime boughtAt,
+  DateTime? endedAt,
+) {
+  final ymd = assetHoldingCalendarYmd(boughtAt, endedAt);
+  if (ymd == null) {
+    return '0d';
+  }
+
+  final y = ymd.years;
+  final m = ymd.months;
+  final d = ymd.days;
+
+  if (y == 0 && m == 0 && d == 0) {
+    return '0d';
+  }
+
+  final parts = <String>[];
+  if (y > 0) {
+    parts.add('${y}y');
+  }
+  if (m > 0) {
+    parts.add('${m}m');
+  }
+
+  final hasYm = y > 0 || m > 0;
+  if (!hasYm && d > 0) {
+    parts.add('${d}d');
+  }
+
+  if (parts.isEmpty) {
+    return '0d';
+  }
+  return parts.join(' ');
+}
+
 DateTime _calendarDateLocal(DateTime t) {
   final l = t.toLocal();
   return DateTime(l.year, l.month, l.day);
