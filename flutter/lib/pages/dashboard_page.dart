@@ -11,6 +11,7 @@ import '../widgets/dashboard_month_transactions_list.dart';
 import '../widgets/monthly_category_expense_pie_chart.dart';
 import '../widgets/monthly_tag_pie_chart.dart';
 import '../widgets/shell_scaffold.dart';
+import '../widgets/transaction_month_totals.dart';
 import '../widgets/transactions_month_scope.dart';
 import '../widgets/transactions_totals_bar.dart';
 import 'transactions_page.dart'
@@ -171,6 +172,16 @@ class _MonthlyDashboardViewState extends State<_MonthlyDashboardView> {
           tagFilter,
           categoryFilter,
         );
+
+        // Income / outcome / balance for the same filtered set as the charts and list below.
+        final dashboardViewTotals = transactionMonthTotalsBreakdown(
+          listTxs,
+          include: (_) => true,
+          amount: _useWeightedAmounts
+              ? (t) => t.value * t.percentage / 100.0
+              : (t) => t.value,
+        );
+
         final showBar =
             state is TransactionsLoaded || state is TransactionsActionError;
 
@@ -187,7 +198,13 @@ class _MonthlyDashboardViewState extends State<_MonthlyDashboardView> {
           title: l10n.monthlyDashboard,
           appBarBottom: TransactionsMonthAppBarBottom(notifier: monthNotifier),
           bottomNavigationBar: showBar
-              ? TransactionsTotalsBarHost(l10n: l10n, transactions: txs)
+              ? TransactionsTotalsBar(
+                  l10n: l10n,
+                  primarySubtitle: l10n.monthlyDashboardTotalsSubtitle,
+                  income: dashboardViewTotals.income,
+                  outcome: dashboardViewTotals.outcome,
+                  balance: dashboardViewTotals.balance,
+                )
               : null,
           floatingActionButton: showBar
               ? TransactionsExpandableFab(
