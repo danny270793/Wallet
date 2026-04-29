@@ -63,7 +63,11 @@ class _CategoriesView extends StatelessWidget {
     );
   }
 
-  Widget _body(BuildContext context, CategoriesState state, AppLocalizations l10n) {
+  Widget _body(
+    BuildContext context,
+    CategoriesState state,
+    AppLocalizations l10n,
+  ) {
     Future<void> refresh() => context.read<CategoriesCubit>().load();
 
     if (state is CategoriesLoading || state is CategoriesInitial) {
@@ -136,7 +140,8 @@ class _CategoriesView extends StatelessWidget {
         physics: const AlwaysScrollableScrollPhysics(),
         padding: const EdgeInsets.only(bottom: 88),
         itemCount: categories.length,
-        itemBuilder: (context, index) => _CategoryTile(category: categories[index]),
+        itemBuilder: (context, index) =>
+            _CategoryTile(category: categories[index]),
       ),
     );
   }
@@ -171,7 +176,11 @@ class _CategoryTile extends StatelessWidget {
       itemKey: category.id,
       title: Text(category.name),
       subtitle: category.description != null
-          ? Text(category.description!, maxLines: 2, overflow: TextOverflow.ellipsis)
+          ? Text(
+              category.description!,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+            )
           : null,
       onTap: openTransactions,
       onEdit: openEdit,
@@ -189,7 +198,10 @@ class _CategoryTile extends StatelessWidget {
               ElevatedButton(
                 style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
                 onPressed: () => Navigator.of(dialogContext).pop(true),
-                child: Text(l10n.delete, style: const TextStyle(color: Colors.white)),
+                child: Text(
+                  l10n.delete,
+                  style: const TextStyle(color: Colors.white),
+                ),
               ),
             ],
           ),
