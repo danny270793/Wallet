@@ -411,6 +411,23 @@ class AppLocalizationsEn extends AppLocalizations {
   String get transactions => 'Transactions';
 
   @override
+  String get creditsNav => 'Credits';
+
+  @override
+  String get creditsTitle => 'Credits';
+
+  @override
+  String get creditsEmpty => 'No deferred credit installments yet.';
+
+  @override
+  String get creditsUntitledGroup => 'Deferred purchase';
+
+  @override
+  String creditsInstallmentsCount(int count) {
+    return '$count installments';
+  }
+
+  @override
   String get transactionsSearchTooltip => 'Search transactions';
 
   @override
