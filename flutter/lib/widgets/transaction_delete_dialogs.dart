@@ -26,6 +26,31 @@ Future<bool> confirmDeleteTransactionDialog(
   return ok ?? false;
 }
 
+Future<bool> confirmDeleteCreditGroupTransactionDialog(
+  BuildContext context,
+  AppLocalizations l10n,
+) async {
+  final ok = await showDialog<bool>(
+    context: context,
+    builder: (dialogContext) => AlertDialog(
+      title: Text(l10n.deleteTransaction),
+      content: Text(l10n.confirmDeleteCreditGroupTransaction),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(dialogContext).pop(false),
+          child: Text(l10n.cancel),
+        ),
+        ElevatedButton(
+          style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+          onPressed: () => Navigator.of(dialogContext).pop(true),
+          child: Text(l10n.delete, style: const TextStyle(color: Colors.white)),
+        ),
+      ],
+    ),
+  );
+  return ok ?? false;
+}
+
 Future<bool> confirmDeleteTransferPairDialog(
   BuildContext context,
   AppLocalizations l10n,
