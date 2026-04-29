@@ -167,6 +167,19 @@ class _AssetTile extends StatelessWidget {
 
     final valueStr =
         l10n.transactionAmountValue(asset.value.toStringAsFixed(2));
+    final perApproxMo = assetValuePerApproximateCalendarMonth(
+      asset.value,
+      asset.boughtAt,
+      asset.endedAt,
+    );
+    final soldPerApproxMo = asset.soldValue != null
+        ? assetValuePerApproximateCalendarMonth(
+            asset.soldValue!,
+            asset.boughtAt,
+            asset.endedAt,
+          )
+        : null;
+
     final held = formatAssetHoldingDurationYmd(asset.boughtAt, asset.endedAt);
     final locale = Localizations.localeOf(context).toString();
     final dateFmt = DateFormat.yMd(locale);
@@ -194,22 +207,66 @@ class _AssetTile extends StatelessWidget {
       height: 1.22,
     );
 
+    final moOnlyStyle = theme.textTheme.labelSmall?.copyWith(
+      color: scheme.onSurfaceVariant.withValues(alpha: 0.92),
+      height: 1.15,
+      fontWeight: FontWeight.w500,
+      fontFeatures: tabular,
+    );
+
     Widget purchaseTrailing() {
-      return Text(
-        valueStr,
-        style: amountStyle?.copyWith(color: scheme.onSurface),
-        textAlign: TextAlign.right,
+      return Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.end,
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Text(
+            valueStr,
+            style: amountStyle?.copyWith(color: scheme.onSurface),
+            textAlign: TextAlign.right,
+          ),
+          if (perApproxMo != null) ...[
+            const SizedBox(height: 2),
+            Text(
+              l10n.transactionAmountValue(
+                perApproxMo.toStringAsFixed(2),
+              ),
+              style: moOnlyStyle,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              textAlign: TextAlign.right,
+            ),
+          ],
+        ],
       );
     }
 
     Widget soldOnlyColumn() {
-      return Text(
-        '${l10n.assetSold}: '
-        '${l10n.transactionAmountValue(
-          asset.soldValue!.toStringAsFixed(2),
-        )}',
-        style: subAmountStyle?.copyWith(color: scheme.tertiary),
-        textAlign: TextAlign.right,
+      return Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: [
+          Text(
+            '${l10n.assetSold}: '
+            '${l10n.transactionAmountValue(
+              asset.soldValue!.toStringAsFixed(2),
+            )}',
+            style: subAmountStyle?.copyWith(color: scheme.tertiary),
+            textAlign: TextAlign.right,
+          ),
+          if (soldPerApproxMo != null) ...[
+            const SizedBox(height: 2),
+            Text(
+              l10n.transactionAmountValue(
+                soldPerApproxMo.toStringAsFixed(2),
+              ),
+              style: moOnlyStyle?.copyWith(color: scheme.tertiary.withValues(alpha: 0.95)),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              textAlign: TextAlign.right,
+            ),
+          ],
+        ],
       );
     }
 
