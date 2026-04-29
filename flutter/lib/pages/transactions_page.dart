@@ -907,20 +907,23 @@ class _TransactionsViewState extends State<_TransactionsView> {
               body: Stack(
                 fit: StackFit.expand,
                 children: [
-                  _body(
-                    context,
-                    state,
-                    l10n,
-                    visibleMonth,
-                    monthNotifier,
-                    filtered,
+                  IgnorePointer(
+                    ignoring: _fabMenuOpen,
+                    child: _body(
+                      context,
+                      state,
+                      l10n,
+                      visibleMonth,
+                      monthNotifier,
+                      filtered,
+                    ),
                   ),
                   if (_fabMenuOpen)
                     Positioned.fill(
                       child: GestureDetector(
                         behavior: HitTestBehavior.opaque,
                         onTap: () => setState(() => _fabMenuOpen = false),
-                        child: const SizedBox.expand(),
+                        child: const ColoredBox(color: Colors.transparent),
                       ),
                     ),
                 ],
@@ -1187,6 +1190,21 @@ List<TransactionEntity> _localTransactionsMatchingDescription(
   return transactions
       .where((t) => (t.description ?? '').toLowerCase().contains(needle))
       .toList();
+}
+
+List<TransactionEntity> _mergeTransactionListsByIdNewestFirst(
+  List<TransactionEntity> a,
+  List<TransactionEntity> b,
+) {
+  final byId = <String, TransactionEntity>{};
+  for (final t in a) {
+    byId[t.id] = t;
+  }
+  for (final t in b) {
+    byId[t.id] = t;
+  }
+  final out = byId.values.toList()..sort((x, y) => y.transactedAt.compareTo(x.transactedAt));
+  return out;
 }
 
 class _TransactionSearchBody extends StatefulWidget {
@@ -2051,6 +2069,8 @@ class _TransactionDialog extends StatefulWidget {
 
 class _TransactionDialogState extends State<_TransactionDialog> {
   final _formKey = GlobalKey<FormState>();
+  final _valueFieldKey = GlobalKey<FormFieldState<String>>();
+  final _percentageFieldKey = GlobalKey<FormFieldState<String>>();
   final _paymentMethodFieldKey = GlobalKey<FormFieldState<String>>();
   final _categoryFieldKey = GlobalKey<FormFieldState<String>>();
   final _tagFieldKey = GlobalKey<FormFieldState<String>>();
@@ -2077,15 +2097,27 @@ class _TransactionDialogState extends State<_TransactionDialog> {
   String? _categoryId;
   String? _tagId;
 
+  Timer? _descriptionSuggestDebounce;
+  List<TransactionEntity> _descriptionSuggestionMatches = const [];
+  bool _descriptionSuggestLoading = false;
+  /// After selecting a suggestion, hide the list until the description text changes.
+  bool _dismissSuggestionsUntilDescriptionChange = false;
+  String? _descriptionSnapshotWhenSuggestionsDismissed;
+
+  static const _descriptionSuggestDebounceMs = 400;
+
   @override
   void initState() {
     super.initState();
     final t = widget.transaction;
     _transactedAt = t?.transactedAt.toLocal() ?? DateTime.now();
-    _valueController = TextEditingController(
-      text: t != null ? t.value.toStringAsFixed(2) : '0.00',
-    );
-    _percentageController = TextEditingController(text: t != null ? t.percentage.toString() : '0');
+    if (t != null) {
+      _valueController = TextEditingController(text: t.value.toStringAsFixed(2));
+      _percentageController = TextEditingController(text: t.percentage.toString());
+    } else {
+      _valueController = TextEditingController();
+      _percentageController = TextEditingController();
+    }
     _descriptionController = TextEditingController(text: t?.description ?? '');
     _dateDisplayController = TextEditingController();
     _timeDisplayController = TextEditingController();
@@ -2098,8 +2130,23 @@ class _TransactionDialogState extends State<_TransactionDialog> {
     _categoryId = t?.categoryId ?? widget.preferredCategoryId;
     _tagId = t?.tagId ?? widget.preferredTagId;
     _loadLookups();
+    _descriptionController.addListener(_onDescriptionTextChangedForSuggestions);
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) _syncDateTimeDisplay();
+      if (!mounted) return;
+      _syncDateTimeDisplay();
+      if (widget.transaction != null) return;
+      var strippedAutofillZeros = false;
+      final v = _valueController.text.trim();
+      if (v == '0' || v == '0.00' || v == '0.0' || v == '-0' || v == '-0.00' || v == '-0.0') {
+        _valueController.clear();
+        strippedAutofillZeros = true;
+      }
+      final p = _percentageController.text.trim();
+      if (p == '0' || p == '0.0') {
+        _percentageController.clear();
+        strippedAutofillZeros = true;
+      }
+      if (strippedAutofillZeros && mounted) setState(() {});
     });
   }
 
@@ -2176,8 +2223,192 @@ class _TransactionDialogState extends State<_TransactionDialog> {
     _tagDisplayController.text = tagName(_tagId) ?? '';
   }
 
+  void _onDescriptionTextChangedForSuggestions() {
+    if (widget.transaction != null) return;
+    if (_dismissSuggestionsUntilDescriptionChange) {
+      if (_descriptionController.text == _descriptionSnapshotWhenSuggestionsDismissed) {
+        return;
+      }
+      _dismissSuggestionsUntilDescriptionChange = false;
+      _descriptionSnapshotWhenSuggestionsDismissed = null;
+    }
+    _descriptionSuggestDebounce?.cancel();
+    final q = _descriptionController.text.trim();
+    if (q.isEmpty) {
+      setState(() {
+        _descriptionSuggestionMatches = const [];
+        _descriptionSuggestLoading = false;
+        _dismissSuggestionsUntilDescriptionChange = false;
+        _descriptionSnapshotWhenSuggestionsDismissed = null;
+      });
+      return;
+    }
+    final local = switch (widget.cubit.state) {
+      TransactionsLoaded(:final transactions) =>
+        _localTransactionsMatchingDescription(transactions, q),
+      _ => <TransactionEntity>[],
+    };
+    setState(() {
+      _descriptionSuggestionMatches = local;
+      _descriptionSuggestLoading = true;
+    });
+    _descriptionSuggestDebounce = Timer(
+      const Duration(milliseconds: _descriptionSuggestDebounceMs),
+      () => _loadDescriptionSuggestionsRemote(q),
+    );
+  }
+
+  Future<void> _loadDescriptionSuggestionsRemote(String q) async {
+    if (!mounted || widget.transaction != null) return;
+    if (_descriptionController.text.trim() != q) return;
+    if (_dismissSuggestionsUntilDescriptionChange &&
+        _descriptionController.text == _descriptionSnapshotWhenSuggestionsDismissed) {
+      return;
+    }
+    try {
+      final remote = await getIt<SearchTransactionsByDescriptionUsecase>()(q, limit: 80);
+      if (!mounted || widget.transaction != null) return;
+      if (_descriptionController.text.trim() != q) return;
+      final local = switch (widget.cubit.state) {
+        TransactionsLoaded(:final transactions) =>
+            _localTransactionsMatchingDescription(transactions, q),
+        _ => <TransactionEntity>[],
+      };
+      final merged = _mergeTransactionListsByIdNewestFirst(local, remote);
+      setState(() {
+        _descriptionSuggestionMatches = merged;
+        _descriptionSuggestLoading = false;
+      });
+    } catch (_) {
+      if (!mounted || widget.transaction != null) return;
+      if (_descriptionController.text.trim() != q) return;
+      setState(() => _descriptionSuggestLoading = false);
+    }
+  }
+
+  void _applyTransactionSuggestion(TransactionEntity t) {
+    if (_loadingLookups) return;
+    _descriptionSuggestDebounce?.cancel();
+    final snapshot = _descriptionController.text;
+    setState(() {
+      if (_accountId == null && _cardId == null) {
+        _accountId = t.accountId;
+        _cardId = t.cardId;
+        if (_accountId != null && _cardId != null) {
+          _cardId = null;
+        }
+      }
+      _categoryId ??= t.categoryId;
+      _tagId ??= t.tagId;
+      final valueRaw = _valueController.text.trim();
+      final valueParsed = _parseTransactionAmountInput(valueRaw);
+      if (valueRaw.isEmpty || valueParsed == null || valueParsed == 0) {
+        _valueController.text = t.value.toStringAsFixed(2);
+      }
+      final pct = double.tryParse(_percentageController.text.trim());
+      if (pct == null || pct == 0) {
+        _percentageController.text = t.percentage.toString();
+      }
+      _syncRelationDisplays();
+      _dismissSuggestionsUntilDescriptionChange = true;
+      _descriptionSnapshotWhenSuggestionsDismissed = snapshot;
+      _descriptionSuggestionMatches = const [];
+      _descriptionSuggestLoading = false;
+    });
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      _valueFieldKey.currentState?.validate();
+      _percentageFieldKey.currentState?.validate();
+      _paymentMethodFieldKey.currentState?.validate();
+      _categoryFieldKey.currentState?.validate();
+      _tagFieldKey.currentState?.validate();
+    });
+  }
+
+  Widget _descriptionSuggestionSection(BuildContext context) {
+    if (widget.transaction != null) return const SizedBox.shrink();
+    if (_dismissSuggestionsUntilDescriptionChange &&
+        _descriptionController.text == _descriptionSnapshotWhenSuggestionsDismissed) {
+      return const SizedBox.shrink();
+    }
+    final q = _descriptionController.text.trim();
+    if (q.isEmpty) return const SizedBox.shrink();
+
+    final theme = Theme.of(context);
+    final l10n = widget.l10n;
+    final locale = Localizations.localeOf(context).toString();
+    final dateFmt = DateFormat.yMMMd(locale).add_Hm();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        if (_descriptionSuggestLoading && _descriptionSuggestionMatches.isEmpty)
+          const Padding(
+            padding: EdgeInsets.symmetric(vertical: 12),
+            child: Center(
+              child: SizedBox(
+                width: 24,
+                height: 24,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              ),
+            ),
+          )
+        else if (!_descriptionSuggestLoading && _descriptionSuggestionMatches.isEmpty)
+          Padding(
+            padding: const EdgeInsets.only(top: 4, bottom: 4),
+            child: Text(
+              l10n.transactionsSearchNoResults,
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
+          )
+        else
+          SizedBox(
+            height: 220,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                if (_descriptionSuggestLoading) const LinearProgressIndicator(minHeight: 2),
+                Expanded(
+                  child: ListView.builder(
+                    padding: EdgeInsets.zero,
+                    itemCount: _descriptionSuggestionMatches.length,
+                    itemBuilder: (context, i) {
+                      final t = _descriptionSuggestionMatches[i];
+                      final desc = t.description?.isNotEmpty == true ? t.description! : l10n.none;
+                      final weighted = t.value * t.percentage / 100.0;
+                      final amt = l10n.transactionAmountValue(weighted.toStringAsFixed(2));
+                      final pay = t.accountName ?? t.cardName ?? l10n.none;
+                      final sub = '${dateFmt.format(t.transactedAt.toLocal())} · $pay';
+                      return ListTile(
+                        dense: true,
+                        visualDensity: VisualDensity.compact,
+                        title: Text(desc, maxLines: 1, overflow: TextOverflow.ellipsis),
+                        subtitle: Text(sub, maxLines: 2, overflow: TextOverflow.ellipsis),
+                        trailing: Text(
+                          amt,
+                          style: theme.textTheme.titleSmall?.copyWith(
+                            fontWeight: FontWeight.w600,
+                            fontFeatures: const [FontFeature.tabularFigures()],
+                          ),
+                        ),
+                        onTap: _loadingLookups ? null : () => _applyTransactionSuggestion(t),
+                      );
+                    },
+                  ),
+                ),
+              ],
+            ),
+          ),
+      ],
+    );
+  }
+
   @override
   void dispose() {
+    _descriptionSuggestDebounce?.cancel();
+    _descriptionController.removeListener(_onDescriptionTextChangedForSuggestions);
     _valueController.dispose();
     _percentageController.dispose();
     _descriptionController.dispose();
@@ -2438,13 +2669,18 @@ class _TransactionDialogState extends State<_TransactionDialog> {
                   maxLines: 1,
                   textInputAction: TextInputAction.next,
                 ),
+                _descriptionSuggestionSection(context),
                 const SizedBox(height: 16),
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Expanded(
                       child: TextFormField(
+                        key: _valueFieldKey,
                         controller: _valueController,
+                        autocorrect: false,
+                        enableSuggestions: false,
+                        autofillHints: isEdit ? null : const <String>[],
                         decoration: InputDecoration(labelText: l10n.transactionAmount),
                         keyboardType: const TextInputType.numberWithOptions(decimal: true, signed: true),
                         inputFormatters: _transactionAmountInputFormatters,
@@ -2571,7 +2807,11 @@ class _TransactionDialogState extends State<_TransactionDialog> {
                   children: [
                     Expanded(
                       child: TextFormField(
+                        key: _percentageFieldKey,
                         controller: _percentageController,
+                        autocorrect: false,
+                        enableSuggestions: false,
+                        autofillHints: isEdit ? null : const <String>[],
                         decoration: InputDecoration(labelText: l10n.transactionPercentage),
                         keyboardType: const TextInputType.numberWithOptions(decimal: true),
                         validator: (v) {

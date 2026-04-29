@@ -265,52 +265,55 @@ class _MonthlyDashboardViewState extends State<_MonthlyDashboardView> {
       child: Stack(
         fit: StackFit.expand,
         children: [
-          ListView(
-            physics: const AlwaysScrollableScrollPhysics(),
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-            children: [
-              SwitchListTile(
-                title: Text(l10n.dashboardIncludeIgnoredInTotals),
-                value: _includeIgnored,
-                onChanged: (v) => setState(() => _includeIgnored = v),
-              ),
-              if (!_includeIgnored)
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
-                  child: Text(
-                    l10n.transactionsTotalsExcludingIgnoredHint,
-                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                          color: Theme.of(context).colorScheme.onSurfaceVariant,
-                        ),
-                  ),
+          IgnorePointer(
+            ignoring: _fabMenuOpen,
+            child: ListView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+              children: [
+                SwitchListTile(
+                  title: Text(l10n.dashboardIncludeIgnoredInTotals),
+                  value: _includeIgnored,
+                  onChanged: (v) => setState(() => _includeIgnored = v),
                 ),
-              MonthlyTagPieChart(
-                l10n: l10n,
-                transactions: tagPieTransactions,
-                includeIgnored: true,
-                tagKeysFilter: tagKeysFilter,
-                onTagKeysFilterChanged: (v) => setState(() => _tagKeysFilter = v),
-              ),
-              MonthlyCategoryExpensePieChart(
-                l10n: l10n,
-                transactions: categoryPieTransactions,
-                includeIgnored: true,
-                categoryKeysFilter: categoryKeysFilter,
-                onCategoryKeysFilterChanged: (v) => setState(() => _categoryKeysFilter = v),
-              ),
-              DashboardMonthTransactionsList(
-                l10n: l10n,
-                transactions: listTransactions,
-                visibleMonth: visibleMonth,
-              ),
-            ],
+                if (!_includeIgnored)
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+                    child: Text(
+                      l10n.transactionsTotalsExcludingIgnoredHint,
+                      style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                            color: Theme.of(context).colorScheme.onSurfaceVariant,
+                          ),
+                    ),
+                  ),
+                MonthlyTagPieChart(
+                  l10n: l10n,
+                  transactions: tagPieTransactions,
+                  includeIgnored: true,
+                  tagKeysFilter: tagKeysFilter,
+                  onTagKeysFilterChanged: (v) => setState(() => _tagKeysFilter = v),
+                ),
+                MonthlyCategoryExpensePieChart(
+                  l10n: l10n,
+                  transactions: categoryPieTransactions,
+                  includeIgnored: true,
+                  categoryKeysFilter: categoryKeysFilter,
+                  onCategoryKeysFilterChanged: (v) => setState(() => _categoryKeysFilter = v),
+                ),
+                DashboardMonthTransactionsList(
+                  l10n: l10n,
+                  transactions: listTransactions,
+                  visibleMonth: visibleMonth,
+                ),
+              ],
+            ),
           ),
           if (_fabMenuOpen)
             Positioned.fill(
               child: GestureDetector(
                 behavior: HitTestBehavior.opaque,
                 onTap: () => setState(() => _fabMenuOpen = false),
-                child: const SizedBox.expand(),
+                child: const ColoredBox(color: Colors.transparent),
               ),
             ),
         ],
