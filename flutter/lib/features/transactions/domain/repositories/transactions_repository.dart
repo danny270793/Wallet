@@ -5,6 +5,9 @@ abstract class TransactionsRepository {
   Future<List<TransactionEntity>> getTransactionsForYear(DateTime yearStartLocal);
   Future<List<TransactionEntity>> searchTransactionsByDescription(String query, {int limit = 200});
   Future<List<TransactionEntity>> getTransactionsByCreditGroupId(String creditGroupId);
+
+  Future<List<TransactionEntity>> listTransactionsHavingCreditGroup();
+
   Future<TransactionEntity> createTransaction({
     String? accountId,
     String? cardId,
