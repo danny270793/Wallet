@@ -189,12 +189,6 @@ class _AssetTile extends StatelessWidget {
       letterSpacing: -0.25,
       height: 1.25,
     );
-    final amountStyle = theme.textTheme.titleSmall?.copyWith(
-      fontWeight: FontWeight.w700,
-      letterSpacing: -0.2,
-      height: 1.2,
-      fontFeatures: tabular,
-    );
     final subAmountStyle = muted(0.95)?.copyWith(
       fontWeight: FontWeight.w500,
       fontSize:
@@ -202,10 +196,18 @@ class _AssetTile extends StatelessWidget {
       height: 1.22,
     );
 
-    final moOnlyStyle = theme.textTheme.labelSmall?.copyWith(
-      color: scheme.onSurfaceVariant.withValues(alpha: 0.92),
-      height: 1.15,
-      fontWeight: FontWeight.w500,
+    final moHighlightStyle = theme.textTheme.titleSmall?.copyWith(
+      color: scheme.primary,
+      fontWeight: FontWeight.w700,
+      letterSpacing: -0.2,
+      height: 1.2,
+      fontFeatures: tabular,
+    );
+    /// Total position value — subdued vs highlighted /mo figure above.
+    final trailingTotalStyle = theme.textTheme.bodyLarge?.copyWith(
+      color: scheme.onSurfaceVariant.withValues(alpha: 0.95),
+      fontWeight: FontWeight.w400,
+      height: 1.25,
       fontFeatures: tabular,
     );
 
@@ -220,16 +222,16 @@ class _AssetTile extends StatelessWidget {
               l10n.transactionAmountValue(
                 perApproxMo.toStringAsFixed(2),
               ),
-              style: moOnlyStyle,
+              style: moHighlightStyle,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               textAlign: TextAlign.right,
             ),
-            const SizedBox(height: 2),
+            const SizedBox(height: 4),
           ],
           Text(
             valueStr,
-            style: amountStyle?.copyWith(color: scheme.onSurface),
+            style: trailingTotalStyle,
             textAlign: TextAlign.right,
           ),
         ],
