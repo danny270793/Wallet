@@ -225,6 +225,8 @@
   "transactionDeferred": "Diferido",
   "transactionGraceMonths": "Meses de gracia",
   "transactionMesesPlazo": "Meses plazo",
+  "transactionGraceMonthsInvalid": "Los meses de gracia deben ser 0 o más",
+  "transactionTermMonthsInvalid": "Indica al menos 2 meses de plazo",
   "transactionCategory": "Categoría",
   "transactionTag": "Etiqueta",
   "transactionAmount": "Importe",
