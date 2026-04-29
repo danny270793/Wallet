@@ -1,6 +1,6 @@
 import '../features/transactions/domain/entities/transaction_entity.dart';
 
-/// Income (positive weighted sums), outcome (absolute negatives), net balance for a set of transactions.
+/// Income (positive amounts), outcome (absolute negatives), net balance for a set of transactions.
 ///
 /// Rows with [TransactionEntity.isAccountTransferLeg] are omitted (transfer pairs do not count
 /// toward income/outcome/net).
