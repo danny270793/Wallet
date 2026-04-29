@@ -36,6 +36,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get dashboardIncludeIgnoredInTotals => 'Include ignored transactions';
 
   @override
+  String get dashboardUseWeightedAmounts => 'Weighted amounts (%)';
+
+  @override
   String get monthlyDashboardTagPieTitle => 'Expenses by tag';
 
   @override
