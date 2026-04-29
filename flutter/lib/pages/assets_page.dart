@@ -159,10 +159,17 @@ class _AssetTile extends StatelessWidget {
     );
 
     final valueStr = l10n.transactionAmountValue(asset.value.toStringAsFixed(2));
-    final dateFmt = DateFormat.yMMMd();
+    final locale = Localizations.localeOf(context).toString();
+    final dateFmt = DateFormat.yMd(locale);
+    final timeFmt = DateFormat.Hm(locale);
+    String dateTimeLine(DateTime t) {
+      final local = t.toLocal();
+      return '${dateFmt.format(local)} ${timeFmt.format(local)}';
+    }
+
     final period = asset.endedAt != null
-        ? '${dateFmt.format(asset.boughtAt)} → ${dateFmt.format(asset.endedAt!)}'
-        : dateFmt.format(asset.boughtAt);
+        ? '${dateTimeLine(asset.boughtAt)} → ${dateTimeLine(asset.endedAt!)}'
+        : dateTimeLine(asset.boughtAt);
 
     void openEdit() {
       showAssetEditorBottomSheet(
