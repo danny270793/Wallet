@@ -18,6 +18,14 @@ import '../features/transactions/domain/entities/transaction_entity.dart';
 import '../features/transactions/domain/usecases/search_transactions_by_description_usecase.dart';
 import '../features/transactions/presentation/cubit/transactions_cubit.dart';
 import '../features/transactions/presentation/cubit/transactions_state.dart';
+import '../features/categories/domain/usecases/delete_category_usecase.dart';
+import '../features/tags/domain/usecases/delete_tag_usecase.dart';
+import '../features/accounts/domain/usecases/delete_account_usecase.dart';
+import '../features/cards/domain/usecases/delete_card_usecase.dart';
+import '../features/categories/presentation/cubit/categories_cubit.dart';
+import '../features/tags/presentation/cubit/tags_cubit.dart';
+import '../features/accounts/presentation/cubit/accounts_cubit.dart';
+import '../features/cards/presentation/cubit/cards_cubit.dart';
 import '../widgets/account_editor_sheet.dart';
 import '../widgets/card_editor_sheet.dart';
 import '../widgets/category_editor_sheet.dart';
@@ -28,6 +36,80 @@ import '../widgets/swipeable_list_tile.dart';
 import '../widgets/transaction_month_totals.dart';
 import '../widgets/transactions_month_scope.dart';
 import '../widgets/transactions_totals_bar.dart';
+import '../widgets/bottom_sheet_pinned_title.dart';
+
+/// Swipe edit/delete for searchable id+name pickers (category, tag).
+class SearchablePickerSwipeActions {
+  const SearchablePickerSwipeActions({
+    required this.onEditItem,
+    required this.confirmDeleteItem,
+    required this.deleteItem,
+  });
+
+  final Future<void> Function(
+    BuildContext sheetContext,
+    ({String id, String name}) item,
+  )
+  onEditItem;
+  final Future<bool> Function(
+    BuildContext sheetContext,
+    ({String id, String name}) item,
+  )
+  confirmDeleteItem;
+  final Future<bool> Function(({String id, String name}) item) deleteItem;
+}
+
+/// Swipe edit/delete for account vs card lists in payment method picker.
+class PaymentMethodPickerSwipeActions {
+  const PaymentMethodPickerSwipeActions({
+    required this.editAccount,
+    required this.confirmDeleteAccount,
+    required this.deleteAccount,
+    required this.editCard,
+    required this.confirmDeleteCard,
+    required this.deleteCard,
+  });
+
+  final Future<void> Function(BuildContext sheetContext, AccountEntity a)
+  editAccount;
+  final Future<bool> Function(BuildContext sheetContext, AccountEntity a)
+  confirmDeleteAccount;
+  final Future<bool> Function(AccountEntity a) deleteAccount;
+  final Future<void> Function(BuildContext sheetContext, CardEntity c) editCard;
+  final Future<bool> Function(BuildContext sheetContext, CardEntity c)
+  confirmDeleteCard;
+  final Future<bool> Function(CardEntity c) deleteCard;
+}
+
+Future<bool> _confirmDeletePickerTitle(
+  BuildContext context,
+  AppLocalizations l10n, {
+  required String title,
+  required String message,
+}) async {
+  final ok = await showDialog<bool>(
+    context: context,
+    builder: (dialogContext) => AlertDialog(
+      title: Text(title),
+      content: Text(message),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(dialogContext).pop(false),
+          child: Text(l10n.cancel),
+        ),
+        FilledButton(
+          style: FilledButton.styleFrom(
+            backgroundColor: Theme.of(dialogContext).colorScheme.error,
+            foregroundColor: Theme.of(dialogContext).colorScheme.onError,
+          ),
+          onPressed: () => Navigator.of(dialogContext).pop(true),
+          child: Text(l10n.delete),
+        ),
+      ],
+    ),
+  );
+  return ok ?? false;
+}
 
 /// Encodes account vs card in unified payment-method picker sheet results.
 const _paymentMethodPickAccountPrefix = 'a:';
@@ -79,11 +161,17 @@ final class _DecimalAmountInputFormatter extends TextInputFormatter {
   }
 
   @override
-  TextEditingValue formatEditUpdate(TextEditingValue oldValue, TextEditingValue newValue) {
+  TextEditingValue formatEditUpdate(
+    TextEditingValue oldValue,
+    TextEditingValue newValue,
+  ) {
     final filtered = _filter(newValue.text, allowNegative: allowNegative);
     if (filtered == newValue.text) return newValue;
     final end = newValue.selection.end.clamp(0, newValue.text.length);
-    final mapped = _filter(newValue.text.substring(0, end), allowNegative: allowNegative).length;
+    final mapped = _filter(
+      newValue.text.substring(0, end),
+      allowNegative: allowNegative,
+    ).length;
     final off = mapped.clamp(0, filtered.length);
     return TextEditingValue(
       text: filtered,
@@ -189,10 +277,12 @@ class _TransactionsTotalsBarHost extends StatefulWidget {
   final List<TransactionEntity> transactions;
 
   @override
-  State<_TransactionsTotalsBarHost> createState() => _TransactionsTotalsBarHostState();
+  State<_TransactionsTotalsBarHost> createState() =>
+      _TransactionsTotalsBarHostState();
 }
 
-class _TransactionsTotalsBarHostState extends State<_TransactionsTotalsBarHost> {
+class _TransactionsTotalsBarHostState
+    extends State<_TransactionsTotalsBarHost> {
   bool _altTotals = false;
 
   @override
@@ -303,9 +393,9 @@ class _AccountTransferBottomSheet extends StatefulWidget {
     this.editingSource,
     this.editingTarget,
   }) : assert(
-          (editingSource == null && editingTarget == null) ||
-              (editingSource != null && editingTarget != null),
-        );
+         (editingSource == null && editingTarget == null) ||
+             (editingSource != null && editingTarget != null),
+       );
 
   final TransactionsCubit cubit;
   final AppLocalizations l10n;
@@ -313,10 +403,12 @@ class _AccountTransferBottomSheet extends StatefulWidget {
   final TransactionEntity? editingTarget;
 
   @override
-  State<_AccountTransferBottomSheet> createState() => _AccountTransferBottomSheetState();
+  State<_AccountTransferBottomSheet> createState() =>
+      _AccountTransferBottomSheetState();
 }
 
-class _AccountTransferBottomSheetState extends State<_AccountTransferBottomSheet> {
+class _AccountTransferBottomSheetState
+    extends State<_AccountTransferBottomSheet> {
   final _formKey = GlobalKey<FormState>();
   late DateTime _transactedAt;
   late final TextEditingController _valueController;
@@ -346,7 +438,9 @@ class _AccountTransferBottomSheetState extends State<_AccountTransferBottomSheet
       _transactedAt = es.transactedAt.toLocal();
       _sourcePickKey = _entityToPickKey(es);
       _targetPickKey = _entityToPickKey(et);
-      _valueController = TextEditingController(text: et.value.abs().toStringAsFixed(2));
+      _valueController = TextEditingController(
+        text: et.value.abs().toStringAsFixed(2),
+      );
       _ignorePair = es.ignore || et.ignore;
     } else {
       _transactedAt = DateTime.now();
@@ -363,7 +457,8 @@ class _AccountTransferBottomSheetState extends State<_AccountTransferBottomSheet
   }
 
   String? _entityToPickKey(TransactionEntity e) {
-    if (e.accountId != null) return '$_paymentMethodPickAccountPrefix${e.accountId}';
+    if (e.accountId != null)
+      return '$_paymentMethodPickAccountPrefix${e.accountId}';
     if (e.cardId != null) return '$_paymentMethodPickCardPrefix${e.cardId}';
     return null;
   }
@@ -460,7 +555,13 @@ class _AccountTransferBottomSheetState extends State<_AccountTransferBottomSheet
     );
     if (d == null || !mounted) return;
     setState(() {
-      _transactedAt = DateTime(d.year, d.month, d.day, _transactedAt.hour, _transactedAt.minute);
+      _transactedAt = DateTime(
+        d.year,
+        d.month,
+        d.day,
+        _transactedAt.hour,
+        _transactedAt.minute,
+      );
     });
     _syncDateTimeControllers();
   }
@@ -488,9 +589,11 @@ class _AccountTransferBottomSheetState extends State<_AccountTransferBottomSheet
     final raw = await showPaymentMethodPickerSheet(
       context,
       l10n: l10n,
-      sheetTitle: source ? l10n.transferSourceAccount : l10n.transferTargetAccount,
-      accounts: _accounts,
-      cards: _cards,
+      sheetTitle: source
+          ? l10n.transferSourceAccount
+          : l10n.transferTargetAccount,
+      getAccounts: () => _accounts,
+      getCards: () => _cards,
       onListsUpdated: (a, c) {
         if (!mounted) return;
         setState(() {
@@ -557,172 +660,178 @@ class _AccountTransferBottomSheetState extends State<_AccountTransferBottomSheet
   @override
   Widget build(BuildContext context) {
     final l10n = widget.l10n;
-    final bottomInset = MediaQuery.viewInsetsOf(context).bottom;
 
-    return Padding(
-      padding: EdgeInsets.only(bottom: bottomInset),
-      child: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Text(
-                _isEditingPair ? l10n.editTransferTitle : l10n.transferSheetTitle,
-                style: Theme.of(context).textTheme.titleLarge,
-              ),
-              const SizedBox(height: 16),
-              Form(
-                key: _formKey,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Expanded(
-                          child: TextFormField(
-                            readOnly: true,
-                            enableInteractiveSelection: false,
-                            showCursor: false,
-                            controller: _dateDisplayController,
-                            decoration: InputDecoration(
-                              labelText: l10n.transferDateLabel,
-                              suffixIcon: const Icon(Icons.calendar_today_outlined, size: 20),
-                            ),
-                            onTap: _pickDate,
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: TextFormField(
-                            readOnly: true,
-                            enableInteractiveSelection: false,
-                            showCursor: false,
-                            controller: _timeDisplayController,
-                            decoration: InputDecoration(
-                              labelText: l10n.transferTimeLabel,
-                              suffixIcon: const Icon(Icons.schedule, size: 20),
-                            ),
-                            onTap: _pickTime,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 16),
-                    if (_loadingPaymentMethods)
-                      Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Expanded(
-                            child: InputDecorator(
-                              decoration: InputDecoration(
-                                labelText: l10n.transferSourceAccount,
-                              ),
-                              child: const SizedBox(
-                                height: 40,
-                                child: Center(
-                                  child: SizedBox(
-                                    width: 22,
-                                    height: 22,
-                                    child: CircularProgressIndicator(strokeWidth: 2),
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: InputDecorator(
-                              decoration: InputDecoration(
-                                labelText: l10n.transferTargetAccount,
-                              ),
-                              child: const SizedBox(
-                                height: 40,
-                                child: Center(
-                                  child: SizedBox(
-                                    width: 22,
-                                    height: 22,
-                                    child: CircularProgressIndicator(strokeWidth: 2),
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
-                      )
-                    else if (_paymentMethodCount < 2)
-                      Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 8),
-                        child: Text(l10n.transferNeedTwoAccounts, textAlign: TextAlign.center),
-                      )
-                    else
-                      Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Expanded(
-                            child: TextFormField(
-                              readOnly: true,
-                              enableInteractiveSelection: false,
-                              showCursor: false,
-                              controller: _sourceDisplayController,
-                              decoration: InputDecoration(
-                                labelText: l10n.transferSourceAccount,
-                                suffixIcon: const Icon(Icons.expand_more_rounded, size: 22),
-                              ),
-                              validator: (_) => _sourcePickKey == null ? l10n.fieldRequired : null,
-                              onTap: () => _pickTransferLeg(source: true),
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: TextFormField(
-                              readOnly: true,
-                              enableInteractiveSelection: false,
-                              showCursor: false,
-                              controller: _targetDisplayController,
-                              decoration: InputDecoration(
-                                labelText: l10n.transferTargetAccount,
-                                suffixIcon: const Icon(Icons.expand_more_rounded, size: 22),
-                              ),
-                              validator: (_) => _targetPickKey == null ? l10n.fieldRequired : null,
-                              onTap: () => _pickTransferLeg(source: false),
-                            ),
-                          ),
-                        ],
+    return BottomSheetPinnedTitleScrollView(
+      padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
+      title: _isEditingPair ? l10n.editTransferTitle : l10n.transferSheetTitle,
+      child: Form(
+        key: _formKey,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                  child: TextFormField(
+                    readOnly: true,
+                    enableInteractiveSelection: false,
+                    showCursor: false,
+                    controller: _dateDisplayController,
+                    decoration: InputDecoration(
+                      labelText: l10n.transferDateLabel,
+                      suffixIcon: const Icon(
+                        Icons.calendar_today_outlined,
+                        size: 20,
                       ),
-                    const SizedBox(height: 16),
-                    TextFormField(
-                      controller: _valueController,
-                      decoration: InputDecoration(labelText: l10n.transactionAmount),
-                      keyboardType: const TextInputType.numberWithOptions(decimal: true, signed: false),
-                      inputFormatters: _transferAmountInputFormatters,
-                      validator: (v) {
-                        if (v == null || v.trim().isEmpty) return l10n.fieldRequired;
-                        final amt = _parseTransactionAmountInput(v);
-                        if (amt == null) return l10n.transactionAmountInvalidNumber;
-                        if (amt <= 0) return l10n.transferAmountMustBePositive;
-                        return null;
-                      },
                     ),
-                    const SizedBox(height: 24),
-                    FilledButton(
-                      onPressed:
-                          _submitting || _loadingPaymentMethods || _paymentMethodCount < 2 ? null : _submit,
-                      child: _submitting
-                          ? const SizedBox(
-                              height: 20,
-                              width: 20,
-                              child: CircularProgressIndicator(strokeWidth: 2),
-                            )
-                          : Text(l10n.save),
-                    ),
-                  ],
+                    onTap: _pickDate,
+                  ),
                 ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: TextFormField(
+                    readOnly: true,
+                    enableInteractiveSelection: false,
+                    showCursor: false,
+                    controller: _timeDisplayController,
+                    decoration: InputDecoration(
+                      labelText: l10n.transferTimeLabel,
+                      suffixIcon: const Icon(Icons.schedule, size: 20),
+                    ),
+                    onTap: _pickTime,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            if (_loadingPaymentMethods)
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    child: InputDecorator(
+                      decoration: InputDecoration(
+                        labelText: l10n.transferSourceAccount,
+                      ),
+                      child: const SizedBox(
+                        height: 40,
+                        child: Center(
+                          child: SizedBox(
+                            width: 22,
+                            height: 22,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: InputDecorator(
+                      decoration: InputDecoration(
+                        labelText: l10n.transferTargetAccount,
+                      ),
+                      child: const SizedBox(
+                        height: 40,
+                        child: Center(
+                          child: SizedBox(
+                            width: 22,
+                            height: 22,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              )
+            else if (_paymentMethodCount < 2)
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 8),
+                child: Text(
+                  l10n.transferNeedTwoAccounts,
+                  textAlign: TextAlign.center,
+                ),
+              )
+            else
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    child: TextFormField(
+                      readOnly: true,
+                      enableInteractiveSelection: false,
+                      showCursor: false,
+                      controller: _sourceDisplayController,
+                      decoration: InputDecoration(
+                        labelText: l10n.transferSourceAccount,
+                        suffixIcon: const Icon(
+                          Icons.expand_more_rounded,
+                          size: 22,
+                        ),
+                      ),
+                      validator: (_) =>
+                          _sourcePickKey == null ? l10n.fieldRequired : null,
+                      onTap: () => _pickTransferLeg(source: true),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: TextFormField(
+                      readOnly: true,
+                      enableInteractiveSelection: false,
+                      showCursor: false,
+                      controller: _targetDisplayController,
+                      decoration: InputDecoration(
+                        labelText: l10n.transferTargetAccount,
+                        suffixIcon: const Icon(
+                          Icons.expand_more_rounded,
+                          size: 22,
+                        ),
+                      ),
+                      validator: (_) =>
+                          _targetPickKey == null ? l10n.fieldRequired : null,
+                      onTap: () => _pickTransferLeg(source: false),
+                    ),
+                  ),
+                ],
               ),
-            ],
-          ),
+            const SizedBox(height: 16),
+            TextFormField(
+              controller: _valueController,
+              decoration: InputDecoration(labelText: l10n.transactionAmount),
+              keyboardType: const TextInputType.numberWithOptions(
+                decimal: true,
+                signed: false,
+              ),
+              inputFormatters: _transferAmountInputFormatters,
+              validator: (v) {
+                if (v == null || v.trim().isEmpty) return l10n.fieldRequired;
+                final amt = _parseTransactionAmountInput(v);
+                if (amt == null) return l10n.transactionAmountInvalidNumber;
+                if (amt <= 0) return l10n.transferAmountMustBePositive;
+                return null;
+              },
+            ),
+            const SizedBox(height: 24),
+            FilledButton(
+              onPressed:
+                  _submitting ||
+                      _loadingPaymentMethods ||
+                      _paymentMethodCount < 2
+                  ? null
+                  : _submit,
+              child: _submitting
+                  ? const SizedBox(
+                      height: 20,
+                      width: 20,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : Text(l10n.save),
+            ),
+          ],
         ),
       ),
     );
@@ -737,7 +846,7 @@ void showAccountTransferCreateBottomSheet(
   showModalBottomSheet<void>(
     context: context,
     isScrollControlled: true,
-    showDragHandle: true,
+    showDragHandle: false,
     builder: (_) => _AccountTransferBottomSheet(cubit: cubit, l10n: l10n),
   );
 }
@@ -820,21 +929,28 @@ class _TransactionsViewState extends State<_TransactionsView> {
     final l10n = AppLocalizations.of(context)!;
     final monthNotifier = TransactionsMonthScope.of(context);
     final String title;
-    if (widget.accountNameFilter != null && widget.accountNameFilter!.isNotEmpty) {
+    if (widget.accountNameFilter != null &&
+        widget.accountNameFilter!.isNotEmpty) {
       title = '${widget.accountNameFilter!} · ${l10n.transactions}';
-    } else if (widget.cardNameFilter != null && widget.cardNameFilter!.isNotEmpty) {
+    } else if (widget.cardNameFilter != null &&
+        widget.cardNameFilter!.isNotEmpty) {
       title = '${widget.cardNameFilter!} · ${l10n.transactions}';
-    } else if (widget.categoryNameFilter != null && widget.categoryNameFilter!.isNotEmpty) {
+    } else if (widget.categoryNameFilter != null &&
+        widget.categoryNameFilter!.isNotEmpty) {
       title = '${widget.categoryNameFilter!} · ${l10n.transactions}';
-    } else if (widget.tagNameFilter != null && widget.tagNameFilter!.isNotEmpty) {
+    } else if (widget.tagNameFilter != null &&
+        widget.tagNameFilter!.isNotEmpty) {
       title = '${widget.tagNameFilter!} · ${l10n.transactions}';
     } else {
       title = l10n.transactions;
     }
 
-    final isScoped = (widget.accountIdFilter != null && widget.accountIdFilter!.isNotEmpty) ||
+    final isScoped =
+        (widget.accountIdFilter != null &&
+            widget.accountIdFilter!.isNotEmpty) ||
         (widget.cardIdFilter != null && widget.cardIdFilter!.isNotEmpty) ||
-        (widget.categoryIdFilter != null && widget.categoryIdFilter!.isNotEmpty) ||
+        (widget.categoryIdFilter != null &&
+            widget.categoryIdFilter!.isNotEmpty) ||
         (widget.tagIdFilter != null && widget.tagIdFilter!.isNotEmpty);
 
     return BlocConsumer<TransactionsCubit, TransactionsState>(
@@ -856,7 +972,9 @@ class _TransactionsViewState extends State<_TransactionsView> {
             return ShellScaffold(
               title: title,
               useDrawer: !isScoped,
-              appBarBottom: TransactionsMonthAppBarBottom(notifier: monthNotifier),
+              appBarBottom: TransactionsMonthAppBarBottom(
+                notifier: monthNotifier,
+              ),
               appBarActionsBeforeSettings: [
                 IconButton(
                   icon: const Icon(Icons.search),
@@ -896,7 +1014,8 @@ class _TransactionsViewState extends State<_TransactionsView> {
                   widget.categoryIdFilter,
                   widget.tagIdFilter,
                 ),
-                onTransfer: () => showAccountTransferCreateBottomSheet(context, l10n: l10n),
+                onTransfer: () =>
+                    showAccountTransferCreateBottomSheet(context, l10n: l10n),
               ),
               bottomNavigationBar: showTotalsBar
                   ? _TransactionsTotalsBarHost(
@@ -948,8 +1067,11 @@ class _TransactionsViewState extends State<_TransactionsView> {
     if (widget.cardIdFilter != null && widget.cardIdFilter!.isNotEmpty) {
       list = list.where((t) => t.cardId == widget.cardIdFilter).toList();
     }
-    if (widget.categoryIdFilter != null && widget.categoryIdFilter!.isNotEmpty) {
-      list = list.where((t) => t.categoryId == widget.categoryIdFilter).toList();
+    if (widget.categoryIdFilter != null &&
+        widget.categoryIdFilter!.isNotEmpty) {
+      list = list
+          .where((t) => t.categoryId == widget.categoryIdFilter)
+          .toList();
     }
     if (widget.tagIdFilter != null && widget.tagIdFilter!.isNotEmpty) {
       list = list.where((t) => t.tagId == widget.tagIdFilter).toList();
@@ -1022,7 +1144,9 @@ class _TransactionsViewState extends State<_TransactionsView> {
   ) {
     if (monthTransactions.isEmpty) {
       final locale = Localizations.localeOf(context);
-      final monthYear = DateFormat.yMMMM(locale.toString()).format(visibleMonth);
+      final monthYear = DateFormat.yMMMM(
+        locale.toString(),
+      ).format(visibleMonth);
       return RefreshIndicator(
         onRefresh: refresh,
         child: ListView(
@@ -1048,8 +1172,10 @@ class _TransactionsViewState extends State<_TransactionsView> {
         itemBuilder: (context, index) {
           return switch (rows[index]) {
             _DayMarker(:final day) => _TransactionDayHeader(day: day),
-            _TxMarker(:final transaction) =>
-              _TransactionTile(transaction: transaction, l10n: l10n),
+            _TxMarker(:final transaction) => _TransactionTile(
+              transaction: transaction,
+              l10n: l10n,
+            ),
             _TransferPairMarker(:final source, :final target) =>
               _TransferPairTile(source: source, target: target, l10n: l10n),
           };
@@ -1094,7 +1220,7 @@ void showTransactionEditorBottomSheet(
     context: context,
     isScrollControlled: true,
     useSafeArea: true,
-    showDragHandle: true,
+    showDragHandle: false,
     builder: (_) => _TransactionDialog(
       cubit: cubit,
       l10n: l10n,
@@ -1117,7 +1243,8 @@ void showAccountTransferEditorBottomSheet(
   showModalBottomSheet<void>(
     context: context,
     isScrollControlled: true,
-    showDragHandle: true,
+    showDragHandle: false,
+    useSafeArea: true,
     builder: (_) => _AccountTransferBottomSheet(
       cubit: cubit,
       l10n: l10n,
@@ -1136,6 +1263,7 @@ class _TransactionSearchDelegate extends SearchDelegate<TransactionEntity?> {
 
   final AppLocalizations l10n;
   final SearchTransactionsByDescriptionUsecase search;
+
   /// Already-loaded list for the visible month (and scoped filters), for instant local search.
   final List<TransactionEntity> localTransactions;
 
@@ -1203,7 +1331,8 @@ List<TransactionEntity> _mergeTransactionListsByIdNewestFirst(
   for (final t in b) {
     byId[t.id] = t;
   }
-  final out = byId.values.toList()..sort((x, y) => y.transactedAt.compareTo(x.transactedAt));
+  final out = byId.values.toList()
+    ..sort((x, y) => y.transactedAt.compareTo(x.transactedAt));
   return out;
 }
 
@@ -1289,14 +1418,17 @@ class _TransactionSearchBodyState extends State<_TransactionSearchBody> {
             widget.l10n.transactionsSearchTypeQuery,
             textAlign: TextAlign.center,
             style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
-                ),
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
           ),
         ),
       );
     }
 
-    final local = _localTransactionsMatchingDescription(widget.localTransactions, q);
+    final local = _localTransactionsMatchingDescription(
+      widget.localTransactions,
+      q,
+    );
 
     if (_remoteFuture == null) {
       if (local.isEmpty) {
@@ -1316,9 +1448,11 @@ class _TransactionSearchBodyState extends State<_TransactionSearchBody> {
       future: _remoteFuture,
       builder: (context, snapshot) {
         final forQuery = widget.query.trim();
-        final staleRemote = _remoteForQuery != null && _remoteForQuery != forQuery;
+        final staleRemote =
+            _remoteForQuery != null && _remoteForQuery != forQuery;
 
-        if (snapshot.connectionState == ConnectionState.waiting && !staleRemote) {
+        if (snapshot.connectionState == ConnectionState.waiting &&
+            !staleRemote) {
           if (local.isEmpty) {
             return const Center(child: CircularProgressIndicator());
           }
@@ -1397,9 +1531,13 @@ Widget _transactionSearchResultsList(
           itemCount: list.length,
           itemBuilder: (context, i) {
             final t = list[i];
-            final desc = t.description?.isNotEmpty == true ? t.description! : l10n.none;
+            final desc = t.description?.isNotEmpty == true
+                ? t.description!
+                : l10n.none;
             final weighted = t.value * t.percentage / 100.0;
-            final amt = l10n.transactionAmountValue(weighted.toStringAsFixed(2));
+            final amt = l10n.transactionAmountValue(
+              weighted.toStringAsFixed(2),
+            );
             final pay = t.accountName ?? t.cardName ?? l10n.none;
             final sub = '${dateFmt.format(t.transactedAt.toLocal())} · $pay';
             return ListTile(
@@ -1408,9 +1546,9 @@ Widget _transactionSearchResultsList(
               trailing: Text(
                 amt,
                 style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                      fontWeight: FontWeight.w600,
-                      fontFeatures: const [FontFeature.tabularFigures()],
-                    ),
+                  fontWeight: FontWeight.w600,
+                  fontFeatures: const [FontFeature.tabularFigures()],
+                ),
               ),
               onTap: () => onSelect(t),
             );
@@ -1464,7 +1602,9 @@ class _TransferPairTile extends StatelessWidget {
     final locale = Localizations.localeOf(context);
     final timeLocal = source.transactedAt.toLocal();
     final timeStr = DateFormat.Hm(locale.toString()).format(timeLocal);
-    final amountStr = l10n.transactionAmountValue(target.value.toStringAsFixed(2));
+    final amountStr = l10n.transactionAmountValue(
+      target.value.toStringAsFixed(2),
+    );
     final gid = source.transactionGroupId;
     String payLabel(TransactionEntity t) => t.accountName ?? t.cardName ?? '—';
 
@@ -1518,7 +1658,9 @@ class _TransferPairTile extends StatelessWidget {
     }
 
     Widget tile = SwipeableListTile(
-      itemKey: gid != null && gid.isNotEmpty ? 'pair_$gid' : '${source.id}|${target.id}',
+      itemKey: gid != null && gid.isNotEmpty
+          ? 'pair_$gid'
+          : '${source.id}|${target.id}',
       leading: Icon(
         Icons.swap_vert_rounded,
         size: 26,
@@ -1544,10 +1686,7 @@ class _TransactionTile extends StatelessWidget {
   final TransactionEntity transaction;
   final AppLocalizations l10n;
 
-  const _TransactionTile({
-    required this.transaction,
-    required this.l10n,
-  });
+  const _TransactionTile({required this.transaction, required this.l10n});
 
   @override
   Widget build(BuildContext context) {
@@ -1588,7 +1727,9 @@ class _TransactionTile extends StatelessWidget {
                   ),
                   TextSpan(
                     text: desc,
-                    style: theme.textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w500),
+                    style: theme.textTheme.bodyLarge?.copyWith(
+                      fontWeight: FontWeight.w500,
+                    ),
                   ),
                 ],
               ),
@@ -1602,7 +1743,9 @@ class _TransactionTile extends StatelessWidget {
               desc,
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
-              style: theme.textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w500),
+              style: theme.textTheme.bodyLarge?.copyWith(
+                fontWeight: FontWeight.w500,
+              ),
             ),
           );
         }
@@ -1627,7 +1770,9 @@ class _TransactionTile extends StatelessWidget {
               relationNames.join(' · '),
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
-              style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
             ),
           ),
         );
@@ -1707,15 +1852,17 @@ class _TransactionTile extends StatelessWidget {
 
   /// Account, card, category, tag labels from embedded FK names (aligned with datasource order).
   static List<String> _relationNames(TransactionEntity t) => [
-        if (t.accountName?.isNotEmpty == true) t.accountName!,
-        if (t.cardName?.isNotEmpty == true) t.cardName!,
-        if (t.categoryName?.isNotEmpty == true) t.categoryName!,
-        if (t.tagName?.isNotEmpty == true) t.tagName!,
-      ];
-
+    if (t.accountName?.isNotEmpty == true) t.accountName!,
+    if (t.cardName?.isNotEmpty == true) t.cardName!,
+    if (t.categoryName?.isNotEmpty == true) t.categoryName!,
+    if (t.tagName?.isNotEmpty == true) t.tagName!,
+  ];
 }
 
 /// Picks an id from a searchable list. Returns `null` if dismissed, `''` if [allowNone] and user cleared.
+///
+/// Use [getItems] so each build reads the parent's current lists. The modal sheet [builder] can rerun
+/// when the parent rebuilds after [reloadItems]; snapshots in the outer closure would stay stale.
 Future<String?> _showSearchableIdPickerSheet(
   BuildContext context, {
   required AppLocalizations l10n,
@@ -1724,56 +1871,66 @@ Future<String?> _showSearchableIdPickerSheet(
   required String noResultsMessage,
   required String emptyMessage,
   required bool allowNone,
-  required List<({String id, String name})> initialItems,
+  required List<({String id, String name})> Function() getItems,
   Future<void> Function(BuildContext sheetContext)? onAddPressed,
   String? addTooltip,
-  Future<List<({String id, String name})>> Function()? reloadItems,
+  Future<void> Function()? reloadItems,
+  SearchablePickerSwipeActions? swipe,
 }) {
   return showModalBottomSheet<String?>(
     context: context,
-    showDragHandle: true,
+    showDragHandle: false,
     isScrollControlled: true,
     builder: (sheetContext) {
-      final maxH = MediaQuery.sizeOf(sheetContext).height * 0.55;
-      var items = List<({String id, String name})>.from(initialItems);
       var showSearchField = false;
       var searchFilter = '';
 
       List<({String id, String name})> visible() {
         final q = searchFilter.trim().toLowerCase();
+        final items = getItems();
         if (q.isEmpty) return items;
         return items.where((e) => e.name.toLowerCase().contains(q)).toList();
       }
 
       return StatefulBuilder(
         builder: (context, setPickerState) {
+          final allItems = getItems();
           final list = visible();
 
           Future<void> refreshItems() async {
             final r = reloadItems;
             if (r == null) return;
-            items = await r();
+            await r();
             setPickerState(() {});
           }
 
+          final themeSheet = Theme.of(sheetContext);
           return SafeArea(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(12, 12, 4, 8),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: Text(
-                          title,
-                          style: Theme.of(sheetContext).textTheme.titleMedium,
-                        ),
-                      ),
+            child: ConstrainedBox(
+              constraints: BoxConstraints(
+                maxHeight: MediaQuery.sizeOf(sheetContext).height * 0.55,
+              ),
+              child: CustomScrollView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                slivers: [
+                  SliverAppBar(
+                    pinned: true,
+                    centerTitle: true,
+                    automaticallyImplyLeading: false,
+                    elevation: 0,
+                    scrolledUnderElevation: 4,
+                    backgroundColor: modalBottomSheetSurfaceColor(sheetContext),
+                    shadowColor: Theme.of(sheetContext).colorScheme.shadow,
+                    leading: modalBottomSheetBackButton(sheetContext),
+                    title: Text(title, style: themeSheet.textTheme.titleLarge),
+                    actions: [
                       IconButton(
                         tooltip: l10n.transferAccountSearch,
-                        icon: Icon(showSearchField ? Icons.search_off_outlined : Icons.search),
+                        icon: Icon(
+                          showSearchField
+                              ? Icons.search_off_outlined
+                              : Icons.search,
+                        ),
                         onPressed: () {
                           setPickerState(() {
                             showSearchField = !showSearchField;
@@ -1792,45 +1949,75 @@ Future<String?> _showSearchableIdPickerSheet(
                         ),
                     ],
                   ),
-                ),
-                if (allowNone)
-                  ListTile(
-                    title: Text(l10n.none),
-                    leading: const Icon(Icons.clear),
-                    onTap: () => Navigator.of(sheetContext).pop(''),
-                  ),
-                if (showSearchField)
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
-                    child: TextField(
-                      decoration: InputDecoration(
-                        hintText: searchHint,
-                        prefixIcon: const Icon(Icons.search, size: 22),
-                        isDense: true,
-                        border: const OutlineInputBorder(),
+                  if (allowNone)
+                    SliverToBoxAdapter(
+                      child: ListTile(
+                        title: Text(l10n.none),
+                        leading: const Icon(Icons.clear),
+                        onTap: () => Navigator.of(sheetContext).pop(''),
                       ),
-                      textInputAction: TextInputAction.search,
-                      onChanged: (v) => setPickerState(() => searchFilter = v),
                     ),
-                  ),
-                SizedBox(
-                  height: maxH,
-                  child: items.isEmpty
-                      ? Center(child: Text(emptyMessage))
-                      : list.isEmpty
-                          ? Center(child: Text(noResultsMessage))
-                          : ListView.builder(
-                              itemCount: list.length,
-                              itemBuilder: (context, index) {
-                                final e = list[index];
-                                return ListTile(
-                                  title: Text(e.name),
-                                  onTap: () => Navigator.of(sheetContext).pop(e.id),
-                                );
-                              },
-                            ),
-                ),
-              ],
+                  if (showSearchField)
+                    SliverPadding(
+                      padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+                      sliver: SliverToBoxAdapter(
+                        child: TextField(
+                          decoration: InputDecoration(
+                            hintText: searchHint,
+                            prefixIcon: const Icon(Icons.search, size: 22),
+                            isDense: true,
+                            border: const OutlineInputBorder(),
+                          ),
+                          textInputAction: TextInputAction.search,
+                          onChanged: (v) =>
+                              setPickerState(() => searchFilter = v),
+                        ),
+                      ),
+                    ),
+                  if (allItems.isEmpty)
+                    SliverFillRemaining(
+                      hasScrollBody: false,
+                      child: Center(child: Text(emptyMessage)),
+                    )
+                  else if (list.isEmpty)
+                    SliverFillRemaining(
+                      hasScrollBody: false,
+                      child: Center(child: Text(noResultsMessage)),
+                    )
+                  else
+                    SliverList(
+                      delegate: SliverChildBuilderDelegate((context, index) {
+                        final e = list[index];
+                        if (swipe == null) {
+                          return ListTile(
+                            title: Text(e.name),
+                            onTap: () => Navigator.of(sheetContext).pop(e.id),
+                          );
+                        }
+                        final actions = swipe;
+                        return SwipeableListTile(
+                          itemKey: e.id,
+                          title: Text(e.name),
+                          onTap: () => Navigator.of(sheetContext).pop(e.id),
+                          onEdit: () {
+                            Future(() async {
+                              await actions.onEditItem(sheetContext, e);
+                              if (!sheetContext.mounted) return;
+                              await refreshItems();
+                            });
+                          },
+                          confirmDelete: () =>
+                              actions.confirmDeleteItem(sheetContext, e),
+                          onDelete: () async {
+                            final ok = await actions.deleteItem(e);
+                            if (ok) await refreshItems();
+                            return ok;
+                          },
+                        );
+                      }, childCount: list.length),
+                    ),
+                ],
+              ),
             ),
           );
         },
@@ -1840,22 +2027,24 @@ Future<String?> _showSearchableIdPickerSheet(
 }
 
 /// Returns `a:id` or `c:id`. [onListsUpdated] should update parent state (e.g. [setState]).
+///
+/// Use [getAccounts]/[getCards] so each build reads fresh lists after the parent reloads via
+/// [onListsUpdated]. The modal [builder] can rerun when the parent rebuilds.
 Future<String?> showPaymentMethodPickerSheet(
   BuildContext context, {
   required AppLocalizations l10n,
   required String sheetTitle,
-  required List<AccountEntity> accounts,
-  required List<CardEntity> cards,
-  required void Function(List<AccountEntity> accounts, List<CardEntity> cards) onListsUpdated,
+  required List<AccountEntity> Function() getAccounts,
+  required List<CardEntity> Function() getCards,
+  required void Function(List<AccountEntity> accounts, List<CardEntity> cards)
+  onListsUpdated,
+  PaymentMethodPickerSwipeActions? paymentSwipe,
 }) {
   return showModalBottomSheet<String?>(
     context: context,
-    showDragHandle: true,
+    showDragHandle: false,
     isScrollControlled: true,
     builder: (sheetContext) {
-      final maxH = MediaQuery.sizeOf(sheetContext).height * 0.55;
-      var pickerAccounts = List<AccountEntity>.from(accounts);
-      var pickerCards = List<CardEntity>.from(cards);
       var showSearchField = false;
       var searchFilter = '';
 
@@ -1864,47 +2053,71 @@ Future<String?> showPaymentMethodPickerSheet(
           Future<void> refreshPicker() async {
             final freshAccounts = await getIt<GetAccountsUsecase>()();
             final freshCards = await getIt<GetCardsUsecase>()();
-            pickerAccounts = freshAccounts;
-            pickerCards = freshCards;
-            setPickerState(() {});
             onListsUpdated(freshAccounts, freshCards);
+            setPickerState(() {});
           }
 
           List<AccountEntity> visibleAccounts() {
             final q = searchFilter.trim().toLowerCase();
+            final pickerAccounts = getAccounts();
             if (q.isEmpty) return pickerAccounts;
-            return pickerAccounts.where((a) => a.name.toLowerCase().contains(q)).toList();
+            return pickerAccounts
+                .where((a) => a.name.toLowerCase().contains(q))
+                .toList();
           }
 
           List<CardEntity> visibleCards() {
             final q = searchFilter.trim().toLowerCase();
+            final pickerCards = getCards();
             if (q.isEmpty) return pickerCards;
-            return pickerCards.where((c) => c.name.toLowerCase().contains(q)).toList();
+            return pickerCards
+                .where((c) => c.name.toLowerCase().contains(q))
+                .toList();
           }
 
           final vAccounts = visibleAccounts();
           final vCards = visibleCards();
-          final hasAny = pickerAccounts.isNotEmpty || pickerCards.isNotEmpty;
+          final pickerAccountsSnapshot = getAccounts();
+          final pickerCardsSnapshot = getCards();
+          final hasAny =
+              pickerAccountsSnapshot.isNotEmpty ||
+              pickerCardsSnapshot.isNotEmpty;
           final filteredEmpty = vAccounts.isEmpty && vCards.isEmpty;
 
+          final sheetTheme = Theme.of(sheetContext);
+          final titleSmallPrimary = sheetTheme.textTheme.titleSmall?.copyWith(
+            color: sheetTheme.colorScheme.primary,
+          );
+
           return SafeArea(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(12, 12, 4, 8),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: Text(
-                          sheetTitle,
-                          style: Theme.of(sheetContext).textTheme.titleMedium,
-                        ),
-                      ),
+            child: ConstrainedBox(
+              constraints: BoxConstraints(
+                maxHeight: MediaQuery.sizeOf(sheetContext).height * 0.55,
+              ),
+              child: CustomScrollView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                slivers: [
+                  SliverAppBar(
+                    pinned: true,
+                    centerTitle: true,
+                    automaticallyImplyLeading: false,
+                    elevation: 0,
+                    scrolledUnderElevation: 4,
+                    backgroundColor: modalBottomSheetSurfaceColor(sheetContext),
+                    shadowColor: Theme.of(sheetContext).colorScheme.shadow,
+                    leading: modalBottomSheetBackButton(sheetContext),
+                    title: Text(
+                      sheetTitle,
+                      style: sheetTheme.textTheme.titleLarge,
+                    ),
+                    actions: [
                       IconButton(
                         tooltip: l10n.transferAccountSearch,
-                        icon: Icon(showSearchField ? Icons.search_off_outlined : Icons.search),
+                        icon: Icon(
+                          showSearchField
+                              ? Icons.search_off_outlined
+                              : Icons.search,
+                        ),
                         onPressed: () {
                           setPickerState(() {
                             showSearchField = !showSearchField;
@@ -1916,42 +2129,62 @@ Future<String?> showPaymentMethodPickerSheet(
                         tooltip: l10n.paymentMethodAddChoiceTitle,
                         icon: const Icon(Icons.add_circle_outline),
                         onPressed: () async {
-                          final choice = await showModalBottomSheet<_PaymentMethodCreateChoice>(
-                            context: sheetContext,
-                            showDragHandle: true,
-                            builder: (ctx) => SafeArea(
-                              child: Column(
-                                mainAxisSize: MainAxisSize.min,
-                                crossAxisAlignment: CrossAxisAlignment.stretch,
-                                children: [
-                                  Padding(
-                                    padding: const EdgeInsets.fromLTRB(20, 12, 20, 4),
-                                    child: Text(
-                                      l10n.paymentMethodAddChoiceTitle,
-                                      style: Theme.of(ctx).textTheme.titleMedium,
-                                    ),
+                          final choice =
+                              await showModalBottomSheet<
+                                _PaymentMethodCreateChoice
+                              >(
+                                context: sheetContext,
+                                showDragHandle: false,
+                                isScrollControlled: true,
+                                builder: (ctx) => BottomSheetPinnedTitleScrollView(
+                                  padding: EdgeInsets.fromLTRB(
+                                    24,
+                                    0,
+                                    24,
+                                    24 + MediaQuery.paddingOf(ctx).bottom,
                                   ),
-                                  ListTile(
-                                    leading: const Icon(Icons.account_balance_wallet_outlined),
-                                    title: Text(l10n.newAccount),
-                                    onTap: () => Navigator.pop(ctx, _PaymentMethodCreateChoice.account),
+                                  title: l10n.paymentMethodAddChoiceTitle,
+                                  child: Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.stretch,
+                                    children: [
+                                      ListTile(
+                                        leading: const Icon(
+                                          Icons.account_balance_wallet_outlined,
+                                        ),
+                                        title: Text(l10n.newAccount),
+                                        onTap: () => Navigator.pop(
+                                          ctx,
+                                          _PaymentMethodCreateChoice.account,
+                                        ),
+                                      ),
+                                      ListTile(
+                                        leading: const Icon(
+                                          Icons.credit_card_outlined,
+                                        ),
+                                        title: Text(l10n.newCard),
+                                        onTap: () => Navigator.pop(
+                                          ctx,
+                                          _PaymentMethodCreateChoice.card,
+                                        ),
+                                      ),
+                                    ],
                                   ),
-                                  ListTile(
-                                    leading: const Icon(Icons.credit_card_outlined),
-                                    title: Text(l10n.newCard),
-                                    onTap: () => Navigator.pop(ctx, _PaymentMethodCreateChoice.card),
-                                  ),
-                                  SizedBox(height: MediaQuery.paddingOf(ctx).bottom),
-                                ],
-                              ),
-                            ),
-                          );
+                                ),
+                              );
                           if (!sheetContext.mounted) return;
                           switch (choice) {
                             case _PaymentMethodCreateChoice.account:
-                              await showAccountEditorBottomSheet(sheetContext, l10n);
+                              await showAccountEditorBottomSheet(
+                                sheetContext,
+                                l10n,
+                              );
                             case _PaymentMethodCreateChoice.card:
-                              await showCardEditorBottomSheet(sheetContext, l10n);
+                              await showCardEditorBottomSheet(
+                                sheetContext,
+                                l10n,
+                              );
                             case null:
                               return;
                           }
@@ -1960,82 +2193,139 @@ Future<String?> showPaymentMethodPickerSheet(
                       ),
                     ],
                   ),
-                ),
-                if (showSearchField)
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
-                    child: TextField(
-                      decoration: InputDecoration(
-                        hintText: l10n.transferAccountSearchHint,
-                        prefixIcon: const Icon(Icons.search, size: 22),
-                        isDense: true,
-                        border: const OutlineInputBorder(),
+                  if (showSearchField)
+                    SliverPadding(
+                      padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+                      sliver: SliverToBoxAdapter(
+                        child: TextField(
+                          decoration: InputDecoration(
+                            hintText: l10n.transferAccountSearchHint,
+                            prefixIcon: const Icon(Icons.search, size: 22),
+                            isDense: true,
+                            border: const OutlineInputBorder(),
+                          ),
+                          textInputAction: TextInputAction.search,
+                          onChanged: (v) =>
+                              setPickerState(() => searchFilter = v),
+                        ),
                       ),
-                      textInputAction: TextInputAction.search,
-                      onChanged: (v) => setPickerState(() => searchFilter = v),
                     ),
-                  ),
-                SizedBox(
-                  height: maxH,
-                  child: !hasAny
-                      ? Center(
-                          child: Padding(
-                            padding: const EdgeInsets.all(16),
+                  if (!hasAny)
+                    SliverFillRemaining(
+                      hasScrollBody: false,
+                      child: Center(
+                        child: Padding(
+                          padding: const EdgeInsets.all(16),
+                          child: Text(
+                            '${l10n.noAccounts}\n${l10n.noCards}',
+                            textAlign: TextAlign.center,
+                          ),
+                        ),
+                      ),
+                    )
+                  else if (filteredEmpty)
+                    SliverFillRemaining(
+                      hasScrollBody: false,
+                      child: Center(
+                        child: Text(
+                          l10n.transactionPaymentMethodSearchNoResults,
+                        ),
+                      ),
+                    )
+                  else
+                    SliverList.list(
+                      children: [
+                        if (vCards.isNotEmpty) ...[
+                          Padding(
+                            padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
+                            child: Text(l10n.cards, style: titleSmallPrimary),
+                          ),
+                          ...vCards.map((c) {
+                            final sw = paymentSwipe;
+                            if (sw == null) {
+                              return ListTile(
+                                leading: const Icon(Icons.credit_card_outlined),
+                                title: Text(c.name),
+                                onTap: () => Navigator.of(
+                                  sheetContext,
+                                ).pop('$_paymentMethodPickCardPrefix${c.id}'),
+                              );
+                            }
+                            return SwipeableListTile(
+                              itemKey: c.id,
+                              leading: const Icon(Icons.credit_card_outlined),
+                              title: Text(c.name),
+                              onTap: () => Navigator.of(
+                                sheetContext,
+                              ).pop('$_paymentMethodPickCardPrefix${c.id}'),
+                              onEdit: () {
+                                Future(() async {
+                                  await sw.editCard(sheetContext, c);
+                                  if (!sheetContext.mounted) return;
+                                  await refreshPicker();
+                                });
+                              },
+                              confirmDelete: () =>
+                                  sw.confirmDeleteCard(sheetContext, c),
+                              onDelete: () async {
+                                final ok = await sw.deleteCard(c);
+                                if (ok) await refreshPicker();
+                                return ok;
+                              },
+                            );
+                          }),
+                        ],
+                        if (vAccounts.isNotEmpty) ...[
+                          Padding(
+                            padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
                             child: Text(
-                              '${l10n.noAccounts}\n${l10n.noCards}',
-                              textAlign: TextAlign.center,
+                              l10n.accounts,
+                              style: titleSmallPrimary,
                             ),
                           ),
-                        )
-                      : filteredEmpty
-                          ? Center(child: Text(l10n.transactionPaymentMethodSearchNoResults))
-                          : ListView(
-                              padding: EdgeInsets.zero,
-                              children: [
-                                if (vCards.isNotEmpty) ...[
-                                  Padding(
-                                    padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
-                                    child: Text(
-                                      l10n.cards,
-                                      style: Theme.of(sheetContext).textTheme.titleSmall?.copyWith(
-                                            color: Theme.of(sheetContext).colorScheme.primary,
-                                          ),
-                                    ),
-                                  ),
-                                  ...vCards.map(
-                                    (c) => ListTile(
-                                      leading: const Icon(Icons.credit_card_outlined),
-                                      title: Text(c.name),
-                                      onTap: () => Navigator.of(sheetContext).pop(
-                                        '$_paymentMethodPickCardPrefix${c.id}',
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                                if (vAccounts.isNotEmpty) ...[
-                                  Padding(
-                                    padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
-                                    child: Text(
-                                      l10n.accounts,
-                                      style: Theme.of(sheetContext).textTheme.titleSmall?.copyWith(
-                                            color: Theme.of(sheetContext).colorScheme.primary,
-                                          ),
-                                    ),
-                                  ),
-                                  ...vAccounts.map(
-                                    (a) => ListTile(
-                                      leading: const Icon(Icons.account_balance_wallet_outlined),
-                                      title: Text(a.name),
-                                      onTap: () => Navigator.of(sheetContext).pop(
-                                        '$_paymentMethodPickAccountPrefix${a.id}',
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ],
-                            ),
-                ),
-              ],
+                          ...vAccounts.map((a) {
+                            final sw = paymentSwipe;
+                            if (sw == null) {
+                              return ListTile(
+                                leading: const Icon(
+                                  Icons.account_balance_wallet_outlined,
+                                ),
+                                title: Text(a.name),
+                                onTap: () => Navigator.of(sheetContext).pop(
+                                  '$_paymentMethodPickAccountPrefix${a.id}',
+                                ),
+                              );
+                            }
+                            return SwipeableListTile(
+                              itemKey: a.id,
+                              leading: const Icon(
+                                Icons.account_balance_wallet_outlined,
+                              ),
+                              title: Text(a.name),
+                              onTap: () => Navigator.of(
+                                sheetContext,
+                              ).pop('$_paymentMethodPickAccountPrefix${a.id}'),
+                              onEdit: () {
+                                Future(() async {
+                                  await sw.editAccount(sheetContext, a);
+                                  if (!sheetContext.mounted) return;
+                                  await refreshPicker();
+                                });
+                              },
+                              confirmDelete: () =>
+                                  sw.confirmDeleteAccount(sheetContext, a),
+                              onDelete: () async {
+                                final ok = await sw.deleteAccount(a);
+                                if (ok) await refreshPicker();
+                                return ok;
+                              },
+                            );
+                          }),
+                        ],
+                      ],
+                    ),
+                ],
+              ),
             ),
           );
         },
@@ -2100,6 +2390,7 @@ class _TransactionDialogState extends State<_TransactionDialog> {
   Timer? _descriptionSuggestDebounce;
   List<TransactionEntity> _descriptionSuggestionMatches = const [];
   bool _descriptionSuggestLoading = false;
+
   /// After selecting a suggestion, hide the list until the description text changes.
   bool _dismissSuggestionsUntilDescriptionChange = false;
   String? _descriptionSnapshotWhenSuggestionsDismissed;
@@ -2112,8 +2403,12 @@ class _TransactionDialogState extends State<_TransactionDialog> {
     final t = widget.transaction;
     _transactedAt = t?.transactedAt.toLocal() ?? DateTime.now();
     if (t != null) {
-      _valueController = TextEditingController(text: t.value.toStringAsFixed(2));
-      _percentageController = TextEditingController(text: t.percentage.toString());
+      _valueController = TextEditingController(
+        text: t.value.toStringAsFixed(2),
+      );
+      _percentageController = TextEditingController(
+        text: t.percentage.toString(),
+      );
     } else {
       _valueController = TextEditingController();
       _percentageController = TextEditingController();
@@ -2137,7 +2432,12 @@ class _TransactionDialogState extends State<_TransactionDialog> {
       if (widget.transaction != null) return;
       var strippedAutofillZeros = false;
       final v = _valueController.text.trim();
-      if (v == '0' || v == '0.00' || v == '0.0' || v == '-0' || v == '-0.00' || v == '-0.0') {
+      if (v == '0' ||
+          v == '0.00' ||
+          v == '0.0' ||
+          v == '-0' ||
+          v == '-0.00' ||
+          v == '-0.0') {
         _valueController.clear();
         strippedAutofillZeros = true;
       }
@@ -2162,11 +2462,16 @@ class _TransactionDialogState extends State<_TransactionDialog> {
           _cards = cards;
           _categories = categories;
           _tags = tags;
-          if (_accountId != null && !_accounts.any((a) => a.id == _accountId)) _accountId = null;
-          if (_cardId != null && !_cards.any((c) => c.id == _cardId)) _cardId = null;
+          if (_accountId != null && !_accounts.any((a) => a.id == _accountId))
+            _accountId = null;
+          if (_cardId != null && !_cards.any((c) => c.id == _cardId))
+            _cardId = null;
           if (_accountId != null && _cardId != null) _cardId = null;
-          if (_categoryId != null && !_categories.any((c) => c.id == _categoryId)) _categoryId = null;
-          if (_tagId != null && !_tags.any((t) => t.id == _tagId)) _tagId = null;
+          if (_categoryId != null &&
+              !_categories.any((c) => c.id == _categoryId))
+            _categoryId = null;
+          if (_tagId != null && !_tags.any((t) => t.id == _tagId))
+            _tagId = null;
           _loadingLookups = false;
           _syncRelationDisplays();
         });
@@ -2226,7 +2531,8 @@ class _TransactionDialogState extends State<_TransactionDialog> {
   void _onDescriptionTextChangedForSuggestions() {
     if (widget.transaction != null) return;
     if (_dismissSuggestionsUntilDescriptionChange) {
-      if (_descriptionController.text == _descriptionSnapshotWhenSuggestionsDismissed) {
+      if (_descriptionController.text ==
+          _descriptionSnapshotWhenSuggestionsDismissed) {
         return;
       }
       _dismissSuggestionsUntilDescriptionChange = false;
@@ -2262,16 +2568,20 @@ class _TransactionDialogState extends State<_TransactionDialog> {
     if (!mounted || widget.transaction != null) return;
     if (_descriptionController.text.trim() != q) return;
     if (_dismissSuggestionsUntilDescriptionChange &&
-        _descriptionController.text == _descriptionSnapshotWhenSuggestionsDismissed) {
+        _descriptionController.text ==
+            _descriptionSnapshotWhenSuggestionsDismissed) {
       return;
     }
     try {
-      final remote = await getIt<SearchTransactionsByDescriptionUsecase>()(q, limit: 80);
+      final remote = await getIt<SearchTransactionsByDescriptionUsecase>()(
+        q,
+        limit: 80,
+      );
       if (!mounted || widget.transaction != null) return;
       if (_descriptionController.text.trim() != q) return;
       final local = switch (widget.cubit.state) {
         TransactionsLoaded(:final transactions) =>
-            _localTransactionsMatchingDescription(transactions, q),
+          _localTransactionsMatchingDescription(transactions, q),
         _ => <TransactionEntity>[],
       };
       final merged = _mergeTransactionListsByIdNewestFirst(local, remote);
@@ -2328,7 +2638,8 @@ class _TransactionDialogState extends State<_TransactionDialog> {
   Widget _descriptionSuggestionSection(BuildContext context) {
     if (widget.transaction != null) return const SizedBox.shrink();
     if (_dismissSuggestionsUntilDescriptionChange &&
-        _descriptionController.text == _descriptionSnapshotWhenSuggestionsDismissed) {
+        _descriptionController.text ==
+            _descriptionSnapshotWhenSuggestionsDismissed) {
       return const SizedBox.shrink();
     }
     final q = _descriptionController.text.trim();
@@ -2353,7 +2664,8 @@ class _TransactionDialogState extends State<_TransactionDialog> {
               ),
             ),
           )
-        else if (!_descriptionSuggestLoading && _descriptionSuggestionMatches.isEmpty)
+        else if (!_descriptionSuggestLoading &&
+            _descriptionSuggestionMatches.isEmpty)
           Padding(
             padding: const EdgeInsets.only(top: 4, bottom: 4),
             child: Text(
@@ -2369,23 +2681,37 @@ class _TransactionDialogState extends State<_TransactionDialog> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                if (_descriptionSuggestLoading) const LinearProgressIndicator(minHeight: 2),
+                if (_descriptionSuggestLoading)
+                  const LinearProgressIndicator(minHeight: 2),
                 Expanded(
                   child: ListView.builder(
                     padding: EdgeInsets.zero,
                     itemCount: _descriptionSuggestionMatches.length,
                     itemBuilder: (context, i) {
                       final t = _descriptionSuggestionMatches[i];
-                      final desc = t.description?.isNotEmpty == true ? t.description! : l10n.none;
+                      final desc = t.description?.isNotEmpty == true
+                          ? t.description!
+                          : l10n.none;
                       final weighted = t.value * t.percentage / 100.0;
-                      final amt = l10n.transactionAmountValue(weighted.toStringAsFixed(2));
+                      final amt = l10n.transactionAmountValue(
+                        weighted.toStringAsFixed(2),
+                      );
                       final pay = t.accountName ?? t.cardName ?? l10n.none;
-                      final sub = '${dateFmt.format(t.transactedAt.toLocal())} · $pay';
+                      final sub =
+                          '${dateFmt.format(t.transactedAt.toLocal())} · $pay';
                       return ListTile(
                         dense: true,
                         visualDensity: VisualDensity.compact,
-                        title: Text(desc, maxLines: 1, overflow: TextOverflow.ellipsis),
-                        subtitle: Text(sub, maxLines: 2, overflow: TextOverflow.ellipsis),
+                        title: Text(
+                          desc,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        subtitle: Text(
+                          sub,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
                         trailing: Text(
                           amt,
                           style: theme.textTheme.titleSmall?.copyWith(
@@ -2393,7 +2719,9 @@ class _TransactionDialogState extends State<_TransactionDialog> {
                             fontFeatures: const [FontFeature.tabularFigures()],
                           ),
                         ),
-                        onTap: _loadingLookups ? null : () => _applyTransactionSuggestion(t),
+                        onTap: _loadingLookups
+                            ? null
+                            : () => _applyTransactionSuggestion(t),
                       );
                     },
                   ),
@@ -2408,7 +2736,9 @@ class _TransactionDialogState extends State<_TransactionDialog> {
   @override
   void dispose() {
     _descriptionSuggestDebounce?.cancel();
-    _descriptionController.removeListener(_onDescriptionTextChangedForSuggestions);
+    _descriptionController.removeListener(
+      _onDescriptionTextChangedForSuggestions,
+    );
     _valueController.dispose();
     _percentageController.dispose();
     _descriptionController.dispose();
@@ -2429,7 +2759,13 @@ class _TransactionDialogState extends State<_TransactionDialog> {
     );
     if (d == null || !mounted) return;
     setState(() {
-      _transactedAt = DateTime(d.year, d.month, d.day, _transactedAt.hour, _transactedAt.minute);
+      _transactedAt = DateTime(
+        d.year,
+        d.month,
+        d.day,
+        _transactedAt.hour,
+        _transactedAt.minute,
+      );
     });
     _syncDateTimeDisplay();
   }
@@ -2459,19 +2795,73 @@ class _TransactionDialogState extends State<_TransactionDialog> {
       context,
       l10n: l10n,
       sheetTitle: l10n.transactionPaymentMethod,
-      accounts: _accounts,
-      cards: _cards,
+      getAccounts: () => _accounts,
+      getCards: () => _cards,
       onListsUpdated: (a, c) {
         if (!mounted) return;
         setState(() {
           _accounts = a;
           _cards = c;
-          if (_accountId != null && !_accounts.any((x) => x.id == _accountId)) _accountId = null;
-          if (_cardId != null && !_cards.any((x) => x.id == _cardId)) _cardId = null;
+          if (_accountId != null && !_accounts.any((x) => x.id == _accountId))
+            _accountId = null;
+          if (_cardId != null && !_cards.any((x) => x.id == _cardId))
+            _cardId = null;
           if (_accountId != null && _cardId != null) _cardId = null;
           _syncRelationDisplays();
         });
       },
+      paymentSwipe: PaymentMethodPickerSwipeActions(
+        editAccount: (sheetCtx, a) async => showAccountEditorBottomSheet(
+          sheetCtx,
+          l10n,
+          account: a,
+          cubit: getIt<AccountsCubit>(),
+        ),
+        confirmDeleteAccount: (sheetCtx, a) => _confirmDeletePickerTitle(
+          sheetCtx,
+          l10n,
+          title: l10n.deleteAccount,
+          message: l10n.confirmDeleteAccount(a.name),
+        ),
+        deleteAccount: (a) async {
+          try {
+            await getIt<DeleteAccountUsecase>()(id: a.id);
+            return true;
+          } catch (_) {
+            if (mounted) {
+              ScaffoldMessenger.of(
+                context,
+              ).showSnackBar(SnackBar(content: Text(l10n.unexpectedError)));
+            }
+            return false;
+          }
+        },
+        editCard: (sheetCtx, c) async => showCardEditorBottomSheet(
+          sheetCtx,
+          l10n,
+          card: c,
+          cubit: getIt<CardsCubit>(),
+        ),
+        confirmDeleteCard: (sheetCtx, c) => _confirmDeletePickerTitle(
+          sheetCtx,
+          l10n,
+          title: l10n.deleteCard,
+          message: l10n.confirmDeleteCard(c.name),
+        ),
+        deleteCard: (c) async {
+          try {
+            await getIt<DeleteCardUsecase>()(id: c.id);
+            return true;
+          } catch (_) {
+            if (mounted) {
+              ScaffoldMessenger.of(
+                context,
+              ).showSnackBar(SnackBar(content: Text(l10n.unexpectedError)));
+            }
+            return false;
+          }
+        },
+      ),
     );
     if (!mounted || raw == null || raw.isEmpty) return;
     setState(() {
@@ -2500,9 +2890,10 @@ class _TransactionDialogState extends State<_TransactionDialog> {
       noResultsMessage: l10n.transferAccountSearchNoResults,
       emptyMessage: l10n.noCategories,
       allowNone: false,
-      initialItems: _categories.map((c) => (id: c.id, name: c.name)).toList(),
+      getItems: () => _categories.map((c) => (id: c.id, name: c.name)).toList(),
       addTooltip: l10n.newCategory,
-      onAddPressed: (sheetContext) => showCategoryEditorBottomSheet(sheetContext, l10n),
+      onAddPressed: (sheetContext) =>
+          showCategoryEditorBottomSheet(sheetContext, l10n),
       reloadItems: () async {
         final cats = await getIt<GetCategoriesUsecase>()();
         if (mounted) {
@@ -2514,8 +2905,37 @@ class _TransactionDialogState extends State<_TransactionDialog> {
             _syncRelationDisplays();
           });
         }
-        return cats.map((c) => (id: c.id, name: c.name)).toList();
       },
+      swipe: SearchablePickerSwipeActions(
+        onEditItem: (sheetCtx, item) async {
+          final cat = _categories.firstWhere((c) => c.id == item.id);
+          await showCategoryEditorBottomSheet(
+            sheetCtx,
+            l10n,
+            category: cat,
+            cubit: getIt<CategoriesCubit>(),
+          );
+        },
+        confirmDeleteItem: (sheetCtx, item) => _confirmDeletePickerTitle(
+          sheetCtx,
+          l10n,
+          title: l10n.deleteCategory,
+          message: l10n.confirmDeleteCategory(item.name),
+        ),
+        deleteItem: (item) async {
+          try {
+            await getIt<DeleteCategoryUsecase>()(id: item.id);
+            return true;
+          } catch (_) {
+            if (mounted) {
+              ScaffoldMessenger.of(
+                context,
+              ).showSnackBar(SnackBar(content: Text(l10n.unexpectedError)));
+            }
+            return false;
+          }
+        },
+      ),
     );
     if (!mounted || selectedId == null || selectedId.isEmpty) return;
     setState(() {
@@ -2538,9 +2958,10 @@ class _TransactionDialogState extends State<_TransactionDialog> {
       noResultsMessage: l10n.transferAccountSearchNoResults,
       emptyMessage: l10n.noTags,
       allowNone: false,
-      initialItems: _tags.map((t) => (id: t.id, name: t.name)).toList(),
+      getItems: () => _tags.map((t) => (id: t.id, name: t.name)).toList(),
       addTooltip: l10n.newTag,
-      onAddPressed: (sheetContext) => showTagEditorBottomSheet(sheetContext, l10n),
+      onAddPressed: (sheetContext) =>
+          showTagEditorBottomSheet(sheetContext, l10n),
       reloadItems: () async {
         final tags = await getIt<GetTagsUsecase>()();
         if (mounted) {
@@ -2552,8 +2973,37 @@ class _TransactionDialogState extends State<_TransactionDialog> {
             _syncRelationDisplays();
           });
         }
-        return tags.map((t) => (id: t.id, name: t.name)).toList();
       },
+      swipe: SearchablePickerSwipeActions(
+        onEditItem: (sheetCtx, item) async {
+          final tag = _tags.firstWhere((t) => t.id == item.id);
+          await showTagEditorBottomSheet(
+            sheetCtx,
+            l10n,
+            tag: tag,
+            cubit: getIt<TagsCubit>(),
+          );
+        },
+        confirmDeleteItem: (sheetCtx, item) => _confirmDeletePickerTitle(
+          sheetCtx,
+          l10n,
+          title: l10n.deleteTag,
+          message: l10n.confirmDeleteTag(item.name),
+        ),
+        deleteItem: (item) async {
+          try {
+            await getIt<DeleteTagUsecase>()(id: item.id);
+            return true;
+          } catch (_) {
+            if (mounted) {
+              ScaffoldMessenger.of(
+                context,
+              ).showSnackBar(SnackBar(content: Text(l10n.unexpectedError)));
+            }
+            return false;
+          }
+        },
+      ),
     );
     if (!mounted || selectedId == null || selectedId.isEmpty) return;
     setState(() {
@@ -2570,8 +3020,11 @@ class _TransactionDialogState extends State<_TransactionDialog> {
     if (!_formKey.currentState!.validate()) return;
     final value = _parseTransactionAmountInput(_valueController.text);
     final pct = double.tryParse(_percentageController.text.trim());
-    if (value == null || value == 0 || pct == null || pct < 0 || pct > 100) return;
-    final desc = _descriptionController.text.trim().isEmpty ? null : _descriptionController.text.trim();
+    if (value == null || value == 0 || pct == null || pct < 0 || pct > 100)
+      return;
+    final desc = _descriptionController.text.trim().isEmpty
+        ? null
+        : _descriptionController.text.trim();
     setState(() => _loading = true);
     try {
       if (widget.transaction == null) {
@@ -2611,19 +3064,14 @@ class _TransactionDialogState extends State<_TransactionDialog> {
     final l10n = widget.l10n;
     final isEdit = widget.transaction != null;
     final theme = Theme.of(context);
-    final bottomInset = MediaQuery.viewInsetsOf(context).bottom;
 
-    return SingleChildScrollView(
-      padding: EdgeInsets.only(left: 20, right: 20, top: 4, bottom: bottomInset + 24),
+    return BottomSheetPinnedTitleScrollView(
+      padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
+      title: isEdit ? l10n.editTransaction : l10n.newTransaction,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text(
-            isEdit ? l10n.editTransaction : l10n.newTransaction,
-            style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w600),
-          ),
-          const SizedBox(height: 12),
           Form(
             key: _formKey,
             child: Column(
@@ -2641,7 +3089,10 @@ class _TransactionDialogState extends State<_TransactionDialog> {
                         controller: _dateDisplayController,
                         decoration: InputDecoration(
                           labelText: l10n.transferDateLabel,
-                          suffixIcon: const Icon(Icons.calendar_today_outlined, size: 20),
+                          suffixIcon: const Icon(
+                            Icons.calendar_today_outlined,
+                            size: 20,
+                          ),
                         ),
                         onTap: _pickDate,
                       ),
@@ -2665,7 +3116,9 @@ class _TransactionDialogState extends State<_TransactionDialog> {
                 const SizedBox(height: 16),
                 TextFormField(
                   controller: _descriptionController,
-                  decoration: InputDecoration(labelText: l10n.accountDescription),
+                  decoration: InputDecoration(
+                    labelText: l10n.accountDescription,
+                  ),
                   maxLines: 1,
                   textInputAction: TextInputAction.next,
                 ),
@@ -2681,14 +3134,22 @@ class _TransactionDialogState extends State<_TransactionDialog> {
                         autocorrect: false,
                         enableSuggestions: false,
                         autofillHints: isEdit ? null : const <String>[],
-                        decoration: InputDecoration(labelText: l10n.transactionAmount),
-                        keyboardType: const TextInputType.numberWithOptions(decimal: true, signed: true),
+                        decoration: InputDecoration(
+                          labelText: l10n.transactionAmount,
+                        ),
+                        keyboardType: const TextInputType.numberWithOptions(
+                          decimal: true,
+                          signed: true,
+                        ),
                         inputFormatters: _transactionAmountInputFormatters,
                         validator: (v) {
-                          if (v == null || v.trim().isEmpty) return l10n.fieldRequired;
+                          if (v == null || v.trim().isEmpty)
+                            return l10n.fieldRequired;
                           final amt = _parseTransactionAmountInput(v);
-                          if (amt == null) return l10n.transactionAmountInvalidNumber;
-                          if (amt == 0) return l10n.transactionAmountMustBeNonZero;
+                          if (amt == null)
+                            return l10n.transactionAmountInvalidNumber;
+                          if (amt == 0)
+                            return l10n.transactionAmountMustBeNonZero;
                           return null;
                         },
                       ),
@@ -2697,14 +3158,18 @@ class _TransactionDialogState extends State<_TransactionDialog> {
                     Expanded(
                       child: _loadingLookups
                           ? InputDecorator(
-                              decoration: InputDecoration(labelText: l10n.transactionPaymentMethod),
+                              decoration: InputDecoration(
+                                labelText: l10n.transactionPaymentMethod,
+                              ),
                               child: const SizedBox(
                                 height: 40,
                                 child: Center(
                                   child: SizedBox(
                                     width: 22,
                                     height: 22,
-                                    child: CircularProgressIndicator(strokeWidth: 2),
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                    ),
                                   ),
                                 ),
                               ),
@@ -2717,7 +3182,10 @@ class _TransactionDialogState extends State<_TransactionDialog> {
                               controller: _paymentMethodDisplayController,
                               decoration: InputDecoration(
                                 labelText: l10n.transactionPaymentMethod,
-                                suffixIcon: const Icon(Icons.expand_more_rounded, size: 22),
+                                suffixIcon: const Icon(
+                                  Icons.expand_more_rounded,
+                                  size: 22,
+                                ),
                               ),
                               validator: (_) {
                                 if (_accountId == null && _cardId == null) {
@@ -2737,14 +3205,18 @@ class _TransactionDialogState extends State<_TransactionDialog> {
                     Expanded(
                       child: _loadingLookups
                           ? InputDecorator(
-                              decoration: InputDecoration(labelText: l10n.transactionCategory),
+                              decoration: InputDecoration(
+                                labelText: l10n.transactionCategory,
+                              ),
                               child: const SizedBox(
                                 height: 40,
                                 child: Center(
                                   child: SizedBox(
                                     width: 22,
                                     height: 22,
-                                    child: CircularProgressIndicator(strokeWidth: 2),
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                    ),
                                   ),
                                 ),
                               ),
@@ -2757,10 +3229,14 @@ class _TransactionDialogState extends State<_TransactionDialog> {
                               controller: _categoryDisplayController,
                               decoration: InputDecoration(
                                 labelText: l10n.transactionCategory,
-                                suffixIcon: const Icon(Icons.expand_more_rounded, size: 22),
+                                suffixIcon: const Icon(
+                                  Icons.expand_more_rounded,
+                                  size: 22,
+                                ),
                               ),
                               validator: (_) {
-                                if (_categoryId == null) return l10n.fieldRequired;
+                                if (_categoryId == null)
+                                  return l10n.fieldRequired;
                                 return null;
                               },
                               onTap: _pickCategory,
@@ -2770,14 +3246,18 @@ class _TransactionDialogState extends State<_TransactionDialog> {
                     Expanded(
                       child: _loadingLookups
                           ? InputDecorator(
-                              decoration: InputDecoration(labelText: l10n.transactionTag),
+                              decoration: InputDecoration(
+                                labelText: l10n.transactionTag,
+                              ),
                               child: const SizedBox(
                                 height: 40,
                                 child: Center(
                                   child: SizedBox(
                                     width: 22,
                                     height: 22,
-                                    child: CircularProgressIndicator(strokeWidth: 2),
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                    ),
                                   ),
                                 ),
                               ),
@@ -2790,7 +3270,10 @@ class _TransactionDialogState extends State<_TransactionDialog> {
                               controller: _tagDisplayController,
                               decoration: InputDecoration(
                                 labelText: l10n.transactionTag,
-                                suffixIcon: const Icon(Icons.expand_more_rounded, size: 22),
+                                suffixIcon: const Icon(
+                                  Icons.expand_more_rounded,
+                                  size: 22,
+                                ),
                               ),
                               validator: (_) {
                                 if (_tagId == null) return l10n.fieldRequired;
@@ -2812,13 +3295,19 @@ class _TransactionDialogState extends State<_TransactionDialog> {
                         autocorrect: false,
                         enableSuggestions: false,
                         autofillHints: isEdit ? null : const <String>[],
-                        decoration: InputDecoration(labelText: l10n.transactionPercentage),
-                        keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                        decoration: InputDecoration(
+                          labelText: l10n.transactionPercentage,
+                        ),
+                        keyboardType: const TextInputType.numberWithOptions(
+                          decimal: true,
+                        ),
                         validator: (v) {
-                          if (v == null || v.trim().isEmpty) return l10n.fieldRequired;
+                          if (v == null || v.trim().isEmpty)
+                            return l10n.fieldRequired;
                           final p = double.tryParse(v.trim());
                           if (p == null) return l10n.fieldRequired;
-                          if (p < 0 || p > 100) return l10n.transactionPercentageInvalidRange;
+                          if (p < 0 || p > 100)
+                            return l10n.transactionPercentageInvalidRange;
                           return null;
                         },
                       ),
