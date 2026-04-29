@@ -1038,9 +1038,11 @@ class _TransactionsViewState extends State<_TransactionsView> {
                   icon: const Icon(Icons.search),
                   tooltip: l10n.transactionsSearchTooltip,
                   onPressed: () async {
+                    final searchCubit = context.read<TransactionsCubit>();
                     final tx = await showSearch<TransactionEntity?>(
                       context: context,
                       delegate: _TransactionSearchDelegate(
+                        cubit: searchCubit,
                         l10n: l10n,
                         search: getIt<SearchTransactionsByDescriptionUsecase>(),
                         localTransactions: filtered,
@@ -1190,7 +1192,14 @@ class _TransactionsViewState extends State<_TransactionsView> {
       );
     }
 
-    return _monthListBody(context, l10n, visibleMonth, filteredList, refresh);
+    return _monthListBody(
+      context,
+      l10n,
+      visibleMonth,
+      filteredList,
+      refresh,
+      context.read<TransactionsCubit>(),
+    );
   }
 
   Widget _monthListBody(
@@ -1199,6 +1208,7 @@ class _TransactionsViewState extends State<_TransactionsView> {
     DateTime visibleMonth,
     List<TransactionEntity> monthTransactions,
     Future<void> Function() refresh,
+    TransactionsCubit cubit,
   ) {
     if (monthTransactions.isEmpty) {
       final locale = Localizations.localeOf(context);
@@ -1231,6 +1241,7 @@ class _TransactionsViewState extends State<_TransactionsView> {
           return switch (rows[index]) {
             _DayMarker(:final day) => _TransactionDayHeader(day: day),
             _TxMarker(:final transaction) => _TransactionTile(
+              cubit: cubit,
               transaction: transaction,
               l10n: l10n,
             ),
@@ -1314,11 +1325,13 @@ void showAccountTransferEditorBottomSheet(
 
 class _TransactionSearchDelegate extends SearchDelegate<TransactionEntity?> {
   _TransactionSearchDelegate({
+    required this.cubit,
     required this.l10n,
     required this.search,
     required this.localTransactions,
   });
 
+  final TransactionsCubit cubit;
   final AppLocalizations l10n;
   final SearchTransactionsByDescriptionUsecase search;
 
@@ -1358,6 +1371,7 @@ class _TransactionSearchDelegate extends SearchDelegate<TransactionEntity?> {
 
   Widget _searchBody(BuildContext context) {
     return _TransactionSearchBody(
+      cubit: cubit,
       l10n: l10n,
       query: query,
       localTransactions: localTransactions,
@@ -1396,6 +1410,7 @@ List<TransactionEntity> _mergeTransactionListsByIdNewestFirst(
 
 class _TransactionSearchBody extends StatefulWidget {
   const _TransactionSearchBody({
+    required this.cubit,
     required this.l10n,
     required this.query,
     required this.localTransactions,
@@ -1403,6 +1418,7 @@ class _TransactionSearchBody extends StatefulWidget {
     required this.onSelect,
   });
 
+  final TransactionsCubit cubit;
   final AppLocalizations l10n;
   final String query;
   final List<TransactionEntity> localTransactions;
@@ -1494,6 +1510,7 @@ class _TransactionSearchBodyState extends State<_TransactionSearchBody> {
       }
       return _transactionSearchResultsList(
         context,
+        cubit: widget.cubit,
         l10n: widget.l10n,
         list: local,
         onSelect: widget.onSelect,
@@ -1516,6 +1533,7 @@ class _TransactionSearchBodyState extends State<_TransactionSearchBody> {
           }
           return _transactionSearchResultsList(
             context,
+            cubit: widget.cubit,
             l10n: widget.l10n,
             list: local,
             onSelect: widget.onSelect,
@@ -1527,6 +1545,7 @@ class _TransactionSearchBodyState extends State<_TransactionSearchBody> {
           if (local.isNotEmpty) {
             return _transactionSearchResultsList(
               context,
+              cubit: widget.cubit,
               l10n: widget.l10n,
               list: local,
               onSelect: widget.onSelect,
@@ -1545,6 +1564,7 @@ class _TransactionSearchBodyState extends State<_TransactionSearchBody> {
         if (staleRemote || !snapshot.hasData) {
           return _transactionSearchResultsList(
             context,
+            cubit: widget.cubit,
             l10n: widget.l10n,
             list: local,
             onSelect: widget.onSelect,
@@ -1558,6 +1578,7 @@ class _TransactionSearchBodyState extends State<_TransactionSearchBody> {
         }
         return _transactionSearchResultsList(
           context,
+          cubit: widget.cubit,
           l10n: widget.l10n,
           list: list,
           onSelect: widget.onSelect,
@@ -1570,6 +1591,7 @@ class _TransactionSearchBodyState extends State<_TransactionSearchBody> {
 
 Widget _transactionSearchResultsList(
   BuildContext context, {
+  required TransactionsCubit cubit,
   required AppLocalizations l10n,
   required List<TransactionEntity> list,
   required void Function(TransactionEntity t) onSelect,
@@ -1578,8 +1600,6 @@ Widget _transactionSearchResultsList(
   if (list.isEmpty) {
     return Center(child: Text(l10n.transactionsSearchNoResults));
   }
-  final locale = Localizations.localeOf(context).toString();
-  final dateFmt = DateFormat.yMMMd(locale).add_Hm();
   return Column(
     crossAxisAlignment: CrossAxisAlignment.stretch,
     children: [
@@ -1589,25 +1609,10 @@ Widget _transactionSearchResultsList(
           itemCount: list.length,
           itemBuilder: (context, i) {
             final t = list[i];
-            final desc = t.description?.isNotEmpty == true
-                ? t.description!
-                : l10n.none;
-            final weighted = t.value * t.percentage / 100.0;
-            final amt = l10n.transactionAmountValue(
-              weighted.toStringAsFixed(2),
-            );
-            final pay = t.accountName ?? t.cardName ?? l10n.none;
-            final sub = '${dateFmt.format(t.transactedAt.toLocal())} · $pay';
-            return ListTile(
-              title: Text(desc, maxLines: 2, overflow: TextOverflow.ellipsis),
-              subtitle: Text(sub, maxLines: 2, overflow: TextOverflow.ellipsis),
-              trailing: Text(
-                amt,
-                style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                  fontWeight: FontWeight.w600,
-                  fontFeatures: const [FontFeature.tabularFigures()],
-                ),
-              ),
+            return _TransactionTile(
+              cubit: cubit,
+              transaction: t,
+              l10n: l10n,
               onTap: () => onSelect(t),
             );
           },
@@ -1741,14 +1746,20 @@ class _TransferPairTile extends StatelessWidget {
 }
 
 class _TransactionTile extends StatelessWidget {
+  final TransactionsCubit cubit;
   final TransactionEntity transaction;
   final AppLocalizations l10n;
+  final VoidCallback? onTap;
 
-  const _TransactionTile({required this.transaction, required this.l10n});
+  const _TransactionTile({
+    required this.cubit,
+    required this.transaction,
+    required this.l10n,
+    this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
-    final cubit = context.read<TransactionsCubit>();
     final relationNames = _relationNames(transaction);
     final theme = Theme.of(context);
     final locale = Localizations.localeOf(context);
@@ -1895,6 +1906,7 @@ class _TransactionTile extends StatelessWidget {
       itemKey: transaction.id,
       title: titleSection(),
       trailing: trailingPrices,
+      onTap: onTap,
       onEdit: openEdit,
       confirmDelete: () => confirmDeleteTransactionDialog(context, l10n),
       onDelete: () => cubit.delete(id: transaction.id),
@@ -2706,8 +2718,6 @@ class _TransactionDialogState extends State<_TransactionDialog> {
 
     final theme = Theme.of(context);
     final l10n = widget.l10n;
-    final locale = Localizations.localeOf(context).toString();
-    final dateFmt = DateFormat.yMMMd(locale).add_Hm();
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -2736,7 +2746,7 @@ class _TransactionDialogState extends State<_TransactionDialog> {
           )
         else
           SizedBox(
-            height: 220,
+            height: 280,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
@@ -2748,36 +2758,10 @@ class _TransactionDialogState extends State<_TransactionDialog> {
                     itemCount: _descriptionSuggestionMatches.length,
                     itemBuilder: (context, i) {
                       final t = _descriptionSuggestionMatches[i];
-                      final desc = t.description?.isNotEmpty == true
-                          ? t.description!
-                          : l10n.none;
-                      final weighted = t.value * t.percentage / 100.0;
-                      final amt = l10n.transactionAmountValue(
-                        weighted.toStringAsFixed(2),
-                      );
-                      final pay = t.accountName ?? t.cardName ?? l10n.none;
-                      final sub =
-                          '${dateFmt.format(t.transactedAt.toLocal())} · $pay';
-                      return ListTile(
-                        dense: true,
-                        visualDensity: VisualDensity.compact,
-                        title: Text(
-                          desc,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        subtitle: Text(
-                          sub,
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        trailing: Text(
-                          amt,
-                          style: theme.textTheme.titleSmall?.copyWith(
-                            fontWeight: FontWeight.w600,
-                            fontFeatures: const [FontFeature.tabularFigures()],
-                          ),
-                        ),
+                      return _TransactionTile(
+                        cubit: widget.cubit,
+                        transaction: t,
+                        l10n: l10n,
                         onTap: _loadingLookups
                             ? null
                             : () => _applyTransactionSuggestion(t),
