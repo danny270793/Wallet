@@ -2976,17 +2976,37 @@ class _TransactionDialogState extends State<_TransactionDialog> {
     setState(() => _loading = true);
     try {
       if (widget.transaction == null) {
-        await widget.cubit.create(
-          accountId: _accountId,
-          cardId: _cardId,
-          categoryId: _categoryId,
-          tagId: _tagId,
-          description: desc,
-          transactedAt: _transactedAt,
-          value: value,
-          ignore: _ignore,
-          percentage: pct,
-        );
+        if (_deferred && _cardId != null) {
+          final grace =
+              int.tryParse(_graceMonthsController.text.trim()) ?? 0;
+          final term = int.parse(_termMonthsController.text.trim());
+          await widget.cubit.create(
+            accountId: _accountId,
+            cardId: _cardId,
+            categoryId: _categoryId,
+            tagId: _tagId,
+            description: desc,
+            transactedAt: _transactedAt,
+            value: value,
+            ignore: _ignore,
+            percentage: pct,
+            deferredCredit: true,
+            deferredGraceMonths: grace.clamp(0, 1200),
+            deferredTermMonths: term,
+          );
+        } else {
+          await widget.cubit.create(
+            accountId: _accountId,
+            cardId: _cardId,
+            categoryId: _categoryId,
+            tagId: _tagId,
+            description: desc,
+            transactedAt: _transactedAt,
+            value: value,
+            ignore: _ignore,
+            percentage: pct,
+          );
+        }
       } else {
         await widget.cubit.update(
           id: widget.transaction!.id,
@@ -3000,6 +3020,7 @@ class _TransactionDialogState extends State<_TransactionDialog> {
           ignore: _ignore,
           percentage: pct,
           transferGroupId: widget.transaction!.transferGroupId,
+          creditGroupId: widget.transaction!.creditGroupId,
         );
       }
     } finally {
@@ -3146,7 +3167,9 @@ class _TransactionDialogState extends State<_TransactionDialog> {
                     ),
                   ],
                 ),
-                if (!_loadingLookups && _cardId != null) ...[
+                if (!_loadingLookups &&
+                    _cardId != null &&
+                    widget.transaction == null) ...[
                   const SizedBox(height: 10),
                   CheckboxListTile(
                     value: _deferred,
@@ -3182,6 +3205,17 @@ class _TransactionDialogState extends State<_TransactionDialog> {
                               FilteringTextInputFormatter.digitsOnly,
                             ],
                             textInputAction: TextInputAction.next,
+                            validator: (v) {
+                              if (!_deferred || _loadingLookups)
+                                return null;
+                              final t = (v ?? '').trim();
+                              if (t.isEmpty) return null;
+                              final n = int.tryParse(t);
+                              if (n == null || n < 0) {
+                                return l10n.transactionGraceMonthsInvalid;
+                              }
+                              return null;
+                            },
                           ),
                         ),
                         const SizedBox(width: 12),
@@ -3196,6 +3230,18 @@ class _TransactionDialogState extends State<_TransactionDialog> {
                               FilteringTextInputFormatter.digitsOnly,
                             ],
                             textInputAction: TextInputAction.next,
+                            validator: (v) {
+                              if (!_deferred || _loadingLookups)
+                                return null;
+                              if (v == null || v.trim().isEmpty) {
+                                return l10n.fieldRequired;
+                              }
+                              final n = int.tryParse(v.trim());
+                              if (n == null || n < 2) {
+                                return l10n.transactionTermMonthsInvalid;
+                              }
+                              return null;
+                            },
                           ),
                         ),
                       ],
