@@ -8,6 +8,8 @@ import '../features/transactions/domain/entities/transaction_entity.dart';
 import '../features/transactions/domain/usecases/list_transactions_having_credit_group_usecase.dart';
 import '../features/transactions/presentation/cubit/transactions_cubit.dart';
 import '../widgets/shell_scaffold.dart';
+import '../widgets/swipeable_list_tile.dart';
+import '../widgets/transaction_delete_dialogs.dart';
 import 'transactions_page.dart' show showTransactionEditorBottomSheet;
 
 /// Groups rows by [TransactionEntity.creditGroupId]; newest groups (by latest date) first.
@@ -37,6 +39,218 @@ List<({String id, List<TransactionEntity> rows})> groupedCreditLedger(
     out.add((id: k, rows: rows));
   }
   return out;
+}
+
+List<String> _relationNames(TransactionEntity t) => [
+  if (t.categoryName?.isNotEmpty == true) t.categoryName!,
+  if (t.accountName?.isNotEmpty == true) t.accountName!,
+  if (t.cardName?.isNotEmpty == true) t.cardName!,
+  if (t.tagName?.isNotEmpty == true) t.tagName!,
+];
+
+class _CreditGroupTile extends StatelessWidget {
+  const _CreditGroupTile({
+    required this.cubit,
+    required this.rows,
+    required this.creditGroupId,
+    required this.l10n,
+    required this.onSwipeEdit,
+  });
+
+  final TransactionsCubit cubit;
+  final List<TransactionEntity> rows;
+  final String creditGroupId;
+  final AppLocalizations l10n;
+  /// Opens the editor for the group's first installment and reloads the page list.
+  final VoidCallback onSwipeEdit;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final locale = Localizations.localeOf(context);
+    final first = rows.first;
+
+    final totalWeighted = rows.fold<double>(
+      0,
+      (a, t) => a + t.value * t.percentage / 100.0,
+    );
+    final totalRaw = rows.fold<double>(0, (a, t) => a + t.value);
+    final groupPartialPct = rows.any(
+      (t) => (t.percentage - 100.0).abs() > 0.01,
+    );
+
+    Color weightedColor() {
+      if (totalWeighted > 0) return const Color(0xFF1B8736);
+      if (totalWeighted < 0) return theme.colorScheme.error;
+      return theme.colorScheme.onSurfaceVariant;
+    }
+
+    final relationNames = _relationNames(first);
+    final localTime = first.transactedAt.toLocal();
+
+    Widget titleSection() {
+      final chunks = <Widget>[];
+      final desc = first.description;
+      final hasDesc = desc != null && desc.isNotEmpty;
+
+      if (!hasDesc && (first.percentage - 100.0).abs() <= 0.01) {
+        chunks.add(
+          Text(
+            l10n.creditsUntitledGroup,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: theme.textTheme.bodyLarge?.copyWith(
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        );
+      }
+
+      if (hasDesc) {
+        if ((first.percentage - 100.0).abs() > 0.01) {
+          chunks.add(
+            Text.rich(
+              TextSpan(
+                children: [
+                  TextSpan(
+                    text: '(${first.percentage.toStringAsFixed(2)}%) ',
+                    style: theme.textTheme.labelLarge?.copyWith(
+                      color: theme.colorScheme.primary,
+                      fontWeight: FontWeight.w700,
+                      fontFeatures: const [FontFeature.tabularFigures()],
+                    ),
+                  ),
+                  TextSpan(
+                    text: desc,
+                    style: theme.textTheme.bodyLarge?.copyWith(
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ],
+              ),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+            ),
+          );
+        } else {
+          chunks.add(
+            Text(
+              desc,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: theme.textTheme.bodyLarge?.copyWith(
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          );
+        }
+      } else if ((first.percentage - 100.0).abs() > 0.01) {
+        chunks.add(
+          Text(
+            '(${first.percentage.toStringAsFixed(2)}%)',
+            style: theme.textTheme.labelLarge?.copyWith(
+              color: theme.colorScheme.primary,
+              fontWeight: FontWeight.w700,
+              fontFeatures: const [FontFeature.tabularFigures()],
+            ),
+          ),
+        );
+      }
+
+      if (relationNames.isNotEmpty) {
+        chunks.add(
+          Padding(
+            padding: EdgeInsets.only(top: chunks.isNotEmpty ? 4 : 0),
+            child: Text(
+              relationNames.join(' · '),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
+          ),
+        );
+      }
+
+      chunks.add(
+        Padding(
+          padding: EdgeInsets.only(top: chunks.isNotEmpty ? 4 : 0),
+          child: Text(
+            l10n.creditsInstallmentsCount(rows.length),
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
+          ),
+        ),
+      );
+
+      if (chunks.isEmpty) {
+        return const SizedBox.shrink();
+      }
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: chunks,
+      );
+    }
+
+    final trailingPrices = Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.end,
+      children: [
+        Text(
+          l10n.transactionAmountValue(totalWeighted.toStringAsFixed(2)),
+          style: theme.textTheme.titleMedium?.copyWith(
+            fontWeight: FontWeight.w700,
+            color: weightedColor(),
+            height: 1.2,
+          ),
+        ),
+        if (groupPartialPct) ...[
+          const SizedBox(height: 2),
+          Text(
+            l10n.transactionAmountValue(totalRaw.toStringAsFixed(2)),
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+              height: 1.1,
+              decoration: TextDecoration.lineThrough,
+              decorationColor: theme.colorScheme.onSurfaceVariant,
+              fontFeatures: const [FontFeature.tabularFigures()],
+            ),
+          ),
+        ],
+        const SizedBox(height: 4),
+        Text(
+          DateFormat.Hm(locale.toString()).format(localTime),
+          style: theme.textTheme.bodySmall?.copyWith(
+            color: theme.colorScheme.onSurfaceVariant,
+            fontFeatures: const [FontFeature.tabularFigures()],
+          ),
+        ),
+      ],
+    );
+
+    Widget tile = SwipeableListTile(
+      itemKey: creditGroupId,
+      title: titleSection(),
+      trailing: trailingPrices,
+      onEdit: onSwipeEdit,
+      confirmDelete: () =>
+          confirmDeleteCreditGroupTransactionDialog(context, l10n),
+      onDelete: () => cubit.delete(
+        id: first.id,
+        creditGroupId: creditGroupId,
+      ),
+    );
+
+    final allIgnored = rows.every((t) => t.ignore);
+    if (allIgnored) {
+      tile = Opacity(opacity: 0.52, child: tile);
+      tile = Tooltip(message: l10n.transactionIgnoredBadge, child: tile);
+    }
+    return tile;
+  }
 }
 
 class CreditsPage extends StatefulWidget {
@@ -93,7 +307,6 @@ class _CreditsPageState extends State<CreditsPage> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
-    final locale = Localizations.localeOf(context);
 
     if (_error != null && !_loading) {
       return ShellScaffold(
@@ -145,70 +358,26 @@ class _CreditsPageState extends State<CreditsPage> {
                   ),
                 ],
               )
-            : ListView.builder(
-                padding: const EdgeInsets.only(bottom: 24),
-                itemCount: groups.length,
-                itemBuilder: (context, i) {
-                  final g = groups[i];
-                  final rows = g.rows;
-                  final total =
-                      rows.fold<double>(0, (a, t) => a + t.value);
-                  final label = rows.first.description ?? '';
-                  final truncated = label.length > 80
-                      ? '${label.substring(0, 80)}…'
-                      : label;
-                  final pay = rows.first.accountName ??
-                      rows.first.cardName ??
-                      '—';
-                  return Card(
-                    margin: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-                    child: ExpansionTile(
-                      initiallyExpanded: i == 0,
-                      title: Text(
-                        truncated.isEmpty ? l10n.creditsUntitledGroup : truncated,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      subtitle: Text(
-                        '$pay · ${l10n.creditsInstallmentsCount(rows.length)} · '
-                        '${l10n.transactionAmountValue(total.abs().toStringAsFixed(2))}',
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: theme.colorScheme.onSurfaceVariant,
-                        ),
-                      ),
-                      children: [
-                        for (final t in rows)
-                          ListTile(
-                            dense: true,
-                            leading: Text(
-                              DateFormat.Hm(locale.toString())
-                                  .format(t.transactedAt.toLocal()),
-                              style: theme.textTheme.labelSmall?.copyWith(
-                                fontFeatures: const [
-                                  FontFeature.tabularFigures(),
-                                ],
-                              ),
-                            ),
-                            title: Text(
-                              t.description ?? '',
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                            trailing: Text(
-                              l10n.transactionAmountValue(
-                                t.value.toStringAsFixed(2),
-                              ),
-                              style: theme.textTheme.titleSmall?.copyWith(
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                            onTap: () => _openEditor(t, l10n),
-                          ),
-                      ],
-                    ),
-                  );
-                },
-              ),
+            : Builder(
+              builder: (context) {
+                final cubit = context.read<TransactionsCubit>();
+                return ListView.builder(
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  padding: const EdgeInsets.only(bottom: 8),
+                  itemCount: groups.length,
+                  itemBuilder: (context, i) {
+                    final g = groups[i];
+                    return _CreditGroupTile(
+                      cubit: cubit,
+                      rows: g.rows,
+                      creditGroupId: g.id,
+                      l10n: l10n,
+                      onSwipeEdit: () => _openEditor(g.rows.first, l10n),
+                    );
+                  },
+                );
+              },
+            ),
       ),
     );
   }
