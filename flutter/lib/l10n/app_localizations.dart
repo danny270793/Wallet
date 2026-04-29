@@ -212,6 +212,12 @@ abstract class AppLocalizations {
   /// **'Select at least one category'**
   String get dashboardCategoryPieNeedOneCategory;
 
+  /// No description provided for @dashboardPieDeselectAll.
+  ///
+  /// In en, this message translates to:
+  /// **'Deselect all'**
+  String get dashboardPieDeselectAll;
+
   /// No description provided for @yearlyDashboard.
   ///
   /// In en, this message translates to:
