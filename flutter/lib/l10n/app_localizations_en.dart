@@ -539,6 +539,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get transactionMesesPlazo => 'Term (months)';
 
   @override
+  String get transactionGraceMonthsInvalid =>
+      'Grace months must be 0 or greater';
+
+  @override
+  String get transactionTermMonthsInvalid =>
+      'Enter at least 2 installment months';
+
+  @override
   String get transactionCategory => 'Category';
 
   @override
