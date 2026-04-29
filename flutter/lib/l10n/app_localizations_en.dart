@@ -357,6 +357,42 @@ class AppLocalizationsEn extends AppLocalizations {
   String get assetSold => 'Sold';
 
   @override
+  String get newAsset => 'New asset';
+
+  @override
+  String get assetProvider => 'Provider';
+
+  @override
+  String get assetValue => 'Value';
+
+  @override
+  String get assetPurchaseDate => 'Purchase date';
+
+  @override
+  String get assetEndDate => 'End date';
+
+  @override
+  String get assetSoldAmountField => 'Sold amount';
+
+  @override
+  String get assetInvalidNumber => 'Enter a valid number';
+
+  @override
+  String get assetEndBeforePurchase =>
+      'End date must be on or after purchase date';
+
+  @override
+  String get editAsset => 'Edit asset';
+
+  @override
+  String get deleteAsset => 'Delete asset';
+
+  @override
+  String confirmDeleteAsset(String name) {
+    return 'Are you sure you want to delete \"$name\"?';
+  }
+
+  @override
   String get transactions => 'Transactions';
 
   @override
