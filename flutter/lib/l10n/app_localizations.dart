@@ -1052,6 +1052,24 @@ abstract class AppLocalizations {
   /// **'No payment methods match your search'**
   String get transactionPaymentMethodSearchNoResults;
 
+  /// No description provided for @transactionDeferred.
+  ///
+  /// In en, this message translates to:
+  /// **'Deferred'**
+  String get transactionDeferred;
+
+  /// No description provided for @transactionGraceMonths.
+  ///
+  /// In en, this message translates to:
+  /// **'Grace months'**
+  String get transactionGraceMonths;
+
+  /// No description provided for @transactionMesesPlazo.
+  ///
+  /// In en, this message translates to:
+  /// **'Term (months)'**
+  String get transactionMesesPlazo;
+
   /// No description provided for @transactionCategory.
   ///
   /// In en, this message translates to:
