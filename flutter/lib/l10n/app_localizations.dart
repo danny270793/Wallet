@@ -1004,23 +1004,23 @@ abstract class AppLocalizations {
   /// **'Balance'**
   String get transactionsTotalBalance;
 
-  /// No description provided for @transactionsTotalsExcludingIgnoredHint.
+  /// No description provided for @transactionsTotalsWeightedHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Weighted'**
+  String get transactionsTotalsWeightedHint;
+
+  /// No description provided for @transactionsTotalsWeightedExcludingIgnoredHint.
   ///
   /// In en, this message translates to:
   /// **'Weighted excluding ignored'**
-  String get transactionsTotalsExcludingIgnoredHint;
+  String get transactionsTotalsWeightedExcludingIgnoredHint;
 
-  /// No description provided for @transactionsTotalsIncludingIgnoredHint.
+  /// No description provided for @transactionsTotalsNotWeightedHint.
   ///
   /// In en, this message translates to:
-  /// **'Including ignored transactions'**
-  String get transactionsTotalsIncludingIgnoredHint;
-
-  /// No description provided for @transactionsTotalsNotWeightedIncludingIgnoredHint.
-  ///
-  /// In en, this message translates to:
-  /// **'Not weighted including ignored'**
-  String get transactionsTotalsNotWeightedIncludingIgnoredHint;
+  /// **'Not weighted'**
+  String get transactionsTotalsNotWeightedHint;
 
   /// No description provided for @transactionsTotalsNotWeightedExcludingIgnoredHint.
   ///
