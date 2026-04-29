@@ -17,7 +17,7 @@ class TransactionEntity extends Equatable {
   final bool ignore;
   final double percentage;
   /// Shared id for paired rows (e.g. account transfers); null for normal transactions.
-  final String? transactionGroupId;
+  final String? transferGroupId;
   final DateTime createdAt;
   final DateTime updatedAt;
 
@@ -37,7 +37,7 @@ class TransactionEntity extends Equatable {
     required this.value,
     required this.ignore,
     required this.percentage,
-    this.transactionGroupId,
+    this.transferGroupId,
     required this.createdAt,
     required this.updatedAt,
   });
@@ -61,7 +61,7 @@ class TransactionEntity extends Equatable {
       value: asDouble(json['value']),
       ignore: json['ignore'] as bool,
       percentage: asDouble(json['percentage']),
-      transactionGroupId: json['transactionGroupId'] as String?,
+      transferGroupId: json['transferGroupId'] as String?,
       createdAt: DateTime.parse(json['createdAt'] as String),
       updatedAt: DateTime.parse(json['updatedAt'] as String),
     );
@@ -78,9 +78,9 @@ class TransactionEntity extends Equatable {
     return null;
   }
 
-  /// True when this row is part of an account/card transfer (paired legs share [transactionGroupId]).
+  /// True when this row is part of an account/card transfer (paired legs share [transferGroupId]).
   bool get isAccountTransferLeg =>
-      transactionGroupId != null && transactionGroupId!.isNotEmpty;
+      transferGroupId != null && transferGroupId!.isNotEmpty;
 
   @override
   List<Object?> get props => [
@@ -99,7 +99,7 @@ class TransactionEntity extends Equatable {
     value,
     ignore,
     percentage,
-    transactionGroupId,
+    transferGroupId,
     createdAt,
     updatedAt,
   ];
