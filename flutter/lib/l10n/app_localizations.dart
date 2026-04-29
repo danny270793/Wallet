@@ -788,6 +788,12 @@ abstract class AppLocalizations {
   /// **'End date must be on or after purchase date'**
   String get assetEndBeforePurchase;
 
+  /// No description provided for @assetPickEndDateFirst.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick the end date before the end time.'**
+  String get assetPickEndDateFirst;
+
   /// No description provided for @editAsset.
   ///
   /// In en, this message translates to:
