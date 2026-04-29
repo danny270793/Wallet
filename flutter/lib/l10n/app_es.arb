@@ -7,6 +7,8 @@
   "fieldRequired": "Obligatorio",
   "unexpectedError": "Ocurrió un error inesperado",
   "monthlyDashboard": "Panel mensual",
+  "monthlyDashboardConfigureTooltip": "Opciones de gráficos y totales",
+  "monthlyDashboardOptionsSheetTitle": "Opciones de vista",
   "monthlyDashboardTransactionsListTitle": "Transacciones",
   "dashboardIncludeIgnoredInTotals": "Incluir transacciones ignoradas",
   "dashboardUseWeightedAmounts": "Importes ponderados (%)",
