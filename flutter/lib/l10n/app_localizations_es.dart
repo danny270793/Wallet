@@ -310,7 +310,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get cardPayDay => 'Día de pago';
 
   @override
-  String get cardDayInvalidRange => 'Introduce un día del 1 al 31';
+  String get cardDayInvalidRange => 'Introduce un día del 1 al 30';
 
   @override
   String cardBillingCycleSummary(int cutDay, int payDay) {
