@@ -209,6 +209,7 @@
     }
   },
   "creditsPendingTotalsLabel": "Pending total",
+  "creditsDueThisMonthLabel": "Due this month",
   "creditsNewDeferredPurchase": "New credit purchase",
   "creditsWalletCreditTransactedAt": "Credit date: {when}",
   "@creditsWalletCreditTransactedAt": {
