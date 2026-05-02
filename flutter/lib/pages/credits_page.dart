@@ -380,17 +380,7 @@ class _CreditGroupTile extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.end,
       children: [
-        Text(
-          l10n.transactionAmountValue(totalWeighted.toStringAsFixed(2)),
-          style: theme.textTheme.titleMedium?.copyWith(
-            fontWeight: FontWeight.w700,
-            color: theme.colorScheme.onSurface,
-            height: 1.2,
-            fontFeatures: const [FontFeature.tabularFigures()],
-          ),
-        ),
         if (groupPartialPct) ...[
-          const SizedBox(height: 4),
           Text(
             l10n.transactionAmountValue(totalRaw.toStringAsFixed(2)),
             style: theme.textTheme.bodySmall?.copyWith(
@@ -401,8 +391,8 @@ class _CreditGroupTile extends StatelessWidget {
               fontFeatures: const [FontFeature.tabularFigures()],
             ),
           ),
+          const SizedBox(height: 8),
         ],
-        const SizedBox(height: 8),
         if (pendingWeighted.abs() > 0.005) ...[
           Text(
             l10n.transactionAmountValue(pendingWeighted.toStringAsFixed(2)),
@@ -424,6 +414,16 @@ class _CreditGroupTile extends StatelessWidget {
             fontWeight: FontWeight.w700,
             color: paidGreen,
             height: 1.2,
+          ),
+        ),
+        const SizedBox(height: 8),
+        Text(
+          l10n.transactionAmountValue(totalWeighted.toStringAsFixed(2)),
+          style: theme.textTheme.titleMedium?.copyWith(
+            fontWeight: FontWeight.w700,
+            color: theme.colorScheme.onSurface,
+            height: 1.2,
+            fontFeatures: const [FontFeature.tabularFigures()],
           ),
         ),
       ],
