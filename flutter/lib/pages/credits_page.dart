@@ -76,14 +76,33 @@ double creditLedgerTotalPendingWeighted(List<TransactionEntity> flat) {
   return sum;
 }
 
+/// Weighted sum of installments due in the current local month (due date on or after today).
+double creditLedgerDueThisMonthWeighted(List<TransactionEntity> flat) {
+  final now = DateTime.now();
+  final today = DateTime(now.year, now.month, now.day);
+  var sum = 0.0;
+  for (final t in flat) {
+    final g = t.creditLedgerGroupingKey;
+    if (g == null || g.isEmpty) continue;
+    final local = t.transactedAt.toLocal();
+    if (local.year != now.year || local.month != now.month) continue;
+    final dueDay = DateTime(local.year, local.month, local.day);
+    if (dueDay.isBefore(today)) continue;
+    sum += _weighted(t);
+  }
+  return sum;
+}
+
 class _CreditsPendingTotalsBar extends StatelessWidget {
   const _CreditsPendingTotalsBar({
     required this.l10n,
     required this.pendingWeighted,
+    required this.dueThisMonthWeighted,
   });
 
   final AppLocalizations l10n;
   final double pendingWeighted;
+  final double dueThisMonthWeighted;
 
   @override
   Widget build(BuildContext context) {
@@ -94,6 +113,14 @@ class _CreditsPendingTotalsBar extends StatelessWidget {
     final hasPending = pendingWeighted.abs() > 0.005;
     final amountColor = hasPending
         ? theme.colorScheme.error
+        : theme.colorScheme.onSurfaceVariant;
+
+    final monthStr = l10n.transactionAmountValue(
+      dueThisMonthWeighted.toStringAsFixed(2),
+    );
+    final hasMonthDue = dueThisMonthWeighted.abs() > 0.005;
+    final monthColor = hasMonthDue
+        ? theme.colorScheme.primary
         : theme.colorScheme.onSurfaceVariant;
 
     return Material(
@@ -120,6 +147,26 @@ class _CreditsPendingTotalsBar extends StatelessWidget {
               const SizedBox(height: 2),
               Text(
                 l10n.creditsPendingTotalsLabel,
+                textAlign: TextAlign.center,
+                style: theme.textTheme.labelMedium?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              const SizedBox(height: 10),
+              Text(
+                monthStr,
+                textAlign: TextAlign.center,
+                style: theme.textTheme.titleSmall?.copyWith(
+                  fontWeight: FontWeight.w700,
+                  height: 1.2,
+                  fontFeatures: const [FontFeature.tabularFigures()],
+                  color: monthColor,
+                ),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                l10n.creditsDueThisMonthLabel,
                 textAlign: TextAlign.center,
                 style: theme.textTheme.labelMedium?.copyWith(
                   color: theme.colorScheme.onSurfaceVariant,
@@ -467,6 +514,7 @@ class _CreditsPageState extends State<CreditsPage> {
           ? _CreditsPendingTotalsBar(
               l10n: l10n,
               pendingWeighted: creditLedgerTotalPendingWeighted(_flat),
+              dueThisMonthWeighted: creditLedgerDueThisMonthWeighted(_flat),
             )
           : null,
       body: RefreshIndicator(
