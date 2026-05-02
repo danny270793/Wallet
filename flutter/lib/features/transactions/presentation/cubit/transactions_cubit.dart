@@ -134,7 +134,6 @@ class TransactionsCubit extends Cubit<TransactionsState> {
           graceMonths: graceMonths,
           termMonths: deferredTermMonths,
           cardCutDay: card.cutDay,
-          cardPayDay: card.payDay,
         );
         final header = await _createWalletCredit(
           transactedAt: anchor,
@@ -253,7 +252,6 @@ class TransactionsCubit extends Cubit<TransactionsState> {
               graceMonths: graceStored,
               termMonths: newTerm,
               cardCutDay: card.cutDay,
-              cardPayDay: card.payDay,
             );
             final parts = splitEqualAmountParts(value, newTerm);
 
