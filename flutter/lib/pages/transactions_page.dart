@@ -2091,7 +2091,16 @@ class _TransactionDialogState extends State<_TransactionDialog> {
   void initState() {
     super.initState();
     final t = widget.transaction;
-    _transactedAt = t?.transactedAt.toLocal() ?? DateTime.now();
+    _transactedAt = () {
+      if (t == null) return DateTime.now();
+      final creditAt = t.creditTransactedAt;
+      if (t.creditId != null &&
+          t.creditId!.isNotEmpty &&
+          creditAt != null) {
+        return creditAt.toLocal();
+      }
+      return t.transactedAt.toLocal();
+    }();
     if (t != null) {
       _valueController = TextEditingController(
         text: t.value.toStringAsFixed(2),
