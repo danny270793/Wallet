@@ -8,14 +8,14 @@ import 'calendar_months.dart';
 /// within the grace window; otherwise the purchase month is treated as past the
 /// cut and an extra month is skipped before counting grace.
 ///
-/// Each due date uses [cardPayDay] as the day of month (clamped to the target
-/// month's length). Time-of-day matches [purchaseLocal].
+/// Each installment uses the purchase calendar day (same as [purchaseLocal]'s
+/// day, clamped to the target month's length). Time-of-day matches
+/// [purchaseLocal]. Cut day still drives which billing cycle months apply.
 List<DateTime> scheduleDeferredCreditInstallmentsLocal({
   required DateTime purchaseLocal,
   required int graceMonths,
   required int termMonths,
   required int cardCutDay,
-  required int cardPayDay,
 }) {
   if (termMonths < 2) {
     throw ArgumentError.value(termMonths, 'termMonths', 'must be at least 2');
@@ -41,11 +41,11 @@ List<DateTime> scheduleDeferredCreditInstallmentsLocal({
   );
   final firstMonth = addCalendarMonths(monthStart, monthsToFirstPayment);
 
-  DateTime withPayDayOnCalendarMonth(DateTime ymd) {
+  DateTime withPurchaseDayOnCalendarMonth(DateTime ymd) {
     final y = ymd.year;
     final m = ymd.month;
     final last = DateTime(y, m + 1, 0).day;
-    final d = cardPayDay.clamp(1, last);
+    final d = p.day.clamp(1, last);
     return DateTime(
       y,
       m,
@@ -58,7 +58,7 @@ List<DateTime> scheduleDeferredCreditInstallmentsLocal({
     );
   }
 
-  final firstDue = withPayDayOnCalendarMonth(firstMonth);
+  final firstDue = withPurchaseDayOnCalendarMonth(firstMonth);
   return List.generate(
     termMonths,
     (i) => addCalendarMonths(firstDue, i),
