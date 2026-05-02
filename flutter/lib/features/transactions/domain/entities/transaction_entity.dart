@@ -16,6 +16,8 @@ class TransactionEntity extends Equatable {
   final double value;
   final bool ignore;
   final double percentage;
+  /// Opening-balance row; set only in DB (default false). Not editable in app UI.
+  final bool initialBalance;
   /// Shared id for paired rows (e.g. account transfers); null for normal transactions.
   final String? transferGroupId;
   /// FK to wallet_credits when this row is a deferred installment.
@@ -41,6 +43,7 @@ class TransactionEntity extends Equatable {
     required this.value,
     required this.ignore,
     required this.percentage,
+    this.initialBalance = false,
     this.transferGroupId,
     this.creditId,
     this.creditTransactedAt,
@@ -67,6 +70,7 @@ class TransactionEntity extends Equatable {
       value: asDouble(json['value']),
       ignore: json['ignore'] as bool,
       percentage: asDouble(json['percentage']),
+      initialBalance: json['initialBalance'] as bool? ?? false,
       transferGroupId: json['transferGroupId'] as String?,
       creditId: json['creditId'] as String?,
       creditTransactedAt: _embeddedCreditTransactedAt(json),
@@ -125,6 +129,7 @@ class TransactionEntity extends Equatable {
         value,
         ignore,
         percentage,
+        initialBalance,
         transferGroupId,
         creditId,
         creditTransactedAt,
