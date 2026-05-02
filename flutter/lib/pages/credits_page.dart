@@ -8,13 +8,15 @@ import '../features/transactions/domain/entities/transaction_entity.dart';
 import '../features/transactions/domain/usecases/list_transactions_having_credit_group_usecase.dart';
 import '../features/transactions/presentation/cubit/transactions_cubit.dart';
 import '../widgets/shell_scaffold.dart';
+import '../widgets/wallet_bottom_bar_insets.dart';
 import '../widgets/swipeable_list_tile.dart';
 import '../widgets/transaction_delete_dialogs.dart';
 import 'transactions_page.dart' show showTransactionEditorBottomSheet;
 
 /// Groups rows by [TransactionEntity.creditLedgerGroupingKey]; newest groups (by latest date) first.
 List<({String id, List<TransactionEntity> rows})> groupedCreditLedger(
-    List<TransactionEntity> flat) {
+  List<TransactionEntity> flat,
+) {
   final m = <String, List<TransactionEntity>>{};
   for (final t in flat) {
     final g = t.creditLedgerGroupingKey;
@@ -33,7 +35,8 @@ List<({String id, List<TransactionEntity> rows})> groupedCreditLedger(
     return mx;
   }
 
-  final keys = m.keys.toList()..sort((a, b) => newest(m[b]!).compareTo(newest(m[a]!)));
+  final keys = m.keys.toList()
+    ..sort((a, b) => newest(m[b]!).compareTo(newest(m[a]!)));
   for (final k in keys) {
     final rows = m[k]!;
     out.add((id: k, rows: rows));
@@ -84,8 +87,9 @@ class _CreditsPendingTotalsBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final amountStr =
-        l10n.transactionAmountValue(pendingWeighted.toStringAsFixed(2));
+    final amountStr = l10n.transactionAmountValue(
+      pendingWeighted.toStringAsFixed(2),
+    );
     final hasPending = pendingWeighted.abs() > 0.005;
     final amountColor = hasPending
         ? theme.colorScheme.error
@@ -94,30 +98,35 @@ class _CreditsPendingTotalsBar extends StatelessWidget {
     return Material(
       color: theme.colorScheme.surfaceContainerHighest,
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              amountStr,
-              textAlign: TextAlign.center,
-              style: theme.textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.w700,
-                height: 1.2,
-                fontFeatures: const [FontFeature.tabularFigures()],
-                color: amountColor,
+        padding: EdgeInsets.only(
+          bottom: walletBottomBarExtraBottomInset(context),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                amountStr,
+                textAlign: TextAlign.center,
+                style: theme.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.w700,
+                  height: 1.2,
+                  fontFeatures: const [FontFeature.tabularFigures()],
+                  color: amountColor,
+                ),
               ),
-            ),
-            const SizedBox(height: 2),
-            Text(
-              l10n.creditsPendingTotalsLabel,
-              textAlign: TextAlign.center,
-              style: theme.textTheme.labelMedium?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
-                fontWeight: FontWeight.w500,
+              const SizedBox(height: 2),
+              Text(
+                l10n.creditsPendingTotalsLabel,
+                textAlign: TextAlign.center,
+                style: theme.textTheme.labelMedium?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                  fontWeight: FontWeight.w500,
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -137,6 +146,7 @@ class _CreditGroupTile extends StatelessWidget {
   final List<TransactionEntity> rows;
   final String creditLedgerKey;
   final AppLocalizations l10n;
+
   /// Opens the editor for the group's first installment and reloads the page list.
   final VoidCallback onSwipeEdit;
 
@@ -169,8 +179,9 @@ class _CreditGroupTile extends StatelessWidget {
 
     Widget titleSection() {
       final chunks = <Widget>[];
-      final displayDesc =
-          stripLeadingCreditInstallmentDescription(first.description).trim();
+      final displayDesc = stripLeadingCreditInstallmentDescription(
+        first.description,
+      ).trim();
       final hasDesc = displayDesc.isNotEmpty;
 
       if (!hasDesc && (first.percentage - 100.0).abs() <= 0.01) {
@@ -328,10 +339,8 @@ class _CreditGroupTile extends StatelessWidget {
       onEdit: onSwipeEdit,
       confirmDelete: () =>
           confirmDeleteCreditGroupTransactionDialog(context, l10n),
-      onDelete: () => cubit.delete(
-        id: first.id,
-        creditLedgerKey: creditLedgerKey,
-      ),
+      onDelete: () =>
+          cubit.delete(id: first.id, creditLedgerKey: creditLedgerKey),
     );
   }
 }
@@ -397,10 +406,7 @@ class _CreditsPageState extends State<CreditsPage> {
         body: Center(
           child: Padding(
             padding: const EdgeInsets.all(24),
-            child: Text(
-              l10n.unexpectedError,
-              textAlign: TextAlign.center,
-            ),
+            child: Text(l10n.unexpectedError, textAlign: TextAlign.center),
           ),
         ),
       );
@@ -449,25 +455,25 @@ class _CreditsPageState extends State<CreditsPage> {
                 ],
               )
             : Builder(
-              builder: (context) {
-                final cubit = context.read<TransactionsCubit>();
-                return ListView.builder(
-                  physics: const AlwaysScrollableScrollPhysics(),
-                  padding: const EdgeInsets.only(bottom: 8),
-                  itemCount: groups.length,
-                  itemBuilder: (context, i) {
-                    final g = groups[i];
-                    return _CreditGroupTile(
-                      cubit: cubit,
-                      rows: g.rows,
-                      creditLedgerKey: g.id,
-                      l10n: l10n,
-                      onSwipeEdit: () => _openEditor(g.rows.first, l10n),
-                    );
-                  },
-                );
-              },
-            ),
+                builder: (context) {
+                  final cubit = context.read<TransactionsCubit>();
+                  return ListView.builder(
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    padding: const EdgeInsets.only(bottom: 8),
+                    itemCount: groups.length,
+                    itemBuilder: (context, i) {
+                      final g = groups[i];
+                      return _CreditGroupTile(
+                        cubit: cubit,
+                        rows: g.rows,
+                        creditLedgerKey: g.id,
+                        l10n: l10n,
+                        onSwipeEdit: () => _openEditor(g.rows.first, l10n),
+                      );
+                    },
+                  );
+                },
+              ),
       ),
     );
   }
