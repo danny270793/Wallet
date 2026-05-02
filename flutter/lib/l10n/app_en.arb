@@ -106,7 +106,7 @@
   },
   "cardCutDay": "Cut day",
   "cardPayDay": "Pay day",
-  "cardDayInvalidRange": "Enter a day from 1 to 31",
+  "cardDayInvalidRange": "Enter a day from 1 to 30",
   "cardBillingCycleSummary": "Cut day {cutDay} · Pay day {payDay}",
   "@cardBillingCycleSummary": {
     "placeholders": {
