@@ -2101,7 +2101,7 @@ class _TransactionDialogState extends State<_TransactionDialog> {
       );
     } else {
       _valueController = TextEditingController();
-      _percentageController = TextEditingController();
+      _percentageController = TextEditingController(text: '100');
     }
     _descriptionController = TextEditingController(
       text: (t != null &&
@@ -2367,10 +2367,7 @@ class _TransactionDialogState extends State<_TransactionDialog> {
       if (valueRaw.isEmpty || valueParsed == null || valueParsed == 0) {
         _valueController.text = t.value.toStringAsFixed(2);
       }
-      final pct = double.tryParse(_percentageController.text.trim());
-      if (pct == null || pct == 0) {
-        _percentageController.text = t.percentage.toString();
-      }
+      _percentageController.text = t.percentage.toString();
       _syncRelationDisplays();
       _descriptionSuggestionMatches = const [];
       _descriptionSuggestLoading = false;
