@@ -9,4 +9,10 @@ abstract class WalletCreditsRepository {
   });
 
   Future<WalletCreditEntity?> getCredit(String id);
+
+  Future<WalletCreditEntity> updateCreditGracing({
+    required String id,
+    required int graceMonths,
+    required int termMonths,
+  });
 }
