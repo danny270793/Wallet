@@ -195,6 +195,7 @@
     }
   },
   "creditsPendingTotalsLabel": "Pending total",
+  "creditEditGraceNotApplicable": "Original grace period is not stored.",
   "transactionsSearchTooltip": "Search transactions",
   "transactionsSearchHint": "Search by description",
   "transactionsSearchTypeQuery": "Enter text to search all your transactions",
