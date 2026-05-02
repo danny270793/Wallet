@@ -14,5 +14,6 @@ abstract class WalletCreditsRepository {
     required String id,
     required int graceMonths,
     required int termMonths,
+    DateTime? transactedAt,
   });
 }
