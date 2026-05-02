@@ -896,6 +896,12 @@ abstract class AppLocalizations {
   /// **'Pending total'**
   String get creditsPendingTotalsLabel;
 
+  /// No description provided for @creditsNewDeferredPurchase.
+  ///
+  /// In en, this message translates to:
+  /// **'New credit purchase'**
+  String get creditsNewDeferredPurchase;
+
   /// No description provided for @creditsWalletCreditTransactedAt.
   ///
   /// In en, this message translates to:
