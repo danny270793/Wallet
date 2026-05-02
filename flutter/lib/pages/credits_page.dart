@@ -222,19 +222,14 @@ class _CreditGroupTile extends StatelessWidget {
       (t) => (t.percentage - 100.0).abs() > 0.01,
     );
 
-    // Pending / paid columns: sum of row `value` only (not weighted by percentage).
-    double paidTotal = 0;
-    double pendingTotal = 0;
-    var pendingInstallmentCount = 0;
-    for (final t in rows) {
-      final v = t.value;
-      if (_installmentIsPaidThroughToday(t)) {
-        paidTotal += v;
-      } else {
-        pendingTotal += v;
-        pendingInstallmentCount++;
-      }
-    }
+    final pendingRows =
+        rows.where((t) => !_installmentIsPaidThroughToday(t)).toList();
+    final paidRows = rows.where(_installmentIsPaidThroughToday).toList();
+    final pendingTotal =
+        pendingRows.fold<double>(0, (a, t) => a + t.value);
+    // Sum of each paid installment's full [TransactionEntity.value], not × percentage/100.
+    final paidTotal = paidRows.fold<double>(0, (a, t) => a + t.value);
+    final pendingInstallmentCount = pendingRows.length;
 
     final fullyPaid = pendingTotal.abs() <= 0.005;
 
@@ -408,9 +403,7 @@ class _CreditGroupTile extends StatelessWidget {
         ],
         Text(
           l10n.transactionAmountValue(
-            paidTotal.abs() > 0.005
-                ? paidTotal.abs().toStringAsFixed(2)
-                : '0.00',
+            paidTotal.abs() > 0.005 ? paidTotal.toStringAsFixed(2) : '0.00',
           ),
           style: theme.textTheme.titleSmall?.copyWith(
             fontWeight: FontWeight.w700,
