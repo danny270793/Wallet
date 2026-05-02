@@ -486,10 +486,9 @@ class _CreditsPageState extends State<CreditsPage> {
     if (_error != null && !_loading) {
       return ShellScaffold(
         title: l10n.creditsTitle,
-        floatingActionButton: FloatingActionButton.extended(
+        floatingActionButton: FloatingActionButton(
           onPressed: () => _openNewCreditPurchase(l10n),
-          icon: const Icon(Icons.add),
-          label: Text(l10n.creditsNewDeferredPurchase),
+          child: const Icon(Icons.add),
         ),
         body: Center(
           child: Padding(
@@ -505,10 +504,9 @@ class _CreditsPageState extends State<CreditsPage> {
 
     return ShellScaffold(
       title: l10n.creditsTitle,
-      floatingActionButton: FloatingActionButton.extended(
+      floatingActionButton: FloatingActionButton(
         onPressed: () => _openNewCreditPurchase(l10n),
-        icon: const Icon(Icons.add),
-        label: Text(l10n.creditsNewDeferredPurchase),
+        child: const Icon(Icons.add),
       ),
       bottomNavigationBar: showPendingBar
           ? _CreditsPendingTotalsBar(
