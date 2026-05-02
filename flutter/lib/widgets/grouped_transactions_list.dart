@@ -297,20 +297,8 @@ class GroupedTxnTransactionTile extends StatelessWidget {
       );
     }
 
-    final initialBalanceLeading = transaction.initialBalance
-        ? Tooltip(
-            message: l10n.transactionInitialBalanceBadge,
-            child: Icon(
-              Icons.account_balance_wallet_outlined,
-              size: 22,
-              color: theme.colorScheme.tertiary,
-            ),
-          )
-        : null;
-
     Widget tile = SwipeableListTile(
       itemKey: transaction.id,
-      leading: initialBalanceLeading,
       title: titleSection(),
       trailing: trailingPrices,
       onTap: onTap,
