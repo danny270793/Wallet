@@ -217,11 +217,6 @@ class _CreditGroupTile extends StatelessWidget {
     final theme = Theme.of(context);
     final first = rows.first;
 
-    final totalRaw = rows.fold<double>(0, (a, t) => a + t.value);
-    final groupPartialPct = rows.any(
-      (t) => (t.percentage - 100.0).abs() > 0.01,
-    );
-
     final pendingRows =
         rows.where((t) => !_installmentIsPaidThroughToday(t)).toList();
     final paidRows = rows.where(_installmentIsPaidThroughToday).toList();
@@ -244,10 +239,10 @@ class _CreditGroupTile extends StatelessWidget {
       ).trim();
       final hasDesc = displayDesc.isNotEmpty;
 
-      if (!hasDesc && (first.percentage - 100.0).abs() <= 0.01) {
+      if (hasDesc) {
         chunks.add(
           Text(
-            l10n.creditsUntitledGroup,
+            displayDesc,
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
             style: theme.textTheme.bodyLarge?.copyWith(
@@ -255,54 +250,14 @@ class _CreditGroupTile extends StatelessWidget {
             ),
           ),
         );
-      }
-
-      if (hasDesc) {
-        if ((first.percentage - 100.0).abs() > 0.01) {
-          chunks.add(
-            Text.rich(
-              TextSpan(
-                children: [
-                  TextSpan(
-                    text: '(${first.percentage.toStringAsFixed(2)}%) ',
-                    style: theme.textTheme.labelLarge?.copyWith(
-                      color: theme.colorScheme.primary,
-                      fontWeight: FontWeight.w700,
-                      fontFeatures: const [FontFeature.tabularFigures()],
-                    ),
-                  ),
-                  TextSpan(
-                    text: displayDesc,
-                    style: theme.textTheme.bodyLarge?.copyWith(
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ],
-              ),
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-            ),
-          );
-        } else {
-          chunks.add(
-            Text(
-              displayDesc,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-              style: theme.textTheme.bodyLarge?.copyWith(
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          );
-        }
-      } else if ((first.percentage - 100.0).abs() > 0.01) {
+      } else {
         chunks.add(
           Text(
-            '(${first.percentage.toStringAsFixed(2)}%)',
-            style: theme.textTheme.labelLarge?.copyWith(
-              color: theme.colorScheme.primary,
-              fontWeight: FontWeight.w700,
-              fontFeatures: const [FontFeature.tabularFigures()],
+            l10n.creditsUntitledGroup,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: theme.textTheme.bodyLarge?.copyWith(
+              fontWeight: FontWeight.w500,
             ),
           ),
         );
@@ -376,19 +331,6 @@ class _CreditGroupTile extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.end,
       children: [
-        if (groupPartialPct) ...[
-          Text(
-            l10n.transactionAmountValue(totalRaw.toStringAsFixed(2)),
-            style: theme.textTheme.bodySmall?.copyWith(
-              color: theme.colorScheme.onSurfaceVariant,
-              height: 1.1,
-              decoration: TextDecoration.lineThrough,
-              decorationColor: theme.colorScheme.onSurfaceVariant,
-              fontFeatures: const [FontFeature.tabularFigures()],
-            ),
-          ),
-          const SizedBox(height: 8),
-        ],
         if (pendingTotal.abs() > 0.005) ...[
           Text(
             l10n.transactionAmountValue(pendingTotal.toStringAsFixed(2)),
