@@ -1,9 +1,9 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:uuid/uuid.dart';
 import '../../../../core/calendar_months.dart';
 import '../../../../core/credit_group_description.dart';
 import '../../../../core/logger/app_logger.dart';
 import '../../../../core/split_equal_amounts.dart';
+import '../../../wallet_credits/domain/usecases/create_wallet_credit_usecase.dart';
 import '../../domain/entities/transaction_entity.dart';
 import '../../domain/usecases/get_transactions_usecase.dart';
 import '../../domain/usecases/create_transaction_usecase.dart';
@@ -20,6 +20,7 @@ class TransactionsCubit extends Cubit<TransactionsState> {
   final DeleteTransactionUsecase _deleteTransaction;
   final CreateAccountTransferUsecase _createAccountTransfer;
   final GetTransactionsByCreditGroupIdUsecase _getTransactionsByCreditGroupId;
+  final CreateWalletCreditUsecase _createWalletCredit;
 
   TransactionsCubit({
     required GetTransactionsUsecase getTransactions,
@@ -28,12 +29,14 @@ class TransactionsCubit extends Cubit<TransactionsState> {
     required DeleteTransactionUsecase deleteTransaction,
     required CreateAccountTransferUsecase createAccountTransfer,
     required GetTransactionsByCreditGroupIdUsecase getTransactionsByCreditGroupId,
+    required CreateWalletCreditUsecase createWalletCredit,
   })  : _getTransactions = getTransactions,
         _createTransaction = createTransaction,
         _updateTransaction = updateTransaction,
         _deleteTransaction = deleteTransaction,
         _createAccountTransfer = createAccountTransfer,
         _getTransactionsByCreditGroupId = getTransactionsByCreditGroupId,
+        _createWalletCredit = createWalletCredit,
         super(const TransactionsInitial());
 
   /// Last month that was requested via [loadForMonth] (normalized local day 1).
@@ -104,9 +107,14 @@ class TransactionsCubit extends Cubit<TransactionsState> {
 
     try {
       if (useDeferred) {
-        final uuid = const Uuid().v4();
         final parts = splitEqualAmountParts(value, deferredTermMonths);
         final anchor = transactedAt;
+        final header = await _createWalletCredit(
+          transactedAt: anchor,
+          graceMonths: graceMonths,
+          termMonths: deferredTermMonths,
+          description: description,
+        );
         for (var i = 0; i < deferredTermMonths; i++) {
           final at = addCalendarMonths(
             anchor,
@@ -124,11 +132,10 @@ class TransactionsCubit extends Cubit<TransactionsState> {
             ),
             transactedAt: at,
             value: parts[i],
-            // Deferred installments are bookkeeping for card credit; totals ignore them elsewhere.
             ignore: true,
             percentage: percentage,
             transferGroupId: transferGroupId,
-            creditGroupId: uuid,
+            creditId: header.id,
           );
         }
       } else {
@@ -166,12 +173,15 @@ class TransactionsCubit extends Cubit<TransactionsState> {
     required double percentage,
     String? transferGroupId,
     String? creditGroupId,
+    String? creditId,
   }) async {
     final current = _currentTransactions();
     AppLogger.debug('updating transaction: $id');
+    final creditLedgerKey =
+        (creditId != null && creditId.isNotEmpty) ? creditId : creditGroupId;
     try {
-      if (creditGroupId != null && creditGroupId.isNotEmpty) {
-        final siblings = await _getTransactionsByCreditGroupId(creditGroupId);
+      if (creditLedgerKey != null && creditLedgerKey.isNotEmpty) {
+        final siblings = await _getTransactionsByCreditGroupId(creditLedgerKey);
         if (siblings.isEmpty) {
           await _updateTransaction(
             id: id,
@@ -186,6 +196,7 @@ class TransactionsCubit extends Cubit<TransactionsState> {
             percentage: percentage,
             transferGroupId: transferGroupId,
             creditGroupId: creditGroupId,
+            creditId: creditId,
           );
         } else {
           siblings.sort((a, b) => a.transactedAt.compareTo(b.transactedAt));
@@ -217,10 +228,13 @@ class TransactionsCubit extends Cubit<TransactionsState> {
               ignore: ignore,
               percentage: percentage,
               transferGroupId: s.transferGroupId,
-              creditGroupId: creditGroupId,
+              creditGroupId: s.creditGroupId,
+              creditId: s.creditId,
             );
           }
-          AppLogger.info('credit group updated ($creditGroupId): ${siblings.length} rows');
+          AppLogger.info(
+            'credit group updated ($creditLedgerKey): ${siblings.length} rows',
+          );
         }
       } else {
         await _updateTransaction(
@@ -236,6 +250,7 @@ class TransactionsCubit extends Cubit<TransactionsState> {
           percentage: percentage,
           transferGroupId: transferGroupId,
           creditGroupId: creditGroupId,
+          creditId: creditId,
         );
         AppLogger.info('transaction updated: $id');
       }
@@ -311,6 +326,7 @@ class TransactionsCubit extends Cubit<TransactionsState> {
         percentage: source.percentage,
         transferGroupId: gid,
         creditGroupId: source.creditGroupId,
+        creditId: source.creditId,
       );
       await _updateTransaction(
         id: target.id,
@@ -325,6 +341,7 @@ class TransactionsCubit extends Cubit<TransactionsState> {
         percentage: target.percentage,
         transferGroupId: gid,
         creditGroupId: target.creditGroupId,
+        creditId: target.creditId,
       );
       AppLogger.info('transfer updated');
       await _refetchCurrentMonthQuietly();
@@ -336,14 +353,14 @@ class TransactionsCubit extends Cubit<TransactionsState> {
     }
   }
 
-  Future<bool> delete({required String id, String? creditGroupId}) async {
+  Future<bool> delete({required String id, String? creditLedgerKey}) async {
     final current = _currentTransactions();
     AppLogger.debug('deleting transaction: $id');
     try {
       final idsToDelete = <String>{};
       idsToDelete.add(id);
-      if (creditGroupId != null && creditGroupId.isNotEmpty) {
-        final group = await _getTransactionsByCreditGroupId(creditGroupId);
+      if (creditLedgerKey != null && creditLedgerKey.isNotEmpty) {
+        final group = await _getTransactionsByCreditGroupId(creditLedgerKey);
         for (final t in group) {
           idsToDelete.add(t.id);
         }
