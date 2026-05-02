@@ -124,7 +124,8 @@ class TransactionsCubit extends Cubit<TransactionsState> {
             ),
             transactedAt: at,
             value: parts[i],
-            ignore: ignore,
+            // Deferred installments are bookkeeping for card credit; totals ignore them elsewhere.
+            ignore: true,
             percentage: percentage,
             transferGroupId: transferGroupId,
             creditGroupId: uuid,
