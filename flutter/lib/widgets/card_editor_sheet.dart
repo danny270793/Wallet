@@ -83,7 +83,7 @@ class _CardEditorSheetState extends State<CardEditorSheet> {
   String? _validateBillingDay(String? v, AppLocalizations l10n) {
     if (v == null || v.trim().isEmpty) return l10n.fieldRequired;
     final n = int.tryParse(v.trim());
-    if (n == null || n < 1 || n > 31) return l10n.cardDayInvalidRange;
+    if (n == null || n < 1 || n > 30) return l10n.cardDayInvalidRange;
     return null;
   }
 
