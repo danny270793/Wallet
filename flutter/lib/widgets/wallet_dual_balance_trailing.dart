@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:wallet/l10n/app_localizations.dart';
 
+import 'wallet_bottom_bar_insets.dart';
+
 Color walletListBalanceColor(ThemeData theme, double v) {
   if (v > 0) return const Color(0xFF1B8736);
   if (v < 0) return theme.colorScheme.error;
@@ -49,41 +51,46 @@ class WalletListBalanceTotalBar extends StatelessWidget {
     final s = total.toStringAsFixed(2);
     return Material(
       color: theme.colorScheme.surfaceContainerHighest,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            child: Center(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    l10n.transactionAmountValue(s),
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontWeight: FontWeight.w600,
-                      fontSize: 18,
-                      height: 1.2,
-                      color: walletListBalanceColor(theme, total),
+      child: Padding(
+        padding: EdgeInsets.only(
+          bottom: walletBottomBarExtraBottomInset(context),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              child: Center(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      l10n.transactionAmountValue(s),
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontWeight: FontWeight.w600,
+                        fontSize: 18,
+                        height: 1.2,
+                        color: walletListBalanceColor(theme, total),
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    l10n.listBalanceTotalLabel,
-                    textAlign: TextAlign.center,
-                    style: theme.textTheme.labelMedium?.copyWith(
-                      color: theme.colorScheme.onSurfaceVariant,
-                      fontWeight: FontWeight.w500,
+                    const SizedBox(height: 2),
+                    Text(
+                      l10n.listBalanceTotalLabel,
+                      textAlign: TextAlign.center,
+                      style: theme.textTheme.labelMedium?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
+                        fontWeight: FontWeight.w500,
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 2),
-                ],
+                    const SizedBox(height: 2),
+                  ],
+                ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
