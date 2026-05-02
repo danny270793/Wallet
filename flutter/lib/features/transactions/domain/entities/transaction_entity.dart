@@ -18,9 +18,7 @@ class TransactionEntity extends Equatable {
   final double percentage;
   /// Shared id for paired rows (e.g. account transfers); null for normal transactions.
   final String? transferGroupId;
-  /// Groups related credit installments (e.g. deferred card purchase split). Legacy installs only.
-  final String? creditGroupId;
-  /// FK to wallet_credits; preferred grouping for deferred installments (new installs).
+  /// FK to wallet_credits when this row is a deferred installment.
   final String? creditId;
   final DateTime createdAt;
   final DateTime updatedAt;
@@ -42,7 +40,6 @@ class TransactionEntity extends Equatable {
     required this.ignore,
     required this.percentage,
     this.transferGroupId,
-    this.creditGroupId,
     this.creditId,
     required this.createdAt,
     required this.updatedAt,
@@ -68,7 +65,6 @@ class TransactionEntity extends Equatable {
       ignore: json['ignore'] as bool,
       percentage: asDouble(json['percentage']),
       transferGroupId: json['transferGroupId'] as String?,
-      creditGroupId: json['creditGroupId'] as String?,
       creditId: json['creditId'] as String?,
       createdAt: DateTime.parse(json['createdAt'] as String),
       updatedAt: DateTime.parse(json['updatedAt'] as String),
@@ -90,34 +86,30 @@ class TransactionEntity extends Equatable {
   bool get isAccountTransferLeg =>
       transferGroupId != null && transferGroupId!.isNotEmpty;
 
-  /// Same deferred-credit purchase; [creditId] preferred, else legacy [creditGroupId].
-  String? get creditLedgerGroupingKey {
-    if (creditId != null && creditId!.isNotEmpty) return creditId;
-    if (creditGroupId != null && creditGroupId!.isNotEmpty) return creditGroupId;
-    return null;
-  }
+  /// Same deferred purchase as sibling installments (shared [creditId]).
+  String? get creditLedgerGroupingKey =>
+      creditId != null && creditId!.isNotEmpty ? creditId : null;
 
   @override
   List<Object?> get props => [
-    id,
-    userId,
-    accountId,
-    cardId,
-    categoryId,
-    tagId,
-    accountName,
-    cardName,
-    categoryName,
-    tagName,
-    description,
-    transactedAt,
-    value,
-    ignore,
-    percentage,
-    transferGroupId,
-    creditGroupId,
-    creditId,
-    createdAt,
-    updatedAt,
-  ];
+        id,
+        userId,
+        accountId,
+        cardId,
+        categoryId,
+        tagId,
+        accountName,
+        cardName,
+        categoryName,
+        tagName,
+        description,
+        transactedAt,
+        value,
+        ignore,
+        percentage,
+        transferGroupId,
+        creditId,
+        createdAt,
+        updatedAt,
+      ];
 }
