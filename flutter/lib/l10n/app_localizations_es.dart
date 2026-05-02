@@ -643,6 +643,9 @@ class AppLocalizationsEs extends AppLocalizations {
   String get transactionIgnoredBadge => 'Ignorado';
 
   @override
+  String get transactionInitialBalanceBadge => 'Saldo inicial';
+
+  @override
   String transactionAmountValue(String amount) {
     return '$amount';
   }
