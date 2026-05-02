@@ -17,6 +17,7 @@ class CreateTransactionUsecase {
     required double percentage,
     String? transferGroupId,
     String? creditGroupId,
+    String? creditId,
   }) =>
       _repository.createTransaction(
         accountId: accountId,
@@ -30,5 +31,6 @@ class CreateTransactionUsecase {
         percentage: percentage,
         transferGroupId: transferGroupId,
         creditGroupId: creditGroupId,
+        creditId: creditId,
       );
 }
