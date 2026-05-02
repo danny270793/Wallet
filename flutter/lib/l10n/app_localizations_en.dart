@@ -448,6 +448,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get creditsPendingTotalsLabel => 'Pending total';
 
   @override
+  String get creditsDueThisMonthLabel => 'Due this month';
+
+  @override
   String get creditsNewDeferredPurchase => 'New credit purchase';
 
   @override
