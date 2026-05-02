@@ -304,6 +304,20 @@ class AppLocalizationsEs extends AppLocalizations {
   }
 
   @override
+  String get cardCutDay => 'Día de corte';
+
+  @override
+  String get cardPayDay => 'Día de pago';
+
+  @override
+  String get cardDayInvalidRange => 'Introduce un día del 1 al 31';
+
+  @override
+  String cardBillingCycleSummary(int cutDay, int payDay) {
+    return 'Corte día $cutDay · Pago día $payDay';
+  }
+
+  @override
   String get cancel => 'Cancelar';
 
   @override
