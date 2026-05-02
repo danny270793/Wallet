@@ -94,29 +94,31 @@ double creditLedgerDueThisMonth(List<TransactionEntity> flat) {
 class _CreditsPendingTotalsBar extends StatelessWidget {
   const _CreditsPendingTotalsBar({
     required this.l10n,
-    required this.pendingWeighted,
-    required this.dueThisMonthWeighted,
+    required this.pendingTotal,
+    required this.dueThisMonthTotal,
   });
 
   final AppLocalizations l10n;
-  final double pendingWeighted;
-  final double dueThisMonthWeighted;
+  /// Sum of raw [TransactionEntity.value] for future credit installments.
+  final double pendingTotal;
+  /// Sum of raw values for credit installments due this month (today onward).
+  final double dueThisMonthTotal;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final amountStr = l10n.transactionAmountValue(
-      pendingWeighted.toStringAsFixed(2),
+      pendingTotal.toStringAsFixed(2),
     );
-    final hasPending = pendingWeighted.abs() > 0.005;
+    final hasPending = pendingTotal.abs() > 0.005;
     final amountColor = hasPending
         ? theme.colorScheme.error
         : theme.colorScheme.onSurfaceVariant;
 
     final monthStr = l10n.transactionAmountValue(
-      dueThisMonthWeighted.toStringAsFixed(2),
+      dueThisMonthTotal.toStringAsFixed(2),
     );
-    final hasMonthDue = dueThisMonthWeighted.abs() > 0.005;
+    final hasMonthDue = dueThisMonthTotal.abs() > 0.005;
     final monthColor = hasMonthDue
         ? theme.colorScheme.error
         : theme.colorScheme.onSurfaceVariant;
@@ -220,20 +222,21 @@ class _CreditGroupTile extends StatelessWidget {
       (t) => (t.percentage - 100.0).abs() > 0.01,
     );
 
-    double paidWeighted = 0;
-    double pendingWeighted = 0;
+    // Pending / paid columns: sum of row `value` only (not weighted by percentage).
+    double paidTotal = 0;
+    double pendingTotal = 0;
     var pendingInstallmentCount = 0;
     for (final t in rows) {
-      final w = t.value;
+      final v = t.value;
       if (_installmentIsPaidThroughToday(t)) {
-        paidWeighted += w;
+        paidTotal += v;
       } else {
-        pendingWeighted += w;
+        pendingTotal += v;
         pendingInstallmentCount++;
       }
     }
 
-    final fullyPaid = pendingWeighted.abs() <= 0.005;
+    final fullyPaid = pendingTotal.abs() <= 0.005;
 
     const paidGreen = Color(0xFF1B8736);
 
@@ -391,9 +394,9 @@ class _CreditGroupTile extends StatelessWidget {
           ),
           const SizedBox(height: 8),
         ],
-        if (pendingWeighted.abs() > 0.005) ...[
+        if (pendingTotal.abs() > 0.005) ...[
           Text(
-            l10n.transactionAmountValue(pendingWeighted.toStringAsFixed(2)),
+            l10n.transactionAmountValue(pendingTotal.toStringAsFixed(2)),
             style: theme.textTheme.titleSmall?.copyWith(
               fontWeight: FontWeight.w700,
               color: theme.colorScheme.error,
@@ -405,8 +408,8 @@ class _CreditGroupTile extends StatelessWidget {
         ],
         Text(
           l10n.transactionAmountValue(
-            paidWeighted.abs() > 0.005
-                ? paidWeighted.abs().toStringAsFixed(2)
+            paidTotal.abs() > 0.005
+                ? paidTotal.abs().toStringAsFixed(2)
                 : '0.00',
           ),
           style: theme.textTheme.titleSmall?.copyWith(
@@ -533,8 +536,8 @@ class _CreditsPageState extends State<CreditsPage> {
       bottomNavigationBar: showPendingBar
           ? _CreditsPendingTotalsBar(
               l10n: l10n,
-              pendingWeighted: creditLedgerTotalPending(_flat),
-              dueThisMonthWeighted: creditLedgerDueThisMonth(_flat),
+              pendingTotal: creditLedgerTotalPending(_flat),
+              dueThisMonthTotal: creditLedgerDueThisMonth(_flat),
             )
           : null,
       body: RefreshIndicator(
