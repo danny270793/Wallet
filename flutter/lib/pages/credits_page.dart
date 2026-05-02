@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:intl/intl.dart';
 import 'package:wallet/l10n/app_localizations.dart';
 
 import '../core/credit_group_description.dart';
@@ -258,6 +259,29 @@ class _CreditGroupTile extends StatelessWidget {
               overflow: TextOverflow.ellipsis,
               style: theme.textTheme.bodySmall?.copyWith(
                 color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
+          ),
+        );
+      }
+
+      final creditAt = first.creditTransactedAt;
+      if (creditAt != null) {
+        final locale = Localizations.localeOf(context);
+        final when = DateFormat(
+          'yMMMd, HH:mm',
+          locale.toString(),
+        ).format(creditAt.toLocal());
+        chunks.add(
+          Padding(
+            padding: EdgeInsets.only(top: chunks.isNotEmpty ? 4 : 0),
+            child: Text(
+              l10n.creditsWalletCreditTransactedAt(when),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+                fontFeatures: const [FontFeature.tabularFigures()],
               ),
             ),
           ),
