@@ -436,6 +436,10 @@ class AppLocalizationsEs extends AppLocalizations {
   String get creditsPendingTotalsLabel => 'Total pendiente';
 
   @override
+  String get creditEditGraceNotApplicable =>
+      'El periodo de gracia original no está guardado.';
+
+  @override
   String get transactionsSearchTooltip => 'Buscar transacciones';
 
   @override
