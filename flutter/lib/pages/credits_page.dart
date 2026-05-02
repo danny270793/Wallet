@@ -235,6 +235,8 @@ class _CreditGroupTile extends StatelessWidget {
       }
     }
 
+    final totalWeighted = pendingWeighted + paidWeighted;
+
     const paidGreen = Color(0xFF1B8736);
 
     final relationNames = _relationNames(first);
@@ -378,6 +380,16 @@ class _CreditGroupTile extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.end,
       children: [
+        Text(
+          l10n.transactionAmountValue(totalWeighted.toStringAsFixed(2)),
+          style: theme.textTheme.titleMedium?.copyWith(
+            fontWeight: FontWeight.w700,
+            color: theme.colorScheme.onSurface,
+            height: 1.2,
+            fontFeatures: const [FontFeature.tabularFigures()],
+          ),
+        ),
+        const SizedBox(height: 8),
         if (pendingWeighted.abs() > 0.005) ...[
           Text(
             l10n.transactionAmountValue(pendingWeighted.toStringAsFixed(2)),
