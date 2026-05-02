@@ -209,6 +209,14 @@
     }
   },
   "creditsPendingTotalsLabel": "Total pendiente",
+  "creditsWalletCreditTransactedAt": "Fecha del crédito: {when}",
+  "@creditsWalletCreditTransactedAt": {
+    "placeholders": {
+      "when": {
+        "type": "String"
+      }
+    }
+  },
   "creditEditGraceNotApplicable": "El periodo de gracia original no está guardado.",
   "transactionsSearchTooltip": "Buscar transacciones",
   "transactionsSearchHint": "Buscar por descripción",
