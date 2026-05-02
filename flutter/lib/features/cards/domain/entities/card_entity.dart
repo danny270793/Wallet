@@ -7,9 +7,9 @@ class CardEntity extends Equatable {
   final String? description;
   final DateTime createdAt;
   final DateTime updatedAt;
-  /// Day of month (1–31) for the billing statement cut.
+  /// Day of month (1–30) for the billing statement cut.
   final int cutDay;
-  /// Day of month (1–31) for payment due.
+  /// Day of month (1–30) for payment due.
   final int payDay;
   /// Sum of transaction `value` amounts (full row amounts, not value×percentage÷100).
   /// From [wallet_cards_with_balance].
