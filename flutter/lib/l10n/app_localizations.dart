@@ -653,7 +653,7 @@ abstract class AppLocalizations {
   /// No description provided for @cardDayInvalidRange.
   ///
   /// In en, this message translates to:
-  /// **'Enter a day from 1 to 31'**
+  /// **'Enter a day from 1 to 30'**
   String get cardDayInvalidRange;
 
   /// No description provided for @cardBillingCycleSummary.
