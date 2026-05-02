@@ -450,6 +450,9 @@ class AppLocalizationsEs extends AppLocalizations {
   String get creditsPendingTotalsLabel => 'Total pendiente';
 
   @override
+  String get creditsNewDeferredPurchase => 'Nueva compra a crédito';
+
+  @override
   String creditsWalletCreditTransactedAt(String when) {
     return 'Fecha del crédito: $when';
   }
