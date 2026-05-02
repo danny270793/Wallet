@@ -5,6 +5,8 @@ import '../../../../core/logger/app_logger.dart';
 import '../../../../core/split_equal_amounts.dart';
 import '../../../cards/domain/usecases/get_cards_usecase.dart';
 import '../../../wallet_credits/domain/usecases/create_wallet_credit_usecase.dart';
+import '../../../wallet_credits/domain/usecases/get_wallet_credit_usecase.dart';
+import '../../../wallet_credits/domain/usecases/update_wallet_credit_usecase.dart';
 import '../../domain/entities/transaction_entity.dart';
 import '../../domain/usecases/get_transactions_usecase.dart';
 import '../../domain/usecases/create_transaction_usecase.dart';
@@ -23,6 +25,8 @@ class TransactionsCubit extends Cubit<TransactionsState> {
   final GetTransactionsByCreditGroupIdUsecase _getTransactionsByCreditGroupId;
   final CreateWalletCreditUsecase _createWalletCredit;
   final GetCardsUsecase _getCards;
+  final GetWalletCreditUsecase _getWalletCredit;
+  final UpdateWalletCreditUsecase _updateWalletCredit;
 
   TransactionsCubit({
     required GetTransactionsUsecase getTransactions,
@@ -33,6 +37,8 @@ class TransactionsCubit extends Cubit<TransactionsState> {
     required GetTransactionsByCreditGroupIdUsecase getTransactionsByCreditGroupId,
     required CreateWalletCreditUsecase createWalletCredit,
     required GetCardsUsecase getCards,
+    required GetWalletCreditUsecase getWalletCredit,
+    required UpdateWalletCreditUsecase updateWalletCredit,
   })  : _getTransactions = getTransactions,
         _createTransaction = createTransaction,
         _updateTransaction = updateTransaction,
@@ -41,6 +47,8 @@ class TransactionsCubit extends Cubit<TransactionsState> {
         _getTransactionsByCreditGroupId = getTransactionsByCreditGroupId,
         _createWalletCredit = createWalletCredit,
         _getCards = getCards,
+        _getWalletCredit = getWalletCredit,
+        _updateWalletCredit = updateWalletCredit,
         super(const TransactionsInitial());
 
   /// Last month that was requested via [loadForMonth] (normalized local day 1).
@@ -189,6 +197,8 @@ class TransactionsCubit extends Cubit<TransactionsState> {
     required double percentage,
     String? transferGroupId,
     String? creditId,
+    int? creditGraceMonths,
+    int? creditTermMonths,
   }) async {
     final current = _currentTransactions();
     AppLogger.debug('updating transaction: $id');
@@ -214,40 +224,127 @@ class TransactionsCubit extends Cubit<TransactionsState> {
           );
         } else {
           siblings.sort((a, b) => a.transactedAt.compareTo(b.transactedAt));
-          var anchor = siblings.first;
-          for (final e in siblings) {
-            if (e.id == id) {
-              anchor = e;
-              break;
+          final wc = await _getWalletCredit(creditLedgerKey);
+          final ng = creditGraceMonths;
+          final nt = creditTermMonths;
+          final useReschedule = wc != null &&
+              cardId != null &&
+              cardId.isNotEmpty &&
+              ng != null &&
+              nt != null &&
+              nt >= 2 &&
+              (ng != wc.graceMonths ||
+                  nt != wc.termMonths ||
+                  nt != siblings.length);
+
+          if (useReschedule) {
+            final graceStored = ng.clamp(0, 1200);
+            final newTerm = nt;
+            final cards = await _getCards();
+            final cardIdx = cards.indexWhere((c) => c.id == cardId);
+            if (cardIdx < 0) {
+              throw StateError(
+                'Credit reschedule requires the card (cut/pay days).',
+              );
             }
-          }
-          final delta = transactedAt.difference(anchor.transactedAt.toLocal());
-          final parts = splitEqualAmountParts(value, siblings.length);
-          for (var i = 0; i < siblings.length; i++) {
-            final s = siblings[i];
-            final shiftedLocal = s.transactedAt.toLocal().add(delta);
-            await _updateTransaction(
-              id: s.id,
-              accountId: accountId,
-              cardId: cardId,
-              categoryId: categoryId,
-              tagId: tagId,
-              description: creditGroupPrefixedDescription(
-                oneBasedCurrent: i + 1,
-                total: siblings.length,
-                userNote: description,
-              ),
-              transactedAt: shiftedLocal,
-              value: parts[i],
-              ignore: ignore,
-              percentage: percentage,
-              transferGroupId: s.transferGroupId,
-              creditId: s.creditId,
+            final card = cards[cardIdx];
+            final schedule = scheduleDeferredCreditInstallmentsLocal(
+              purchaseLocal: wc.transactedAt.toLocal(),
+              graceMonths: graceStored,
+              termMonths: newTerm,
+              cardCutDay: card.cutDay,
+              cardPayDay: card.payDay,
+            );
+            final parts = splitEqualAmountParts(value, newTerm);
+
+            for (var i = 0; i < newTerm; i++) {
+              if (i < siblings.length) {
+                final s = siblings[i];
+                await _updateTransaction(
+                  id: s.id,
+                  accountId: accountId,
+                  cardId: cardId,
+                  categoryId: categoryId,
+                  tagId: tagId,
+                  description: creditGroupPrefixedDescription(
+                    oneBasedCurrent: i + 1,
+                    total: newTerm,
+                    userNote: description,
+                  ),
+                  transactedAt: schedule[i],
+                  value: parts[i],
+                  ignore: ignore,
+                  percentage: percentage,
+                  transferGroupId: s.transferGroupId,
+                  creditId: creditLedgerKey,
+                );
+              } else {
+                await _createTransaction(
+                  accountId: accountId,
+                  cardId: cardId,
+                  categoryId: categoryId,
+                  tagId: tagId,
+                  description: creditGroupPrefixedDescription(
+                    oneBasedCurrent: i + 1,
+                    total: newTerm,
+                    userNote: description,
+                  ),
+                  transactedAt: schedule[i],
+                  value: parts[i],
+                  ignore: ignore,
+                  percentage: percentage,
+                  transferGroupId: null,
+                  creditId: creditLedgerKey,
+                );
+              }
+            }
+            for (var j = newTerm; j < siblings.length; j++) {
+              await _deleteTransaction(id: siblings[j].id);
+            }
+            await _updateWalletCredit(
+              id: creditLedgerKey,
+              graceMonths: graceStored,
+              termMonths: newTerm,
+            );
+            AppLogger.info(
+              'credit group rescheduled ($creditLedgerKey): $newTerm rows',
+            );
+          } else {
+            var anchor = siblings.first;
+            for (final e in siblings) {
+              if (e.id == id) {
+                anchor = e;
+                break;
+              }
+            }
+            final delta = transactedAt.difference(anchor.transactedAt.toLocal());
+            final parts = splitEqualAmountParts(value, siblings.length);
+            for (var i = 0; i < siblings.length; i++) {
+              final s = siblings[i];
+              final shiftedLocal = s.transactedAt.toLocal().add(delta);
+              await _updateTransaction(
+                id: s.id,
+                accountId: accountId,
+                cardId: cardId,
+                categoryId: categoryId,
+                tagId: tagId,
+                description: creditGroupPrefixedDescription(
+                  oneBasedCurrent: i + 1,
+                  total: siblings.length,
+                  userNote: description,
+                ),
+                transactedAt: shiftedLocal,
+                value: parts[i],
+                ignore: ignore,
+                percentage: percentage,
+                transferGroupId: s.transferGroupId,
+                creditId: s.creditId,
+              );
+            }
+            AppLogger.info(
+              'credit group updated ($creditLedgerKey): ${siblings.length} rows',
             );
           }
-          AppLogger.info(
-            'credit group updated ($creditLedgerKey): ${siblings.length} rows',
-          );
         }
       } else {
         await _updateTransaction(
