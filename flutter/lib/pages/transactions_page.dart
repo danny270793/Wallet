@@ -2034,7 +2034,7 @@ class _TransactionDialogState extends State<_TransactionDialog> {
   late final TextEditingController _graceMonthsController;
   late final TextEditingController _termMonthsController;
 
-  /// True while fetching group installments to show summed amount (edit + creditGroupId).
+  /// True while fetching group installments to show summed amount (edit + creditId).
   bool _loadingCreditGroupTotal = false;
 
   /// New deferred card installments are saved with ignore=true regardless of toggle.
@@ -2765,7 +2765,6 @@ class _TransactionDialogState extends State<_TransactionDialog> {
           ignore: _ignore,
           percentage: pct,
           transferGroupId: widget.transaction!.transferGroupId,
-          creditGroupId: widget.transaction!.creditGroupId,
           creditId: widget.transaction!.creditId,
         );
       }
