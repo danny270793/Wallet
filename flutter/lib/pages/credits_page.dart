@@ -419,6 +419,18 @@ class _CreditsPageState extends State<CreditsPage> {
     if (mounted) await _load();
   }
 
+  Future<void> _openNewCreditPurchase(AppLocalizations l10n) async {
+    final cubit = context.read<TransactionsCubit>();
+    await showTransactionEditorBottomSheet(
+      context,
+      l10n: l10n,
+      cubit: cubit,
+      forceDeferredCredit: true,
+      paymentMethodCardsOnly: true,
+    );
+    if (mounted) await _load();
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
@@ -427,6 +439,11 @@ class _CreditsPageState extends State<CreditsPage> {
     if (_error != null && !_loading) {
       return ShellScaffold(
         title: l10n.creditsTitle,
+        floatingActionButton: FloatingActionButton.extended(
+          onPressed: () => _openNewCreditPurchase(l10n),
+          icon: const Icon(Icons.add),
+          label: Text(l10n.creditsNewDeferredPurchase),
+        ),
         body: Center(
           child: Padding(
             padding: const EdgeInsets.all(24),
@@ -441,6 +458,11 @@ class _CreditsPageState extends State<CreditsPage> {
 
     return ShellScaffold(
       title: l10n.creditsTitle,
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () => _openNewCreditPurchase(l10n),
+        icon: const Icon(Icons.add),
+        label: Text(l10n.creditsNewDeferredPurchase),
+      ),
       bottomNavigationBar: showPendingBar
           ? _CreditsPendingTotalsBar(
               l10n: l10n,
@@ -452,7 +474,7 @@ class _CreditsPageState extends State<CreditsPage> {
         child: _loading
             ? ListView(
                 physics: const AlwaysScrollableScrollPhysics(),
-                padding: const EdgeInsets.only(top: 120),
+                padding: const EdgeInsets.fromLTRB(0, 120, 0, 88),
                 children: const [
                   Center(
                     child: SizedBox(
@@ -466,7 +488,7 @@ class _CreditsPageState extends State<CreditsPage> {
             : groups.isEmpty
             ? ListView(
                 physics: const AlwaysScrollableScrollPhysics(),
-                padding: const EdgeInsets.all(24),
+                padding: const EdgeInsets.fromLTRB(24, 0, 24, 88),
                 children: [
                   SizedBox(height: MediaQuery.paddingOf(context).top + 40),
                   Text(
@@ -483,7 +505,7 @@ class _CreditsPageState extends State<CreditsPage> {
                   final cubit = context.read<TransactionsCubit>();
                   return ListView.builder(
                     physics: const AlwaysScrollableScrollPhysics(),
-                    padding: const EdgeInsets.only(bottom: 8),
+                    padding: const EdgeInsets.fromLTRB(0, 0, 0, 88),
                     itemCount: groups.length,
                     itemBuilder: (context, i) {
                       final g = groups[i];
