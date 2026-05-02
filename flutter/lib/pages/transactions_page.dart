@@ -2020,6 +2020,11 @@ class _TransactionDialogState extends State<_TransactionDialog> {
     return k != null && k.isNotEmpty;
   }
 
+  /// Linked [wallet_credits] row: grace/term can be edited and reschedule installments.
+  bool get _canEditWalletCreditTerms =>
+      _isCreditGroupEdit &&
+      (widget.transaction?.creditId?.isNotEmpty ?? false);
+
   List<AccountEntity> _accounts = [];
   List<CardEntity> _cards = [];
   List<CategoryEntity> _categories = [];
@@ -2753,6 +2758,14 @@ class _TransactionDialogState extends State<_TransactionDialog> {
           );
         }
       } else {
+        int? creditGraceMonths;
+        int? creditTermMonths;
+        if (_canEditWalletCreditTerms) {
+          creditGraceMonths =
+              int.tryParse(_graceMonthsController.text.trim()) ?? 0;
+          creditTermMonths =
+              int.tryParse(_termMonthsController.text.trim());
+        }
         await widget.cubit.update(
           id: widget.transaction!.id,
           accountId: _accountId,
@@ -2766,6 +2779,8 @@ class _TransactionDialogState extends State<_TransactionDialog> {
           percentage: pct,
           transferGroupId: widget.transaction!.transferGroupId,
           creditId: widget.transaction!.creditId,
+          creditGraceMonths: creditGraceMonths,
+          creditTermMonths: creditTermMonths,
         );
       }
     } finally {
@@ -3022,9 +3037,10 @@ class _TransactionDialogState extends State<_TransactionDialog> {
                           Expanded(
                             child: TextFormField(
                               controller: _graceMonthsController,
-                              readOnly: _isCreditGroupEdit,
+                              readOnly: _isCreditGroupEdit && !_canEditWalletCreditTerms,
                               keyboardType: TextInputType.number,
-                              inputFormatters: _isCreditGroupEdit
+                              inputFormatters: (_isCreditGroupEdit &&
+                                      !_canEditWalletCreditTerms)
                                   ? const <TextInputFormatter>[]
                                   : <TextInputFormatter>[
                                       FilteringTextInputFormatter.digitsOnly,
@@ -3033,21 +3049,25 @@ class _TransactionDialogState extends State<_TransactionDialog> {
                               decoration: InputDecoration(
                                 labelText: l10n.transactionGraceMonths,
                                 helperText:
-                                    _isCreditGroupEdit &&
-                                            !(widget.transaction?.creditId
-                                                    ?.isNotEmpty ??
-                                                false)
+                                    _isCreditGroupEdit && !_canEditWalletCreditTerms
                                         ? l10n.creditEditGraceNotApplicable
                                         : null,
                               ),
                               validator: (v) {
-                                if (widget.transaction != null ||
-                                    !_deferred ||
-                                    _loadingLookups) {
+                                if (!_deferred || _loadingLookups) {
                                   return null;
                                 }
                                 final t = (v ?? '').trim();
-                                if (t.isEmpty) return null;
+                                if (widget.transaction == null) {
+                                  if (t.isEmpty) return null;
+                                  final n = int.tryParse(t);
+                                  if (n == null || n < 0) {
+                                    return l10n.transactionGraceMonthsInvalid;
+                                  }
+                                  return null;
+                                }
+                                if (!_canEditWalletCreditTerms) return null;
+                                if (t.isEmpty) return l10n.fieldRequired;
                                 final n = int.tryParse(t);
                                 if (n == null || n < 0) {
                                   return l10n.transactionGraceMonthsInvalid;
@@ -3060,9 +3080,10 @@ class _TransactionDialogState extends State<_TransactionDialog> {
                           Expanded(
                             child: TextFormField(
                               controller: _termMonthsController,
-                              readOnly: _isCreditGroupEdit,
+                              readOnly: _isCreditGroupEdit && !_canEditWalletCreditTerms,
                               keyboardType: TextInputType.number,
-                              inputFormatters: _isCreditGroupEdit
+                              inputFormatters: (_isCreditGroupEdit &&
+                                      !_canEditWalletCreditTerms)
                                   ? const <TextInputFormatter>[]
                                   : <TextInputFormatter>[
                                       FilteringTextInputFormatter.digitsOnly,
@@ -3072,11 +3093,20 @@ class _TransactionDialogState extends State<_TransactionDialog> {
                                 labelText: l10n.transactionMesesPlazo,
                               ),
                               validator: (v) {
-                                if (widget.transaction != null ||
-                                    !_deferred ||
-                                    _loadingLookups) {
+                                if (!_deferred || _loadingLookups) {
                                   return null;
                                 }
+                                if (widget.transaction == null) {
+                                  if (v == null || v.trim().isEmpty) {
+                                    return l10n.fieldRequired;
+                                  }
+                                  final n = int.tryParse(v.trim());
+                                  if (n == null || n < 2) {
+                                    return l10n.transactionTermMonthsInvalid;
+                                  }
+                                  return null;
+                                }
+                                if (!_canEditWalletCreditTerms) return null;
                                 if (v == null || v.trim().isEmpty) {
                                   return l10n.fieldRequired;
                                 }
