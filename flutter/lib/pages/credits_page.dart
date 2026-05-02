@@ -235,6 +235,8 @@ class _CreditGroupTile extends StatelessWidget {
       }
     }
 
+    final fullyPaid = pendingWeighted.abs() <= 0.005;
+
     const paidGreen = Color(0xFF1B8736);
 
     final relationNames = _relationNames(first);
@@ -411,7 +413,9 @@ class _CreditGroupTile extends StatelessWidget {
           ),
           style: theme.textTheme.titleSmall?.copyWith(
             fontWeight: FontWeight.w700,
-            color: paidGreen,
+            color: fullyPaid
+                ? theme.colorScheme.onSurfaceVariant
+                : paidGreen,
             height: 1.15,
             fontFeatures: const [FontFeature.tabularFigures()],
           ),
@@ -419,7 +423,7 @@ class _CreditGroupTile extends StatelessWidget {
       ],
     );
 
-    return SwipeableListTile(
+    Widget tile = SwipeableListTile(
       itemKey: creditLedgerKey,
       title: titleSection(),
       trailing: trailingPrices,
@@ -429,6 +433,10 @@ class _CreditGroupTile extends StatelessWidget {
       onDelete: () =>
           cubit.delete(id: first.id, creditLedgerKey: creditLedgerKey),
     );
+    if (fullyPaid) {
+      tile = Opacity(opacity: 0.52, child: tile);
+    }
+    return tile;
   }
 }
 
