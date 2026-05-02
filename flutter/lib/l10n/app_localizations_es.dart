@@ -433,6 +433,12 @@ class AppLocalizationsEs extends AppLocalizations {
   }
 
   @override
+  String get creditsPendingTotalsLabel => 'Total pendiente';
+
+  @override
+  String get creditsPendingTotalsHint => 'Cuotas futuras · ponderado';
+
+  @override
   String get transactionsSearchTooltip => 'Buscar transacciones';
 
   @override
