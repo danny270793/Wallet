@@ -11,6 +11,12 @@ abstract class WalletCreditsRemoteDatasource {
   });
 
   Future<WalletCreditEntity?> fetchCredit(String id);
+
+  Future<WalletCreditEntity> updateCreditGracing({
+    required String id,
+    required int graceMonths,
+    required int termMonths,
+  });
 }
 
 class WalletCreditsSupabaseDatasource implements WalletCreditsRemoteDatasource {
@@ -49,6 +55,25 @@ class WalletCreditsSupabaseDatasource implements WalletCreditsRemoteDatasource {
     if (id.isEmpty) return null;
     final data = await _client.from('wallet_credits').select(_select).eq('id', id).maybeSingle();
     if (data == null) return null;
+    return WalletCreditEntity.fromJson(Map<String, dynamic>.from(data));
+  }
+
+  @override
+  Future<WalletCreditEntity> updateCreditGracing({
+    required String id,
+    required int graceMonths,
+    required int termMonths,
+  }) async {
+    AppLogger.debug('updateCreditGracing: $id');
+    final data = await _client
+        .from('wallet_credits')
+        .update({
+          'graceMonths': graceMonths,
+          'termMonths': termMonths,
+        })
+        .eq('id', id)
+        .select(_select)
+        .single();
     return WalletCreditEntity.fromJson(Map<String, dynamic>.from(data));
   }
 }
