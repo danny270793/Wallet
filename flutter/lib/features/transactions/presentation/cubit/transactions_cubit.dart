@@ -1,8 +1,9 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
-import '../../../../core/calendar_months.dart';
 import '../../../../core/credit_group_description.dart';
+import '../../../../core/deferred_credit_installment_schedule.dart';
 import '../../../../core/logger/app_logger.dart';
 import '../../../../core/split_equal_amounts.dart';
+import '../../../cards/domain/usecases/get_cards_usecase.dart';
 import '../../../wallet_credits/domain/usecases/create_wallet_credit_usecase.dart';
 import '../../domain/entities/transaction_entity.dart';
 import '../../domain/usecases/get_transactions_usecase.dart';
@@ -21,6 +22,7 @@ class TransactionsCubit extends Cubit<TransactionsState> {
   final CreateAccountTransferUsecase _createAccountTransfer;
   final GetTransactionsByCreditGroupIdUsecase _getTransactionsByCreditGroupId;
   final CreateWalletCreditUsecase _createWalletCredit;
+  final GetCardsUsecase _getCards;
 
   TransactionsCubit({
     required GetTransactionsUsecase getTransactions,
@@ -30,6 +32,7 @@ class TransactionsCubit extends Cubit<TransactionsState> {
     required CreateAccountTransferUsecase createAccountTransfer,
     required GetTransactionsByCreditGroupIdUsecase getTransactionsByCreditGroupId,
     required CreateWalletCreditUsecase createWalletCredit,
+    required GetCardsUsecase getCards,
   })  : _getTransactions = getTransactions,
         _createTransaction = createTransaction,
         _updateTransaction = updateTransaction,
@@ -37,6 +40,7 @@ class TransactionsCubit extends Cubit<TransactionsState> {
         _createAccountTransfer = createAccountTransfer,
         _getTransactionsByCreditGroupId = getTransactionsByCreditGroupId,
         _createWalletCredit = createWalletCredit,
+        _getCards = getCards,
         super(const TransactionsInitial());
 
   /// Last month that was requested via [loadForMonth] (normalized local day 1).
@@ -109,6 +113,21 @@ class TransactionsCubit extends Cubit<TransactionsState> {
       if (useDeferred) {
         final parts = splitEqualAmountParts(value, deferredTermMonths);
         final anchor = transactedAt;
+        final cards = await _getCards();
+        final cardIndex = cards.indexWhere((c) => c.id == cardId);
+        if (cardIndex < 0) {
+          throw StateError(
+            'Deferred credit requires the selected card (cut/pay days).',
+          );
+        }
+        final card = cards[cardIndex];
+        final schedule = scheduleDeferredCreditInstallmentsLocal(
+          purchaseLocal: transactedAt.toLocal(),
+          graceMonths: graceMonths,
+          termMonths: deferredTermMonths,
+          cardCutDay: card.cutDay,
+          cardPayDay: card.payDay,
+        );
         final header = await _createWalletCredit(
           transactedAt: anchor,
           graceMonths: graceMonths,
@@ -116,10 +135,7 @@ class TransactionsCubit extends Cubit<TransactionsState> {
           description: description,
         );
         for (var i = 0; i < deferredTermMonths; i++) {
-          final at = addCalendarMonths(
-            anchor,
-            graceMonths + i,
-          );
+          final at = schedule[i];
           await _createTransaction(
             accountId: accountId,
             cardId: cardId,
