@@ -866,6 +866,18 @@ abstract class AppLocalizations {
   /// **'{count} installments - {pending} pending'**
   String creditsInstallmentsWithPending(int count, int pending);
 
+  /// No description provided for @creditsPendingTotalsLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Pending total'**
+  String get creditsPendingTotalsLabel;
+
+  /// No description provided for @creditsPendingTotalsHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Future installments · weighted'**
+  String get creditsPendingTotalsHint;
+
   /// No description provided for @transactionsSearchTooltip.
   ///
   /// In en, this message translates to:
