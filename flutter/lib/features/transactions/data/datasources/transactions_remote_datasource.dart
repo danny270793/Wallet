@@ -12,11 +12,11 @@ abstract class TransactionsRemoteDatasource {
   /// All-time search on [description] (case-insensitive substring). RLS limits to current user.
   Future<List<TransactionEntity>> searchTransactionsByDescription(String query, {int limit = 200});
 
-  /// All rows with non-null credit linking (creditId or legacy creditGroupId), deleted excluded.
+  /// Rows with deferred-installment linkage (creditId set), deleted excluded.
   Future<List<TransactionEntity>> listTransactionsHavingCreditGroup();
 
-  /// All installments sharing [creditLedgerKey] (creditId.uuid or legacy creditGroupId).
-  Future<List<TransactionEntity>> getTransactionsByCreditGroupId(String creditLedgerKey);
+  /// All installments with the given wallet_credits row id ([creditId]).
+  Future<List<TransactionEntity>> getTransactionsByCreditGroupId(String creditId);
   Future<TransactionEntity> createTransaction({
     String? accountId,
     String? cardId,
@@ -28,7 +28,6 @@ abstract class TransactionsRemoteDatasource {
     required bool ignore,
     required double percentage,
     String? transferGroupId,
-    String? creditGroupId,
     String? creditId,
   });
   Future<TransactionEntity> updateTransaction({
@@ -43,7 +42,6 @@ abstract class TransactionsRemoteDatasource {
     required bool ignore,
     required double percentage,
     String? transferGroupId,
-    String? creditGroupId,
     String? creditId,
   });
   Future<void> deleteTransaction({required String id});
@@ -82,13 +80,13 @@ wallet_tags(name)
   }
 
   @override
-  Future<List<TransactionEntity>> getTransactionsByCreditGroupId(String creditLedgerKey) async {
-    if (creditLedgerKey.isEmpty) return [];
-    AppLogger.debug('getTransactionsByCreditLedgerKey');
+  Future<List<TransactionEntity>> getTransactionsByCreditGroupId(String creditId) async {
+    if (creditId.isEmpty) return [];
+    AppLogger.debug('getTransactionsByCreditId');
     final data = await _client
         .from('wallet_transactions')
         .select(_transactionSelectEmbedded)
-        .or('creditId.eq.$creditLedgerKey,creditGroupId.eq.$creditLedgerKey')
+        .eq('creditId', creditId)
         .isFilter('deletedAt', null)
         .order('transactedAt', ascending: true);
     return (data as List).map((e) => TransactionEntity.fromJson(e as Map<String, dynamic>)).toList();
@@ -100,7 +98,7 @@ wallet_tags(name)
     final data = await _client
         .from('wallet_transactions')
         .select(_transactionSelectEmbedded)
-        .or('creditId.not.is.null,creditGroupId.not.is.null')
+        .not('creditId', 'is', 'null')
         .isFilter('deletedAt', null)
         .order('transactedAt', ascending: false);
     return (data as List).map((e) => TransactionEntity.fromJson(e as Map<String, dynamic>)).toList();
@@ -153,7 +151,6 @@ wallet_tags(name)
     required bool ignore,
     required double percentage,
     String? transferGroupId,
-    String? creditGroupId,
     String? creditId,
   }) async {
     AppLogger.debug('createTransaction called');
@@ -169,7 +166,6 @@ wallet_tags(name)
       if (tagId != null) 'tagId': tagId,
       if (description != null) 'description': description,
       if (transferGroupId != null) 'transferGroupId': transferGroupId,
-      if (creditGroupId != null) 'creditGroupId': creditGroupId,
       if (creditId != null) 'creditId': creditId,
     };
     final data = await _client.from('wallet_transactions').insert(row).select(_transactionSelectEmbedded).single();
@@ -189,7 +185,6 @@ wallet_tags(name)
     required bool ignore,
     required double percentage,
     String? transferGroupId,
-    String? creditGroupId,
     String? creditId,
   }) async {
     AppLogger.debug('updateTransaction called: $id');
@@ -206,7 +201,6 @@ wallet_tags(name)
           'ignore': ignore,
           'percentage': percentage,
           'transferGroupId': transferGroupId,
-          'creditGroupId': creditGroupId,
           'creditId': creditId,
         })
         .eq('id', id)
