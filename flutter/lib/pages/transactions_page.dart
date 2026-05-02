@@ -1107,6 +1107,8 @@ Future<void> showTransactionEditorBottomSheet(
   String? preferredCardId,
   String? preferredCategoryId,
   String? preferredTagId,
+  bool forceDeferredCredit = false,
+  bool paymentMethodCardsOnly = false,
 }) {
   return showModalBottomSheet<void>(
     context: context,
@@ -1121,6 +1123,8 @@ Future<void> showTransactionEditorBottomSheet(
       preferredCardId: preferredCardId,
       preferredCategoryId: preferredCategoryId,
       preferredTagId: preferredTagId,
+      forceDeferredCredit: forceDeferredCredit,
+      paymentMethodCardsOnly: paymentMethodCardsOnly,
     ),
   );
 }
@@ -1677,6 +1681,7 @@ Future<String?> showPaymentMethodPickerSheet(
   required void Function(List<AccountEntity> accounts, List<CardEntity> cards)
   onListsUpdated,
   PaymentMethodPickerSwipeActions? paymentSwipe,
+  bool cardsOnly = false,
 }) {
   return showModalBottomSheet<String?>(
     context: context,
@@ -1717,10 +1722,13 @@ Future<String?> showPaymentMethodPickerSheet(
           final vCards = visibleCards();
           final pickerAccountsSnapshot = getAccounts();
           final pickerCardsSnapshot = getCards();
-          final hasAny =
-              pickerAccountsSnapshot.isNotEmpty ||
-              pickerCardsSnapshot.isNotEmpty;
-          final filteredEmpty = vAccounts.isEmpty && vCards.isEmpty;
+          final hasAny = cardsOnly
+              ? pickerCardsSnapshot.isNotEmpty
+              : pickerAccountsSnapshot.isNotEmpty ||
+                    pickerCardsSnapshot.isNotEmpty;
+          final filteredEmpty = cardsOnly
+              ? vCards.isEmpty
+              : vAccounts.isEmpty && vCards.isEmpty;
 
           final sheetTheme = Theme.of(sheetContext);
           final titleSmallPrimary = sheetTheme.textTheme.titleSmall?.copyWith(
@@ -1764,9 +1772,19 @@ Future<String?> showPaymentMethodPickerSheet(
                         },
                       ),
                       IconButton(
-                        tooltip: l10n.paymentMethodAddChoiceTitle,
+                        tooltip: cardsOnly
+                            ? l10n.newCard
+                            : l10n.paymentMethodAddChoiceTitle,
                         icon: const Icon(Icons.add_circle_outline),
                         onPressed: () async {
+                          if (cardsOnly) {
+                            await showCardEditorBottomSheet(
+                              sheetContext,
+                              l10n,
+                            );
+                            await refreshPicker();
+                            return;
+                          }
                           final choice =
                               await showModalBottomSheet<
                                 _PaymentMethodCreateChoice
@@ -1855,7 +1873,9 @@ Future<String?> showPaymentMethodPickerSheet(
                         child: Padding(
                           padding: const EdgeInsets.all(16),
                           child: Text(
-                            '${l10n.noAccounts}\n${l10n.noCards}',
+                            cardsOnly
+                                ? l10n.noCards
+                                : '${l10n.noAccounts}\n${l10n.noCards}',
                             textAlign: TextAlign.center,
                           ),
                         ),
@@ -1913,7 +1933,7 @@ Future<String?> showPaymentMethodPickerSheet(
                             );
                           }),
                         ],
-                        if (vAccounts.isNotEmpty) ...[
+                        if (vAccounts.isNotEmpty && !cardsOnly) ...[
                           Padding(
                             padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
                             child: Text(
@@ -1980,6 +2000,8 @@ class _TransactionDialog extends StatefulWidget {
   final String? preferredCardId;
   final String? preferredCategoryId;
   final String? preferredTagId;
+  final bool forceDeferredCredit;
+  final bool paymentMethodCardsOnly;
 
   const _TransactionDialog({
     required this.cubit,
@@ -1989,6 +2011,8 @@ class _TransactionDialog extends StatefulWidget {
     this.preferredCardId,
     this.preferredCategoryId,
     this.preferredTagId,
+    this.forceDeferredCredit = false,
+    this.paymentMethodCardsOnly = false,
   });
 
   @override
@@ -2092,9 +2116,15 @@ class _TransactionDialogState extends State<_TransactionDialog> {
     _tagDisplayController = TextEditingController();
     _graceMonthsController = TextEditingController();
     _termMonthsController = TextEditingController();
-    _deferred = t != null && (t.creditLedgerGroupingKey?.isNotEmpty ?? false);
+    _deferred = (t != null &&
+            (t.creditLedgerGroupingKey?.isNotEmpty ?? false)) ||
+        (t == null && widget.forceDeferredCredit);
     _ignore = t?.ignore ?? false;
-    _accountId = t?.accountId ?? widget.preferredAccountId;
+    if (t == null && widget.forceDeferredCredit) {
+      _ignore = true;
+    }
+    _accountId = t?.accountId ??
+        (widget.paymentMethodCardsOnly ? null : widget.preferredAccountId);
     _cardId = t?.cardId ?? widget.preferredCardId;
     _categoryId = t?.categoryId ?? widget.preferredCategoryId;
     _tagId = t?.tagId ?? widget.preferredTagId;
@@ -2147,7 +2177,12 @@ class _TransactionDialogState extends State<_TransactionDialog> {
             _accountId = null;
           if (_cardId != null && !_cards.any((c) => c.id == _cardId))
             _cardId = null;
-          if (_accountId != null && _cardId != null) _cardId = null;
+          if (widget.paymentMethodCardsOnly) {
+            _accountId = null;
+          }
+          if (_accountId != null && _cardId != null) {
+            _cardId = null;
+          }
           if (_categoryId != null &&
               !_categories.any((c) => c.id == _categoryId))
             _categoryId = null;
@@ -2489,6 +2524,7 @@ class _TransactionDialogState extends State<_TransactionDialog> {
       sheetTitle: l10n.transactionPaymentMethod,
       getAccounts: () => _accounts,
       getCards: () => _cards,
+      cardsOnly: widget.paymentMethodCardsOnly,
       onListsUpdated: (a, c) {
         if (!mounted) return;
         setState(() {
@@ -2498,7 +2534,12 @@ class _TransactionDialogState extends State<_TransactionDialog> {
             _accountId = null;
           if (_cardId != null && !_cards.any((x) => x.id == _cardId))
             _cardId = null;
-          if (_accountId != null && _cardId != null) _cardId = null;
+          if (widget.paymentMethodCardsOnly) {
+            _accountId = null;
+          }
+          if (_accountId != null && _cardId != null) {
+            _cardId = null;
+          }
           _syncRelationDisplays();
         });
       },
@@ -2557,10 +2598,10 @@ class _TransactionDialogState extends State<_TransactionDialog> {
     );
     if (!mounted || raw == null || raw.isEmpty) return;
     setState(() {
-      if (raw.startsWith(_paymentMethodPickAccountPrefix)) {
+        if (raw.startsWith(_paymentMethodPickAccountPrefix)) {
         _accountId = raw.substring(_paymentMethodPickAccountPrefix.length);
         _cardId = null;
-        if (widget.transaction == null) {
+        if (widget.transaction == null && !widget.forceDeferredCredit) {
           _deferred = false;
         }
       } else if (raw.startsWith(_paymentMethodPickCardPrefix)) {
@@ -2965,7 +3006,9 @@ class _TransactionDialogState extends State<_TransactionDialog> {
                   const SizedBox(height: 10),
                   CheckboxListTile(
                     value: _deferred,
-                    onChanged: widget.transaction != null || _loadingLookups
+                    onChanged: widget.transaction != null ||
+                            _loadingLookups ||
+                            widget.forceDeferredCredit
                         ? null
                         : (checked) {
                             setState(() {
