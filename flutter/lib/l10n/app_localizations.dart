@@ -896,6 +896,12 @@ abstract class AppLocalizations {
   /// **'Pending total'**
   String get creditsPendingTotalsLabel;
 
+  /// No description provided for @creditsWalletCreditTransactedAt.
+  ///
+  /// In en, this message translates to:
+  /// **'Credit date: {when}'**
+  String creditsWalletCreditTransactedAt(String when);
+
   /// No description provided for @creditEditGraceNotApplicable.
   ///
   /// In en, this message translates to:
