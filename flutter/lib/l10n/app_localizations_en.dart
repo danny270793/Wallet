@@ -448,6 +448,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get creditsPendingTotalsLabel => 'Pending total';
 
   @override
+  String get creditsNewDeferredPurchase => 'New credit purchase';
+
+  @override
   String creditsWalletCreditTransactedAt(String when) {
     return 'Credit date: $when';
   }
