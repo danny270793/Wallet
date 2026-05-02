@@ -231,7 +231,7 @@ class TransactionsTotalsBar extends StatelessWidget {
 }
 
 /// Same four-mode totals bar as the transactions list: swipe horizontally (or use the dots)
-/// between weighted vs raw amounts, with or without ignored rows.
+/// through weighted → weighted excluding ignored → not weighted → not weighted excluding ignored.
 class TransactionsTotalsBarHost extends StatefulWidget {
   const TransactionsTotalsBarHost({
     super.key,
@@ -252,8 +252,8 @@ class _TransactionsTotalsBarHostState extends State<TransactionsTotalsBarHost> {
 
   /// Swipe cycle order (`_totalsMode` 0…3):
   /// * Weighted — `value * percentage / 100` for **all** non–transfer-leg rows (including ignored).
-  /// * Not weighted — raw `value` for **all** such rows (including ignored).
   /// * Weighted excluding ignored — weighted formula only for rows with `ignore == false`.
+  /// * Not weighted — raw `value` for **all** such rows (including ignored).
   /// * Not weighted excluding ignored — raw `value` only for rows with `ignore == false`.
   int _totalsMode = 0;
 
@@ -305,21 +305,21 @@ class _TransactionsTotalsBarHostState extends State<TransactionsTotalsBarHost> {
       ),
       1 => TransactionsTotalsBar(
         l10n: widget.l10n,
-        primarySubtitle: widget.l10n.transactionsTotalsNotWeightedHint,
-        income: totalsRawValueAll.income,
-        outcome: totalsRawValueAll.outcome,
-        balance: totalsRawValueAll.balance,
+        primarySubtitle:
+            widget.l10n.transactionsTotalsWeightedExcludingIgnoredHint,
+        income: totalsWeightedNonIgnoredOnly.income,
+        outcome: totalsWeightedNonIgnoredOnly.outcome,
+        balance: totalsWeightedNonIgnoredOnly.balance,
         onTotalsModeSwipe: _handleTotalsModeSwipe,
         totalsDotsCount: _kTotalsModeCount,
         totalsDotsSelectedIndex: _totalsMode,
       ),
       2 => TransactionsTotalsBar(
         l10n: widget.l10n,
-        primarySubtitle:
-            widget.l10n.transactionsTotalsWeightedExcludingIgnoredHint,
-        income: totalsWeightedNonIgnoredOnly.income,
-        outcome: totalsWeightedNonIgnoredOnly.outcome,
-        balance: totalsWeightedNonIgnoredOnly.balance,
+        primarySubtitle: widget.l10n.transactionsTotalsNotWeightedHint,
+        income: totalsRawValueAll.income,
+        outcome: totalsRawValueAll.outcome,
+        balance: totalsRawValueAll.balance,
         onTotalsModeSwipe: _handleTotalsModeSwipe,
         totalsDotsCount: _kTotalsModeCount,
         totalsDotsSelectedIndex: _totalsMode,
