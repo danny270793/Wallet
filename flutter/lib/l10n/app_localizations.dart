@@ -872,12 +872,6 @@ abstract class AppLocalizations {
   /// **'Pending total'**
   String get creditsPendingTotalsLabel;
 
-  /// No description provided for @creditsPendingTotalsHint.
-  ///
-  /// In en, this message translates to:
-  /// **'Future installments · weighted'**
-  String get creditsPendingTotalsHint;
-
   /// No description provided for @transactionsSearchTooltip.
   ///
   /// In en, this message translates to:
