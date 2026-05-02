@@ -376,24 +376,33 @@ class _CreditGroupTile extends StatelessWidget {
       );
     }
 
-    final leadingTotal = Align(
-      alignment: Alignment.centerLeft,
-      child: Text(
-        l10n.transactionAmountValue(totalWeighted.toStringAsFixed(2)),
-        style: theme.textTheme.titleMedium?.copyWith(
-          fontWeight: FontWeight.w700,
-          color: theme.colorScheme.onSurface,
-          height: 1.2,
-          fontFeatures: const [FontFeature.tabularFigures()],
-        ),
-        textAlign: TextAlign.start,
-      ),
-    );
-
     final trailingPrices = Column(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.end,
       children: [
+        Text(
+          l10n.transactionAmountValue(totalWeighted.toStringAsFixed(2)),
+          style: theme.textTheme.titleMedium?.copyWith(
+            fontWeight: FontWeight.w700,
+            color: theme.colorScheme.onSurface,
+            height: 1.2,
+            fontFeatures: const [FontFeature.tabularFigures()],
+          ),
+        ),
+        if (groupPartialPct) ...[
+          const SizedBox(height: 4),
+          Text(
+            l10n.transactionAmountValue(totalRaw.toStringAsFixed(2)),
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+              height: 1.1,
+              decoration: TextDecoration.lineThrough,
+              decorationColor: theme.colorScheme.onSurfaceVariant,
+              fontFeatures: const [FontFeature.tabularFigures()],
+            ),
+          ),
+        ],
+        const SizedBox(height: 8),
         if (pendingWeighted.abs() > 0.005) ...[
           Text(
             l10n.transactionAmountValue(pendingWeighted.toStringAsFixed(2)),
@@ -417,25 +426,11 @@ class _CreditGroupTile extends StatelessWidget {
             height: 1.2,
           ),
         ),
-        if (groupPartialPct) ...[
-          const SizedBox(height: 4),
-          Text(
-            l10n.transactionAmountValue(totalRaw.toStringAsFixed(2)),
-            style: theme.textTheme.bodySmall?.copyWith(
-              color: theme.colorScheme.onSurfaceVariant,
-              height: 1.1,
-              decoration: TextDecoration.lineThrough,
-              decorationColor: theme.colorScheme.onSurfaceVariant,
-              fontFeatures: const [FontFeature.tabularFigures()],
-            ),
-          ),
-        ],
       ],
     );
 
     return SwipeableListTile(
       itemKey: creditLedgerKey,
-      leading: leadingTotal,
       title: titleSection(),
       trailing: trailingPrices,
       onEdit: onSwipeEdit,
