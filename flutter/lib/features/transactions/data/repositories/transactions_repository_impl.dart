@@ -39,6 +39,7 @@ class TransactionsRepositoryImpl implements TransactionsRepository {
     required double percentage,
     String? transferGroupId,
     String? creditGroupId,
+    String? creditId,
   }) =>
       _datasource.createTransaction(
         accountId: accountId,
@@ -52,6 +53,7 @@ class TransactionsRepositoryImpl implements TransactionsRepository {
         percentage: percentage,
         transferGroupId: transferGroupId,
         creditGroupId: creditGroupId,
+        creditId: creditId,
       );
 
   @override
@@ -68,6 +70,7 @@ class TransactionsRepositoryImpl implements TransactionsRepository {
     required double percentage,
     String? transferGroupId,
     String? creditGroupId,
+    String? creditId,
   }) =>
       _datasource.updateTransaction(
         id: id,
@@ -82,6 +85,7 @@ class TransactionsRepositoryImpl implements TransactionsRepository {
         percentage: percentage,
         transferGroupId: transferGroupId,
         creditGroupId: creditGroupId,
+        creditId: creditId,
       );
 
   @override
