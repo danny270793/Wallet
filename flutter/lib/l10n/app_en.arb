@@ -195,7 +195,6 @@
     }
   },
   "creditsPendingTotalsLabel": "Pending total",
-  "creditsPendingTotalsHint": "Future installments · weighted",
   "transactionsSearchTooltip": "Search transactions",
   "transactionsSearchHint": "Search by description",
   "transactionsSearchTypeQuery": "Enter text to search all your transactions",
