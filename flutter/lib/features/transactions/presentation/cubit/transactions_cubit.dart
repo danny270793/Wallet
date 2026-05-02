@@ -249,7 +249,7 @@ class TransactionsCubit extends Cubit<TransactionsState> {
             }
             final card = cards[cardIdx];
             final schedule = scheduleDeferredCreditInstallmentsLocal(
-              purchaseLocal: wc.transactedAt.toLocal(),
+              purchaseLocal: transactedAt.toLocal(),
               graceMonths: graceStored,
               termMonths: newTerm,
               cardCutDay: card.cutDay,
@@ -305,19 +305,26 @@ class TransactionsCubit extends Cubit<TransactionsState> {
               id: creditLedgerKey,
               graceMonths: graceStored,
               termMonths: newTerm,
+              transactedAt: transactedAt,
             );
             AppLogger.info(
               'credit group rescheduled ($creditLedgerKey): $newTerm rows',
             );
           } else {
-            var anchor = siblings.first;
-            for (final e in siblings) {
-              if (e.id == id) {
-                anchor = e;
-                break;
+            DateTime baselineLocal;
+            if (wc != null) {
+              baselineLocal = wc.transactedAt.toLocal();
+            } else {
+              var anchor = siblings.first;
+              for (final e in siblings) {
+                if (e.id == id) {
+                  anchor = e;
+                  break;
+                }
               }
+              baselineLocal = anchor.transactedAt.toLocal();
             }
-            final delta = transactedAt.difference(anchor.transactedAt.toLocal());
+            final delta = transactedAt.difference(baselineLocal);
             final parts = splitEqualAmountParts(value, siblings.length);
             for (var i = 0; i < siblings.length; i++) {
               final s = siblings[i];
@@ -339,6 +346,14 @@ class TransactionsCubit extends Cubit<TransactionsState> {
                 percentage: percentage,
                 transferGroupId: s.transferGroupId,
                 creditId: s.creditId,
+              );
+            }
+            if (wc != null) {
+              await _updateWalletCredit(
+                id: creditLedgerKey,
+                graceMonths: wc.graceMonths,
+                termMonths: wc.termMonths,
+                transactedAt: transactedAt,
               );
             }
             AppLogger.info(
