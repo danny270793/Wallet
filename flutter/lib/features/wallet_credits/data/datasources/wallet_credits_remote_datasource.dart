@@ -16,6 +16,7 @@ abstract class WalletCreditsRemoteDatasource {
     required String id,
     required int graceMonths,
     required int termMonths,
+    DateTime? transactedAt,
   });
 }
 
@@ -63,14 +64,19 @@ class WalletCreditsSupabaseDatasource implements WalletCreditsRemoteDatasource {
     required String id,
     required int graceMonths,
     required int termMonths,
+    DateTime? transactedAt,
   }) async {
     AppLogger.debug('updateCreditGracing: $id');
+    final patch = <String, dynamic>{
+      'graceMonths': graceMonths,
+      'termMonths': termMonths,
+    };
+    if (transactedAt != null) {
+      patch['transactedAt'] = transactedAt.toUtc().toIso8601String();
+    }
     final data = await _client
         .from('wallet_credits')
-        .update({
-          'graceMonths': graceMonths,
-          'termMonths': termMonths,
-        })
+        .update(patch)
         .eq('id', id)
         .select(_select)
         .single();
