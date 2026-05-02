@@ -209,6 +209,7 @@
     }
   },
   "creditsPendingTotalsLabel": "Pending total",
+  "creditsNewDeferredPurchase": "New credit purchase",
   "creditsWalletCreditTransactedAt": "Credit date: {when}",
   "@creditsWalletCreditTransactedAt": {
     "placeholders": {
