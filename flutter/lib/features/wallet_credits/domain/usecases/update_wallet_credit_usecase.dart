@@ -9,10 +9,12 @@ class UpdateWalletCreditUsecase {
     required String id,
     required int graceMonths,
     required int termMonths,
+    DateTime? transactedAt,
   }) =>
       _repository.updateCreditGracing(
         id: id,
         graceMonths: graceMonths,
         termMonths: termMonths,
+        transactedAt: transactedAt,
       );
 }
