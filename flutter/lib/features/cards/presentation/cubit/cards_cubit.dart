@@ -42,11 +42,21 @@ class CardsCubit extends Cubit<CardsState> {
     }
   }
 
-  Future<void> create({required String name, String? description}) async {
+  Future<void> create({
+    required String name,
+    String? description,
+    int cutDay = 24,
+    int payDay = 24,
+  }) async {
     final current = _currentCards();
     AppLogger.debug('creating card: $name');
     try {
-      await _createCard(name: name, description: description);
+      await _createCard(
+        name: name,
+        description: description,
+        cutDay: cutDay,
+        payDay: payDay,
+      );
       AppLogger.info('card created');
       final cards = sortedByName(await _getCards(), (c) => c.name);
       emit(CardsLoaded(cards));
@@ -60,13 +70,21 @@ class CardsCubit extends Cubit<CardsState> {
     required String id,
     required String name,
     String? description,
+    required int cutDay,
+    required int payDay,
     required double previousBalance,
     required double targetBalance,
   }) async {
     final current = _currentCards();
     AppLogger.debug('updating card: $id');
     try {
-      await _updateCard(id: id, name: name, description: description);
+      await _updateCard(
+        id: id,
+        name: name,
+        description: description,
+        cutDay: cutDay,
+        payDay: payDay,
+      );
       final delta = targetBalance - previousBalance;
       if (delta.abs() >= 1e-9) {
         await _adjustBalanceViaTransaction(cardId: id, delta: delta);
