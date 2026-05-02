@@ -3004,15 +3004,15 @@ class _TransactionDialogState extends State<_TransactionDialog> {
                     _cardId != null &&
                     (widget.transaction == null || _isCreditGroupEdit)) ...[
                   const SizedBox(height: 10),
-                  CheckboxListTile(
+                  SwitchListTile(
                     value: _deferred,
                     onChanged: widget.transaction != null ||
                             _loadingLookups ||
                             widget.forceDeferredCredit
                         ? null
-                        : (checked) {
+                        : (v) {
                             setState(() {
-                              _deferred = checked ?? false;
+                              _deferred = v;
                               if (!_deferred) {
                                 _graceMonthsController.clear();
                                 _termMonthsController.clear();
@@ -3023,7 +3023,6 @@ class _TransactionDialogState extends State<_TransactionDialog> {
                           },
                     dense: true,
                     contentPadding: EdgeInsets.zero,
-                    controlAffinity: ListTileControlAffinity.leading,
                     title: Text(l10n.transactionDeferred),
                   ),
                   if (_deferred) ...[
