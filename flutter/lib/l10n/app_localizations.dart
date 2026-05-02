@@ -872,6 +872,12 @@ abstract class AppLocalizations {
   /// **'Pending total'**
   String get creditsPendingTotalsLabel;
 
+  /// No description provided for @creditEditGraceNotApplicable.
+  ///
+  /// In en, this message translates to:
+  /// **'Original grace period is not stored.'**
+  String get creditEditGraceNotApplicable;
+
   /// No description provided for @transactionsSearchTooltip.
   ///
   /// In en, this message translates to:
