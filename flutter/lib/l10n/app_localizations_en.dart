@@ -448,6 +448,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get creditsPendingTotalsLabel => 'Pending total';
 
   @override
+  String creditsWalletCreditTransactedAt(String when) {
+    return 'Credit date: $when';
+  }
+
+  @override
   String get creditEditGraceNotApplicable =>
       'Original grace period is not stored.';
 
