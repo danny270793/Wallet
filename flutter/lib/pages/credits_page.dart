@@ -52,8 +52,6 @@ List<String> _relationNames(TransactionEntity t) => [
   if (t.tagName?.isNotEmpty == true) t.tagName!,
 ];
 
-double _weighted(TransactionEntity t) => t.value * t.percentage / 100.0;
-
 /// Installment is treated as already posted when its local calendar date is on or before today.
 bool _installmentIsPaidThroughToday(TransactionEntity t) {
   final now = DateTime.now();
@@ -63,21 +61,21 @@ bool _installmentIsPaidThroughToday(TransactionEntity t) {
   return !d.isAfter(today);
 }
 
-/// Sum of weighted amounts for installments not yet reached by local calendar date.
-double creditLedgerTotalPendingWeighted(List<TransactionEntity> flat) {
+/// Sum of raw [TransactionEntity.value] for installments not yet reached by local calendar date.
+double creditLedgerTotalPending(List<TransactionEntity> flat) {
   var sum = 0.0;
   for (final t in flat) {
     final g = t.creditLedgerGroupingKey;
     if (g == null || g.isEmpty) continue;
     if (!_installmentIsPaidThroughToday(t)) {
-      sum += _weighted(t);
+      sum += t.value;
     }
   }
   return sum;
 }
 
-/// Weighted sum of installments due in the current local month (due date on or after today).
-double creditLedgerDueThisMonthWeighted(List<TransactionEntity> flat) {
+/// Raw sum of installment values due in the current local month (due date on or after today).
+double creditLedgerDueThisMonth(List<TransactionEntity> flat) {
   final now = DateTime.now();
   final today = DateTime(now.year, now.month, now.day);
   var sum = 0.0;
@@ -88,7 +86,7 @@ double creditLedgerDueThisMonthWeighted(List<TransactionEntity> flat) {
     if (local.year != now.year || local.month != now.month) continue;
     final dueDay = DateTime(local.year, local.month, local.day);
     if (dueDay.isBefore(today)) continue;
-    sum += _weighted(t);
+    sum += t.value;
   }
   return sum;
 }
@@ -226,7 +224,7 @@ class _CreditGroupTile extends StatelessWidget {
     double pendingWeighted = 0;
     var pendingInstallmentCount = 0;
     for (final t in rows) {
-      final w = _weighted(t);
+      final w = t.value;
       if (_installmentIsPaidThroughToday(t)) {
         paidWeighted += w;
       } else {
@@ -535,8 +533,8 @@ class _CreditsPageState extends State<CreditsPage> {
       bottomNavigationBar: showPendingBar
           ? _CreditsPendingTotalsBar(
               l10n: l10n,
-              pendingWeighted: creditLedgerTotalPendingWeighted(_flat),
-              dueThisMonthWeighted: creditLedgerDueThisMonthWeighted(_flat),
+              pendingWeighted: creditLedgerTotalPending(_flat),
+              dueThisMonthWeighted: creditLedgerDueThisMonth(_flat),
             )
           : null,
       body: RefreshIndicator(
