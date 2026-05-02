@@ -262,6 +262,7 @@ void setupDi() {
       createAccountTransfer: getIt(),
       getTransactionsByCreditGroupId: getIt(),
       createWalletCredit: getIt(),
+      getCards: getIt(),
     ),
   );
   getIt.registerFactory<YearlyDashboardCubit>(() => YearlyDashboardCubit(getIt()));
