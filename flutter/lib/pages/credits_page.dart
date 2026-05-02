@@ -99,15 +99,6 @@ class _CreditsPendingTotalsBar extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
-              l10n.creditsPendingTotalsHint,
-              textAlign: TextAlign.center,
-              style: theme.textTheme.labelSmall?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
               amountStr,
               textAlign: TextAlign.center,
               style: theme.textTheme.titleMedium?.copyWith(
@@ -300,19 +291,20 @@ class _CreditGroupTile extends StatelessWidget {
               height: 1.2,
             ),
           ),
-          if (paidWeighted.abs() > 0.005) const SizedBox(height: 4),
+          const SizedBox(height: 4),
         ],
-        if (paidWeighted.abs() > 0.005)
-          Text(
-            l10n.transactionAmountValue(
-              paidWeighted.abs().toStringAsFixed(2),
-            ),
-            style: theme.textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.w700,
-              color: paidGreen,
-              height: 1.2,
-            ),
+        Text(
+          l10n.transactionAmountValue(
+            paidWeighted.abs() > 0.005
+                ? paidWeighted.abs().toStringAsFixed(2)
+                : '0.00',
           ),
+          style: theme.textTheme.titleMedium?.copyWith(
+            fontWeight: FontWeight.w700,
+            color: paidGreen,
+            height: 1.2,
+          ),
+        ),
         if (groupPartialPct) ...[
           const SizedBox(height: 4),
           Text(
@@ -329,7 +321,7 @@ class _CreditGroupTile extends StatelessWidget {
       ],
     );
 
-    Widget tile = SwipeableListTile(
+    return SwipeableListTile(
       itemKey: creditGroupId,
       title: titleSection(),
       trailing: trailingPrices,
@@ -341,13 +333,6 @@ class _CreditGroupTile extends StatelessWidget {
         creditGroupId: creditGroupId,
       ),
     );
-
-    final allIgnored = rows.every((t) => t.ignore);
-    if (allIgnored) {
-      tile = Opacity(opacity: 0.52, child: tile);
-      tile = Tooltip(message: l10n.transactionIgnoredBadge, child: tile);
-    }
-    return tile;
   }
 }
 
