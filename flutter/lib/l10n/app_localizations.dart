@@ -1244,12 +1244,6 @@ abstract class AppLocalizations {
   /// **'Ignored'**
   String get transactionIgnoredBadge;
 
-  /// No description provided for @transactionInitialBalanceBadge.
-  ///
-  /// In en, this message translates to:
-  /// **'Initial balance'**
-  String get transactionInitialBalanceBadge;
-
   /// No description provided for @transactionAmountValue.
   ///
   /// In en, this message translates to:
