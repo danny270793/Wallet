@@ -410,19 +410,20 @@ class _CreditGroupTile extends StatelessWidget {
                 ? paidWeighted.abs().toStringAsFixed(2)
                 : '0.00',
           ),
-          style: theme.textTheme.titleMedium?.copyWith(
+          style: theme.textTheme.titleSmall?.copyWith(
             fontWeight: FontWeight.w700,
             color: paidGreen,
-            height: 1.2,
+            height: 1.15,
+            fontFeatures: const [FontFeature.tabularFigures()],
           ),
         ),
         const SizedBox(height: 8),
         Text(
           l10n.transactionAmountValue(totalWeighted.toStringAsFixed(2)),
-          style: theme.textTheme.titleMedium?.copyWith(
+          style: theme.textTheme.titleSmall?.copyWith(
             fontWeight: FontWeight.w700,
             color: theme.colorScheme.onSurface,
-            height: 1.2,
+            height: 1.15,
             fontFeatures: const [FontFeature.tabularFigures()],
           ),
         ),
