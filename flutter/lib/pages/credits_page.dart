@@ -403,7 +403,7 @@ class _CreditGroupTile extends StatelessWidget {
               fontFeatures: const [FontFeature.tabularFigures()],
             ),
           ),
-          const SizedBox(height: 4),
+          const SizedBox(height: 2),
         ],
         Text(
           l10n.transactionAmountValue(
@@ -418,7 +418,7 @@ class _CreditGroupTile extends StatelessWidget {
             fontFeatures: const [FontFeature.tabularFigures()],
           ),
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: 2),
         Text(
           l10n.transactionAmountValue(totalWeighted.toStringAsFixed(2)),
           style: theme.textTheme.titleSmall?.copyWith(
