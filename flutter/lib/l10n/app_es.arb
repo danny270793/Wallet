@@ -281,7 +281,6 @@
   "transactionPercentageInvalidRange": "Introduce un número entre 0 y 100",
   "transactionIgnore": "Ignorar",
   "transactionIgnoredBadge": "Ignorado",
-  "transactionInitialBalanceBadge": "Saldo inicial",
   "transactionAmountValue": "{amount}",
   "@transactionAmountValue": {
     "placeholders": {
