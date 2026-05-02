@@ -2014,6 +2014,11 @@ class _TransactionDialogState extends State<_TransactionDialog> {
   bool _loading = false;
   bool _loadingLookups = true;
 
+  bool get _isCreditGroupEdit {
+    final id = widget.transaction?.creditGroupId;
+    return id != null && id.isNotEmpty;
+  }
+
   List<AccountEntity> _accounts = [];
   List<CardEntity> _cards = [];
   List<CategoryEntity> _categories = [];
@@ -2034,6 +2039,10 @@ class _TransactionDialogState extends State<_TransactionDialog> {
   /// New deferred card installments are saved with ignore=true regardless of toggle.
   bool get _creatingDeferredInstallments =>
       widget.transaction == null && _deferred && _cardId != null;
+
+  /// Credits (deferred installments) ignore totals; Ignore is locked for create/installments and edit.
+  bool get _ignoreSwitchLocked =>
+      _creatingDeferredInstallments || _isCreditGroupEdit;
 
   bool get _ignoreSwitchShowsOn =>
       _creatingDeferredInstallments ? true : _ignore;
@@ -2078,6 +2087,9 @@ class _TransactionDialogState extends State<_TransactionDialog> {
     _tagDisplayController = TextEditingController();
     _graceMonthsController = TextEditingController();
     _termMonthsController = TextEditingController();
+    _deferred = t != null &&
+        t.creditGroupId != null &&
+        t.creditGroupId!.isNotEmpty;
     _ignore = t?.ignore ?? false;
     _accountId = t?.accountId ?? widget.preferredAccountId;
     _cardId = t?.cardId ?? widget.preferredCardId;
@@ -2154,9 +2166,16 @@ class _TransactionDialogState extends State<_TransactionDialog> {
     try {
       final list = await getIt<GetTransactionsByCreditGroupIdUsecase>()(gid);
       if (!mounted) return;
+      list.sort((a, b) => a.transactedAt.compareTo(b.transactedAt));
       final sum = list.fold<double>(0, (a, e) => a + e.value);
       setState(() {
         _valueController.text = sum.toStringAsFixed(2);
+        if (widget.transaction?.creditGroupId != null &&
+            widget.transaction!.creditGroupId!.isNotEmpty) {
+          _termMonthsController.text =
+              list.isEmpty ? '' : '${list.length}';
+          _graceMonthsController.text = '\u2014';
+        }
         _loadingCreditGroupTotal = false;
       });
     } catch (_) {
@@ -2527,7 +2546,9 @@ class _TransactionDialogState extends State<_TransactionDialog> {
       if (raw.startsWith(_paymentMethodPickAccountPrefix)) {
         _accountId = raw.substring(_paymentMethodPickAccountPrefix.length);
         _cardId = null;
-        _deferred = false;
+        if (widget.transaction == null) {
+          _deferred = false;
+        }
       } else if (raw.startsWith(_paymentMethodPickCardPrefix)) {
         _cardId = raw.substring(_paymentMethodPickCardPrefix.length);
         _accountId = null;
@@ -2923,11 +2944,11 @@ class _TransactionDialogState extends State<_TransactionDialog> {
                 ),
                 if (!_loadingLookups &&
                     _cardId != null &&
-                    widget.transaction == null) ...[
+                    (widget.transaction == null || _isCreditGroupEdit)) ...[
                   const SizedBox(height: 10),
                   CheckboxListTile(
                     value: _deferred,
-                    onChanged: _loadingLookups
+                    onChanged: widget.transaction != null || _loadingLookups
                         ? null
                         : (checked) {
                             setState(() {
@@ -2947,61 +2968,122 @@ class _TransactionDialogState extends State<_TransactionDialog> {
                   ),
                   if (_deferred) ...[
                     const SizedBox(height: 4),
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Expanded(
-                          child: TextFormField(
-                            controller: _graceMonthsController,
-                            decoration: InputDecoration(
-                              labelText: l10n.transactionGraceMonths,
+                    if (_isCreditGroupEdit && _loadingCreditGroupTotal)
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Expanded(
+                            child: InputDecorator(
+                              decoration: InputDecoration(
+                                labelText: l10n.transactionGraceMonths,
+                              ),
+                              child: const SizedBox(
+                                height: 40,
+                                child: Center(
+                                  child: SizedBox(
+                                    width: 22,
+                                    height: 22,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                    ),
+                                  ),
+                                ),
+                              ),
                             ),
-                            keyboardType: TextInputType.number,
-                            inputFormatters: <TextInputFormatter>[
-                              FilteringTextInputFormatter.digitsOnly,
-                            ],
-                            textInputAction: TextInputAction.next,
-                            validator: (v) {
-                              if (!_deferred || _loadingLookups)
-                                return null;
-                              final t = (v ?? '').trim();
-                              if (t.isEmpty) return null;
-                              final n = int.tryParse(t);
-                              if (n == null || n < 0) {
-                                return l10n.transactionGraceMonthsInvalid;
-                              }
-                              return null;
-                            },
                           ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: TextFormField(
-                            controller: _termMonthsController,
-                            decoration: InputDecoration(
-                              labelText: l10n.transactionMesesPlazo,
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: InputDecorator(
+                              decoration: InputDecoration(
+                                labelText: l10n.transactionMesesPlazo,
+                              ),
+                              child: const SizedBox(
+                                height: 40,
+                                child: Center(
+                                  child: SizedBox(
+                                    width: 22,
+                                    height: 22,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                    ),
+                                  ),
+                                ),
+                              ),
                             ),
-                            keyboardType: TextInputType.number,
-                            inputFormatters: <TextInputFormatter>[
-                              FilteringTextInputFormatter.digitsOnly,
-                            ],
-                            textInputAction: TextInputAction.next,
-                            validator: (v) {
-                              if (!_deferred || _loadingLookups)
-                                return null;
-                              if (v == null || v.trim().isEmpty) {
-                                return l10n.fieldRequired;
-                              }
-                              final n = int.tryParse(v.trim());
-                              if (n == null || n < 2) {
-                                return l10n.transactionTermMonthsInvalid;
-                              }
-                              return null;
-                            },
                           ),
-                        ),
-                      ],
-                    ),
+                        ],
+                      )
+                    else
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Expanded(
+                            child: TextFormField(
+                              controller: _graceMonthsController,
+                              readOnly: _isCreditGroupEdit,
+                              keyboardType: TextInputType.number,
+                              inputFormatters: _isCreditGroupEdit
+                                  ? const <TextInputFormatter>[]
+                                  : <TextInputFormatter>[
+                                      FilteringTextInputFormatter.digitsOnly,
+                                    ],
+                              textInputAction: TextInputAction.next,
+                              decoration: InputDecoration(
+                                labelText: l10n.transactionGraceMonths,
+                                helperText: _isCreditGroupEdit
+                                    ? l10n.creditEditGraceNotApplicable
+                                    : null,
+                              ),
+                              validator: (v) {
+                                if (widget.transaction != null ||
+                                    !_deferred ||
+                                    _loadingLookups) {
+                                  return null;
+                                }
+                                final t = (v ?? '').trim();
+                                if (t.isEmpty) return null;
+                                final n = int.tryParse(t);
+                                if (n == null || n < 0) {
+                                  return l10n.transactionGraceMonthsInvalid;
+                                }
+                                return null;
+                              },
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: TextFormField(
+                              controller: _termMonthsController,
+                              readOnly: _isCreditGroupEdit,
+                              keyboardType: TextInputType.number,
+                              inputFormatters: _isCreditGroupEdit
+                                  ? const <TextInputFormatter>[]
+                                  : <TextInputFormatter>[
+                                      FilteringTextInputFormatter.digitsOnly,
+                                    ],
+                              textInputAction: TextInputAction.next,
+                              decoration: InputDecoration(
+                                labelText: l10n.transactionMesesPlazo,
+                              ),
+                              validator: (v) {
+                                if (widget.transaction != null ||
+                                    !_deferred ||
+                                    _loadingLookups) {
+                                  return null;
+                                }
+                                if (v == null || v.trim().isEmpty) {
+                                  return l10n.fieldRequired;
+                                }
+                                final n = int.tryParse(v.trim());
+                                if (n == null || n < 2) {
+                                  return l10n.transactionTermMonthsInvalid;
+                                }
+                                return null;
+                              },
+                            ),
+                          ),
+                        ],
+                      ),
                   ],
                 ],
                 const SizedBox(height: 16),
@@ -3130,7 +3212,7 @@ class _TransactionDialogState extends State<_TransactionDialog> {
                           ),
                           Switch(
                             value: _ignoreSwitchShowsOn,
-                            onChanged: _creatingDeferredInstallments
+                            onChanged: _ignoreSwitchLocked
                                     ? null
                                     : (v) => setState(() => _ignore = v),
                           ),
