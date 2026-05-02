@@ -120,7 +120,7 @@ class _CreditsPendingTotalsBar extends StatelessWidget {
     );
     final hasMonthDue = dueThisMonthWeighted.abs() > 0.005;
     final monthColor = hasMonthDue
-        ? theme.colorScheme.primary
+        ? theme.colorScheme.error
         : theme.colorScheme.onSurfaceVariant;
 
     return Material(
