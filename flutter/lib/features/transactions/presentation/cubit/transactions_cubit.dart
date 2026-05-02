@@ -172,13 +172,12 @@ class TransactionsCubit extends Cubit<TransactionsState> {
     required bool ignore,
     required double percentage,
     String? transferGroupId,
-    String? creditGroupId,
     String? creditId,
   }) async {
     final current = _currentTransactions();
     AppLogger.debug('updating transaction: $id');
     final creditLedgerKey =
-        (creditId != null && creditId.isNotEmpty) ? creditId : creditGroupId;
+        (creditId != null && creditId.isNotEmpty) ? creditId : null;
     try {
       if (creditLedgerKey != null && creditLedgerKey.isNotEmpty) {
         final siblings = await _getTransactionsByCreditGroupId(creditLedgerKey);
@@ -195,7 +194,6 @@ class TransactionsCubit extends Cubit<TransactionsState> {
             ignore: ignore,
             percentage: percentage,
             transferGroupId: transferGroupId,
-            creditGroupId: creditGroupId,
             creditId: creditId,
           );
         } else {
@@ -228,7 +226,6 @@ class TransactionsCubit extends Cubit<TransactionsState> {
               ignore: ignore,
               percentage: percentage,
               transferGroupId: s.transferGroupId,
-              creditGroupId: s.creditGroupId,
               creditId: s.creditId,
             );
           }
@@ -249,7 +246,6 @@ class TransactionsCubit extends Cubit<TransactionsState> {
           ignore: ignore,
           percentage: percentage,
           transferGroupId: transferGroupId,
-          creditGroupId: creditGroupId,
           creditId: creditId,
         );
         AppLogger.info('transaction updated: $id');
@@ -325,7 +321,6 @@ class TransactionsCubit extends Cubit<TransactionsState> {
         ignore: ignore,
         percentage: source.percentage,
         transferGroupId: gid,
-        creditGroupId: source.creditGroupId,
         creditId: source.creditId,
       );
       await _updateTransaction(
@@ -340,7 +335,6 @@ class TransactionsCubit extends Cubit<TransactionsState> {
         ignore: ignore,
         percentage: target.percentage,
         transferGroupId: gid,
-        creditGroupId: target.creditGroupId,
         creditId: target.creditId,
       );
       AppLogger.info('transfer updated');
