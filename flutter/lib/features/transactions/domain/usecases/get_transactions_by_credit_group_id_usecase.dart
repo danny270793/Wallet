@@ -6,6 +6,7 @@ class GetTransactionsByCreditGroupIdUsecase {
 
   const GetTransactionsByCreditGroupIdUsecase(this._repository);
 
-  Future<List<TransactionEntity>> call(String creditGroupId) =>
-      _repository.getTransactionsByCreditGroupId(creditGroupId);
+  /// Rows sharing the given [creditId] (FK to wallet_credits), ordered by date.
+  Future<List<TransactionEntity>> call(String creditId) =>
+      _repository.getTransactionsByCreditGroupId(creditId);
 }
