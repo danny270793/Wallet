@@ -434,9 +434,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get creditsPendingTotalsLabel => 'Pending total';
 
   @override
-  String get creditsPendingTotalsHint => 'Future installments · weighted';
-
-  @override
   String get transactionsSearchTooltip => 'Search transactions';
 
   @override
