@@ -396,10 +396,11 @@ class _CreditGroupTile extends StatelessWidget {
         if (pendingWeighted.abs() > 0.005) ...[
           Text(
             l10n.transactionAmountValue(pendingWeighted.toStringAsFixed(2)),
-            style: theme.textTheme.titleMedium?.copyWith(
+            style: theme.textTheme.titleSmall?.copyWith(
               fontWeight: FontWeight.w700,
               color: theme.colorScheme.error,
-              height: 1.2,
+              height: 1.15,
+              fontFeatures: const [FontFeature.tabularFigures()],
             ),
           ),
           const SizedBox(height: 4),
