@@ -28,10 +28,12 @@ class WalletCreditsRepositoryImpl implements WalletCreditsRepository {
     required String id,
     required int graceMonths,
     required int termMonths,
+    DateTime? transactedAt,
   }) =>
       _datasource.updateCreditGracing(
         id: id,
         graceMonths: graceMonths,
         termMonths: termMonths,
+        transactedAt: transactedAt,
       );
 }
