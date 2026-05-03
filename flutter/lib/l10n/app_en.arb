@@ -57,6 +57,74 @@
   "settingsThemeSystem": "System default",
   "settingsThemeLight": "Light",
   "settingsThemeDark": "Dark",
+  "settingsDataSection": "Offline data",
+  "settingsOfflineCache": "Cached responses",
+  "settingsOfflineCacheSubtitle": "API responses stored on this device for offline use",
+  "settingsCachePageTitle": "Offline cache",
+  "settingsCacheEmpty": "No cached responses yet.",
+  "settingsCacheBottomBarTotal": "Total: {size}",
+  "@settingsCacheBottomBarTotal": {
+    "placeholders": {
+      "size": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsCacheRowSubtitle": "{dateTime} · {size}",
+  "@settingsCacheRowSubtitle": {
+    "placeholders": {
+      "dateTime": {
+        "type": "String"
+      },
+      "size": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsCacheKeyTxMonth": "Transactions · {year}-{month}",
+  "@settingsCacheKeyTxMonth": {
+    "placeholders": {
+      "year": {
+        "type": "String"
+      },
+      "month": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsCacheKeyTxYear": "Transactions · {year}",
+  "@settingsCacheKeyTxYear": {
+    "placeholders": {
+      "year": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsCacheKeyTxCreditGroups": "Transactions (credit groups)",
+  "settingsCacheKeyTxCredit": "Transactions (credit {shortId})",
+  "@settingsCacheKeyTxCredit": {
+    "placeholders": {
+      "shortId": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsCacheKeyWalletCredit": "Wallet credit · {shortId}",
+  "@settingsCacheKeyWalletCredit": {
+    "placeholders": {
+      "shortId": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsCacheKeyRaw": "{key}",
+  "@settingsCacheKeyRaw": {
+    "placeholders": {
+      "key": {
+        "type": "String"
+      }
+    }
+  },
   "settingsSecuritySection": "Security",
   "settingsBiometricUnlockTitle": "Face ID & fingerprint",
   "settingsBiometricUnlockSubtitle": "Use biometrics to unlock the app.",
