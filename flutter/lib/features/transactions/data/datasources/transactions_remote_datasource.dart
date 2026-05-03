@@ -57,7 +57,8 @@ class TransactionsSupabaseDatasource implements TransactionsRemoteDatasource {
 wallet_accounts(name),
 wallet_cards(name),
 wallet_categories(name),
-wallet_tags(name)
+wallet_tags(name),
+wallet_credits(transactedAt)
 ''';
 
   @override

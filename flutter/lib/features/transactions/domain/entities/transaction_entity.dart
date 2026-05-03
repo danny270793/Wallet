@@ -20,6 +20,8 @@ class TransactionEntity extends Equatable {
   final String? transferGroupId;
   /// FK to wallet_credits when this row is a deferred installment.
   final String? creditId;
+  /// [wallet_credits.transactedAt] when the credit group row is embedded in the query.
+  final DateTime? creditTransactedAt;
   final DateTime createdAt;
   final DateTime updatedAt;
 
@@ -41,6 +43,7 @@ class TransactionEntity extends Equatable {
     required this.percentage,
     this.transferGroupId,
     this.creditId,
+    this.creditTransactedAt,
     required this.createdAt,
     required this.updatedAt,
   });
@@ -66,6 +69,7 @@ class TransactionEntity extends Equatable {
       percentage: asDouble(json['percentage']),
       transferGroupId: json['transferGroupId'] as String?,
       creditId: json['creditId'] as String?,
+      creditTransactedAt: _embeddedCreditTransactedAt(json),
       createdAt: DateTime.parse(json['createdAt'] as String),
       updatedAt: DateTime.parse(json['updatedAt'] as String),
     );
@@ -80,6 +84,20 @@ class TransactionEntity extends Equatable {
       return (rel.first as Map<String, dynamic>)['name'] as String?;
     }
     return null;
+  }
+
+  static DateTime? _embeddedCreditTransactedAt(Map<String, dynamic> json) {
+    final rel = json['wallet_credits'];
+    if (rel == null) return null;
+    Map<String, dynamic>? m;
+    if (rel is Map<String, dynamic>) {
+      m = rel;
+    } else if (rel is List && rel.isNotEmpty && rel.first is Map<String, dynamic>) {
+      m = rel.first as Map<String, dynamic>;
+    }
+    final ts = m?['transactedAt'];
+    if (ts == null) return null;
+    return DateTime.parse(ts as String);
   }
 
   /// True when this row is part of an account/card transfer (paired legs share [transferGroupId]).
@@ -109,6 +127,7 @@ class TransactionEntity extends Equatable {
         percentage,
         transferGroupId,
         creditId,
+        creditTransactedAt,
         createdAt,
         updatedAt,
       ];

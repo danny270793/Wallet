@@ -22,4 +22,18 @@ class WalletCreditsRepositoryImpl implements WalletCreditsRepository {
 
   @override
   Future<WalletCreditEntity?> getCredit(String id) => _datasource.fetchCredit(id);
+
+  @override
+  Future<WalletCreditEntity> updateCreditGracing({
+    required String id,
+    required int graceMonths,
+    required int termMonths,
+    DateTime? transactedAt,
+  }) =>
+      _datasource.updateCreditGracing(
+        id: id,
+        graceMonths: graceMonths,
+        termMonths: termMonths,
+        transactedAt: transactedAt,
+      );
 }

@@ -896,6 +896,24 @@ abstract class AppLocalizations {
   /// **'Pending total'**
   String get creditsPendingTotalsLabel;
 
+  /// No description provided for @creditsDueThisMonthLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Due this month'**
+  String get creditsDueThisMonthLabel;
+
+  /// No description provided for @creditsNewDeferredPurchase.
+  ///
+  /// In en, this message translates to:
+  /// **'New credit purchase'**
+  String get creditsNewDeferredPurchase;
+
+  /// No description provided for @creditsWalletCreditTransactedAt.
+  ///
+  /// In en, this message translates to:
+  /// **'Credit date: {when}'**
+  String creditsWalletCreditTransactedAt(String when);
+
   /// No description provided for @creditEditGraceNotApplicable.
   ///
   /// In en, this message translates to:

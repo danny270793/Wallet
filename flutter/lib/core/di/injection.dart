@@ -72,6 +72,7 @@ import '../../features/wallet_credits/data/repositories/wallet_credits_repositor
 import '../../features/wallet_credits/domain/repositories/wallet_credits_repository.dart';
 import '../../features/wallet_credits/domain/usecases/create_wallet_credit_usecase.dart';
 import '../../features/wallet_credits/domain/usecases/get_wallet_credit_usecase.dart';
+import '../../features/wallet_credits/domain/usecases/update_wallet_credit_usecase.dart';
 
 final getIt = GetIt.instance;
 
@@ -231,6 +232,9 @@ void setupDi() {
     () => CreateWalletCreditUsecase(getIt()),
   );
   getIt.registerFactory<GetWalletCreditUsecase>(() => GetWalletCreditUsecase(getIt()));
+  getIt.registerFactory<UpdateWalletCreditUsecase>(
+    () => UpdateWalletCreditUsecase(getIt()),
+  );
 
   getIt.registerLazySingleton<TransactionsRemoteDatasource>(
     () => TransactionsSupabaseDatasource(Supabase.instance.client),
@@ -262,6 +266,9 @@ void setupDi() {
       createAccountTransfer: getIt(),
       getTransactionsByCreditGroupId: getIt(),
       createWalletCredit: getIt(),
+      getCards: getIt(),
+      getWalletCredit: getIt(),
+      updateWalletCredit: getIt(),
     ),
   );
   getIt.registerFactory<YearlyDashboardCubit>(() => YearlyDashboardCubit(getIt()));

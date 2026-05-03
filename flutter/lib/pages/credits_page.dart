@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:intl/intl.dart';
 import 'package:wallet/l10n/app_localizations.dart';
 
 import '../core/credit_group_description.dart';
@@ -75,14 +76,33 @@ double creditLedgerTotalPendingWeighted(List<TransactionEntity> flat) {
   return sum;
 }
 
+/// Weighted sum of installments due in the current local month (due date on or after today).
+double creditLedgerDueThisMonthWeighted(List<TransactionEntity> flat) {
+  final now = DateTime.now();
+  final today = DateTime(now.year, now.month, now.day);
+  var sum = 0.0;
+  for (final t in flat) {
+    final g = t.creditLedgerGroupingKey;
+    if (g == null || g.isEmpty) continue;
+    final local = t.transactedAt.toLocal();
+    if (local.year != now.year || local.month != now.month) continue;
+    final dueDay = DateTime(local.year, local.month, local.day);
+    if (dueDay.isBefore(today)) continue;
+    sum += _weighted(t);
+  }
+  return sum;
+}
+
 class _CreditsPendingTotalsBar extends StatelessWidget {
   const _CreditsPendingTotalsBar({
     required this.l10n,
     required this.pendingWeighted,
+    required this.dueThisMonthWeighted,
   });
 
   final AppLocalizations l10n;
   final double pendingWeighted;
+  final double dueThisMonthWeighted;
 
   @override
   Widget build(BuildContext context) {
@@ -95,6 +115,14 @@ class _CreditsPendingTotalsBar extends StatelessWidget {
         ? theme.colorScheme.error
         : theme.colorScheme.onSurfaceVariant;
 
+    final monthStr = l10n.transactionAmountValue(
+      dueThisMonthWeighted.toStringAsFixed(2),
+    );
+    final hasMonthDue = dueThisMonthWeighted.abs() > 0.005;
+    final monthColor = hasMonthDue
+        ? theme.colorScheme.error
+        : theme.colorScheme.onSurfaceVariant;
+
     return Material(
       color: theme.colorScheme.surfaceContainerHighest,
       child: Padding(
@@ -103,26 +131,60 @@ class _CreditsPendingTotalsBar extends StatelessWidget {
         ),
         child: Padding(
           padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                amountStr,
-                textAlign: TextAlign.center,
-                style: theme.textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.w700,
-                  height: 1.2,
-                  fontFeatures: const [FontFeature.tabularFigures()],
-                  color: amountColor,
+              Expanded(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      amountStr,
+                      textAlign: TextAlign.center,
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w700,
+                        height: 1.2,
+                        fontFeatures: const [FontFeature.tabularFigures()],
+                        color: amountColor,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      l10n.creditsPendingTotalsLabel,
+                      textAlign: TextAlign.center,
+                      style: theme.textTheme.labelMedium?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
                 ),
               ),
-              const SizedBox(height: 2),
-              Text(
-                l10n.creditsPendingTotalsLabel,
-                textAlign: TextAlign.center,
-                style: theme.textTheme.labelMedium?.copyWith(
-                  color: theme.colorScheme.onSurfaceVariant,
-                  fontWeight: FontWeight.w500,
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      monthStr,
+                      textAlign: TextAlign.center,
+                      style: theme.textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.w700,
+                        height: 1.2,
+                        fontFeatures: const [FontFeature.tabularFigures()],
+                        color: monthColor,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      l10n.creditsDueThisMonthLabel,
+                      textAlign: TextAlign.center,
+                      style: theme.textTheme.labelMedium?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ],
@@ -264,6 +326,29 @@ class _CreditGroupTile extends StatelessWidget {
         );
       }
 
+      final creditAt = first.creditTransactedAt;
+      if (creditAt != null) {
+        final locale = Localizations.localeOf(context);
+        final when = DateFormat(
+          'yMMMd, HH:mm',
+          locale.toString(),
+        ).format(creditAt.toLocal());
+        chunks.add(
+          Padding(
+            padding: EdgeInsets.only(top: chunks.isNotEmpty ? 4 : 0),
+            child: Text(
+              l10n.creditsWalletCreditTransactedAt(when),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+                fontFeatures: const [FontFeature.tabularFigures()],
+              ),
+            ),
+          ),
+        );
+      }
+
       chunks.add(
         Padding(
           padding: EdgeInsets.only(top: chunks.isNotEmpty ? 4 : 0),
@@ -395,6 +480,18 @@ class _CreditsPageState extends State<CreditsPage> {
     if (mounted) await _load();
   }
 
+  Future<void> _openNewCreditPurchase(AppLocalizations l10n) async {
+    final cubit = context.read<TransactionsCubit>();
+    await showTransactionEditorBottomSheet(
+      context,
+      l10n: l10n,
+      cubit: cubit,
+      forceDeferredCredit: true,
+      paymentMethodCardsOnly: true,
+    );
+    if (mounted) await _load();
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
@@ -403,6 +500,10 @@ class _CreditsPageState extends State<CreditsPage> {
     if (_error != null && !_loading) {
       return ShellScaffold(
         title: l10n.creditsTitle,
+        floatingActionButton: FloatingActionButton(
+          onPressed: () => _openNewCreditPurchase(l10n),
+          child: const Icon(Icons.add),
+        ),
         body: Center(
           child: Padding(
             padding: const EdgeInsets.all(24),
@@ -417,10 +518,15 @@ class _CreditsPageState extends State<CreditsPage> {
 
     return ShellScaffold(
       title: l10n.creditsTitle,
+      floatingActionButton: FloatingActionButton(
+        onPressed: () => _openNewCreditPurchase(l10n),
+        child: const Icon(Icons.add),
+      ),
       bottomNavigationBar: showPendingBar
           ? _CreditsPendingTotalsBar(
               l10n: l10n,
               pendingWeighted: creditLedgerTotalPendingWeighted(_flat),
+              dueThisMonthWeighted: creditLedgerDueThisMonthWeighted(_flat),
             )
           : null,
       body: RefreshIndicator(
@@ -428,7 +534,7 @@ class _CreditsPageState extends State<CreditsPage> {
         child: _loading
             ? ListView(
                 physics: const AlwaysScrollableScrollPhysics(),
-                padding: const EdgeInsets.only(top: 120),
+                padding: const EdgeInsets.fromLTRB(0, 120, 0, 88),
                 children: const [
                   Center(
                     child: SizedBox(
@@ -442,7 +548,7 @@ class _CreditsPageState extends State<CreditsPage> {
             : groups.isEmpty
             ? ListView(
                 physics: const AlwaysScrollableScrollPhysics(),
-                padding: const EdgeInsets.all(24),
+                padding: const EdgeInsets.fromLTRB(24, 0, 24, 88),
                 children: [
                   SizedBox(height: MediaQuery.paddingOf(context).top + 40),
                   Text(
@@ -459,7 +565,7 @@ class _CreditsPageState extends State<CreditsPage> {
                   final cubit = context.read<TransactionsCubit>();
                   return ListView.builder(
                     physics: const AlwaysScrollableScrollPhysics(),
-                    padding: const EdgeInsets.only(bottom: 8),
+                    padding: const EdgeInsets.fromLTRB(0, 0, 0, 88),
                     itemCount: groups.length,
                     itemBuilder: (context, i) {
                       final g = groups[i];

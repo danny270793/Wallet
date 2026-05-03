@@ -1107,6 +1107,8 @@ Future<void> showTransactionEditorBottomSheet(
   String? preferredCardId,
   String? preferredCategoryId,
   String? preferredTagId,
+  bool forceDeferredCredit = false,
+  bool paymentMethodCardsOnly = false,
 }) {
   return showModalBottomSheet<void>(
     context: context,
@@ -1121,6 +1123,8 @@ Future<void> showTransactionEditorBottomSheet(
       preferredCardId: preferredCardId,
       preferredCategoryId: preferredCategoryId,
       preferredTagId: preferredTagId,
+      forceDeferredCredit: forceDeferredCredit,
+      paymentMethodCardsOnly: paymentMethodCardsOnly,
     ),
   );
 }
@@ -1677,6 +1681,7 @@ Future<String?> showPaymentMethodPickerSheet(
   required void Function(List<AccountEntity> accounts, List<CardEntity> cards)
   onListsUpdated,
   PaymentMethodPickerSwipeActions? paymentSwipe,
+  bool cardsOnly = false,
 }) {
   return showModalBottomSheet<String?>(
     context: context,
@@ -1717,10 +1722,13 @@ Future<String?> showPaymentMethodPickerSheet(
           final vCards = visibleCards();
           final pickerAccountsSnapshot = getAccounts();
           final pickerCardsSnapshot = getCards();
-          final hasAny =
-              pickerAccountsSnapshot.isNotEmpty ||
-              pickerCardsSnapshot.isNotEmpty;
-          final filteredEmpty = vAccounts.isEmpty && vCards.isEmpty;
+          final hasAny = cardsOnly
+              ? pickerCardsSnapshot.isNotEmpty
+              : pickerAccountsSnapshot.isNotEmpty ||
+                    pickerCardsSnapshot.isNotEmpty;
+          final filteredEmpty = cardsOnly
+              ? vCards.isEmpty
+              : vAccounts.isEmpty && vCards.isEmpty;
 
           final sheetTheme = Theme.of(sheetContext);
           final titleSmallPrimary = sheetTheme.textTheme.titleSmall?.copyWith(
@@ -1764,9 +1772,19 @@ Future<String?> showPaymentMethodPickerSheet(
                         },
                       ),
                       IconButton(
-                        tooltip: l10n.paymentMethodAddChoiceTitle,
+                        tooltip: cardsOnly
+                            ? l10n.newCard
+                            : l10n.paymentMethodAddChoiceTitle,
                         icon: const Icon(Icons.add_circle_outline),
                         onPressed: () async {
+                          if (cardsOnly) {
+                            await showCardEditorBottomSheet(
+                              sheetContext,
+                              l10n,
+                            );
+                            await refreshPicker();
+                            return;
+                          }
                           final choice =
                               await showModalBottomSheet<
                                 _PaymentMethodCreateChoice
@@ -1855,7 +1873,9 @@ Future<String?> showPaymentMethodPickerSheet(
                         child: Padding(
                           padding: const EdgeInsets.all(16),
                           child: Text(
-                            '${l10n.noAccounts}\n${l10n.noCards}',
+                            cardsOnly
+                                ? l10n.noCards
+                                : '${l10n.noAccounts}\n${l10n.noCards}',
                             textAlign: TextAlign.center,
                           ),
                         ),
@@ -1913,7 +1933,7 @@ Future<String?> showPaymentMethodPickerSheet(
                             );
                           }),
                         ],
-                        if (vAccounts.isNotEmpty) ...[
+                        if (vAccounts.isNotEmpty && !cardsOnly) ...[
                           Padding(
                             padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
                             child: Text(
@@ -1980,6 +2000,8 @@ class _TransactionDialog extends StatefulWidget {
   final String? preferredCardId;
   final String? preferredCategoryId;
   final String? preferredTagId;
+  final bool forceDeferredCredit;
+  final bool paymentMethodCardsOnly;
 
   const _TransactionDialog({
     required this.cubit,
@@ -1989,6 +2011,8 @@ class _TransactionDialog extends StatefulWidget {
     this.preferredCardId,
     this.preferredCategoryId,
     this.preferredTagId,
+    this.forceDeferredCredit = false,
+    this.paymentMethodCardsOnly = false,
   });
 
   @override
@@ -2019,6 +2043,11 @@ class _TransactionDialogState extends State<_TransactionDialog> {
     final k = widget.transaction?.creditLedgerGroupingKey;
     return k != null && k.isNotEmpty;
   }
+
+  /// Linked [wallet_credits] row: grace/term can be edited and reschedule installments.
+  bool get _canEditWalletCreditTerms =>
+      _isCreditGroupEdit &&
+      (widget.transaction?.creditId?.isNotEmpty ?? false);
 
   List<AccountEntity> _accounts = [];
   List<CardEntity> _cards = [];
@@ -2062,7 +2091,16 @@ class _TransactionDialogState extends State<_TransactionDialog> {
   void initState() {
     super.initState();
     final t = widget.transaction;
-    _transactedAt = t?.transactedAt.toLocal() ?? DateTime.now();
+    _transactedAt = () {
+      if (t == null) return DateTime.now();
+      final creditAt = t.creditTransactedAt;
+      if (t.creditId != null &&
+          t.creditId!.isNotEmpty &&
+          creditAt != null) {
+        return creditAt.toLocal();
+      }
+      return t.transactedAt.toLocal();
+    }();
     if (t != null) {
       _valueController = TextEditingController(
         text: t.value.toStringAsFixed(2),
@@ -2072,7 +2110,7 @@ class _TransactionDialogState extends State<_TransactionDialog> {
       );
     } else {
       _valueController = TextEditingController();
-      _percentageController = TextEditingController();
+      _percentageController = TextEditingController(text: '100');
     }
     _descriptionController = TextEditingController(
       text: (t != null &&
@@ -2087,9 +2125,15 @@ class _TransactionDialogState extends State<_TransactionDialog> {
     _tagDisplayController = TextEditingController();
     _graceMonthsController = TextEditingController();
     _termMonthsController = TextEditingController();
-    _deferred = t != null && (t.creditLedgerGroupingKey?.isNotEmpty ?? false);
+    _deferred = (t != null &&
+            (t.creditLedgerGroupingKey?.isNotEmpty ?? false)) ||
+        (t == null && widget.forceDeferredCredit);
     _ignore = t?.ignore ?? false;
-    _accountId = t?.accountId ?? widget.preferredAccountId;
+    if (t == null && widget.forceDeferredCredit) {
+      _ignore = true;
+    }
+    _accountId = t?.accountId ??
+        (widget.paymentMethodCardsOnly ? null : widget.preferredAccountId);
     _cardId = t?.cardId ?? widget.preferredCardId;
     _categoryId = t?.categoryId ?? widget.preferredCategoryId;
     _tagId = t?.tagId ?? widget.preferredTagId;
@@ -2142,7 +2186,12 @@ class _TransactionDialogState extends State<_TransactionDialog> {
             _accountId = null;
           if (_cardId != null && !_cards.any((c) => c.id == _cardId))
             _cardId = null;
-          if (_accountId != null && _cardId != null) _cardId = null;
+          if (widget.paymentMethodCardsOnly) {
+            _accountId = null;
+          }
+          if (_accountId != null && _cardId != null) {
+            _cardId = null;
+          }
           if (_categoryId != null &&
               !_categories.any((c) => c.id == _categoryId))
             _categoryId = null;
@@ -2327,10 +2376,7 @@ class _TransactionDialogState extends State<_TransactionDialog> {
       if (valueRaw.isEmpty || valueParsed == null || valueParsed == 0) {
         _valueController.text = t.value.toStringAsFixed(2);
       }
-      final pct = double.tryParse(_percentageController.text.trim());
-      if (pct == null || pct == 0) {
-        _percentageController.text = t.percentage.toString();
-      }
+      _percentageController.text = t.percentage.toString();
       _syncRelationDisplays();
       _descriptionSuggestionMatches = const [];
       _descriptionSuggestLoading = false;
@@ -2484,6 +2530,7 @@ class _TransactionDialogState extends State<_TransactionDialog> {
       sheetTitle: l10n.transactionPaymentMethod,
       getAccounts: () => _accounts,
       getCards: () => _cards,
+      cardsOnly: widget.paymentMethodCardsOnly,
       onListsUpdated: (a, c) {
         if (!mounted) return;
         setState(() {
@@ -2493,7 +2540,12 @@ class _TransactionDialogState extends State<_TransactionDialog> {
             _accountId = null;
           if (_cardId != null && !_cards.any((x) => x.id == _cardId))
             _cardId = null;
-          if (_accountId != null && _cardId != null) _cardId = null;
+          if (widget.paymentMethodCardsOnly) {
+            _accountId = null;
+          }
+          if (_accountId != null && _cardId != null) {
+            _cardId = null;
+          }
           _syncRelationDisplays();
         });
       },
@@ -2552,10 +2604,10 @@ class _TransactionDialogState extends State<_TransactionDialog> {
     );
     if (!mounted || raw == null || raw.isEmpty) return;
     setState(() {
-      if (raw.startsWith(_paymentMethodPickAccountPrefix)) {
+        if (raw.startsWith(_paymentMethodPickAccountPrefix)) {
         _accountId = raw.substring(_paymentMethodPickAccountPrefix.length);
         _cardId = null;
-        if (widget.transaction == null) {
+        if (widget.transaction == null && !widget.forceDeferredCredit) {
           _deferred = false;
         }
       } else if (raw.startsWith(_paymentMethodPickCardPrefix)) {
@@ -2753,6 +2805,14 @@ class _TransactionDialogState extends State<_TransactionDialog> {
           );
         }
       } else {
+        int? creditGraceMonths;
+        int? creditTermMonths;
+        if (_canEditWalletCreditTerms) {
+          creditGraceMonths =
+              int.tryParse(_graceMonthsController.text.trim()) ?? 0;
+          creditTermMonths =
+              int.tryParse(_termMonthsController.text.trim());
+        }
         await widget.cubit.update(
           id: widget.transaction!.id,
           accountId: _accountId,
@@ -2766,6 +2826,8 @@ class _TransactionDialogState extends State<_TransactionDialog> {
           percentage: pct,
           transferGroupId: widget.transaction!.transferGroupId,
           creditId: widget.transaction!.creditId,
+          creditGraceMonths: creditGraceMonths,
+          creditTermMonths: creditTermMonths,
         );
       }
     } finally {
@@ -2948,13 +3010,15 @@ class _TransactionDialogState extends State<_TransactionDialog> {
                     _cardId != null &&
                     (widget.transaction == null || _isCreditGroupEdit)) ...[
                   const SizedBox(height: 10),
-                  CheckboxListTile(
+                  SwitchListTile(
                     value: _deferred,
-                    onChanged: widget.transaction != null || _loadingLookups
+                    onChanged: widget.transaction != null ||
+                            _loadingLookups ||
+                            widget.forceDeferredCredit
                         ? null
-                        : (checked) {
+                        : (v) {
                             setState(() {
-                              _deferred = checked ?? false;
+                              _deferred = v;
                               if (!_deferred) {
                                 _graceMonthsController.clear();
                                 _termMonthsController.clear();
@@ -2965,7 +3029,6 @@ class _TransactionDialogState extends State<_TransactionDialog> {
                           },
                     dense: true,
                     contentPadding: EdgeInsets.zero,
-                    controlAffinity: ListTileControlAffinity.leading,
                     title: Text(l10n.transactionDeferred),
                   ),
                   if (_deferred) ...[
@@ -3022,9 +3085,10 @@ class _TransactionDialogState extends State<_TransactionDialog> {
                           Expanded(
                             child: TextFormField(
                               controller: _graceMonthsController,
-                              readOnly: _isCreditGroupEdit,
+                              readOnly: _isCreditGroupEdit && !_canEditWalletCreditTerms,
                               keyboardType: TextInputType.number,
-                              inputFormatters: _isCreditGroupEdit
+                              inputFormatters: (_isCreditGroupEdit &&
+                                      !_canEditWalletCreditTerms)
                                   ? const <TextInputFormatter>[]
                                   : <TextInputFormatter>[
                                       FilteringTextInputFormatter.digitsOnly,
@@ -3033,21 +3097,25 @@ class _TransactionDialogState extends State<_TransactionDialog> {
                               decoration: InputDecoration(
                                 labelText: l10n.transactionGraceMonths,
                                 helperText:
-                                    _isCreditGroupEdit &&
-                                            !(widget.transaction?.creditId
-                                                    ?.isNotEmpty ??
-                                                false)
+                                    _isCreditGroupEdit && !_canEditWalletCreditTerms
                                         ? l10n.creditEditGraceNotApplicable
                                         : null,
                               ),
                               validator: (v) {
-                                if (widget.transaction != null ||
-                                    !_deferred ||
-                                    _loadingLookups) {
+                                if (!_deferred || _loadingLookups) {
                                   return null;
                                 }
                                 final t = (v ?? '').trim();
-                                if (t.isEmpty) return null;
+                                if (widget.transaction == null) {
+                                  if (t.isEmpty) return null;
+                                  final n = int.tryParse(t);
+                                  if (n == null || n < 0) {
+                                    return l10n.transactionGraceMonthsInvalid;
+                                  }
+                                  return null;
+                                }
+                                if (!_canEditWalletCreditTerms) return null;
+                                if (t.isEmpty) return l10n.fieldRequired;
                                 final n = int.tryParse(t);
                                 if (n == null || n < 0) {
                                   return l10n.transactionGraceMonthsInvalid;
@@ -3060,9 +3128,10 @@ class _TransactionDialogState extends State<_TransactionDialog> {
                           Expanded(
                             child: TextFormField(
                               controller: _termMonthsController,
-                              readOnly: _isCreditGroupEdit,
+                              readOnly: _isCreditGroupEdit && !_canEditWalletCreditTerms,
                               keyboardType: TextInputType.number,
-                              inputFormatters: _isCreditGroupEdit
+                              inputFormatters: (_isCreditGroupEdit &&
+                                      !_canEditWalletCreditTerms)
                                   ? const <TextInputFormatter>[]
                                   : <TextInputFormatter>[
                                       FilteringTextInputFormatter.digitsOnly,
@@ -3072,11 +3141,20 @@ class _TransactionDialogState extends State<_TransactionDialog> {
                                 labelText: l10n.transactionMesesPlazo,
                               ),
                               validator: (v) {
-                                if (widget.transaction != null ||
-                                    !_deferred ||
-                                    _loadingLookups) {
+                                if (!_deferred || _loadingLookups) {
                                   return null;
                                 }
+                                if (widget.transaction == null) {
+                                  if (v == null || v.trim().isEmpty) {
+                                    return l10n.fieldRequired;
+                                  }
+                                  final n = int.tryParse(v.trim());
+                                  if (n == null || n < 2) {
+                                    return l10n.transactionTermMonthsInvalid;
+                                  }
+                                  return null;
+                                }
+                                if (!_canEditWalletCreditTerms) return null;
                                 if (v == null || v.trim().isEmpty) {
                                   return l10n.fieldRequired;
                                 }

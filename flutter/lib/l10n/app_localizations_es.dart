@@ -450,6 +450,17 @@ class AppLocalizationsEs extends AppLocalizations {
   String get creditsPendingTotalsLabel => 'Total pendiente';
 
   @override
+  String get creditsDueThisMonthLabel => 'A pagar este mes';
+
+  @override
+  String get creditsNewDeferredPurchase => 'Nueva compra a crédito';
+
+  @override
+  String creditsWalletCreditTransactedAt(String when) {
+    return 'Fecha del crédito: $when';
+  }
+
+  @override
   String get creditEditGraceNotApplicable =>
       'El periodo de gracia original no está guardado.';
 
