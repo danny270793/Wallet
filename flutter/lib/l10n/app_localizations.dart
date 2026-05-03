@@ -332,6 +332,54 @@ abstract class AppLocalizations {
   /// **'That is already your email.'**
   String get settingsChangeEmailSameAsCurrent;
 
+  /// No description provided for @settingsChangePassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Change password'**
+  String get settingsChangePassword;
+
+  /// No description provided for @settingsChangePasswordDialogTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Change password'**
+  String get settingsChangePasswordDialogTitle;
+
+  /// No description provided for @settingsNewPasswordLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'New password'**
+  String get settingsNewPasswordLabel;
+
+  /// No description provided for @settingsConfirmNewPasswordLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm new password'**
+  String get settingsConfirmNewPasswordLabel;
+
+  /// No description provided for @settingsChangePasswordSubmit.
+  ///
+  /// In en, this message translates to:
+  /// **'Update password'**
+  String get settingsChangePasswordSubmit;
+
+  /// No description provided for @settingsChangePasswordSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Your password was updated.'**
+  String get settingsChangePasswordSuccess;
+
+  /// No description provided for @settingsPasswordsDoNotMatch.
+  ///
+  /// In en, this message translates to:
+  /// **'Passwords do not match.'**
+  String get settingsPasswordsDoNotMatch;
+
+  /// No description provided for @settingsPasswordTooShort.
+  ///
+  /// In en, this message translates to:
+  /// **'Use at least 6 characters.'**
+  String get settingsPasswordTooShort;
+
   /// No description provided for @settingsAppearance.
   ///
   /// In en, this message translates to:
