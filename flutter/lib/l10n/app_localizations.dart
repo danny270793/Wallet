@@ -476,6 +476,36 @@ abstract class AppLocalizations {
   /// **'Size of cached files'**
   String get settingsCacheBottomBarCaption;
 
+  /// No description provided for @settingsCacheSortTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Sort'**
+  String get settingsCacheSortTooltip;
+
+  /// No description provided for @settingsCacheSortSheetTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Sort by'**
+  String get settingsCacheSortSheetTitle;
+
+  /// No description provided for @settingsCacheSortByDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Date'**
+  String get settingsCacheSortByDate;
+
+  /// No description provided for @settingsCacheSortBySize.
+  ///
+  /// In en, this message translates to:
+  /// **'Size'**
+  String get settingsCacheSortBySize;
+
+  /// No description provided for @settingsCacheSortByName.
+  ///
+  /// In en, this message translates to:
+  /// **'Name'**
+  String get settingsCacheSortByName;
+
   /// No description provided for @settingsCacheKeyTxMonth.
   ///
   /// In en, this message translates to:
