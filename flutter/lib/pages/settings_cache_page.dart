@@ -6,6 +6,7 @@ import 'package:wallet/l10n/app_localizations.dart';
 
 import '../core/di/injection.dart';
 import '../core/offline/wallet_offline_cache.dart';
+import '../widgets/bottom_sheet_pinned_title.dart';
 
 String _formatBytes(int n) {
   if (n < 1024) return '$n B';
@@ -52,6 +53,18 @@ String _cacheEntryTitle(String key, AppLocalizations l10n) {
   return l10n.settingsCacheKeyRaw(key);
 }
 
+enum _CacheSortBy {
+  date,
+  size,
+  name,
+}
+
+String _cacheSortLabel(AppLocalizations l10n, _CacheSortBy by) => switch (by) {
+      _CacheSortBy.date => l10n.settingsCacheSortByDate,
+      _CacheSortBy.size => l10n.settingsCacheSortBySize,
+      _CacheSortBy.name => l10n.settingsCacheSortByName,
+    };
+
 class SettingsCachePage extends StatefulWidget {
   const SettingsCachePage({super.key});
 
@@ -62,6 +75,59 @@ class SettingsCachePage extends StatefulWidget {
 class _SettingsCachePageState extends State<SettingsCachePage> {
   List<WalletCacheEntry> _entries = [];
   bool _loading = true;
+  _CacheSortBy _sortBy = _CacheSortBy.date;
+
+  List<WalletCacheEntry> _sortedEntries(AppLocalizations l10n) {
+    final copy = List<WalletCacheEntry>.from(_entries);
+    switch (_sortBy) {
+      case _CacheSortBy.date:
+        copy.sort((a, b) => b.modifiedAt.compareTo(a.modifiedAt));
+      case _CacheSortBy.size:
+        copy.sort((a, b) => b.bytes.compareTo(a.bytes));
+      case _CacheSortBy.name:
+        copy.sort(
+          (a, b) => _cacheEntryTitle(a.cacheKey, l10n).toLowerCase().compareTo(
+                _cacheEntryTitle(b.cacheKey, l10n).toLowerCase(),
+              ),
+        );
+    }
+    return copy;
+  }
+
+  Future<void> _showSortSheet(
+    BuildContext context,
+    AppLocalizations l10n,
+  ) async {
+    await showModalBottomSheet<void>(
+      context: context,
+      showDragHandle: false,
+      isScrollControlled: true,
+      builder: (sheetContext) => BottomSheetPinnedTitleScrollView(
+        padding: EdgeInsets.zero,
+        title: l10n.settingsCacheSortSheetTitle,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            for (final option in _CacheSortBy.values)
+              ListTile(
+                title: Text(_cacheSortLabel(l10n, option)),
+                trailing: _sortBy == option
+                    ? Icon(
+                        Icons.check,
+                        color: Theme.of(sheetContext).colorScheme.primary,
+                      )
+                    : null,
+                onTap: () {
+                  setState(() => _sortBy = option);
+                  Navigator.of(sheetContext).pop();
+                },
+              ),
+          ],
+        ),
+      ),
+    );
+  }
 
   @override
   void initState() {
@@ -87,11 +153,23 @@ class _SettingsCachePageState extends State<SettingsCachePage> {
     final totalBytes = _entries.fold<int>(0, (s, e) => s + e.bytes);
     final localeName = Localizations.localeOf(context).toString();
     final dateFormat = DateFormat.yMMMd(localeName).add_jm();
+    final displayEntries = _sortedEntries(l10n);
 
     return Scaffold(
       appBar: AppBar(
         title: Text(l10n.settingsCachePageTitle),
-        
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => context.pop(),
+        ),
+        actions: [
+          if (!_loading && _entries.isNotEmpty)
+            IconButton(
+              icon: const Icon(Icons.sort_rounded),
+              tooltip: l10n.settingsCacheSortTooltip,
+              onPressed: () => _showSortSheet(context, l10n),
+            ),
+        ],
       ),
       body: _loading
           ? const Center(child: CircularProgressIndicator())
@@ -118,9 +196,9 @@ class _SettingsCachePageState extends State<SettingsCachePage> {
                   : ListView.builder(
                       physics: const AlwaysScrollableScrollPhysics(),
                       padding: const EdgeInsets.only(bottom: 88),
-                      itemCount: _entries.length,
+                      itemCount: displayEntries.length,
                       itemBuilder: (context, i) {
-                        final e = _entries[i];
+                        final e = displayEntries[i];
                         final dt = dateFormat.format(e.modifiedAt.toLocal());
                         final sz = _formatBytes(e.bytes);
                         return ListTile(
