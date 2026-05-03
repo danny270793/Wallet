@@ -7,6 +7,7 @@ import '../features/categories/domain/entities/category_entity.dart';
 import '../features/categories/presentation/cubit/categories_cubit.dart';
 import '../features/categories/presentation/cubit/categories_state.dart';
 import '../widgets/category_editor_sheet.dart';
+import '../widgets/remote_load_failure_panel.dart';
 import '../widgets/shell_scaffold.dart';
 import '../widgets/swipeable_list_tile.dart';
 
@@ -42,7 +43,19 @@ class _CategoriesView extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
 
-    return BlocConsumer<CategoriesCubit, CategoriesState>(
+    return BlocListener<CategoriesCubit, CategoriesState>(
+      listenWhen: (prev, curr) =>
+          curr is CategoriesError && prev is! CategoriesError,
+      listener: (context, state) {
+        final s = state as CategoriesError;
+        showRemoteLoadFailureAlert(
+          context,
+          l10n,
+          s.failure,
+          () => context.read<CategoriesCubit>().load(showLoading: true),
+        );
+      },
+      child: BlocConsumer<CategoriesCubit, CategoriesState>(
       listener: (context, state) {
         if (state is CategoriesActionError) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -60,6 +73,7 @@ class _CategoriesView extends StatelessWidget {
           body: _body(context, state, l10n),
         );
       },
+    ),
     );
   }
 
@@ -90,29 +104,10 @@ class _CategoriesView extends StatelessWidget {
     }
 
     if (state is CategoriesError) {
-      return RefreshIndicator(
-        onRefresh: pullRefresh,
-        child: ListView(
-          physics: const AlwaysScrollableScrollPhysics(),
-          children: [
-            SizedBox(
-              height: MediaQuery.sizeOf(context).height * 0.35,
-              child: Center(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(l10n.unexpectedError),
-                    const SizedBox(height: 12),
-                    ElevatedButton(
-                      onPressed: reloadWithOverlay,
-                      child: const Text('Retry'),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ],
-        ),
+      return RemoteLoadFailurePanel(
+        l10n: l10n,
+        failure: state.failure,
+        onRetry: reloadWithOverlay,
       );
     }
 
