@@ -31,6 +31,16 @@ class AccountEntity extends Equatable {
     balance: (json['balance'] as num?)?.toDouble() ?? 0,
   );
 
+  Map<String, dynamic> toJson() => {
+    'id': id,
+    'userId': userId,
+    'name': name,
+    'description': description,
+    'createdAt': createdAt.toUtc().toIso8601String(),
+    'updatedAt': updatedAt.toUtc().toIso8601String(),
+    'balance': balance,
+  };
+
   @override
   List<Object?> get props =>
       [id, userId, name, description, createdAt, updatedAt, balance];
