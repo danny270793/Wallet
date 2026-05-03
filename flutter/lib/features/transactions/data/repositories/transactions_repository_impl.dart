@@ -1,4 +1,5 @@
 import '../../../../core/offline/offline_fetch.dart';
+import '../../../../core/offline/offline_served_bundle.dart';
 import '../../../../core/offline/wallet_offline_cache.dart';
 import '../../../../core/offline/wallet_offline_user_context.dart';
 import '../../domain/entities/transaction_entity.dart';
@@ -17,7 +18,7 @@ class TransactionsRepositoryImpl implements TransactionsRepository {
   );
 
   @override
-  Future<List<TransactionEntity>> getTransactionsForMonth(DateTime monthStartLocal) =>
+  Future<OfflineServedBundle<List<TransactionEntity>>> getTransactionsForMonth(DateTime monthStartLocal) =>
       fetchListWithOfflineCache(
         session: _offlineSession,
         cache: _offlineCache,
@@ -28,7 +29,7 @@ class TransactionsRepositoryImpl implements TransactionsRepository {
       );
 
   @override
-  Future<List<TransactionEntity>> getTransactionsForYear(DateTime yearStartLocal) =>
+  Future<OfflineServedBundle<List<TransactionEntity>>> getTransactionsForYear(DateTime yearStartLocal) =>
       fetchListWithOfflineCache(
         session: _offlineSession,
         cache: _offlineCache,
@@ -43,7 +44,7 @@ class TransactionsRepositoryImpl implements TransactionsRepository {
       _datasource.searchTransactionsByDescription(query, limit: limit);
 
   @override
-  Future<List<TransactionEntity>> getTransactionsByCreditGroupId(String creditId) =>
+  Future<OfflineServedBundle<List<TransactionEntity>>> getTransactionsByCreditGroupId(String creditId) =>
       fetchListWithOfflineCache(
         session: _offlineSession,
         cache: _offlineCache,
@@ -54,7 +55,7 @@ class TransactionsRepositoryImpl implements TransactionsRepository {
       );
 
   @override
-  Future<List<TransactionEntity>> listTransactionsHavingCreditGroup() => fetchListWithOfflineCache(
+  Future<OfflineServedBundle<List<TransactionEntity>>> listTransactionsHavingCreditGroup() => fetchListWithOfflineCache(
         session: _offlineSession,
         cache: _offlineCache,
         cacheKey: WalletOfflineCacheKeys.transactionsHavingCreditGroup,
