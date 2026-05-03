@@ -21,9 +21,10 @@ class TagsLoading extends TagsState {
 
 class TagsLoaded extends TagsState {
   final List<TagEntity> tags;
-  const TagsLoaded(this.tags);
+  final bool servedFromOfflineCache;
+  const TagsLoaded(this.tags, {this.servedFromOfflineCache = false});
   @override
-  List<Object?> get props => [tags];
+  List<Object?> get props => [tags, servedFromOfflineCache];
 }
 
 class TagsError extends TagsState {
@@ -36,7 +37,8 @@ class TagsError extends TagsState {
 class TagsActionError extends TagsState {
   final List<TagEntity> tags;
   final String? message;
-  const TagsActionError(this.tags, {this.message});
+  final bool servedFromOfflineCache;
+  const TagsActionError(this.tags, {this.message, this.servedFromOfflineCache = false});
   @override
-  List<Object?> get props => [tags, message];
+  List<Object?> get props => [tags, message, servedFromOfflineCache];
 }
