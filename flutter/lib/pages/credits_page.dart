@@ -12,6 +12,7 @@ import '../features/transactions/presentation/cubit/transactions_cubit.dart';
 import '../widgets/offline_cached_data_banner.dart';
 import '../widgets/remote_load_failure_panel.dart';
 import '../widgets/shell_scaffold.dart';
+import '../widgets/transactions_month_scope.dart';
 import '../widgets/wallet_bottom_bar_insets.dart';
 import '../widgets/swipeable_list_tile.dart';
 import '../widgets/transaction_delete_dialogs.dart';
@@ -77,35 +78,57 @@ double creditLedgerTotalPending(List<TransactionEntity> flat) {
   return sum;
 }
 
-/// Raw sum of installment values due in the current local month (due date on or after today).
-double creditLedgerDueThisMonth(List<TransactionEntity> flat) {
+/// Sum of raw values for installments due in [monthStart]'s calendar month.
+/// For the current local month, only dues on or after today are included.
+double creditLedgerDueInSelectedMonth(
+  List<TransactionEntity> flat,
+  DateTime monthStart,
+) {
   final now = DateTime.now();
   final today = DateTime(now.year, now.month, now.day);
+  final y = monthStart.year;
+  final m = monthStart.month;
+  final isCurrentMonth = y == today.year && m == today.month;
   var sum = 0.0;
   for (final t in flat) {
     final g = t.creditLedgerGroupingKey;
     if (g == null || g.isEmpty) continue;
     final local = t.transactedAt.toLocal();
-    if (local.year != now.year || local.month != now.month) continue;
+    if (local.year != y || local.month != m) continue;
     final dueDay = DateTime(local.year, local.month, local.day);
-    if (dueDay.isBefore(today)) continue;
+    if (isCurrentMonth && dueDay.isBefore(today)) continue;
     sum += t.value;
   }
   return sum;
+}
+
+String _creditsDueMonthDescription(
+  AppLocalizations l10n,
+  DateTime monthStart,
+  Locale locale,
+) {
+  final now = DateTime.now();
+  if (monthStart.year == now.year && monthStart.month == now.month) {
+    return l10n.creditsDueThisMonthLabel;
+  }
+  final monthYear = DateFormat.yMMMM(locale.toString()).format(monthStart);
+  return l10n.creditsDueInMonthLabel(monthYear);
 }
 
 class _CreditsPendingTotalsBar extends StatelessWidget {
   const _CreditsPendingTotalsBar({
     required this.l10n,
     required this.pendingTotal,
-    required this.dueThisMonthTotal,
+    required this.dueInSelectedMonthTotal,
+    required this.dueMonthDescription,
   });
 
   final AppLocalizations l10n;
   /// Sum of raw [TransactionEntity.value] for future credit installments.
   final double pendingTotal;
-  /// Sum of raw values for credit installments due this month (today onward).
-  final double dueThisMonthTotal;
+  /// Sum for installments due in the selected month ([creditLedgerDueInSelectedMonth]).
+  final double dueInSelectedMonthTotal;
+  final String dueMonthDescription;
 
   @override
   Widget build(BuildContext context) {
@@ -119,9 +142,9 @@ class _CreditsPendingTotalsBar extends StatelessWidget {
         : theme.colorScheme.onSurfaceVariant;
 
     final monthStr = l10n.transactionAmountValue(
-      dueThisMonthTotal.toStringAsFixed(2),
+      dueInSelectedMonthTotal.toStringAsFixed(2),
     );
-    final hasMonthDue = dueThisMonthTotal.abs() > 0.005;
+    final hasMonthDue = dueInSelectedMonthTotal.abs() > 0.005;
     final monthColor = hasMonthDue
         ? theme.colorScheme.error
         : theme.colorScheme.onSurfaceVariant;
@@ -180,7 +203,7 @@ class _CreditsPendingTotalsBar extends StatelessWidget {
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      l10n.creditsDueThisMonthLabel,
+                      dueMonthDescription,
                       textAlign: TextAlign.center,
                       style: theme.textTheme.labelMedium?.copyWith(
                         color: theme.colorScheme.onSurfaceVariant,
@@ -387,6 +410,7 @@ class CreditsPage extends StatefulWidget {
 }
 
 class _CreditsPageState extends State<CreditsPage> {
+  late final ValueNotifier<DateTime> _dueMonthNotifier;
   bool _loading = true;
   Object? _error;
   List<TransactionEntity> _flat = const [];
@@ -395,7 +419,15 @@ class _CreditsPageState extends State<CreditsPage> {
   @override
   void initState() {
     super.initState();
+    final n = DateTime.now();
+    _dueMonthNotifier = ValueNotifier(DateTime(n.year, n.month, 1));
     _load();
+  }
+
+  @override
+  void dispose() {
+    _dueMonthNotifier.dispose();
+    super.dispose();
   }
 
   Future<void> _load() async {
@@ -453,6 +485,7 @@ class _CreditsPageState extends State<CreditsPage> {
       final failure = classifyRemoteLoadError(_error!);
       return ShellScaffold(
         title: l10n.creditsTitle,
+        appBarBottom: TransactionsMonthAppBarBottom(notifier: _dueMonthNotifier),
         floatingActionButton: FloatingActionButton(
           onPressed: () => _openNewCreditPurchase(l10n),
           child: const Icon(Icons.add),
@@ -466,79 +499,91 @@ class _CreditsPageState extends State<CreditsPage> {
       );
     }
 
-    final groups = groupedCreditLedger(_flat);
-    final showPendingBar = !_loading && groups.isNotEmpty;
+    return ValueListenableBuilder<DateTime>(
+      valueListenable: _dueMonthNotifier,
+      builder: (context, visibleMonth, _) {
+        final groups = groupedCreditLedger(_flat);
+        final showPendingBar = !_loading && groups.isNotEmpty;
+        final locale = Localizations.localeOf(context);
+        final dueInMonth = creditLedgerDueInSelectedMonth(_flat, visibleMonth);
+        final dueDesc = _creditsDueMonthDescription(l10n, visibleMonth, locale);
 
-    return ShellScaffold(
-      title: l10n.creditsTitle,
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => _openNewCreditPurchase(l10n),
-        child: const Icon(Icons.add),
-      ),
-      bottomNavigationBar: showPendingBar
-          ? _CreditsPendingTotalsBar(
-              l10n: l10n,
-              pendingTotal: creditLedgerTotalPending(_flat),
-              dueThisMonthTotal: creditLedgerDueThisMonth(_flat),
-            )
-          : null,
-      body: RefreshIndicator(
-        onRefresh: _load,
-        child: _loading
-            ? ListView(
-                physics: const AlwaysScrollableScrollPhysics(),
-                padding: const EdgeInsets.fromLTRB(0, 120, 0, 88),
-                children: const [
-                  Center(
-                    child: SizedBox(
-                      width: 32,
-                      height: 32,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    ),
-                  ),
-                ],
-              )
-            : groups.isEmpty
-            ? ListView(
-                physics: const AlwaysScrollableScrollPhysics(),
-                padding: const EdgeInsets.fromLTRB(24, 0, 24, 88),
-                children: [
-                  OfflineCachedDataBanner(visible: _servedFromOfflineCache),
-                  SizedBox(height: MediaQuery.paddingOf(context).top + 40),
-                  Text(
-                    l10n.creditsEmpty,
-                    textAlign: TextAlign.center,
-                    style: theme.textTheme.bodyLarge?.copyWith(
-                      color: theme.colorScheme.onSurfaceVariant,
-                    ),
-                  ),
-                ],
-              )
-            : Builder(
-                builder: (context) {
-                  final cubit = context.read<TransactionsCubit>();
-                  return ListView.builder(
+        return ShellScaffold(
+          title: l10n.creditsTitle,
+          appBarBottom:
+              TransactionsMonthAppBarBottom(notifier: _dueMonthNotifier),
+          floatingActionButton: FloatingActionButton(
+            onPressed: () => _openNewCreditPurchase(l10n),
+            child: const Icon(Icons.add),
+          ),
+          bottomNavigationBar: showPendingBar
+              ? _CreditsPendingTotalsBar(
+                  l10n: l10n,
+                  pendingTotal: creditLedgerTotalPending(_flat),
+                  dueInSelectedMonthTotal: dueInMonth,
+                  dueMonthDescription: dueDesc,
+                )
+              : null,
+          body: RefreshIndicator(
+            onRefresh: _load,
+            child: _loading
+                ? ListView(
                     physics: const AlwaysScrollableScrollPhysics(),
-                    padding: const EdgeInsets.fromLTRB(0, 0, 0, 88),
-                    itemCount: groups.length + (_servedFromOfflineCache ? 1 : 0),
-                    itemBuilder: (context, i) {
-                      if (_servedFromOfflineCache && i == 0) {
-                        return const OfflineCachedDataBanner(visible: true);
-                      }
-                      final gi = i - (_servedFromOfflineCache ? 1 : 0);
-                      final g = groups[gi];
-                      return _CreditGroupTile(
-                        cubit: cubit,
-                        rows: g.rows,
-                        creditLedgerKey: g.id,
-                        l10n: l10n,
-                        onSwipeEdit: () => _openEditor(g.rows.first, l10n),
+                    padding: const EdgeInsets.fromLTRB(0, 120, 0, 88),
+                    children: const [
+                      Center(
+                        child: SizedBox(
+                          width: 32,
+                          height: 32,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        ),
+                      ),
+                    ],
+                  )
+                : groups.isEmpty
+                ? ListView(
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    padding: const EdgeInsets.fromLTRB(24, 0, 24, 88),
+                    children: [
+                      OfflineCachedDataBanner(visible: _servedFromOfflineCache),
+                      SizedBox(height: MediaQuery.paddingOf(context).top + 40),
+                      Text(
+                        l10n.creditsEmpty,
+                        textAlign: TextAlign.center,
+                        style: theme.textTheme.bodyLarge?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                    ],
+                  )
+                : Builder(
+                    builder: (context) {
+                      final cubit = context.read<TransactionsCubit>();
+                      return ListView.builder(
+                        physics: const AlwaysScrollableScrollPhysics(),
+                        padding: const EdgeInsets.fromLTRB(0, 0, 0, 88),
+                        itemCount:
+                            groups.length + (_servedFromOfflineCache ? 1 : 0),
+                        itemBuilder: (context, i) {
+                          if (_servedFromOfflineCache && i == 0) {
+                            return const OfflineCachedDataBanner(visible: true);
+                          }
+                          final gi = i - (_servedFromOfflineCache ? 1 : 0);
+                          final g = groups[gi];
+                          return _CreditGroupTile(
+                            cubit: cubit,
+                            rows: g.rows,
+                            creditLedgerKey: g.id,
+                            l10n: l10n,
+                            onSwipeEdit: () => _openEditor(g.rows.first, l10n),
+                          );
+                        },
                       );
                     },
-                  );
-                },
-              ),
-      ),
+                  ),
+          ),
+        );
+      },
     );
   }
 }
