@@ -324,6 +324,7 @@
   "transactionsTotalsNotWeightedExcludingIgnoredHint": "Not weighted excluding ignored",
   "loadFailedNoConnectionTitle": "No internet connection",
   "loadFailedNoConnectionBody": "Check your network and try again. If you are online, the server may be unreachable.",
+  "cachedDataOfflineBanner": "Showing saved data — no internet connection.",
   "loadFailedRequestFailedTitle": "Could not load data",
   "loadFailedRequestFailedBody": "The request failed. Pull down to refresh or try again shortly.",
   "retry": "Retry",
