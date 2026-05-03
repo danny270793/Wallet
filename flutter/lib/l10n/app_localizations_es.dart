@@ -136,6 +136,27 @@ class AppLocalizationsEs extends AppLocalizations {
   String get settingsThemeDark => 'Oscuro';
 
   @override
+  String get settingsSecuritySection => 'Seguridad';
+
+  @override
+  String get settingsBiometricUnlockTitle => 'Face ID y huella dactilar';
+
+  @override
+  String get settingsBiometricUnlockSubtitle =>
+      'Usa la biometría para desbloquear la app al volver desde segundo plano.';
+
+  @override
+  String get settingsBiometricUnavailable =>
+      'El desbloqueo biométrico no está disponible en este dispositivo.';
+
+  @override
+  String get settingsBiometricAuthReason =>
+      'Confirma para activar el desbloqueo biométrico.';
+
+  @override
+  String get settingsBiometricResumeReason => 'Autentícate para continuar.';
+
+  @override
   String get signOut => 'Cerrar sesión';
 
   @override
