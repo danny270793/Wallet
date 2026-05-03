@@ -63,6 +63,11 @@
   "settingsCachePageTitle": "Caché sin conexión",
   "settingsCacheEmpty": "Aún no hay respuestas en caché.",
   "settingsCacheBottomBarCaption": "Tamaño de archivos en caché",
+  "settingsCacheSortTooltip": "Ordenar",
+  "settingsCacheSortSheetTitle": "Ordenar por",
+  "settingsCacheSortByDate": "Fecha",
+  "settingsCacheSortBySize": "Tamaño",
+  "settingsCacheSortByName": "Nombre",
   "settingsCacheKeyTxMonth": "Transacciones · {year}-{month}",
   "@settingsCacheKeyTxMonth": {
     "placeholders": {
