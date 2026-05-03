@@ -1,6 +1,7 @@
 import 'package:get_it/get_it.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../locale/app_locale_controller.dart';
+import '../security/app_biometric_unlock_controller.dart';
 import '../theme/app_theme_controller.dart';
 import '../wallet_actions/wallet_actions_datasource.dart';
 import '../wallet_actions/wallet_actions_reporter.dart';
@@ -9,6 +10,8 @@ import '../../features/auth/data/repositories/auth_repository_impl.dart';
 import '../../features/auth/domain/repositories/auth_repository.dart';
 import '../../features/auth/domain/usecases/sign_in_usecase.dart';
 import '../../features/auth/domain/usecases/sign_out_usecase.dart';
+import '../../features/auth/domain/usecases/update_email_usecase.dart';
+import '../../features/auth/domain/usecases/update_password_usecase.dart';
 import '../../features/auth/presentation/bloc/login_bloc.dart';
 import '../../features/auth/presentation/cubit/settings_cubit.dart';
 import '../../features/accounts/data/datasources/accounts_remote_datasource.dart';
@@ -79,6 +82,9 @@ final getIt = GetIt.instance;
 void setupDi() {
   getIt.registerLazySingleton<AppLocaleController>(AppLocaleController.new);
   getIt.registerLazySingleton<AppThemeController>(AppThemeController.new);
+  getIt.registerLazySingleton<AppBiometricUnlockController>(
+    AppBiometricUnlockController.new,
+  );
 
   getIt.registerLazySingleton<WalletActionsDatasource>(
     () => WalletActionsDatasource(Supabase.instance.client),
@@ -98,6 +104,10 @@ void setupDi() {
   );
   getIt.registerFactory<SignInUsecase>(() => SignInUsecase(getIt()));
   getIt.registerFactory<SignOutUsecase>(() => SignOutUsecase(getIt()));
+  getIt.registerFactory<UpdateEmailUsecase>(() => UpdateEmailUsecase(getIt()));
+  getIt.registerFactory<UpdatePasswordUsecase>(
+    () => UpdatePasswordUsecase(getIt()),
+  );
   getIt.registerFactory<LoginBloc>(() => LoginBloc(signIn: getIt()));
   getIt.registerFactory<SettingsCubit>(() => SettingsCubit(signOut: getIt()));
 

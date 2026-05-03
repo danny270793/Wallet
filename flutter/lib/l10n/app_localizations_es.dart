@@ -109,6 +109,59 @@ class AppLocalizationsEs extends AppLocalizations {
   String get settings => 'Ajustes';
 
   @override
+  String get settingsProfileSection => 'Perfil';
+
+  @override
+  String get settingsChangeEmail => 'Cambiar correo';
+
+  @override
+  String get settingsChangeEmailDialogTitle => 'Cambiar correo';
+
+  @override
+  String get settingsNewEmailLabel => 'Correo nuevo';
+
+  @override
+  String get settingsChangeEmailSubmit => 'Actualizar';
+
+  @override
+  String get settingsChangeEmailSuccess =>
+      'Revisa tu correo nuevo para confirmar el cambio.';
+
+  @override
+  String get settingsChangeEmailInvalid => 'Introduce un correo válido.';
+
+  @override
+  String get settingsChangeEmailSameAsCurrent => 'Ese ya es tu correo.';
+
+  @override
+  String get settingsChangePassword => 'Cambiar contraseña';
+
+  @override
+  String get settingsChangePasswordSubtitle =>
+      'Actualiza la contraseña con la que inicias sesión.';
+
+  @override
+  String get settingsChangePasswordDialogTitle => 'Cambiar contraseña';
+
+  @override
+  String get settingsNewPasswordLabel => 'Contraseña nueva';
+
+  @override
+  String get settingsConfirmNewPasswordLabel => 'Confirmar contraseña';
+
+  @override
+  String get settingsChangePasswordSubmit => 'Actualizar contraseña';
+
+  @override
+  String get settingsChangePasswordSuccess => 'Tu contraseña se actualizó.';
+
+  @override
+  String get settingsPasswordsDoNotMatch => 'Las contraseñas no coinciden.';
+
+  @override
+  String get settingsPasswordTooShort => 'Usa al menos 6 caracteres.';
+
+  @override
   String get settingsAppearance => 'Apariencia';
 
   @override
@@ -134,6 +187,36 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get settingsThemeDark => 'Oscuro';
+
+  @override
+  String get settingsSecuritySection => 'Seguridad';
+
+  @override
+  String get settingsBiometricUnlockTitle => 'Face ID y huella dactilar';
+
+  @override
+  String get settingsBiometricUnlockSubtitle =>
+      'Usa la biometría para desbloquear la app.';
+
+  @override
+  String get settingsBiometricUnavailable =>
+      'El desbloqueo biométrico no está disponible en este dispositivo.';
+
+  @override
+  String get settingsBiometricAuthReason =>
+      'Confirma para activar el desbloqueo biométrico.';
+
+  @override
+  String get settingsBiometricResumeReason => 'Autentícate para continuar.';
+
+  @override
+  String get biometricLockTitle => 'App bloqueada';
+
+  @override
+  String get biometricLockBody => 'Usa Face ID o la huella para continuar.';
+
+  @override
+  String get biometricLockUnlockButton => 'Desbloquear';
 
   @override
   String get signOut => 'Cerrar sesión';

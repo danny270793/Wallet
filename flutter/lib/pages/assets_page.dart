@@ -167,11 +167,16 @@ class _AssetTile extends StatelessWidget {
 
     final valueStr =
         l10n.transactionAmountValue(asset.value.toStringAsFixed(2));
-    final perApproxMo = assetValuePerApproximateCalendarMonth(
-      asset.value,
-      asset.boughtAt,
-      asset.endedAt,
-    );
+    final ymd = assetHoldingCalendarYmd(asset.boughtAt, asset.endedAt);
+    final heldLessThanOneFullCalendarMonth =
+        ymd != null && ymd.years == 0 && ymd.months == 0;
+    final perApproxMo = heldLessThanOneFullCalendarMonth
+        ? null
+        : assetValuePerApproximateCalendarMonth(
+            asset.value,
+            asset.boughtAt,
+            asset.endedAt,
+          );
     final held = formatAssetHoldingDurationYmOmitDaysWhenGrouped(
       asset.boughtAt,
       asset.endedAt,
@@ -204,6 +209,15 @@ class _AssetTile extends StatelessWidget {
     );
 
     Widget purchaseTrailing() {
+      if (heldLessThanOneFullCalendarMonth) {
+        return Text(
+          valueStr,
+          style: trailingMoAsTitle,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          textAlign: TextAlign.right,
+        );
+      }
       return Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.end,

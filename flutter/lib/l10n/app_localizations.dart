@@ -284,6 +284,108 @@ abstract class AppLocalizations {
   /// **'Settings'**
   String get settings;
 
+  /// No description provided for @settingsProfileSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Profile'**
+  String get settingsProfileSection;
+
+  /// No description provided for @settingsChangeEmail.
+  ///
+  /// In en, this message translates to:
+  /// **'Change email'**
+  String get settingsChangeEmail;
+
+  /// No description provided for @settingsChangeEmailDialogTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Change email'**
+  String get settingsChangeEmailDialogTitle;
+
+  /// No description provided for @settingsNewEmailLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'New email'**
+  String get settingsNewEmailLabel;
+
+  /// No description provided for @settingsChangeEmailSubmit.
+  ///
+  /// In en, this message translates to:
+  /// **'Update'**
+  String get settingsChangeEmailSubmit;
+
+  /// No description provided for @settingsChangeEmailSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Check your new email to confirm the change.'**
+  String get settingsChangeEmailSuccess;
+
+  /// No description provided for @settingsChangeEmailInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a valid email address.'**
+  String get settingsChangeEmailInvalid;
+
+  /// No description provided for @settingsChangeEmailSameAsCurrent.
+  ///
+  /// In en, this message translates to:
+  /// **'That is already your email.'**
+  String get settingsChangeEmailSameAsCurrent;
+
+  /// No description provided for @settingsChangePassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Change password'**
+  String get settingsChangePassword;
+
+  /// No description provided for @settingsChangePasswordSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Updates the password you use to sign in.'**
+  String get settingsChangePasswordSubtitle;
+
+  /// No description provided for @settingsChangePasswordDialogTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Change password'**
+  String get settingsChangePasswordDialogTitle;
+
+  /// No description provided for @settingsNewPasswordLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'New password'**
+  String get settingsNewPasswordLabel;
+
+  /// No description provided for @settingsConfirmNewPasswordLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm new password'**
+  String get settingsConfirmNewPasswordLabel;
+
+  /// No description provided for @settingsChangePasswordSubmit.
+  ///
+  /// In en, this message translates to:
+  /// **'Update password'**
+  String get settingsChangePasswordSubmit;
+
+  /// No description provided for @settingsChangePasswordSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Your password was updated.'**
+  String get settingsChangePasswordSuccess;
+
+  /// No description provided for @settingsPasswordsDoNotMatch.
+  ///
+  /// In en, this message translates to:
+  /// **'Passwords do not match.'**
+  String get settingsPasswordsDoNotMatch;
+
+  /// No description provided for @settingsPasswordTooShort.
+  ///
+  /// In en, this message translates to:
+  /// **'Use at least 6 characters.'**
+  String get settingsPasswordTooShort;
+
   /// No description provided for @settingsAppearance.
   ///
   /// In en, this message translates to:
@@ -337,6 +439,60 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Dark'**
   String get settingsThemeDark;
+
+  /// No description provided for @settingsSecuritySection.
+  ///
+  /// In en, this message translates to:
+  /// **'Security'**
+  String get settingsSecuritySection;
+
+  /// No description provided for @settingsBiometricUnlockTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Face ID & fingerprint'**
+  String get settingsBiometricUnlockTitle;
+
+  /// No description provided for @settingsBiometricUnlockSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Use biometrics to unlock the app.'**
+  String get settingsBiometricUnlockSubtitle;
+
+  /// No description provided for @settingsBiometricUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Biometric unlock is not available on this device.'**
+  String get settingsBiometricUnavailable;
+
+  /// No description provided for @settingsBiometricAuthReason.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm to enable biometric unlock.'**
+  String get settingsBiometricAuthReason;
+
+  /// No description provided for @settingsBiometricResumeReason.
+  ///
+  /// In en, this message translates to:
+  /// **'Authenticate to continue.'**
+  String get settingsBiometricResumeReason;
+
+  /// No description provided for @biometricLockTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'App locked'**
+  String get biometricLockTitle;
+
+  /// No description provided for @biometricLockBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Use Face ID or fingerprint to continue.'**
+  String get biometricLockBody;
+
+  /// No description provided for @biometricLockUnlockButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlock'**
+  String get biometricLockUnlockButton;
 
   /// No description provided for @signOut.
   ///
