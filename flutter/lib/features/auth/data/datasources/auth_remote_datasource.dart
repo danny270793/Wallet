@@ -5,6 +5,7 @@ import '../../domain/entities/user_entity.dart';
 abstract class AuthRemoteDatasource {
   Future<UserEntity> signIn({required String email, required String password});
   Future<void> signOut();
+  Future<void> updateEmail({required String newEmail});
 }
 
 class AuthSupabaseDatasource implements AuthRemoteDatasource {
@@ -31,5 +32,11 @@ class AuthSupabaseDatasource implements AuthRemoteDatasource {
   Future<void> signOut() {
     AppLogger.debug('signOut called');
     return _client.auth.signOut();
+  }
+
+  @override
+  Future<void> updateEmail({required String newEmail}) async {
+    AppLogger.debug('updateEmail called');
+    await _client.auth.updateUser(UserAttributes(email: newEmail));
   }
 }
