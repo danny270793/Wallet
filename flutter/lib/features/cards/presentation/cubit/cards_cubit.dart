@@ -1,5 +1,6 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/logger/app_logger.dart';
+import '../../../../core/remote_load_failure.dart';
 import '../../../../core/sort_by_name.dart';
 import '../../domain/entities/card_entity.dart';
 import '../../domain/usecases/get_cards_usecase.dart';
@@ -38,7 +39,7 @@ class CardsCubit extends Cubit<CardsState> {
       emit(CardsLoaded(cards));
     } catch (e, s) {
       AppLogger.error('failed to load cards', e, s);
-      emit(const CardsError());
+      emit(CardsError(failure: classifyRemoteLoadError(e)));
     }
   }
 
