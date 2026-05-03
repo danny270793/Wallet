@@ -43,19 +43,7 @@ class _CategoriesView extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
 
-    return BlocListener<CategoriesCubit, CategoriesState>(
-      listenWhen: (prev, curr) =>
-          curr is CategoriesError && prev is! CategoriesError,
-      listener: (context, state) {
-        final s = state as CategoriesError;
-        showRemoteLoadFailureAlert(
-          context,
-          l10n,
-          s.failure,
-          () => context.read<CategoriesCubit>().load(showLoading: true),
-        );
-      },
-      child: BlocConsumer<CategoriesCubit, CategoriesState>(
+    return BlocConsumer<CategoriesCubit, CategoriesState>(
       listener: (context, state) {
         if (state is CategoriesActionError) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -73,7 +61,6 @@ class _CategoriesView extends StatelessWidget {
           body: _body(context, state, l10n),
         );
       },
-    ),
     );
   }
 
