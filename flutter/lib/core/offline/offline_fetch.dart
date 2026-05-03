@@ -23,10 +23,11 @@ Future<OfflineServedBundle<List<E>>> fetchListWithOfflineCache<E>({
     );
   }
 
+  // Fast path: OS reports no data connection — prefer disk immediately.
   if (!await deviceReportsOnline()) {
     final cached = await loadFromCache();
     if (cached != null) return cached;
-    throw const NoDeviceConnectivityException();
+    // Fall through: connectivity can be wrong (e.g. VPN); still try remote.
   }
 
   try {
@@ -43,11 +44,20 @@ Future<OfflineServedBundle<List<E>>> fetchListWithOfflineCache<E>({
       servedFromOfflineCache: false,
     );
   } catch (e) {
-    if (classifyRemoteLoadError(e) != RemoteLoadFailure.networkUnavailable) {
-      rethrow;
-    }
     final cached = await loadFromCache();
-    if (cached != null) return cached;
+    final deviceOffline = !await deviceReportsOnline();
+    final networkFailure =
+        classifyRemoteLoadError(e) == RemoteLoadFailure.networkUnavailable;
+
+    // Saved snapshot + offline banner, not only the error panel, when we can.
+    if (cached != null && (networkFailure || deviceOffline)) {
+      return cached;
+    }
+
+    if (deviceOffline && cached == null) {
+      throw const NoDeviceConnectivityException();
+    }
+
     rethrow;
   }
 }
@@ -74,7 +84,6 @@ Future<OfflineServedBundle<T?>> fetchNullableWithOfflineCache<T>({
   if (!await deviceReportsOnline()) {
     final cached = await loadFromCache();
     if (cached != null) return cached;
-    throw const NoDeviceConnectivityException();
   }
 
   try {
@@ -87,11 +96,19 @@ Future<OfflineServedBundle<T?>> fetchNullableWithOfflineCache<T>({
       servedFromOfflineCache: false,
     );
   } catch (e) {
-    if (classifyRemoteLoadError(e) != RemoteLoadFailure.networkUnavailable) {
-      rethrow;
-    }
     final cached = await loadFromCache();
-    if (cached != null) return cached;
+    final deviceOffline = !await deviceReportsOnline();
+    final networkFailure =
+        classifyRemoteLoadError(e) == RemoteLoadFailure.networkUnavailable;
+
+    if (cached != null && (networkFailure || deviceOffline)) {
+      return cached;
+    }
+
+    if (deviceOffline && cached == null) {
+      throw const NoDeviceConnectivityException();
+    }
+
     rethrow;
   }
 }
