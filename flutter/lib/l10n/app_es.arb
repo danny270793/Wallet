@@ -63,17 +63,6 @@
   "settingsCachePageTitle": "Caché sin conexión",
   "settingsCacheEmpty": "Aún no hay respuestas en caché.",
   "settingsCacheBottomBarCaption": "Tamaño de archivos en caché",
-  "settingsCacheRowSubtitle": "{dateTime} · {size}",
-  "@settingsCacheRowSubtitle": {
-    "placeholders": {
-      "dateTime": {
-        "type": "String"
-      },
-      "size": {
-        "type": "String"
-      }
-    }
-  },
   "settingsCacheKeyTxMonth": "Transacciones · {year}-{month}",
   "@settingsCacheKeyTxMonth": {
     "placeholders": {
