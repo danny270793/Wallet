@@ -1683,8 +1683,352 @@ class _SearchableIdPickerSheetState extends State<_SearchableIdPickerSheet> {
 
 /// Returns `a:id` or `c:id`. [onListsUpdated] should update parent state (e.g. [setState]).
 ///
-/// Use [getAccounts]/[getCards] so each build reads fresh lists after the parent reloads via
-/// [onListsUpdated]. The modal [builder] can rerun when the parent rebuilds.
+/// Search visibility/filter live in [_PaymentMethodPickerSheet]'s [State] so keyboard
+/// inset rebuilds do not reset them (see modal `builder` reruns).
+class _PaymentMethodPickerSheet extends StatefulWidget {
+  const _PaymentMethodPickerSheet({
+    required this.l10n,
+    required this.sheetTitle,
+    required this.getAccounts,
+    required this.getCards,
+    required this.onListsUpdated,
+    this.paymentSwipe,
+    this.cardsOnly = false,
+  });
+
+  final AppLocalizations l10n;
+  final String sheetTitle;
+  final List<AccountEntity> Function() getAccounts;
+  final List<CardEntity> Function() getCards;
+  final void Function(List<AccountEntity> accounts, List<CardEntity> cards)
+  onListsUpdated;
+  final PaymentMethodPickerSwipeActions? paymentSwipe;
+  final bool cardsOnly;
+
+  @override
+  State<_PaymentMethodPickerSheet> createState() =>
+      _PaymentMethodPickerSheetState();
+}
+
+class _PaymentMethodPickerSheetState extends State<_PaymentMethodPickerSheet> {
+  bool _showSearchField = false;
+  late final TextEditingController _searchController;
+
+  @override
+  void initState() {
+    super.initState();
+    _searchController = TextEditingController();
+    _searchController.addListener(_onSearchTextChanged);
+  }
+
+  void _onSearchTextChanged() => setState(() {});
+
+  @override
+  void dispose() {
+    _searchController.removeListener(_onSearchTextChanged);
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _refreshPicker() async {
+    final freshAccounts = await getIt<GetAccountsUsecase>()();
+    final freshCards = await getIt<GetCardsUsecase>()();
+    widget.onListsUpdated(freshAccounts, freshCards);
+    if (mounted) setState(() {});
+  }
+
+  void _toggleSearchField() {
+    setState(() {
+      _showSearchField = !_showSearchField;
+      if (!_showSearchField) {
+        _searchController.clear();
+      }
+    });
+  }
+
+  List<AccountEntity> _visibleAccounts() {
+    final q = _searchController.text.trim().toLowerCase();
+    final pickerAccounts = widget.getAccounts();
+    if (q.isEmpty) return pickerAccounts;
+    return pickerAccounts
+        .where((a) => a.name.toLowerCase().contains(q))
+        .toList();
+  }
+
+  List<CardEntity> _visibleCards() {
+    final q = _searchController.text.trim().toLowerCase();
+    final pickerCards = widget.getCards();
+    if (q.isEmpty) return pickerCards;
+    return pickerCards.where((c) => c.name.toLowerCase().contains(q)).toList();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = widget.l10n;
+    final cardsOnly = widget.cardsOnly;
+    final paymentSwipe = widget.paymentSwipe;
+
+    final vAccounts = _visibleAccounts();
+    final vCards = _visibleCards();
+    final pickerAccountsSnapshot = widget.getAccounts();
+    final pickerCardsSnapshot = widget.getCards();
+    final hasAny = cardsOnly
+        ? pickerCardsSnapshot.isNotEmpty
+        : pickerAccountsSnapshot.isNotEmpty || pickerCardsSnapshot.isNotEmpty;
+    final filteredEmpty = cardsOnly
+        ? vCards.isEmpty
+        : vAccounts.isEmpty && vCards.isEmpty;
+
+    final sheetTheme = Theme.of(context);
+    final titleSmallPrimary = sheetTheme.textTheme.titleSmall?.copyWith(
+      color: sheetTheme.colorScheme.primary,
+    );
+
+    return SafeArea(
+      child: ConstrainedBox(
+        constraints: BoxConstraints(
+          maxHeight: MediaQuery.sizeOf(context).height * 0.55,
+        ),
+        child: CustomScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          slivers: [
+            SliverAppBar(
+              pinned: true,
+              centerTitle: true,
+              automaticallyImplyLeading: false,
+              elevation: 0,
+              scrolledUnderElevation: 4,
+              backgroundColor: modalBottomSheetSurfaceColor(context),
+              shadowColor: Theme.of(context).colorScheme.shadow,
+              leading: modalBottomSheetBackButton(context),
+              title: Text(
+                widget.sheetTitle,
+                style: sheetTheme.textTheme.titleLarge,
+              ),
+              actions: [
+                IconButton(
+                  tooltip: l10n.transferAccountSearch,
+                  icon: Icon(
+                    _showSearchField
+                        ? Icons.search_off_outlined
+                        : Icons.search,
+                  ),
+                  onPressed: _toggleSearchField,
+                ),
+                IconButton(
+                  tooltip: cardsOnly
+                      ? l10n.newCard
+                      : l10n.paymentMethodAddChoiceTitle,
+                  icon: const Icon(Icons.add_circle_outline),
+                  onPressed: () async {
+                    if (cardsOnly) {
+                      await showCardEditorBottomSheet(
+                        context,
+                        l10n,
+                      );
+                      await _refreshPicker();
+                      return;
+                    }
+                    final choice =
+                        await showModalBottomSheet<_PaymentMethodCreateChoice>(
+                          context: context,
+                          showDragHandle: false,
+                          isScrollControlled: true,
+                          builder: (ctx) => BottomSheetPinnedTitleScrollView(
+                            padding: EdgeInsets.fromLTRB(
+                              24,
+                              0,
+                              24,
+                              24 + MediaQuery.paddingOf(ctx).bottom,
+                            ),
+                            title: l10n.paymentMethodAddChoiceTitle,
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                ListTile(
+                                  leading: const Icon(
+                                    Icons.account_balance_wallet_outlined,
+                                  ),
+                                  title: Text(l10n.newAccount),
+                                  onTap: () => Navigator.pop(
+                                    ctx,
+                                    _PaymentMethodCreateChoice.account,
+                                  ),
+                                ),
+                                ListTile(
+                                  leading: const Icon(
+                                    Icons.credit_card_outlined,
+                                  ),
+                                  title: Text(l10n.newCard),
+                                  onTap: () => Navigator.pop(
+                                    ctx,
+                                    _PaymentMethodCreateChoice.card,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        );
+                    if (!context.mounted) return;
+                    switch (choice) {
+                      case _PaymentMethodCreateChoice.account:
+                        await showAccountEditorBottomSheet(
+                          context,
+                          l10n,
+                        );
+                      case _PaymentMethodCreateChoice.card:
+                        await showCardEditorBottomSheet(
+                          context,
+                          l10n,
+                        );
+                      case null:
+                        return;
+                    }
+                    await _refreshPicker();
+                  },
+                ),
+              ],
+            ),
+            if (_showSearchField)
+              SliverPadding(
+                padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+                sliver: SliverToBoxAdapter(
+                  child: TextField(
+                    controller: _searchController,
+                    decoration: InputDecoration(
+                      hintText: l10n.transferAccountSearchHint,
+                      prefixIcon: const Icon(Icons.search, size: 22),
+                      isDense: true,
+                      border: const OutlineInputBorder(),
+                    ),
+                    textInputAction: TextInputAction.search,
+                  ),
+                ),
+              ),
+            if (!hasAny)
+              SliverFillRemaining(
+                hasScrollBody: false,
+                child: Center(
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Text(
+                      cardsOnly
+                          ? l10n.noCards
+                          : '${l10n.noAccounts}\n${l10n.noCards}',
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                ),
+              )
+            else if (filteredEmpty)
+              SliverFillRemaining(
+                hasScrollBody: false,
+                child: Center(
+                  child: Text(
+                    l10n.transactionPaymentMethodSearchNoResults,
+                  ),
+                ),
+              )
+            else
+              SliverList.list(
+                children: [
+                  if (vCards.isNotEmpty) ...[
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
+                      child: Text(l10n.cards, style: titleSmallPrimary),
+                    ),
+                    ...vCards.map((c) {
+                      final sw = paymentSwipe;
+                      if (sw == null) {
+                        return ListTile(
+                          leading: const Icon(Icons.credit_card_outlined),
+                          title: Text(c.name),
+                          onTap: () => Navigator.of(
+                            context,
+                          ).pop('$_paymentMethodPickCardPrefix${c.id}'),
+                        );
+                      }
+                      return SwipeableListTile(
+                        itemKey: c.id,
+                        leading: const Icon(Icons.credit_card_outlined),
+                        title: Text(c.name),
+                        onTap: () => Navigator.of(
+                          context,
+                        ).pop('$_paymentMethodPickCardPrefix${c.id}'),
+                        onEdit: () {
+                          Future(() async {
+                            await sw.editCard(context, c);
+                            if (!context.mounted) return;
+                            await _refreshPicker();
+                          });
+                        },
+                        confirmDelete: () =>
+                            sw.confirmDeleteCard(context, c),
+                        onDelete: () async {
+                          final ok = await sw.deleteCard(c);
+                          if (ok) await _refreshPicker();
+                          return ok;
+                        },
+                      );
+                    }),
+                  ],
+                  if (vAccounts.isNotEmpty && !cardsOnly) ...[
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
+                      child: Text(
+                        l10n.accounts,
+                        style: titleSmallPrimary,
+                      ),
+                    ),
+                    ...vAccounts.map((a) {
+                      final sw = paymentSwipe;
+                      if (sw == null) {
+                        return ListTile(
+                          leading: const Icon(
+                            Icons.account_balance_wallet_outlined,
+                          ),
+                          title: Text(a.name),
+                          onTap: () => Navigator.of(context).pop(
+                            '$_paymentMethodPickAccountPrefix${a.id}',
+                          ),
+                        );
+                      }
+                      return SwipeableListTile(
+                        itemKey: a.id,
+                        leading: const Icon(
+                          Icons.account_balance_wallet_outlined,
+                        ),
+                        title: Text(a.name),
+                        onTap: () => Navigator.of(
+                          context,
+                        ).pop('$_paymentMethodPickAccountPrefix${a.id}'),
+                        onEdit: () {
+                          Future(() async {
+                            await sw.editAccount(context, a);
+                            if (!context.mounted) return;
+                            await _refreshPicker();
+                          });
+                        },
+                        confirmDelete: () =>
+                            sw.confirmDeleteAccount(context, a),
+                        onDelete: () async {
+                          final ok = await sw.deleteAccount(a);
+                          if (ok) await _refreshPicker();
+                          return ok;
+                        },
+                      );
+                    }),
+                  ],
+                ],
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 Future<String?> showPaymentMethodPickerSheet(
   BuildContext context, {
   required AppLocalizations l10n,
@@ -1700,308 +2044,15 @@ Future<String?> showPaymentMethodPickerSheet(
     context: context,
     showDragHandle: false,
     isScrollControlled: true,
-    builder: (sheetContext) {
-      var showSearchField = false;
-      var searchFilter = '';
-
-      return StatefulBuilder(
-        builder: (context, setPickerState) {
-          Future<void> refreshPicker() async {
-            final freshAccounts = await getIt<GetAccountsUsecase>()();
-            final freshCards = await getIt<GetCardsUsecase>()();
-            onListsUpdated(freshAccounts, freshCards);
-            setPickerState(() {});
-          }
-
-          List<AccountEntity> visibleAccounts() {
-            final q = searchFilter.trim().toLowerCase();
-            final pickerAccounts = getAccounts();
-            if (q.isEmpty) return pickerAccounts;
-            return pickerAccounts
-                .where((a) => a.name.toLowerCase().contains(q))
-                .toList();
-          }
-
-          List<CardEntity> visibleCards() {
-            final q = searchFilter.trim().toLowerCase();
-            final pickerCards = getCards();
-            if (q.isEmpty) return pickerCards;
-            return pickerCards
-                .where((c) => c.name.toLowerCase().contains(q))
-                .toList();
-          }
-
-          final vAccounts = visibleAccounts();
-          final vCards = visibleCards();
-          final pickerAccountsSnapshot = getAccounts();
-          final pickerCardsSnapshot = getCards();
-          final hasAny = cardsOnly
-              ? pickerCardsSnapshot.isNotEmpty
-              : pickerAccountsSnapshot.isNotEmpty ||
-                    pickerCardsSnapshot.isNotEmpty;
-          final filteredEmpty = cardsOnly
-              ? vCards.isEmpty
-              : vAccounts.isEmpty && vCards.isEmpty;
-
-          final sheetTheme = Theme.of(sheetContext);
-          final titleSmallPrimary = sheetTheme.textTheme.titleSmall?.copyWith(
-            color: sheetTheme.colorScheme.primary,
-          );
-
-          return SafeArea(
-            child: ConstrainedBox(
-              constraints: BoxConstraints(
-                maxHeight: MediaQuery.sizeOf(sheetContext).height * 0.55,
-              ),
-              child: CustomScrollView(
-                physics: const AlwaysScrollableScrollPhysics(),
-                slivers: [
-                  SliverAppBar(
-                    pinned: true,
-                    centerTitle: true,
-                    automaticallyImplyLeading: false,
-                    elevation: 0,
-                    scrolledUnderElevation: 4,
-                    backgroundColor: modalBottomSheetSurfaceColor(sheetContext),
-                    shadowColor: Theme.of(sheetContext).colorScheme.shadow,
-                    leading: modalBottomSheetBackButton(sheetContext),
-                    title: Text(
-                      sheetTitle,
-                      style: sheetTheme.textTheme.titleLarge,
-                    ),
-                    actions: [
-                      IconButton(
-                        tooltip: l10n.transferAccountSearch,
-                        icon: Icon(
-                          showSearchField
-                              ? Icons.search_off_outlined
-                              : Icons.search,
-                        ),
-                        onPressed: () {
-                          setPickerState(() {
-                            showSearchField = !showSearchField;
-                            if (!showSearchField) searchFilter = '';
-                          });
-                        },
-                      ),
-                      IconButton(
-                        tooltip: cardsOnly
-                            ? l10n.newCard
-                            : l10n.paymentMethodAddChoiceTitle,
-                        icon: const Icon(Icons.add_circle_outline),
-                        onPressed: () async {
-                          if (cardsOnly) {
-                            await showCardEditorBottomSheet(
-                              sheetContext,
-                              l10n,
-                            );
-                            await refreshPicker();
-                            return;
-                          }
-                          final choice =
-                              await showModalBottomSheet<
-                                _PaymentMethodCreateChoice
-                              >(
-                                context: sheetContext,
-                                showDragHandle: false,
-                                isScrollControlled: true,
-                                builder: (ctx) => BottomSheetPinnedTitleScrollView(
-                                  padding: EdgeInsets.fromLTRB(
-                                    24,
-                                    0,
-                                    24,
-                                    24 + MediaQuery.paddingOf(ctx).bottom,
-                                  ),
-                                  title: l10n.paymentMethodAddChoiceTitle,
-                                  child: Column(
-                                    mainAxisSize: MainAxisSize.min,
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.stretch,
-                                    children: [
-                                      ListTile(
-                                        leading: const Icon(
-                                          Icons.account_balance_wallet_outlined,
-                                        ),
-                                        title: Text(l10n.newAccount),
-                                        onTap: () => Navigator.pop(
-                                          ctx,
-                                          _PaymentMethodCreateChoice.account,
-                                        ),
-                                      ),
-                                      ListTile(
-                                        leading: const Icon(
-                                          Icons.credit_card_outlined,
-                                        ),
-                                        title: Text(l10n.newCard),
-                                        onTap: () => Navigator.pop(
-                                          ctx,
-                                          _PaymentMethodCreateChoice.card,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              );
-                          if (!sheetContext.mounted) return;
-                          switch (choice) {
-                            case _PaymentMethodCreateChoice.account:
-                              await showAccountEditorBottomSheet(
-                                sheetContext,
-                                l10n,
-                              );
-                            case _PaymentMethodCreateChoice.card:
-                              await showCardEditorBottomSheet(
-                                sheetContext,
-                                l10n,
-                              );
-                            case null:
-                              return;
-                          }
-                          await refreshPicker();
-                        },
-                      ),
-                    ],
-                  ),
-                  if (showSearchField)
-                    SliverPadding(
-                      padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
-                      sliver: SliverToBoxAdapter(
-                        child: TextField(
-                          decoration: InputDecoration(
-                            hintText: l10n.transferAccountSearchHint,
-                            prefixIcon: const Icon(Icons.search, size: 22),
-                            isDense: true,
-                            border: const OutlineInputBorder(),
-                          ),
-                          textInputAction: TextInputAction.search,
-                          onChanged: (v) =>
-                              setPickerState(() => searchFilter = v),
-                        ),
-                      ),
-                    ),
-                  if (!hasAny)
-                    SliverFillRemaining(
-                      hasScrollBody: false,
-                      child: Center(
-                        child: Padding(
-                          padding: const EdgeInsets.all(16),
-                          child: Text(
-                            cardsOnly
-                                ? l10n.noCards
-                                : '${l10n.noAccounts}\n${l10n.noCards}',
-                            textAlign: TextAlign.center,
-                          ),
-                        ),
-                      ),
-                    )
-                  else if (filteredEmpty)
-                    SliverFillRemaining(
-                      hasScrollBody: false,
-                      child: Center(
-                        child: Text(
-                          l10n.transactionPaymentMethodSearchNoResults,
-                        ),
-                      ),
-                    )
-                  else
-                    SliverList.list(
-                      children: [
-                        if (vCards.isNotEmpty) ...[
-                          Padding(
-                            padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
-                            child: Text(l10n.cards, style: titleSmallPrimary),
-                          ),
-                          ...vCards.map((c) {
-                            final sw = paymentSwipe;
-                            if (sw == null) {
-                              return ListTile(
-                                leading: const Icon(Icons.credit_card_outlined),
-                                title: Text(c.name),
-                                onTap: () => Navigator.of(
-                                  sheetContext,
-                                ).pop('$_paymentMethodPickCardPrefix${c.id}'),
-                              );
-                            }
-                            return SwipeableListTile(
-                              itemKey: c.id,
-                              leading: const Icon(Icons.credit_card_outlined),
-                              title: Text(c.name),
-                              onTap: () => Navigator.of(
-                                sheetContext,
-                              ).pop('$_paymentMethodPickCardPrefix${c.id}'),
-                              onEdit: () {
-                                Future(() async {
-                                  await sw.editCard(sheetContext, c);
-                                  if (!sheetContext.mounted) return;
-                                  await refreshPicker();
-                                });
-                              },
-                              confirmDelete: () =>
-                                  sw.confirmDeleteCard(sheetContext, c),
-                              onDelete: () async {
-                                final ok = await sw.deleteCard(c);
-                                if (ok) await refreshPicker();
-                                return ok;
-                              },
-                            );
-                          }),
-                        ],
-                        if (vAccounts.isNotEmpty && !cardsOnly) ...[
-                          Padding(
-                            padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
-                            child: Text(
-                              l10n.accounts,
-                              style: titleSmallPrimary,
-                            ),
-                          ),
-                          ...vAccounts.map((a) {
-                            final sw = paymentSwipe;
-                            if (sw == null) {
-                              return ListTile(
-                                leading: const Icon(
-                                  Icons.account_balance_wallet_outlined,
-                                ),
-                                title: Text(a.name),
-                                onTap: () => Navigator.of(sheetContext).pop(
-                                  '$_paymentMethodPickAccountPrefix${a.id}',
-                                ),
-                              );
-                            }
-                            return SwipeableListTile(
-                              itemKey: a.id,
-                              leading: const Icon(
-                                Icons.account_balance_wallet_outlined,
-                              ),
-                              title: Text(a.name),
-                              onTap: () => Navigator.of(
-                                sheetContext,
-                              ).pop('$_paymentMethodPickAccountPrefix${a.id}'),
-                              onEdit: () {
-                                Future(() async {
-                                  await sw.editAccount(sheetContext, a);
-                                  if (!sheetContext.mounted) return;
-                                  await refreshPicker();
-                                });
-                              },
-                              confirmDelete: () =>
-                                  sw.confirmDeleteAccount(sheetContext, a),
-                              onDelete: () async {
-                                final ok = await sw.deleteAccount(a);
-                                if (ok) await refreshPicker();
-                                return ok;
-                              },
-                            );
-                          }),
-                        ],
-                      ],
-                    ),
-                ],
-              ),
-            ),
-          );
-        },
-      );
-    },
+    builder: (_) => _PaymentMethodPickerSheet(
+      l10n: l10n,
+      sheetTitle: sheetTitle,
+      getAccounts: getAccounts,
+      getCards: getCards,
+      onListsUpdated: onListsUpdated,
+      paymentSwipe: paymentSwipe,
+      cardsOnly: cardsOnly,
+    ),
   );
 }
 
