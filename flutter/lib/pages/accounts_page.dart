@@ -7,6 +7,7 @@ import '../features/accounts/domain/entities/account_entity.dart';
 import '../features/accounts/presentation/cubit/accounts_cubit.dart';
 import '../features/accounts/presentation/cubit/accounts_state.dart';
 import '../widgets/account_editor_sheet.dart';
+import '../widgets/remote_load_failure_panel.dart';
 import '../widgets/shell_scaffold.dart';
 import '../widgets/swipeable_list_tile.dart';
 import '../widgets/wallet_dual_balance_trailing.dart';
@@ -30,7 +31,19 @@ class _AccountsView extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
 
-    return BlocConsumer<AccountsCubit, AccountsState>(
+    return BlocListener<AccountsCubit, AccountsState>(
+      listenWhen: (prev, curr) =>
+          curr is AccountsError && prev is! AccountsError,
+      listener: (context, state) {
+        final s = state as AccountsError;
+        showRemoteLoadFailureAlert(
+          context,
+          l10n,
+          s.failure,
+          () => context.read<AccountsCubit>().load(showLoading: true),
+        );
+      },
+      child: BlocConsumer<AccountsCubit, AccountsState>(
       listener: (context, state) {
         if (state is AccountsActionError) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -65,6 +78,7 @@ class _AccountsView extends StatelessWidget {
           body: _body(context, state, l10n),
         );
       },
+    ),
     );
   }
 
@@ -95,29 +109,10 @@ class _AccountsView extends StatelessWidget {
     }
 
     if (state is AccountsError) {
-      return RefreshIndicator(
-        onRefresh: pullRefresh,
-        child: ListView(
-          physics: const AlwaysScrollableScrollPhysics(),
-          children: [
-            SizedBox(
-              height: MediaQuery.sizeOf(context).height * 0.35,
-              child: Center(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(l10n.unexpectedError),
-                    const SizedBox(height: 12),
-                    ElevatedButton(
-                      onPressed: reloadWithOverlay,
-                      child: const Text('Retry'),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ],
-        ),
+      return RemoteLoadFailurePanel(
+        l10n: l10n,
+        failure: state.failure,
+        onRetry: reloadWithOverlay,
       );
     }
 
