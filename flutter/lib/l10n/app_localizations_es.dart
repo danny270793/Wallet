@@ -138,7 +138,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get settingsChangePasswordSubtitle =>
-      'Actualiza la contraseña con la que inicias sesión en Cartera.';
+      'Actualiza la contraseña con la que inicias sesión.';
 
   @override
   String get settingsChangePasswordDialogTitle => 'Cambiar contraseña';
