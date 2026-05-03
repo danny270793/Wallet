@@ -108,6 +108,31 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settings => 'Settings';
 
   @override
+  String get settingsProfileSection => 'Profile';
+
+  @override
+  String get settingsChangeEmail => 'Change email';
+
+  @override
+  String get settingsChangeEmailDialogTitle => 'Change email';
+
+  @override
+  String get settingsNewEmailLabel => 'New email';
+
+  @override
+  String get settingsChangeEmailSubmit => 'Update';
+
+  @override
+  String get settingsChangeEmailSuccess =>
+      'Check your new email to confirm the change.';
+
+  @override
+  String get settingsChangeEmailInvalid => 'Enter a valid email address.';
+
+  @override
+  String get settingsChangeEmailSameAsCurrent => 'That is already your email.';
+
+  @override
   String get settingsAppearance => 'Appearance';
 
   @override
