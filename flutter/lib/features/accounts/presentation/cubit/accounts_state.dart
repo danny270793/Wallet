@@ -21,9 +21,10 @@ class AccountsLoading extends AccountsState {
 
 class AccountsLoaded extends AccountsState {
   final List<AccountEntity> accounts;
-  const AccountsLoaded(this.accounts);
+  final bool servedFromOfflineCache;
+  const AccountsLoaded(this.accounts, {this.servedFromOfflineCache = false});
   @override
-  List<Object?> get props => [accounts];
+  List<Object?> get props => [accounts, servedFromOfflineCache];
 }
 
 class AccountsError extends AccountsState {
@@ -37,7 +38,8 @@ class AccountsError extends AccountsState {
 class AccountsActionError extends AccountsState {
   final List<AccountEntity> accounts;
   final String? message;
-  const AccountsActionError(this.accounts, {this.message});
+  final bool servedFromOfflineCache;
+  const AccountsActionError(this.accounts, {this.message, this.servedFromOfflineCache = false});
   @override
-  List<Object?> get props => [accounts, message];
+  List<Object?> get props => [accounts, message, servedFromOfflineCache];
 }
