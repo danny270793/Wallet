@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:wallet/l10n/app_localizations.dart';
 
 import '../core/di/injection.dart';
+import '../core/ui/app_icons.dart';
 import '../features/transactions/domain/entities/transaction_entity.dart';
 import '../features/transactions/presentation/cubit/transactions_cubit.dart';
 import '../features/transactions/presentation/cubit/transactions_state.dart';
@@ -225,7 +226,7 @@ class _MonthlyDashboardViewState extends State<_MonthlyDashboardView> {
           appBarActionsBeforeSettings: showBar
               ? <Widget>[
                   IconButton(
-                    icon: const Icon(Icons.tune_rounded),
+                    icon: const Icon(AppIcons.filter),
                     tooltip: l10n.monthlyDashboardConfigureTooltip,
                     onPressed: () =>
                         _showDashboardViewOptionsSheet(context, l10n),
