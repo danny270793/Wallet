@@ -749,4 +749,24 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get transactionsTotalsNotWeightedExcludingIgnoredHint =>
       'Not weighted excluding ignored';
+
+  @override
+  String get loadFailedNoConnectionTitle => 'No internet connection';
+
+  @override
+  String get loadFailedNoConnectionBody =>
+      'Check your network and try again. If you are online, the server may be unreachable.';
+
+  @override
+  String get loadFailedRequestFailedTitle => 'Could not load data';
+
+  @override
+  String get loadFailedRequestFailedBody =>
+      'The request failed. Pull down to refresh or try again shortly.';
+
+  @override
+  String get retry => 'Retry';
+
+  @override
+  String get dialogClose => 'Close';
 }
