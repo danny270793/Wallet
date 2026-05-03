@@ -455,7 +455,7 @@ abstract class AppLocalizations {
   /// No description provided for @settingsBiometricUnlockSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'Use biometrics to unlock the app when returning from the background.'**
+  /// **'Use biometrics to unlock the app.'**
   String get settingsBiometricUnlockSubtitle;
 
   /// No description provided for @settingsBiometricUnavailable.
