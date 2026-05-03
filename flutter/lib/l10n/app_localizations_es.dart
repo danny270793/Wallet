@@ -196,7 +196,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get settingsBiometricUnlockSubtitle =>
-      'Usa la biometría para desbloquear la app al volver desde segundo plano.';
+      'Usa la biometría para desbloquear la app.';
 
   @override
   String get settingsBiometricUnavailable =>
