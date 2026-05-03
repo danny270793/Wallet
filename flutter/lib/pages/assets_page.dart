@@ -9,6 +9,7 @@ import '../features/assets/domain/entities/asset_entity.dart';
 import '../features/assets/presentation/cubit/assets_cubit.dart';
 import '../features/assets/presentation/cubit/assets_state.dart';
 import '../widgets/asset_editor_sheet.dart';
+import '../widgets/remote_load_failure_panel.dart';
 import '../widgets/shell_scaffold.dart';
 import '../widgets/swipeable_list_tile.dart';
 
@@ -31,7 +32,19 @@ class _AssetsView extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
 
-    return BlocConsumer<AssetsCubit, AssetsState>(
+    return BlocListener<AssetsCubit, AssetsState>(
+      listenWhen: (prev, curr) =>
+          curr is AssetsError && prev is! AssetsError,
+      listener: (context, state) {
+        final s = state as AssetsError;
+        showRemoteLoadFailureAlert(
+          context,
+          l10n,
+          s.failure,
+          () => context.read<AssetsCubit>().load(showLoading: true),
+        );
+      },
+      child: BlocConsumer<AssetsCubit, AssetsState>(
       listener: (context, state) {
         if (state is AssetsActionError) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -53,6 +66,7 @@ class _AssetsView extends StatelessWidget {
           body: _body(context, state, l10n),
         );
       },
+    ),
     );
   }
 
@@ -84,30 +98,11 @@ class _AssetsView extends StatelessWidget {
     }
 
     if (state is AssetsError) {
-      return RefreshIndicator(
-        onRefresh: pullRefresh,
-        child: ListView(
-          physics: const AlwaysScrollableScrollPhysics(),
-          padding: const EdgeInsets.only(bottom: 88),
-          children: [
-            SizedBox(
-              height: MediaQuery.sizeOf(context).height * 0.35,
-              child: Center(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(l10n.unexpectedError),
-                    const SizedBox(height: 12),
-                    ElevatedButton(
-                      onPressed: reloadWithOverlay,
-                      child: const Text('Retry'),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ],
-        ),
+      return RemoteLoadFailurePanel(
+        l10n: l10n,
+        failure: state.failure,
+        onRetry: reloadWithOverlay,
+        listPadding: const EdgeInsets.fromLTRB(24, 24, 24, 24 + 88),
       );
     }
 
