@@ -1,13 +1,30 @@
+import '../../../../core/offline/offline_fetch.dart';
+import '../../../../core/offline/wallet_offline_cache.dart';
+import '../../../../core/offline/wallet_offline_user_context.dart';
 import '../../domain/entities/category_entity.dart';
 import '../../domain/repositories/categories_repository.dart';
 import '../datasources/categories_remote_datasource.dart';
 
 class CategoriesRepositoryImpl implements CategoriesRepository {
   final CategoriesRemoteDatasource _datasource;
-  const CategoriesRepositoryImpl(this._datasource);
+  final WalletOfflineCache _offlineCache;
+  final WalletOfflineUserContext _offlineSession;
+
+  const CategoriesRepositoryImpl(
+    this._datasource,
+    this._offlineCache,
+    this._offlineSession,
+  );
 
   @override
-  Future<List<CategoryEntity>> getCategories() => _datasource.getCategories();
+  Future<List<CategoryEntity>> getCategories() => fetchListWithOfflineCache(
+        session: _offlineSession,
+        cache: _offlineCache,
+        cacheKey: WalletOfflineCacheKeys.categories,
+        remote: _datasource.getCategories,
+        fromJson: CategoryEntity.fromJson,
+        toJson: (e) => e.toJson(),
+      );
 
   @override
   Future<CategoryEntity> createCategory({required String name, String? description}) =>
