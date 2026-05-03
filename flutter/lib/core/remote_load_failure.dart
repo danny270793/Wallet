@@ -1,6 +1,11 @@
 import 'dart:async';
 import 'dart:io';
 
+/// Thrown when [deviceReportsOnline] is false and there is no cache to serve.
+class NoDeviceConnectivityException implements Exception {
+  const NoDeviceConnectivityException();
+}
+
 /// Distinguishes offline / transport failures from other remote errors for UX copy.
 enum RemoteLoadFailure {
   networkUnavailable,
@@ -9,6 +14,9 @@ enum RemoteLoadFailure {
 
 /// Classifies [error] from HTTP / Supabase / [SocketException] chains (no [BuildContext]).
 RemoteLoadFailure classifyRemoteLoadError(Object error) {
+  if (error is NoDeviceConnectivityException) {
+    return RemoteLoadFailure.networkUnavailable;
+  }
   if (error is SocketException) {
     return RemoteLoadFailure.networkUnavailable;
   }
