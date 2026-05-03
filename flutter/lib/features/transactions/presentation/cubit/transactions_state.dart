@@ -1,4 +1,6 @@
 import 'package:equatable/equatable.dart';
+
+import '../../../../core/remote_load_failure.dart';
 import '../../domain/entities/transaction_entity.dart';
 
 sealed class TransactionsState extends Equatable {
@@ -25,10 +27,10 @@ class TransactionsLoaded extends TransactionsState {
 }
 
 class TransactionsError extends TransactionsState {
-  final String? message;
-  const TransactionsError({this.message});
+  final RemoteLoadFailure failure;
+  const TransactionsError({this.failure = RemoteLoadFailure.requestFailed});
   @override
-  List<Object?> get props => [message];
+  List<Object?> get props => [failure];
 }
 
 class TransactionsActionError extends TransactionsState {
