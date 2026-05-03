@@ -34,6 +34,7 @@ import '../widgets/card_editor_sheet.dart';
 import '../widgets/category_editor_sheet.dart';
 import '../widgets/tag_editor_sheet.dart';
 import '../widgets/grouped_transactions_list.dart';
+import '../widgets/remote_load_failure_panel.dart';
 import '../widgets/shell_scaffold.dart';
 import '../widgets/swipeable_list_tile.dart';
 import '../widgets/transactions_month_scope.dart';
@@ -822,7 +823,23 @@ class _TransactionsViewState extends State<_TransactionsView> {
             widget.categoryIdFilter!.isNotEmpty) ||
         (widget.tagIdFilter != null && widget.tagIdFilter!.isNotEmpty);
 
-    return BlocConsumer<TransactionsCubit, TransactionsState>(
+    return BlocListener<TransactionsCubit, TransactionsState>(
+      listenWhen: (prev, curr) =>
+          curr is TransactionsError && prev is! TransactionsError,
+      listener: (context, state) {
+        final s = state as TransactionsError;
+        final month = TransactionsMonthScope.of(context).value;
+        showRemoteLoadFailureAlert(
+          context,
+          l10n,
+          s.failure,
+          () => context.read<TransactionsCubit>().loadForMonth(
+                month,
+                showLoading: true,
+              ),
+        );
+      },
+      child: BlocConsumer<TransactionsCubit, TransactionsState>(
       listener: (context, state) {
         if (state is TransactionsActionError) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -922,6 +939,7 @@ class _TransactionsViewState extends State<_TransactionsView> {
           },
         );
       },
+    ),
     );
   }
 
@@ -986,29 +1004,10 @@ class _TransactionsViewState extends State<_TransactionsView> {
     }
 
     if (state is TransactionsError) {
-      return RefreshIndicator(
-        onRefresh: pullRefresh,
-        child: ListView(
-          physics: const AlwaysScrollableScrollPhysics(),
-          children: [
-            SizedBox(
-              height: MediaQuery.sizeOf(context).height * 0.35,
-              child: Center(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(l10n.unexpectedError),
-                    const SizedBox(height: 12),
-                    ElevatedButton(
-                      onPressed: reloadWithOverlay,
-                      child: const Text('Retry'),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ],
-        ),
+      return RemoteLoadFailurePanel(
+        l10n: l10n,
+        failure: state.failure,
+        onRetry: reloadWithOverlay,
       );
     }
 
