@@ -255,6 +255,14 @@ class _SettingsPageState extends State<SettingsPage> {
                     color: theme.colorScheme.onSurfaceVariant,
                   ),
                   title: Text(l10n.settingsChangePassword),
+                  subtitle: Text(
+                    l10n.settingsChangePasswordSubtitle,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                      height: 1.35,
+                    ),
+                  ),
+                  isThreeLine: true,
                   trailing: const Icon(Icons.chevron_right),
                   onTap: () => _showChangePasswordSheet(context, l10n),
                 ),
