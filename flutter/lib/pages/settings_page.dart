@@ -4,11 +4,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:local_auth/local_auth.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:wallet/l10n/app_localizations.dart';
 import '../core/di/injection.dart';
 import '../core/locale/app_locale_controller.dart';
 import '../core/security/app_biometric_unlock_controller.dart';
 import '../core/theme/app_theme_controller.dart';
+import '../features/auth/domain/usecases/update_email_usecase.dart';
 import '../features/auth/presentation/cubit/settings_cubit.dart';
 import '../features/auth/presentation/cubit/settings_state.dart';
 import '../widgets/bottom_sheet_pinned_title.dart';
@@ -133,6 +135,28 @@ Future<void> _setBiometricUnlockEnabled(
   }
 }
 
+Future<void> _showChangeEmailDialog(
+  BuildContext context,
+  AppLocalizations l10n, {
+  VoidCallback? onChanged,
+}) async {
+  final email = Supabase.instance.client.auth.currentUser?.email ?? '';
+  final ok = await showDialog<bool>(
+    context: context,
+    builder: (ctx) => _ChangeEmailDialog(
+      hostContext: context,
+      currentEmail: email,
+      l10n: l10n,
+    ),
+  );
+  if (ok == true && context.mounted) {
+    onChanged?.call();
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(l10n.settingsChangeEmailSuccess)),
+    );
+  }
+}
+
 class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key});
 
@@ -169,6 +193,36 @@ class _SettingsPageState extends State<SettingsPage> {
             child: ListView(
               padding: const EdgeInsets.all(24),
               children: [
+                Text(
+                  l10n.settingsProfileSection,
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  leading: Icon(
+                    Icons.person_outline_rounded,
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                  title: Text(l10n.settingsChangeEmail),
+                  subtitle: Text(
+                    Supabase.instance.client.auth.currentUser?.email ?? '',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  trailing: const Icon(Icons.chevron_right),
+                  onTap: () => _showChangeEmailDialog(
+                    context,
+                    l10n,
+                    onChanged: () => setState(() {}),
+                  ),
+                ),
+                const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 16),
+                  child: Divider(height: 1),
+                ),
                 Text(
                   l10n.settingsAppearance,
                   style: theme.textTheme.titleMedium?.copyWith(
@@ -338,6 +392,111 @@ class _SettingsPageState extends State<SettingsPage> {
           ),
         ),
       ),
+    );
+  }
+}
+
+class _ChangeEmailDialog extends StatefulWidget {
+  const _ChangeEmailDialog({
+    required this.hostContext,
+    required this.currentEmail,
+    required this.l10n,
+  });
+
+  final BuildContext hostContext;
+  final String currentEmail;
+  final AppLocalizations l10n;
+
+  @override
+  State<_ChangeEmailDialog> createState() => _ChangeEmailDialogState();
+}
+
+class _ChangeEmailDialogState extends State<_ChangeEmailDialog> {
+  final _formKey = GlobalKey<FormState>();
+  late final TextEditingController _controller;
+  bool _loading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = TextEditingController(text: widget.currentEmail);
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  void _snack(String message) {
+    ScaffoldMessenger.of(widget.hostContext).showSnackBar(
+      SnackBar(content: Text(message)),
+    );
+  }
+
+  Future<void> _submit() async {
+    if (!_formKey.currentState!.validate()) return;
+    final next = _controller.text.trim();
+    if (next == widget.currentEmail.trim()) {
+      _snack(widget.l10n.settingsChangeEmailSameAsCurrent);
+      return;
+    }
+    setState(() => _loading = true);
+    try {
+      await getIt<UpdateEmailUsecase>()(newEmail: next);
+      if (!mounted) return;
+      Navigator.of(context).pop(true);
+    } on AuthException catch (e) {
+      if (mounted) setState(() => _loading = false);
+      _snack(e.message);
+    } catch (_) {
+      if (mounted) setState(() => _loading = false);
+      _snack(widget.l10n.unexpectedError);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = widget.l10n;
+    return AlertDialog(
+      title: Text(l10n.settingsChangeEmailDialogTitle),
+      content: Form(
+        key: _formKey,
+        child: TextFormField(
+          controller: _controller,
+          keyboardType: TextInputType.emailAddress,
+          textInputAction: TextInputAction.done,
+          autofocus: true,
+          autofillHints: const [AutofillHints.email],
+          decoration: InputDecoration(labelText: l10n.settingsNewEmailLabel),
+          enabled: !_loading,
+          validator: (v) {
+            if (v == null || v.trim().isEmpty) return l10n.fieldRequired;
+            final t = v.trim();
+            if (!RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$').hasMatch(t)) {
+              return l10n.settingsChangeEmailInvalid;
+            }
+            return null;
+          },
+          onFieldSubmitted: (_) => _submit(),
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: _loading ? null : () => Navigator.of(context).pop(),
+          child: Text(l10n.cancel),
+        ),
+        FilledButton(
+          onPressed: _loading ? null : _submit,
+          child: _loading
+              ? const SizedBox(
+                  height: 20,
+                  width: 20,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                )
+              : Text(l10n.settingsChangeEmailSubmit),
+        ),
+      ],
     );
   }
 }
