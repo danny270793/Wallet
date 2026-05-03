@@ -9,6 +9,7 @@ import '../features/assets/domain/entities/asset_entity.dart';
 import '../features/assets/presentation/cubit/assets_cubit.dart';
 import '../features/assets/presentation/cubit/assets_state.dart';
 import '../widgets/asset_editor_sheet.dart';
+import '../widgets/offline_cached_data_banner.dart';
 import '../widgets/remote_load_failure_panel.dart';
 import '../widgets/shell_scaffold.dart';
 import '../widgets/swipeable_list_tile.dart';
@@ -93,6 +94,12 @@ class _AssetsView extends StatelessWidget {
       );
     }
 
+    final offlineCached = switch (state) {
+      AssetsLoaded(:final servedFromOfflineCache) => servedFromOfflineCache,
+      AssetsActionError(:final servedFromOfflineCache) => servedFromOfflineCache,
+      _ => false,
+    };
+
     final assets = switch (state) {
       AssetsLoaded(:final assets) => assets,
       AssetsActionError(:final assets) => assets,
@@ -106,8 +113,9 @@ class _AssetsView extends StatelessWidget {
           physics: const AlwaysScrollableScrollPhysics(),
           padding: const EdgeInsets.only(bottom: 88),
           children: [
+            OfflineCachedDataBanner(visible: offlineCached),
             SizedBox(
-              height: MediaQuery.sizeOf(context).height * 0.35,
+              height: MediaQuery.sizeOf(context).height * 0.3,
               child: Center(child: Text(l10n.noAssets)),
             ),
           ],
@@ -120,9 +128,14 @@ class _AssetsView extends StatelessWidget {
       child: ListView.builder(
         physics: const AlwaysScrollableScrollPhysics(),
         padding: const EdgeInsets.fromLTRB(0, 0, 0, 88),
-        itemCount: assets.length,
-        itemBuilder: (context, index) =>
-            _AssetTile(asset: assets[index]),
+        itemCount: assets.length + (offlineCached ? 1 : 0),
+        itemBuilder: (context, index) {
+          if (offlineCached && index == 0) {
+            return const OfflineCachedDataBanner(visible: true);
+          }
+          final i = index - (offlineCached ? 1 : 0);
+          return _AssetTile(asset: assets[i]);
+        },
       ),
     );
   }
