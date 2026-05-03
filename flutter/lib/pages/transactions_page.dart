@@ -823,23 +823,7 @@ class _TransactionsViewState extends State<_TransactionsView> {
             widget.categoryIdFilter!.isNotEmpty) ||
         (widget.tagIdFilter != null && widget.tagIdFilter!.isNotEmpty);
 
-    return BlocListener<TransactionsCubit, TransactionsState>(
-      listenWhen: (prev, curr) =>
-          curr is TransactionsError && prev is! TransactionsError,
-      listener: (context, state) {
-        final s = state as TransactionsError;
-        final month = TransactionsMonthScope.of(context).value;
-        showRemoteLoadFailureAlert(
-          context,
-          l10n,
-          s.failure,
-          () => context.read<TransactionsCubit>().loadForMonth(
-                month,
-                showLoading: true,
-              ),
-        );
-      },
-      child: BlocConsumer<TransactionsCubit, TransactionsState>(
+    return BlocConsumer<TransactionsCubit, TransactionsState>(
       listener: (context, state) {
         if (state is TransactionsActionError) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -939,7 +923,6 @@ class _TransactionsViewState extends State<_TransactionsView> {
           },
         );
       },
-    ),
     );
   }
 
