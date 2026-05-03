@@ -1,9 +1,13 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:local_auth/local_auth.dart';
 import 'package:wallet/l10n/app_localizations.dart';
 import '../core/di/injection.dart';
 import '../core/locale/app_locale_controller.dart';
+import '../core/security/app_biometric_unlock_controller.dart';
 import '../core/theme/app_theme_controller.dart';
 import '../features/auth/presentation/cubit/settings_cubit.dart';
 import '../features/auth/presentation/cubit/settings_state.dart';
@@ -95,8 +99,56 @@ Future<void> _showThemePickerSheet(
   );
 }
 
-class SettingsPage extends StatelessWidget {
+Future<void> _setBiometricUnlockEnabled(
+  BuildContext context,
+  AppLocalizations l10n,
+  AppBiometricUnlockController ctrl,
+  bool enabled,
+) async {
+  if (!enabled) {
+    await ctrl.setEnabled(false);
+    return;
+  }
+  await ctrl.refreshAuthenticatorAvailability();
+  if (!ctrl.authenticatorAvailable) {
+    if (context.mounted) {
+      ScaffoldMessenger.maybeOf(context)?.showSnackBar(
+        SnackBar(content: Text(l10n.settingsBiometricUnavailable)),
+      );
+    }
+    return;
+  }
+  final ok = await ctrl.localAuth.authenticate(
+    localizedReason: l10n.settingsBiometricAuthReason,
+    options: const AuthenticationOptions(
+      biometricOnly: true,
+      stickyAuth: true,
+    ),
+  );
+  if (!context.mounted) {
+    return;
+  }
+  if (ok) {
+    await ctrl.setEnabled(true);
+  }
+}
+
+class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key});
+
+  @override
+  State<SettingsPage> createState() => _SettingsPageState();
+}
+
+class _SettingsPageState extends State<SettingsPage> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      unawaited(getIt<AppBiometricUnlockController>().refreshAuthenticatorAvailability());
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -158,6 +210,45 @@ class SettingsPage extends StatelessWidget {
                       subtitle: Text(_themeOptionLabel(l10n, ctrl.preference)),
                       trailing: const Icon(Icons.chevron_right),
                       onTap: () => _showThemePickerSheet(context, l10n, ctrl),
+                    );
+                  },
+                ),
+                const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 16),
+                  child: Divider(height: 1),
+                ),
+                Text(
+                  l10n.settingsSecuritySection,
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                ListenableBuilder(
+                  listenable: getIt<AppBiometricUnlockController>(),
+                  builder: (context, _) {
+                    final bio = getIt<AppBiometricUnlockController>();
+                    return SwitchListTile(
+                      contentPadding: EdgeInsets.zero,
+                      secondary: Icon(
+                        Icons.fingerprint_rounded,
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                      title: Text(l10n.settingsBiometricUnlockTitle),
+                      subtitle: Text(
+                        bio.authenticatorAvailable
+                            ? l10n.settingsBiometricUnlockSubtitle
+                            : l10n.settingsBiometricUnavailable,
+                      ),
+                      value: bio.enabled,
+                      onChanged: bio.authenticatorAvailable
+                          ? (v) => _setBiometricUnlockEnabled(
+                                context,
+                                l10n,
+                                bio,
+                                v,
+                              )
+                          : null,
                     );
                   },
                 ),
