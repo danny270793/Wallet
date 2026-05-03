@@ -476,12 +476,6 @@ abstract class AppLocalizations {
   /// **'Size of cached files'**
   String get settingsCacheBottomBarCaption;
 
-  /// No description provided for @settingsCacheRowSubtitle.
-  ///
-  /// In en, this message translates to:
-  /// **'{dateTime} · {size}'**
-  String settingsCacheRowSubtitle(String dateTime, String size);
-
   /// No description provided for @settingsCacheKeyTxMonth.
   ///
   /// In en, this message translates to:
