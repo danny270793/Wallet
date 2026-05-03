@@ -135,18 +135,23 @@ Future<void> _setBiometricUnlockEnabled(
   }
 }
 
-Future<void> _showChangeEmailDialog(
+Future<void> _showChangeEmailSheet(
   BuildContext context,
   AppLocalizations l10n, {
   VoidCallback? onChanged,
 }) async {
   final email = Supabase.instance.client.auth.currentUser?.email ?? '';
-  final ok = await showDialog<bool>(
+  final ok = await showModalBottomSheet<bool>(
     context: context,
-    builder: (ctx) => _ChangeEmailDialog(
-      hostContext: context,
-      currentEmail: email,
-      l10n: l10n,
+    showDragHandle: false,
+    isScrollControlled: true,
+    builder: (_) => BottomSheetPinnedTitleScrollView(
+      title: l10n.settingsChangeEmailDialogTitle,
+      child: _ChangeEmailSheetBody(
+        hostContext: context,
+        currentEmail: email,
+        l10n: l10n,
+      ),
     ),
   );
   if (ok == true && context.mounted) {
@@ -213,7 +218,7 @@ class _SettingsPageState extends State<SettingsPage> {
                     overflow: TextOverflow.ellipsis,
                   ),
                   trailing: const Icon(Icons.chevron_right),
-                  onTap: () => _showChangeEmailDialog(
+                  onTap: () => _showChangeEmailSheet(
                     context,
                     l10n,
                     onChanged: () => setState(() {}),
@@ -396,8 +401,8 @@ class _SettingsPageState extends State<SettingsPage> {
   }
 }
 
-class _ChangeEmailDialog extends StatefulWidget {
-  const _ChangeEmailDialog({
+class _ChangeEmailSheetBody extends StatefulWidget {
+  const _ChangeEmailSheetBody({
     required this.hostContext,
     required this.currentEmail,
     required this.l10n,
@@ -408,10 +413,10 @@ class _ChangeEmailDialog extends StatefulWidget {
   final AppLocalizations l10n;
 
   @override
-  State<_ChangeEmailDialog> createState() => _ChangeEmailDialogState();
+  State<_ChangeEmailSheetBody> createState() => _ChangeEmailSheetBodyState();
 }
 
-class _ChangeEmailDialogState extends State<_ChangeEmailDialog> {
+class _ChangeEmailSheetBodyState extends State<_ChangeEmailSheetBody> {
   final _formKey = GlobalKey<FormState>();
   late final TextEditingController _controller;
   bool _loading = false;
@@ -458,45 +463,43 @@ class _ChangeEmailDialogState extends State<_ChangeEmailDialog> {
   @override
   Widget build(BuildContext context) {
     final l10n = widget.l10n;
-    return AlertDialog(
-      title: Text(l10n.settingsChangeEmailDialogTitle),
-      content: Form(
-        key: _formKey,
-        child: TextFormField(
-          controller: _controller,
-          keyboardType: TextInputType.emailAddress,
-          textInputAction: TextInputAction.done,
-          autofocus: true,
-          autofillHints: const [AutofillHints.email],
-          decoration: InputDecoration(labelText: l10n.settingsNewEmailLabel),
-          enabled: !_loading,
-          validator: (v) {
-            if (v == null || v.trim().isEmpty) return l10n.fieldRequired;
-            final t = v.trim();
-            if (!RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$').hasMatch(t)) {
-              return l10n.settingsChangeEmailInvalid;
-            }
-            return null;
-          },
-          onFieldSubmitted: (_) => _submit(),
-        ),
+    return Form(
+      key: _formKey,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          TextFormField(
+            controller: _controller,
+            keyboardType: TextInputType.emailAddress,
+            textInputAction: TextInputAction.done,
+            autofocus: true,
+            autofillHints: const [AutofillHints.email],
+            decoration: InputDecoration(labelText: l10n.settingsNewEmailLabel),
+            enabled: !_loading,
+            validator: (v) {
+              if (v == null || v.trim().isEmpty) return l10n.fieldRequired;
+              final t = v.trim();
+              if (!RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$').hasMatch(t)) {
+                return l10n.settingsChangeEmailInvalid;
+              }
+              return null;
+            },
+            onFieldSubmitted: (_) => _submit(),
+          ),
+          const SizedBox(height: 20),
+          FilledButton(
+            onPressed: _loading ? null : _submit,
+            child: _loading
+                ? const SizedBox(
+                    height: 20,
+                    width: 20,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : Text(l10n.settingsChangeEmailSubmit),
+          ),
+        ],
       ),
-      actions: [
-        TextButton(
-          onPressed: _loading ? null : () => Navigator.of(context).pop(),
-          child: Text(l10n.cancel),
-        ),
-        FilledButton(
-          onPressed: _loading ? null : _submit,
-          child: _loading
-              ? const SizedBox(
-                  height: 20,
-                  width: 20,
-                  child: CircularProgressIndicator(strokeWidth: 2),
-                )
-              : Text(l10n.settingsChangeEmailSubmit),
-        ),
-      ],
     );
   }
 }
