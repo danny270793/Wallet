@@ -2,6 +2,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/credit_group_description.dart';
 import '../../../../core/deferred_credit_installment_schedule.dart';
 import '../../../../core/logger/app_logger.dart';
+import '../../../../core/remote_load_failure.dart';
 import '../../../../core/split_equal_amounts.dart';
 import '../../../cards/domain/usecases/get_cards_usecase.dart';
 import '../../../wallet_credits/domain/usecases/create_wallet_credit_usecase.dart';
@@ -73,7 +74,7 @@ class TransactionsCubit extends Cubit<TransactionsState> {
       if (gen != _loadGeneration) return;
       if (isClosed) return;
       AppLogger.error('failed to load transactions', e, s);
-      emit(const TransactionsError());
+      emit(TransactionsError(failure: classifyRemoteLoadError(e)));
     }
   }
 
