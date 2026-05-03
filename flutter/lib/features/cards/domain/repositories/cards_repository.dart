@@ -1,7 +1,8 @@
+import '../../../../core/offline/offline_served_bundle.dart';
 import '../entities/card_entity.dart';
 
 abstract class CardsRepository {
-  Future<List<CardEntity>> getCards();
+  Future<OfflineServedBundle<List<CardEntity>>> getCards();
   Future<CardEntity> createCard({
     required String name,
     String? description,
