@@ -64,6 +64,8 @@
       <string>UIInterfaceOrientationLandscapeLeft</string>
       <string>UIInterfaceOrientationLandscapeRight</string>
     </array>
+    <key>NSFaceIDUsageDescription</key>
+    <string>Unlock the app with Face ID when you enable this option.</string>
     <key>UISupportedInterfaceOrientations~ipad</key>
     <array>
       <string>UIInterfaceOrientationPortrait</string>
