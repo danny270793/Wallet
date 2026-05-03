@@ -210,6 +210,15 @@ class AppLocalizationsEs extends AppLocalizations {
   String get settingsBiometricResumeReason => 'Autentícate para continuar.';
 
   @override
+  String get biometricLockTitle => 'App bloqueada';
+
+  @override
+  String get biometricLockBody => 'Usa Face ID o la huella para continuar.';
+
+  @override
+  String get biometricLockUnlockButton => 'Desbloquear';
+
+  @override
   String get signOut => 'Cerrar sesión';
 
   @override
