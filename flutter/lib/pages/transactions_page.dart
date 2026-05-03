@@ -2286,6 +2286,7 @@ class _TransactionDialogState extends State<_TransactionDialog> {
       }
       _categoryId ??= t.categoryId;
       _tagId ??= t.tagId;
+      _ignore = t.ignore;
       final valueRaw = _valueController.text.trim();
       final valueParsed = _parseTransactionAmountInput(valueRaw);
       if (valueRaw.isEmpty || valueParsed == null || valueParsed == 0) {
