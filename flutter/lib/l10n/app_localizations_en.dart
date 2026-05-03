@@ -596,11 +596,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get creditsDueThisMonthLabel => 'Due this month';
 
   @override
-  String creditsDueInMonthLabel(String monthYear) {
-    return 'Due in $monthYear';
-  }
-
-  @override
   String get creditsNewDeferredPurchase => 'New credit purchase';
 
   @override
