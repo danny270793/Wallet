@@ -1,8 +1,9 @@
 import '../remote_load_failure.dart';
+import 'offline_served_bundle.dart';
 import 'wallet_offline_cache.dart';
 import 'wallet_offline_user_context.dart';
 
-Future<List<E>> fetchListWithOfflineCache<E>({
+Future<OfflineServedBundle<List<E>>> fetchListWithOfflineCache<E>({
   required WalletOfflineUserContext session,
   required WalletOfflineCache cache,
   required String cacheKey,
@@ -20,20 +21,26 @@ Future<List<E>> fetchListWithOfflineCache<E>({
         list.map(toJson).toList(),
       );
     }
-    return list;
+    return OfflineServedBundle(
+      value: list,
+      servedFromOfflineCache: false,
+    );
   } catch (e) {
     if (classifyRemoteLoadError(e) != RemoteLoadFailure.networkUnavailable) {
       rethrow;
     }
     final raw = await cache.loadList(userId, cacheKey);
     if (raw != null) {
-      return raw.map(fromJson).toList();
+      return OfflineServedBundle(
+        value: raw.map(fromJson).toList(),
+        servedFromOfflineCache: true,
+      );
     }
     rethrow;
   }
 }
 
-Future<T?> fetchNullableWithOfflineCache<T>({
+Future<OfflineServedBundle<T?>> fetchNullableWithOfflineCache<T>({
   required WalletOfflineUserContext session,
   required WalletOfflineCache cache,
   required String cacheKey,
@@ -47,14 +54,20 @@ Future<T?> fetchNullableWithOfflineCache<T>({
     if (value != null && userId != null && userId.isNotEmpty) {
       await cache.saveItem(userId, cacheKey, toJson(value));
     }
-    return value;
+    return OfflineServedBundle(
+      value: value,
+      servedFromOfflineCache: false,
+    );
   } catch (e) {
     if (classifyRemoteLoadError(e) != RemoteLoadFailure.networkUnavailable) {
       rethrow;
     }
     final raw = await cache.loadItem(userId, cacheKey);
     if (raw != null) {
-      return fromJson(raw);
+      return OfflineServedBundle(
+        value: fromJson(raw),
+        servedFromOfflineCache: true,
+      );
     }
     rethrow;
   }
