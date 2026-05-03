@@ -11,6 +11,7 @@ import '../widgets/dashboard_view_options_bottom_sheet.dart';
 import '../widgets/dashboard_month_transactions_list.dart';
 import '../widgets/monthly_category_expense_pie_chart.dart';
 import '../widgets/monthly_tag_pie_chart.dart';
+import '../widgets/offline_cached_data_banner.dart';
 import '../widgets/remote_load_failure_panel.dart';
 import '../widgets/shell_scaffold.dart';
 import '../widgets/transaction_month_totals.dart';
@@ -189,6 +190,13 @@ class _MonthlyDashboardViewState extends State<_MonthlyDashboardView> {
           tagFilter,
           categoryFilter,
         );
+        final offlineCached = switch (state) {
+          TransactionsLoaded(:final servedFromOfflineCache) =>
+            servedFromOfflineCache,
+          TransactionsActionError(:final servedFromOfflineCache) =>
+            servedFromOfflineCache,
+          _ => false,
+        };
 
         // Income / outcome / balance for the same filtered set as the charts and list below.
         final dashboardViewTotals = transactionMonthTotalsBreakdown(
@@ -261,6 +269,7 @@ class _MonthlyDashboardViewState extends State<_MonthlyDashboardView> {
             tagPieTxs,
             categoryPieTxs,
             listTxs,
+            offlineCached,
           ),
         );
       },
@@ -277,6 +286,7 @@ class _MonthlyDashboardViewState extends State<_MonthlyDashboardView> {
     List<TransactionEntity> tagPieTransactions,
     List<TransactionEntity> categoryPieTransactions,
     List<TransactionEntity> listTransactions,
+    bool offlineCached,
   ) {
     Future<void> pullRefresh() =>
         context.read<TransactionsCubit>().loadForMonth(
@@ -326,6 +336,7 @@ class _MonthlyDashboardViewState extends State<_MonthlyDashboardView> {
               physics: const AlwaysScrollableScrollPhysics(),
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
               children: [
+                OfflineCachedDataBanner(visible: offlineCached),
                 MonthlyTagPieChart(
                   l10n: l10n,
                   transactions: tagPieTransactions,
