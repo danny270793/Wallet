@@ -1,4 +1,5 @@
 import '../remote_load_failure.dart';
+import 'device_connectivity.dart';
 import 'offline_served_bundle.dart';
 import 'wallet_offline_cache.dart';
 import 'wallet_offline_user_context.dart';
@@ -12,6 +13,22 @@ Future<OfflineServedBundle<List<E>>> fetchListWithOfflineCache<E>({
   required Map<String, dynamic> Function(E) toJson,
 }) async {
   final userId = session.userId;
+
+  Future<OfflineServedBundle<List<E>>?> loadFromCache() async {
+    final raw = await cache.loadList(userId, cacheKey);
+    if (raw == null) return null;
+    return OfflineServedBundle(
+      value: raw.map(fromJson).toList(),
+      servedFromOfflineCache: true,
+    );
+  }
+
+  if (!await deviceReportsOnline()) {
+    final cached = await loadFromCache();
+    if (cached != null) return cached;
+    throw const NoDeviceConnectivityException();
+  }
+
   try {
     final list = await remote();
     if (userId != null && userId.isNotEmpty) {
@@ -29,13 +46,8 @@ Future<OfflineServedBundle<List<E>>> fetchListWithOfflineCache<E>({
     if (classifyRemoteLoadError(e) != RemoteLoadFailure.networkUnavailable) {
       rethrow;
     }
-    final raw = await cache.loadList(userId, cacheKey);
-    if (raw != null) {
-      return OfflineServedBundle(
-        value: raw.map(fromJson).toList(),
-        servedFromOfflineCache: true,
-      );
-    }
+    final cached = await loadFromCache();
+    if (cached != null) return cached;
     rethrow;
   }
 }
@@ -49,6 +61,22 @@ Future<OfflineServedBundle<T?>> fetchNullableWithOfflineCache<T>({
   required Map<String, dynamic> Function(T) toJson,
 }) async {
   final userId = session.userId;
+
+  Future<OfflineServedBundle<T?>?> loadFromCache() async {
+    final raw = await cache.loadItem(userId, cacheKey);
+    if (raw == null) return null;
+    return OfflineServedBundle(
+      value: fromJson(raw),
+      servedFromOfflineCache: true,
+    );
+  }
+
+  if (!await deviceReportsOnline()) {
+    final cached = await loadFromCache();
+    if (cached != null) return cached;
+    throw const NoDeviceConnectivityException();
+  }
+
   try {
     final value = await remote();
     if (value != null && userId != null && userId.isNotEmpty) {
@@ -62,13 +90,8 @@ Future<OfflineServedBundle<T?>> fetchNullableWithOfflineCache<T>({
     if (classifyRemoteLoadError(e) != RemoteLoadFailure.networkUnavailable) {
       rethrow;
     }
-    final raw = await cache.loadItem(userId, cacheKey);
-    if (raw != null) {
-      return OfflineServedBundle(
-        value: fromJson(raw),
-        servedFromOfflineCache: true,
-      );
-    }
+    final cached = await loadFromCache();
+    if (cached != null) return cached;
     rethrow;
   }
 }
