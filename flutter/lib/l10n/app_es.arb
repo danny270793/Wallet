@@ -57,6 +57,74 @@
   "settingsThemeSystem": "Predeterminado del sistema",
   "settingsThemeLight": "Claro",
   "settingsThemeDark": "Oscuro",
+  "settingsDataSection": "Datos sin conexión",
+  "settingsOfflineCache": "Respuestas en caché",
+  "settingsOfflineCacheSubtitle": "Respuestas de la API guardadas en este dispositivo para uso sin conexión",
+  "settingsCachePageTitle": "Caché sin conexión",
+  "settingsCacheEmpty": "Aún no hay respuestas en caché.",
+  "settingsCacheBottomBarTotal": "Total: {size}",
+  "@settingsCacheBottomBarTotal": {
+    "placeholders": {
+      "size": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsCacheRowSubtitle": "{dateTime} · {size}",
+  "@settingsCacheRowSubtitle": {
+    "placeholders": {
+      "dateTime": {
+        "type": "String"
+      },
+      "size": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsCacheKeyTxMonth": "Transacciones · {year}-{month}",
+  "@settingsCacheKeyTxMonth": {
+    "placeholders": {
+      "year": {
+        "type": "String"
+      },
+      "month": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsCacheKeyTxYear": "Transacciones · {year}",
+  "@settingsCacheKeyTxYear": {
+    "placeholders": {
+      "year": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsCacheKeyTxCreditGroups": "Transacciones (grupos de crédito)",
+  "settingsCacheKeyTxCredit": "Transacciones (crédito {shortId})",
+  "@settingsCacheKeyTxCredit": {
+    "placeholders": {
+      "shortId": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsCacheKeyWalletCredit": "Crédito de cartera · {shortId}",
+  "@settingsCacheKeyWalletCredit": {
+    "placeholders": {
+      "shortId": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsCacheKeyRaw": "{key}",
+  "@settingsCacheKeyRaw": {
+    "placeholders": {
+      "key": {
+        "type": "String"
+      }
+    }
+  },
   "settingsSecuritySection": "Seguridad",
   "settingsBiometricUnlockTitle": "Face ID y huella dactilar",
   "settingsBiometricUnlockSubtitle": "Usa la biometría para desbloquear la app.",
