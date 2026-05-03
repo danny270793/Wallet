@@ -65,8 +65,11 @@ class App extends StatefulWidget {
 }
 
 class _AppState extends State<App> with WidgetsBindingObserver {
-  /// True after [AppLifecycleState.paused]; cleared on resume so cold start does not prompt.
+  /// True after [AppLifecycleState.paused]; cleared on resume so cold start does not lock.
   bool _shouldUnlockOnNextResume = false;
+
+  /// Full-screen gate: no router navigation visible until cleared.
+  bool _biometricLockActive = false;
 
   @override
   void initState() {
@@ -84,34 +87,25 @@ class _AppState extends State<App> with WidgetsBindingObserver {
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.paused) {
       _shouldUnlockOnNextResume = true;
-    } else if (state == AppLifecycleState.resumed && _shouldUnlockOnNextResume) {
+    } else if (state == AppLifecycleState.resumed &&
+        _shouldUnlockOnNextResume) {
       _shouldUnlockOnNextResume = false;
-      unawaited(_promptBiometricUnlockIfNeeded());
+      unawaited(_activateBiometricLockIfNeeded());
     }
   }
 
-  Future<void> _promptBiometricUnlockIfNeeded() async {
+  Future<void> _activateBiometricLockIfNeeded() async {
     if (Supabase.instance.client.auth.currentSession == null) return;
     final bio = getIt<AppBiometricUnlockController>();
     await bio.refreshAuthenticatorAvailability();
     if (!bio.enabled || !bio.authenticatorAvailable) return;
+    if (!mounted) return;
+    setState(() => _biometricLockActive = true);
+  }
 
-    var unlocked = false;
-    while (!unlocked) {
-      final ctx = rootNavigatorKey.currentContext;
-      if (ctx == null || !ctx.mounted) return;
-      final l10n = AppLocalizations.of(ctx);
-      if (l10n == null) return;
-      final ok = await bio.localAuth.authenticate(
-        localizedReason: l10n.settingsBiometricResumeReason,
-        options: const AuthenticationOptions(
-          biometricOnly: true,
-          stickyAuth: true,
-        ),
-      );
-      if (ok) {
-        unlocked = true;
-      }
+  void _clearBiometricLock() {
+    if (_biometricLockActive) {
+      setState(() => _biometricLockActive = false);
     }
   }
 
@@ -148,8 +142,134 @@ class _AppState extends State<App> with WidgetsBindingObserver {
           ),
           themeMode: appTheme.themeMode,
           routerConfig: router,
+          builder: (context, child) {
+            if (_biometricLockActive) {
+              return PopScope(
+                canPop: false,
+                child: _BiometricLockScreen(
+                  onUnlocked: _clearBiometricLock,
+                ),
+              );
+            }
+            return child ?? const SizedBox.shrink();
+          },
         );
       },
+    );
+  }
+}
+
+class _BiometricLockScreen extends StatefulWidget {
+  const _BiometricLockScreen({required this.onUnlocked});
+
+  final VoidCallback onUnlocked;
+
+  @override
+  State<_BiometricLockScreen> createState() => _BiometricLockScreenState();
+}
+
+class _BiometricLockScreenState extends State<_BiometricLockScreen> {
+  bool _busy = false;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _attemptUnlock());
+  }
+
+  Future<void> _attemptUnlock() async {
+    if (!mounted) return;
+
+    if (Supabase.instance.client.auth.currentSession == null) {
+      widget.onUnlocked();
+      return;
+    }
+
+    final bio = getIt<AppBiometricUnlockController>();
+    await bio.refreshAuthenticatorAvailability();
+    if (!mounted) return;
+
+    if (!bio.enabled || !bio.authenticatorAvailable) {
+      widget.onUnlocked();
+      return;
+    }
+
+    final l10n = AppLocalizations.of(context);
+    if (l10n == null) return;
+
+    setState(() => _busy = true);
+    final ok = await bio.localAuth.authenticate(
+      localizedReason: l10n.settingsBiometricResumeReason,
+      options: const AuthenticationOptions(
+        biometricOnly: true,
+        stickyAuth: true,
+      ),
+    );
+    if (!mounted) return;
+    setState(() => _busy = false);
+
+    if (ok) {
+      widget.onUnlocked();
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+
+    return Material(
+      color: scheme.surface,
+      child: SafeArea(
+        child: Center(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  Icons.lock_outline_rounded,
+                  size: 56,
+                  color: scheme.primary,
+                ),
+                const SizedBox(height: 20),
+                Text(
+                  l10n.biometricLockTitle,
+                  textAlign: TextAlign.center,
+                  style: theme.textTheme.headlineSmall?.copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  l10n.biometricLockBody,
+                  textAlign: TextAlign.center,
+                  style: theme.textTheme.bodyLarge?.copyWith(
+                    color: scheme.onSurfaceVariant,
+                    height: 1.35,
+                  ),
+                ),
+                const SizedBox(height: 28),
+                FilledButton.icon(
+                  onPressed: _busy ? null : _attemptUnlock,
+                  icon: _busy
+                      ? SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: scheme.onPrimary,
+                          ),
+                        )
+                      : const Icon(Icons.fingerprint_rounded),
+                  label: Text(l10n.biometricLockUnlockButton),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
     );
   }
 }
