@@ -134,6 +134,30 @@ class AppLocalizationsEs extends AppLocalizations {
   String get settingsChangeEmailSameAsCurrent => 'Ese ya es tu correo.';
 
   @override
+  String get settingsChangePassword => 'Cambiar contraseña';
+
+  @override
+  String get settingsChangePasswordDialogTitle => 'Cambiar contraseña';
+
+  @override
+  String get settingsNewPasswordLabel => 'Contraseña nueva';
+
+  @override
+  String get settingsConfirmNewPasswordLabel => 'Confirmar contraseña';
+
+  @override
+  String get settingsChangePasswordSubmit => 'Actualizar contraseña';
+
+  @override
+  String get settingsChangePasswordSuccess => 'Tu contraseña se actualizó.';
+
+  @override
+  String get settingsPasswordsDoNotMatch => 'Las contraseñas no coinciden.';
+
+  @override
+  String get settingsPasswordTooShort => 'Usa al menos 6 caracteres.';
+
+  @override
   String get settingsAppearance => 'Apariencia';
 
   @override
