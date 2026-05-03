@@ -1,6 +1,7 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/logger/app_logger.dart';
+import '../../../../core/remote_load_failure.dart';
 import '../../domain/entities/transaction_entity.dart';
 import '../../domain/usecases/get_transactions_for_year_usecase.dart';
 
@@ -22,8 +23,8 @@ final class YearlyDashboardLoaded extends YearlyDashboardState {
 }
 
 final class YearlyDashboardError extends YearlyDashboardState {
-  const YearlyDashboardError(this.message);
-  final String? message;
+  const YearlyDashboardError(this.failure);
+  final RemoteLoadFailure failure;
 }
 
 class YearlyDashboardCubit extends Cubit<YearlyDashboardState> {
@@ -46,7 +47,7 @@ class YearlyDashboardCubit extends Cubit<YearlyDashboardState> {
       if (gen != _generation) return;
       if (isClosed) return;
       AppLogger.error('yearly dashboard load failed', e, s);
-      emit(YearlyDashboardError(e.toString()));
+      emit(YearlyDashboardError(classifyRemoteLoadError(e)));
     }
   }
 }
