@@ -137,7 +137,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get settingsChangePasswordSubtitle =>
-      'Updates the password you use to sign in to Wallet.';
+      'Updates the password you use to sign in.';
 
   @override
   String get settingsChangePasswordDialogTitle => 'Change password';
