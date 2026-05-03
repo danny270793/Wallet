@@ -44,18 +44,7 @@ class _CardsView extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
 
-    return BlocListener<CardsCubit, CardsState>(
-      listenWhen: (prev, curr) => curr is CardsError && prev is! CardsError,
-      listener: (context, state) {
-        final s = state as CardsError;
-        showRemoteLoadFailureAlert(
-          context,
-          l10n,
-          s.failure,
-          () => context.read<CardsCubit>().load(showLoading: true),
-        );
-      },
-      child: BlocConsumer<CardsCubit, CardsState>(
+    return BlocConsumer<CardsCubit, CardsState>(
       listener: (context, state) {
         if (state is CardsActionError) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -86,7 +75,6 @@ class _CardsView extends StatelessWidget {
           body: _body(context, state, l10n),
         );
       },
-    ),
     );
   }
 
