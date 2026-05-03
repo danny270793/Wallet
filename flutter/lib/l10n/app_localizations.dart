@@ -440,6 +440,84 @@ abstract class AppLocalizations {
   /// **'Dark'**
   String get settingsThemeDark;
 
+  /// No description provided for @settingsDataSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Offline data'**
+  String get settingsDataSection;
+
+  /// No description provided for @settingsOfflineCache.
+  ///
+  /// In en, this message translates to:
+  /// **'Cached responses'**
+  String get settingsOfflineCache;
+
+  /// No description provided for @settingsOfflineCacheSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'API responses stored on this device for offline use'**
+  String get settingsOfflineCacheSubtitle;
+
+  /// No description provided for @settingsCachePageTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Offline cache'**
+  String get settingsCachePageTitle;
+
+  /// No description provided for @settingsCacheEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No cached responses yet.'**
+  String get settingsCacheEmpty;
+
+  /// No description provided for @settingsCacheBottomBarTotal.
+  ///
+  /// In en, this message translates to:
+  /// **'Total: {size}'**
+  String settingsCacheBottomBarTotal(String size);
+
+  /// No description provided for @settingsCacheRowSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'{dateTime} · {size}'**
+  String settingsCacheRowSubtitle(String dateTime, String size);
+
+  /// No description provided for @settingsCacheKeyTxMonth.
+  ///
+  /// In en, this message translates to:
+  /// **'Transactions · {year}-{month}'**
+  String settingsCacheKeyTxMonth(String year, String month);
+
+  /// No description provided for @settingsCacheKeyTxYear.
+  ///
+  /// In en, this message translates to:
+  /// **'Transactions · {year}'**
+  String settingsCacheKeyTxYear(String year);
+
+  /// No description provided for @settingsCacheKeyTxCreditGroups.
+  ///
+  /// In en, this message translates to:
+  /// **'Transactions (credit groups)'**
+  String get settingsCacheKeyTxCreditGroups;
+
+  /// No description provided for @settingsCacheKeyTxCredit.
+  ///
+  /// In en, this message translates to:
+  /// **'Transactions (credit {shortId})'**
+  String settingsCacheKeyTxCredit(String shortId);
+
+  /// No description provided for @settingsCacheKeyWalletCredit.
+  ///
+  /// In en, this message translates to:
+  /// **'Wallet credit · {shortId}'**
+  String settingsCacheKeyWalletCredit(String shortId);
+
+  /// No description provided for @settingsCacheKeyRaw.
+  ///
+  /// In en, this message translates to:
+  /// **'{key}'**
+  String settingsCacheKeyRaw(String key);
+
   /// No description provided for @settingsSecuritySection.
   ///
   /// In en, this message translates to:
