@@ -43,18 +43,7 @@ class _TagsView extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
 
-    return BlocListener<TagsCubit, TagsState>(
-      listenWhen: (prev, curr) => curr is TagsError && prev is! TagsError,
-      listener: (context, state) {
-        final s = state as TagsError;
-        showRemoteLoadFailureAlert(
-          context,
-          l10n,
-          s.failure,
-          () => context.read<TagsCubit>().load(showLoading: true),
-        );
-      },
-      child: BlocConsumer<TagsCubit, TagsState>(
+    return BlocConsumer<TagsCubit, TagsState>(
       listener: (context, state) {
         if (state is TagsActionError) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -72,7 +61,6 @@ class _TagsView extends StatelessWidget {
           body: _body(context, state, l10n),
         );
       },
-    ),
     );
   }
 
