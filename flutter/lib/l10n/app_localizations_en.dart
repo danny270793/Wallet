@@ -188,6 +188,60 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsThemeDark => 'Dark';
 
   @override
+  String get settingsDataSection => 'Offline data';
+
+  @override
+  String get settingsOfflineCache => 'Cached responses';
+
+  @override
+  String get settingsOfflineCacheSubtitle =>
+      'API responses stored on this device for offline use';
+
+  @override
+  String get settingsCachePageTitle => 'Offline cache';
+
+  @override
+  String get settingsCacheEmpty => 'No cached responses yet.';
+
+  @override
+  String settingsCacheBottomBarTotal(String size) {
+    return 'Total: $size';
+  }
+
+  @override
+  String settingsCacheRowSubtitle(String dateTime, String size) {
+    return '$dateTime · $size';
+  }
+
+  @override
+  String settingsCacheKeyTxMonth(String year, String month) {
+    return 'Transactions · $year-$month';
+  }
+
+  @override
+  String settingsCacheKeyTxYear(String year) {
+    return 'Transactions · $year';
+  }
+
+  @override
+  String get settingsCacheKeyTxCreditGroups => 'Transactions (credit groups)';
+
+  @override
+  String settingsCacheKeyTxCredit(String shortId) {
+    return 'Transactions (credit $shortId)';
+  }
+
+  @override
+  String settingsCacheKeyWalletCredit(String shortId) {
+    return 'Wallet credit · $shortId';
+  }
+
+  @override
+  String settingsCacheKeyRaw(String key) {
+    return '$key';
+  }
+
+  @override
   String get settingsSecuritySection => 'Security';
 
   @override
