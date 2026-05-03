@@ -86,24 +86,28 @@ List<double> weightedNetByMonthForYear(
   return sums;
 }
 
-/// Running sum of [weightedNetByMonthForYear] from January through each month (YTD net in year).
+/// Cumulative net at end of each calendar month in [year] (local dates), including **all**
+/// transactions strictly before the first day of the following month—i.e. lifetime running
+/// net through that month, not YTD-only. [txs] must include every counted transaction through
+/// the end of [year] (yearly dashboard fetch loads from the beginning through that instant).
 List<double> weightedCumulativeNetByMonthForYear(
   List<TransactionEntity> txs,
   int year, {
   required bool includeIgnored,
   required bool useWeightedAmounts,
 }) {
-  final monthly = weightedNetByMonthForYear(
-    txs,
-    year,
-    includeIgnored: includeIgnored,
-    useWeightedAmounts: useWeightedAmounts,
-  );
   final out = List<double>.filled(12, 0);
-  var sum = 0.0;
-  for (var i = 0; i < 12; i++) {
-    sum += monthly[i];
-    out[i] = sum;
+  for (var m = 0; m < 12; m++) {
+    final cutoffExclusive = DateTime(year, m + 2, 1);
+    var sum = 0.0;
+    for (final t in txs) {
+      if (t.isAccountTransferLeg) continue;
+      if (!includeIgnored && t.ignore) continue;
+      final local = t.transactedAt.toLocal();
+      if (!local.isBefore(cutoffExclusive)) continue;
+      sum += _effectiveAmount(t, useWeightedAmounts);
+    }
+    out[m] = sum;
   }
   return out;
 }
