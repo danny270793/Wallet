@@ -40,6 +40,7 @@
   "settingsChangeEmailInvalid": "Enter a valid email address.",
   "settingsChangeEmailSameAsCurrent": "That is already your email.",
   "settingsChangePassword": "Change password",
+  "settingsChangePasswordSubtitle": "Updates the password you use to sign in to Wallet.",
   "settingsChangePasswordDialogTitle": "Change password",
   "settingsNewPasswordLabel": "New password",
   "settingsConfirmNewPasswordLabel": "Confirm new password",
