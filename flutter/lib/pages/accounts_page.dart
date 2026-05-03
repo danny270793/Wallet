@@ -31,19 +31,7 @@ class _AccountsView extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
 
-    return BlocListener<AccountsCubit, AccountsState>(
-      listenWhen: (prev, curr) =>
-          curr is AccountsError && prev is! AccountsError,
-      listener: (context, state) {
-        final s = state as AccountsError;
-        showRemoteLoadFailureAlert(
-          context,
-          l10n,
-          s.failure,
-          () => context.read<AccountsCubit>().load(showLoading: true),
-        );
-      },
-      child: BlocConsumer<AccountsCubit, AccountsState>(
+    return BlocConsumer<AccountsCubit, AccountsState>(
       listener: (context, state) {
         if (state is AccountsActionError) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -78,7 +66,6 @@ class _AccountsView extends StatelessWidget {
           body: _body(context, state, l10n),
         );
       },
-    ),
     );
   }
 
