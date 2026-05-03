@@ -62,14 +62,7 @@
   "settingsOfflineCacheSubtitle": "API responses stored on this device for offline use",
   "settingsCachePageTitle": "Offline cache",
   "settingsCacheEmpty": "No cached responses yet.",
-  "settingsCacheBottomBarTotal": "Total: {size}",
-  "@settingsCacheBottomBarTotal": {
-    "placeholders": {
-      "size": {
-        "type": "String"
-      }
-    }
-  },
+  "settingsCacheBottomBarCaption": "Size of cached files",
   "settingsCacheRowSubtitle": "{dateTime} · {size}",
   "@settingsCacheRowSubtitle": {
     "placeholders": {
