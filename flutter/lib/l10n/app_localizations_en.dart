@@ -204,9 +204,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsCacheEmpty => 'No cached responses yet.';
 
   @override
-  String settingsCacheBottomBarTotal(String size) {
-    return 'Total: $size';
-  }
+  String get settingsCacheBottomBarCaption => 'Size of cached files';
 
   @override
   String settingsCacheRowSubtitle(String dateTime, String size) {
