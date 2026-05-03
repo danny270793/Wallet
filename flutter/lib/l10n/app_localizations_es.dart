@@ -599,11 +599,6 @@ class AppLocalizationsEs extends AppLocalizations {
   String get creditsDueThisMonthLabel => 'A pagar este mes';
 
   @override
-  String creditsDueInMonthLabel(String monthYear) {
-    return 'A pagar en $monthYear';
-  }
-
-  @override
   String get creditsNewDeferredPurchase => 'Nueva compra a crédito';
 
   @override
