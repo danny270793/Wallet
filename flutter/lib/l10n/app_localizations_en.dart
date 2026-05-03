@@ -758,6 +758,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'Check your network and try again. If you are online, the server may be unreachable.';
 
   @override
+  String get cachedDataOfflineBanner =>
+      'Showing saved data — no internet connection.';
+
+  @override
   String get loadFailedRequestFailedTitle => 'Could not load data';
 
   @override
