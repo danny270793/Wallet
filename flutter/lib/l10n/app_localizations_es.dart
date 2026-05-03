@@ -189,6 +189,61 @@ class AppLocalizationsEs extends AppLocalizations {
   String get settingsThemeDark => 'Oscuro';
 
   @override
+  String get settingsDataSection => 'Datos sin conexión';
+
+  @override
+  String get settingsOfflineCache => 'Respuestas en caché';
+
+  @override
+  String get settingsOfflineCacheSubtitle =>
+      'Respuestas de la API guardadas en este dispositivo para uso sin conexión';
+
+  @override
+  String get settingsCachePageTitle => 'Caché sin conexión';
+
+  @override
+  String get settingsCacheEmpty => 'Aún no hay respuestas en caché.';
+
+  @override
+  String settingsCacheBottomBarTotal(String size) {
+    return 'Total: $size';
+  }
+
+  @override
+  String settingsCacheRowSubtitle(String dateTime, String size) {
+    return '$dateTime · $size';
+  }
+
+  @override
+  String settingsCacheKeyTxMonth(String year, String month) {
+    return 'Transacciones · $year-$month';
+  }
+
+  @override
+  String settingsCacheKeyTxYear(String year) {
+    return 'Transacciones · $year';
+  }
+
+  @override
+  String get settingsCacheKeyTxCreditGroups =>
+      'Transacciones (grupos de crédito)';
+
+  @override
+  String settingsCacheKeyTxCredit(String shortId) {
+    return 'Transacciones (crédito $shortId)';
+  }
+
+  @override
+  String settingsCacheKeyWalletCredit(String shortId) {
+    return 'Crédito de cartera · $shortId';
+  }
+
+  @override
+  String settingsCacheKeyRaw(String key) {
+    return '$key';
+  }
+
+  @override
   String get settingsSecuritySection => 'Seguridad';
 
   @override
