@@ -63,17 +63,6 @@
   "settingsCachePageTitle": "Offline cache",
   "settingsCacheEmpty": "No cached responses yet.",
   "settingsCacheBottomBarCaption": "Size of cached files",
-  "settingsCacheRowSubtitle": "{dateTime} · {size}",
-  "@settingsCacheRowSubtitle": {
-    "placeholders": {
-      "dateTime": {
-        "type": "String"
-      },
-      "size": {
-        "type": "String"
-      }
-    }
-  },
   "settingsCacheKeyTxMonth": "Transactions · {year}-{month}",
   "@settingsCacheKeyTxMonth": {
     "placeholders": {
