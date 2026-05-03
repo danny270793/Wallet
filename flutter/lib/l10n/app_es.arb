@@ -291,14 +291,6 @@
   },
   "creditsPendingTotalsLabel": "Total pendiente",
   "creditsDueThisMonthLabel": "A pagar este mes",
-  "creditsDueInMonthLabel": "A pagar en {monthYear}",
-  "@creditsDueInMonthLabel": {
-    "placeholders": {
-      "monthYear": {
-        "type": "String"
-      }
-    }
-  },
   "creditsNewDeferredPurchase": "Nueva compra a crédito",
   "creditsWalletCreditTransactedAt": "Fecha del crédito: {when}",
   "@creditsWalletCreditTransactedAt": {
