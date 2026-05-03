@@ -108,16 +108,13 @@ wallet_credits(transactedAt)
   @override
   Future<List<TransactionEntity>> getTransactionsForYear(DateTime yearStartLocal) async {
     final y = yearStartLocal.year;
-    final startLocal = DateTime(y, 1, 1);
     final endExclusiveLocal = DateTime(y + 1, 1, 1);
-    final startUtc = startLocal.toUtc().toIso8601String();
     final endUtc = endExclusiveLocal.toUtc().toIso8601String();
-    AppLogger.debug('getTransactionsForYear utc: $startUtc .. $endUtc');
+    AppLogger.debug('getTransactionsForYear through year end utc: .. $endUtc');
     final data = await _client
         .from('wallet_transactions')
         .select(_transactionSelectEmbedded)
         .isFilter('deletedAt', null)
-        .gte('transactedAt', startUtc)
         .lt('transactedAt', endUtc)
         .order('transactedAt', ascending: false);
     return (data as List).map((e) => TransactionEntity.fromJson(e as Map<String, dynamic>)).toList();
