@@ -239,6 +239,10 @@ class _SettingsPageState extends State<SettingsPage> {
                         bio.authenticatorAvailable
                             ? l10n.settingsBiometricUnlockSubtitle
                             : l10n.settingsBiometricUnavailable,
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
+                          height: 1.35,
+                        ),
                       ),
                       value: bio.enabled,
                       onChanged: bio.authenticatorAvailable
