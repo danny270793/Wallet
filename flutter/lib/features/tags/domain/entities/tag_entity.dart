@@ -26,6 +26,15 @@ class TagEntity extends Equatable {
     updatedAt: DateTime.parse(json['updatedAt'] as String),
   );
 
+  Map<String, dynamic> toJson() => {
+    'id': id,
+    'userId': userId,
+    'name': name,
+    'description': description,
+    'createdAt': createdAt.toUtc().toIso8601String(),
+    'updatedAt': updatedAt.toUtc().toIso8601String(),
+  };
+
   @override
   List<Object?> get props => [id, userId, name, description, createdAt, updatedAt];
 }
