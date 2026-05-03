@@ -11,6 +11,7 @@ import '../../features/auth/domain/repositories/auth_repository.dart';
 import '../../features/auth/domain/usecases/sign_in_usecase.dart';
 import '../../features/auth/domain/usecases/sign_out_usecase.dart';
 import '../../features/auth/domain/usecases/update_email_usecase.dart';
+import '../../features/auth/domain/usecases/update_password_usecase.dart';
 import '../../features/auth/presentation/bloc/login_bloc.dart';
 import '../../features/auth/presentation/cubit/settings_cubit.dart';
 import '../../features/accounts/data/datasources/accounts_remote_datasource.dart';
@@ -104,6 +105,9 @@ void setupDi() {
   getIt.registerFactory<SignInUsecase>(() => SignInUsecase(getIt()));
   getIt.registerFactory<SignOutUsecase>(() => SignOutUsecase(getIt()));
   getIt.registerFactory<UpdateEmailUsecase>(() => UpdateEmailUsecase(getIt()));
+  getIt.registerFactory<UpdatePasswordUsecase>(
+    () => UpdatePasswordUsecase(getIt()),
+  );
   getIt.registerFactory<LoginBloc>(() => LoginBloc(signIn: getIt()));
   getIt.registerFactory<SettingsCubit>(() => SettingsCubit(signOut: getIt()));
 
