@@ -1563,12 +1563,18 @@ class _SearchableIdPickerSheetState extends State<_SearchableIdPickerSheet> {
     final list = _visible();
 
     final themeSheet = Theme.of(sheetContext);
-    return SafeArea(
-      child: ConstrainedBox(
-        constraints: BoxConstraints(
-          maxHeight: MediaQuery.sizeOf(sheetContext).height * 0.55,
-        ),
-        child: CustomScrollView(
+    final keyboardInset = MediaQuery.viewInsetsOf(context).bottom;
+
+    return AnimatedPadding(
+      duration: const Duration(milliseconds: 120),
+      curve: Curves.easeOut,
+      padding: EdgeInsets.only(bottom: keyboardInset),
+      child: SafeArea(
+        child: ConstrainedBox(
+          constraints: BoxConstraints(
+            maxHeight: MediaQuery.sizeOf(sheetContext).height * 0.55,
+          ),
+          child: CustomScrollView(
           physics: const AlwaysScrollableScrollPhysics(),
           slivers: [
             SliverAppBar(
@@ -1677,6 +1683,7 @@ class _SearchableIdPickerSheetState extends State<_SearchableIdPickerSheet> {
           ],
         ),
       ),
+    ),
     );
   }
 }
