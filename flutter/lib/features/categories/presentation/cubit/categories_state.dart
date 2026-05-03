@@ -1,4 +1,6 @@
 import 'package:equatable/equatable.dart';
+
+import '../../../../core/remote_load_failure.dart';
 import '../../domain/entities/category_entity.dart';
 
 sealed class CategoriesState extends Equatable {
@@ -25,10 +27,10 @@ class CategoriesLoaded extends CategoriesState {
 }
 
 class CategoriesError extends CategoriesState {
-  final String? message;
-  const CategoriesError({this.message});
+  final RemoteLoadFailure failure;
+  const CategoriesError({this.failure = RemoteLoadFailure.requestFailed});
   @override
-  List<Object?> get props => [message];
+  List<Object?> get props => [failure];
 }
 
 class CategoriesActionError extends CategoriesState {
