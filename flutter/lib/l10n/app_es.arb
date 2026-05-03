@@ -59,7 +59,7 @@
   "settingsThemeDark": "Oscuro",
   "settingsSecuritySection": "Seguridad",
   "settingsBiometricUnlockTitle": "Face ID y huella dactilar",
-  "settingsBiometricUnlockSubtitle": "Usa la biometría para desbloquear la app al volver desde segundo plano.",
+  "settingsBiometricUnlockSubtitle": "Usa la biometría para desbloquear la app.",
   "settingsBiometricUnavailable": "El desbloqueo biométrico no está disponible en este dispositivo.",
   "settingsBiometricAuthReason": "Confirma para activar el desbloqueo biométrico.",
   "settingsBiometricResumeReason": "Autentícate para continuar.",
