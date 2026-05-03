@@ -5,22 +5,73 @@ import 'package:wallet/l10n/app_localizations.dart';
 /// Static information screens linked from Settings → About.
 enum LegalInfoKind { about, privacy, terms }
 
-class LegalInfoPage extends StatelessWidget {
+String _legalInfoAppBarTitle(AppLocalizations l10n, LegalInfoKind kind) =>
+    switch (kind) {
+      LegalInfoKind.about => l10n.settingsAboutApp,
+      LegalInfoKind.privacy => l10n.settingsPrivacyPolicy,
+      LegalInfoKind.terms => l10n.settingsTermsOfUse,
+    };
+
+class LegalInfoPage extends StatefulWidget {
   const LegalInfoPage({super.key, required this.kind});
 
   final LegalInfoKind kind;
 
   @override
+  State<LegalInfoPage> createState() => _LegalInfoPageState();
+}
+
+class _LegalInfoPageState extends State<LegalInfoPage> {
+  static const double _appBarTitleScrollThreshold = 32;
+
+  late final ScrollController _scrollController;
+  bool _showAppBarTitle = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _scrollController = ScrollController();
+    _scrollController.addListener(_onScroll);
+  }
+
+  void _onScroll() {
+    final next =
+        _scrollController.offset > _appBarTitleScrollThreshold;
+    if (next != _showAppBarTitle) {
+      setState(() => _showAppBarTitle = next);
+    }
+  }
+
+  @override
+  void dispose() {
+    _scrollController.removeListener(_onScroll);
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final title = _legalInfoAppBarTitle(l10n, widget.kind);
 
     return Scaffold(
-      appBar: AppBar(),
+      appBar: AppBar(
+        title: _showAppBarTitle ? Text(title) : null,
+      ),
       body: SafeArea(
-        child: switch (kind) {
-          LegalInfoKind.about => _AboutBody(l10n: l10n),
-          LegalInfoKind.privacy => _PrivacyBody(l10n: l10n),
-          LegalInfoKind.terms => _TermsBody(l10n: l10n),
+        child: switch (widget.kind) {
+          LegalInfoKind.about => _AboutBody(
+              l10n: l10n,
+              scrollController: _scrollController,
+            ),
+          LegalInfoKind.privacy => _PrivacyBody(
+              l10n: l10n,
+              scrollController: _scrollController,
+            ),
+          LegalInfoKind.terms => _TermsBody(
+              l10n: l10n,
+              scrollController: _scrollController,
+            ),
         },
       ),
     );
@@ -28,9 +79,13 @@ class LegalInfoPage extends StatelessWidget {
 }
 
 class _AboutBody extends StatelessWidget {
-  const _AboutBody({required this.l10n});
+  const _AboutBody({
+    required this.l10n,
+    required this.scrollController,
+  });
 
   final AppLocalizations l10n;
+  final ScrollController scrollController;
 
   @override
   Widget build(BuildContext context) {
@@ -38,6 +93,7 @@ class _AboutBody extends StatelessWidget {
     final scheme = theme.colorScheme;
 
     return SingleChildScrollView(
+      controller: scrollController,
       padding: const EdgeInsets.fromLTRB(24, 20, 24, 40),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -147,9 +203,13 @@ class _AboutBody extends StatelessWidget {
 }
 
 class _PrivacyBody extends StatelessWidget {
-  const _PrivacyBody({required this.l10n});
+  const _PrivacyBody({
+    required this.l10n,
+    required this.scrollController,
+  });
 
   final AppLocalizations l10n;
+  final ScrollController scrollController;
 
   @override
   Widget build(BuildContext context) {
@@ -157,6 +217,7 @@ class _PrivacyBody extends StatelessWidget {
     final scheme = theme.colorScheme;
 
     return SingleChildScrollView(
+      controller: scrollController,
       padding: const EdgeInsets.fromLTRB(24, 20, 24, 40),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -214,9 +275,13 @@ class _PrivacyBody extends StatelessWidget {
 }
 
 class _TermsBody extends StatelessWidget {
-  const _TermsBody({required this.l10n});
+  const _TermsBody({
+    required this.l10n,
+    required this.scrollController,
+  });
 
   final AppLocalizations l10n;
+  final ScrollController scrollController;
 
   @override
   Widget build(BuildContext context) {
@@ -224,6 +289,7 @@ class _TermsBody extends StatelessWidget {
     final scheme = theme.colorScheme;
 
     return SingleChildScrollView(
+      controller: scrollController,
       padding: const EdgeInsets.fromLTRB(24, 20, 24, 40),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
