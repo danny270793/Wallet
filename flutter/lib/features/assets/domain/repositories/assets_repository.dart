@@ -1,7 +1,8 @@
+import '../../../../core/offline/offline_served_bundle.dart';
 import '../entities/asset_entity.dart';
 
 abstract class AssetsRepository {
-  Future<List<AssetEntity>> getAssets();
+  Future<OfflineServedBundle<List<AssetEntity>>> getAssets();
   Future<AssetEntity> createAsset({
     required String name,
     required String provider,
