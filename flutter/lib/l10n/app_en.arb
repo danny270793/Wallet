@@ -63,6 +63,11 @@
   "settingsCachePageTitle": "Offline cache",
   "settingsCacheEmpty": "No cached responses yet.",
   "settingsCacheBottomBarCaption": "Size of cached files",
+  "settingsCacheSortTooltip": "Sort",
+  "settingsCacheSortSheetTitle": "Sort by",
+  "settingsCacheSortByDate": "Date",
+  "settingsCacheSortBySize": "Size",
+  "settingsCacheSortByName": "Name",
   "settingsCacheKeyTxMonth": "Transactions · {year}-{month}",
   "@settingsCacheKeyTxMonth": {
     "placeholders": {
