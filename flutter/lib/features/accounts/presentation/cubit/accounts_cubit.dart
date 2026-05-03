@@ -1,5 +1,6 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/logger/app_logger.dart';
+import '../../../../core/remote_load_failure.dart';
 import '../../../../core/sort_by_name.dart';
 import '../../domain/entities/account_entity.dart';
 import '../../domain/usecases/get_accounts_usecase.dart';
@@ -38,7 +39,7 @@ class AccountsCubit extends Cubit<AccountsState> {
       emit(AccountsLoaded(accounts));
     } catch (e, s) {
       AppLogger.error('failed to load accounts', e, s);
-      emit(const AccountsError());
+      emit(AccountsError(failure: classifyRemoteLoadError(e)));
     }
   }
 
