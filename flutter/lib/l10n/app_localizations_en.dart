@@ -207,11 +207,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsCacheBottomBarCaption => 'Size of cached files';
 
   @override
-  String settingsCacheRowSubtitle(String dateTime, String size) {
-    return '$dateTime · $size';
-  }
-
-  @override
   String settingsCacheKeyTxMonth(String year, String month) {
     return 'Transactions · $year-$month';
   }
