@@ -582,6 +582,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get creditsEmpty => 'No deferred credit installments yet.';
 
   @override
+  String get creditsEmptyForSelectedMonth =>
+      'No installments due in this month.';
+
+  @override
   String get creditsUntitledGroup => 'Deferred purchase';
 
   @override
