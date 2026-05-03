@@ -9,6 +9,7 @@ import '../core/remote_load_failure.dart';
 import '../features/transactions/domain/entities/transaction_entity.dart';
 import '../features/transactions/domain/usecases/list_transactions_having_credit_group_usecase.dart';
 import '../features/transactions/presentation/cubit/transactions_cubit.dart';
+import '../widgets/offline_cached_data_banner.dart';
 import '../widgets/remote_load_failure_panel.dart';
 import '../widgets/shell_scaffold.dart';
 import '../widgets/wallet_bottom_bar_insets.dart';
@@ -389,6 +390,7 @@ class _CreditsPageState extends State<CreditsPage> {
   bool _loading = true;
   Object? _error;
   List<TransactionEntity> _flat = const [];
+  bool _servedFromOfflineCache = false;
 
   @override
   void initState() {
@@ -402,10 +404,11 @@ class _CreditsPageState extends State<CreditsPage> {
       _error = null;
     });
     try {
-      final list = await getIt<ListTransactionsHavingCreditGroupUsecase>()();
+      final bundle = await getIt<ListTransactionsHavingCreditGroupUsecase>()();
       if (!mounted) return;
       setState(() {
-        _flat = list;
+        _flat = bundle.value;
+        _servedFromOfflineCache = bundle.servedFromOfflineCache;
         _loading = false;
       });
     } catch (e) {
@@ -413,6 +416,7 @@ class _CreditsPageState extends State<CreditsPage> {
       setState(() {
         _error = e;
         _loading = false;
+        _servedFromOfflineCache = false;
       });
     }
   }
@@ -499,6 +503,7 @@ class _CreditsPageState extends State<CreditsPage> {
                 physics: const AlwaysScrollableScrollPhysics(),
                 padding: const EdgeInsets.fromLTRB(24, 0, 24, 88),
                 children: [
+                  OfflineCachedDataBanner(visible: _servedFromOfflineCache),
                   SizedBox(height: MediaQuery.paddingOf(context).top + 40),
                   Text(
                     l10n.creditsEmpty,
@@ -515,9 +520,13 @@ class _CreditsPageState extends State<CreditsPage> {
                   return ListView.builder(
                     physics: const AlwaysScrollableScrollPhysics(),
                     padding: const EdgeInsets.fromLTRB(0, 0, 0, 88),
-                    itemCount: groups.length,
+                    itemCount: groups.length + (_servedFromOfflineCache ? 1 : 0),
                     itemBuilder: (context, i) {
-                      final g = groups[i];
+                      if (_servedFromOfflineCache && i == 0) {
+                        return const OfflineCachedDataBanner(visible: true);
+                      }
+                      final gi = i - (_servedFromOfflineCache ? 1 : 0);
+                      final g = groups[gi];
                       return _CreditGroupTile(
                         cubit: cubit,
                         rows: g.rows,
