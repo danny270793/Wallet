@@ -11,7 +11,8 @@ class CardEntity extends Equatable {
   final int cutDay;
   /// Day of month (1–30) for payment due.
   final int payDay;
-  /// Sum of transaction `value` amounts (full row amounts, not value×percentage÷100).
+  /// Sum of transaction `value` for rows on this card with no [creditId]
+  /// (deferred installments are excluded; see /credits).
   /// From [wallet_cards_with_balance].
   final double balance;
 
