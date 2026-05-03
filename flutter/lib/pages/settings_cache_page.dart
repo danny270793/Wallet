@@ -129,9 +129,16 @@ class _SettingsCachePageState extends State<SettingsCachePage> {
                         return ListTile(
                           title: Text(_cacheEntryTitle(e.cacheKey, l10n)),
                           subtitle: Text(
-                            l10n.settingsCacheRowSubtitle(dt, sz),
+                            dt,
                             style: theme.textTheme.bodySmall?.copyWith(
                               color: theme.colorScheme.onSurfaceVariant,
+                            ),
+                          ),
+                          trailing: Text(
+                            sz,
+                            style: theme.textTheme.bodyMedium?.copyWith(
+                              fontWeight: FontWeight.w500,
+                              color: theme.colorScheme.onSurface,
                             ),
                           ),
                         );
