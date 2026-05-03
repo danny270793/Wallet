@@ -5,6 +5,7 @@ import 'package:wallet/l10n/app_localizations.dart';
 import '../core/di/injection.dart';
 import '../features/transactions/presentation/cubit/yearly_dashboard_cubit.dart';
 import '../widgets/dashboard_view_options_bottom_sheet.dart';
+import '../widgets/offline_cached_data_banner.dart';
 import '../widgets/remote_load_failure_panel.dart';
 import '../widgets/shell_scaffold.dart';
 import '../widgets/yearly_dashboard_scope.dart';
@@ -106,7 +107,7 @@ class _YearlyDashboardViewState extends State<_YearlyDashboardView> {
                       .read<YearlyDashboardCubit>()
                       .loadYear(visibleYear),
                 ),
-                YearlyDashboardLoaded(:final transactions) => RefreshIndicator(
+                YearlyDashboardLoaded(:final transactions, :final servedFromOfflineCache) => RefreshIndicator(
                   onRefresh: () => context
                       .read<YearlyDashboardCubit>()
                       .loadYear(visibleYear),
@@ -117,6 +118,7 @@ class _YearlyDashboardViewState extends State<_YearlyDashboardView> {
                       vertical: 8,
                     ),
                     children: [
+                      OfflineCachedDataBanner(visible: servedFromOfflineCache),
                       YearlyCumulativeNetBarChart(
                         l10n: l10n,
                         year: y,
