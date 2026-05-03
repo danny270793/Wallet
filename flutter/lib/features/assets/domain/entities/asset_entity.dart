@@ -52,6 +52,19 @@ class AssetEntity extends Equatable {
     updatedAt: DateTime.parse(json['updatedAt'] as String),
   );
 
+  Map<String, dynamic> toJson() => {
+    'id': id,
+    'userId': userId,
+    'name': name,
+    'provider': provider,
+    'value': value,
+    'boughtAt': boughtAt.toUtc().toIso8601String(),
+    'endedAt': endedAt?.toUtc().toIso8601String(),
+    'soldValue': soldValue,
+    'createdAt': createdAt.toUtc().toIso8601String(),
+    'updatedAt': updatedAt.toUtc().toIso8601String(),
+  };
+
   @override
   List<Object?> get props => [
     id,
