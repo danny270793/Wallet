@@ -143,37 +143,31 @@ class _SettingsCachePageState extends State<SettingsCachePage> {
           : Material(
               elevation: 8,
               color: theme.colorScheme.surfaceContainerHighest,
-              child: SafeArea(
-                top: false,
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 20,
-                    vertical: 16,
-                  ),
-                  child: SizedBox(
-                    width: double.infinity,
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
-                        Text(
-                          _formatBytes(totalBytes),
-                          style: theme.textTheme.titleLarge?.copyWith(
-                            fontWeight: FontWeight.w700,
-                            letterSpacing: -0.5,
-                          ),
-                          textAlign: TextAlign.center,
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(20, 12, 20, 12),
+                child: SizedBox(
+                  width: double.infinity,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Text(
+                        _formatBytes(totalBytes),
+                        style: theme.textTheme.titleLarge?.copyWith(
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: -0.5,
                         ),
-                        const SizedBox(height: 4),
-                        Text(
-                          l10n.settingsCacheBottomBarCaption,
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            color: theme.colorScheme.onSurfaceVariant,
-                          ),
-                          textAlign: TextAlign.center,
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        l10n.settingsCacheBottomBarCaption,
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
                         ),
-                      ],
-                    ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ],
                   ),
                 ),
               ),
