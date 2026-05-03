@@ -1,4 +1,6 @@
 import 'package:equatable/equatable.dart';
+
+import '../../../../core/remote_load_failure.dart';
 import '../../domain/entities/account_entity.dart';
 
 sealed class AccountsState extends Equatable {
@@ -25,10 +27,10 @@ class AccountsLoaded extends AccountsState {
 }
 
 class AccountsError extends AccountsState {
-  final String? message;
-  const AccountsError({this.message});
+  final RemoteLoadFailure failure;
+  const AccountsError({this.failure = RemoteLoadFailure.requestFailed});
   @override
-  List<Object?> get props => [message];
+  List<Object?> get props => [failure];
 }
 
 // Emitted when a CRUD action fails; retains the current list so the UI stays rendered.
