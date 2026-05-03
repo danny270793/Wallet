@@ -284,6 +284,54 @@ abstract class AppLocalizations {
   /// **'Settings'**
   String get settings;
 
+  /// No description provided for @settingsProfileSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Profile'**
+  String get settingsProfileSection;
+
+  /// No description provided for @settingsChangeEmail.
+  ///
+  /// In en, this message translates to:
+  /// **'Change email'**
+  String get settingsChangeEmail;
+
+  /// No description provided for @settingsChangeEmailDialogTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Change email'**
+  String get settingsChangeEmailDialogTitle;
+
+  /// No description provided for @settingsNewEmailLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'New email'**
+  String get settingsNewEmailLabel;
+
+  /// No description provided for @settingsChangeEmailSubmit.
+  ///
+  /// In en, this message translates to:
+  /// **'Update'**
+  String get settingsChangeEmailSubmit;
+
+  /// No description provided for @settingsChangeEmailSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Check your new email to confirm the change.'**
+  String get settingsChangeEmailSuccess;
+
+  /// No description provided for @settingsChangeEmailInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a valid email address.'**
+  String get settingsChangeEmailInvalid;
+
+  /// No description provided for @settingsChangeEmailSameAsCurrent.
+  ///
+  /// In en, this message translates to:
+  /// **'That is already your email.'**
+  String get settingsChangeEmailSameAsCurrent;
+
   /// No description provided for @settingsAppearance.
   ///
   /// In en, this message translates to:
