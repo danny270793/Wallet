@@ -1447,6 +1447,42 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Not weighted excluding ignored'**
   String get transactionsTotalsNotWeightedExcludingIgnoredHint;
+
+  /// No description provided for @loadFailedNoConnectionTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No internet connection'**
+  String get loadFailedNoConnectionTitle;
+
+  /// No description provided for @loadFailedNoConnectionBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Check your network and try again. If you are online, the server may be unreachable.'**
+  String get loadFailedNoConnectionBody;
+
+  /// No description provided for @loadFailedRequestFailedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load data'**
+  String get loadFailedRequestFailedTitle;
+
+  /// No description provided for @loadFailedRequestFailedBody.
+  ///
+  /// In en, this message translates to:
+  /// **'The request failed. Pull down to refresh or try again shortly.'**
+  String get loadFailedRequestFailedBody;
+
+  /// No description provided for @retry.
+  ///
+  /// In en, this message translates to:
+  /// **'Retry'**
+  String get retry;
+
+  /// No description provided for @dialogClose.
+  ///
+  /// In en, this message translates to:
+  /// **'Close'**
+  String get dialogClose;
 }
 
 class _AppLocalizationsDelegate
