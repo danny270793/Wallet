@@ -761,6 +761,10 @@ class AppLocalizationsEs extends AppLocalizations {
       'Comprueba tu red e inténtalo de nuevo. Si tienes conexión, puede que el servidor no esté accesible.';
 
   @override
+  String get cachedDataOfflineBanner =>
+      'Mostrando datos guardados — sin conexión a internet.';
+
+  @override
   String get loadFailedRequestFailedTitle => 'No se pudieron cargar los datos';
 
   @override
