@@ -40,7 +40,7 @@
   "settingsChangeEmailInvalid": "Introduce un correo válido.",
   "settingsChangeEmailSameAsCurrent": "Ese ya es tu correo.",
   "settingsChangePassword": "Cambiar contraseña",
-  "settingsChangePasswordSubtitle": "Actualiza la contraseña con la que inicias sesión en Cartera.",
+  "settingsChangePasswordSubtitle": "Actualiza la contraseña con la que inicias sesión.",
   "settingsChangePasswordDialogTitle": "Cambiar contraseña",
   "settingsNewPasswordLabel": "Contraseña nueva",
   "settingsConfirmNewPasswordLabel": "Confirmar contraseña",
