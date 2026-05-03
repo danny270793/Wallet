@@ -271,6 +271,49 @@ class _SettingsPageState extends State<SettingsPage> {
                   child: Divider(height: 1),
                 ),
                 Text(
+                  l10n.settingsSecuritySection,
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                ListenableBuilder(
+                  listenable: getIt<AppBiometricUnlockController>(),
+                  builder: (context, _) {
+                    final bio = getIt<AppBiometricUnlockController>();
+                    return SwitchListTile(
+                      contentPadding: EdgeInsets.zero,
+                      secondary: Icon(
+                        Icons.fingerprint_rounded,
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                      title: Text(l10n.settingsBiometricUnlockTitle),
+                      subtitle: Text(
+                        bio.authenticatorAvailable
+                            ? l10n.settingsBiometricUnlockSubtitle
+                            : l10n.settingsBiometricUnavailable,
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
+                          height: 1.35,
+                        ),
+                      ),
+                      value: bio.enabled,
+                      onChanged: bio.authenticatorAvailable
+                          ? (v) => _setBiometricUnlockEnabled(
+                                context,
+                                l10n,
+                                bio,
+                                v,
+                              )
+                          : null,
+                    );
+                  },
+                ),
+                const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 16),
+                  child: Divider(height: 1),
+                ),
+                Text(
                   l10n.settingsAppearance,
                   style: theme.textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.w600,
@@ -311,49 +354,6 @@ class _SettingsPageState extends State<SettingsPage> {
                       subtitle: Text(_themeOptionLabel(l10n, ctrl.preference)),
                       trailing: const Icon(Icons.chevron_right),
                       onTap: () => _showThemePickerSheet(context, l10n, ctrl),
-                    );
-                  },
-                ),
-                const Padding(
-                  padding: EdgeInsets.symmetric(vertical: 16),
-                  child: Divider(height: 1),
-                ),
-                Text(
-                  l10n.settingsSecuritySection,
-                  style: theme.textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                const SizedBox(height: 12),
-                ListenableBuilder(
-                  listenable: getIt<AppBiometricUnlockController>(),
-                  builder: (context, _) {
-                    final bio = getIt<AppBiometricUnlockController>();
-                    return SwitchListTile(
-                      contentPadding: EdgeInsets.zero,
-                      secondary: Icon(
-                        Icons.fingerprint_rounded,
-                        color: theme.colorScheme.onSurfaceVariant,
-                      ),
-                      title: Text(l10n.settingsBiometricUnlockTitle),
-                      subtitle: Text(
-                        bio.authenticatorAvailable
-                            ? l10n.settingsBiometricUnlockSubtitle
-                            : l10n.settingsBiometricUnavailable,
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: theme.colorScheme.onSurfaceVariant,
-                          height: 1.35,
-                        ),
-                      ),
-                      value: bio.enabled,
-                      onChanged: bio.authenticatorAvailable
-                          ? (v) => _setBiometricUnlockEnabled(
-                                context,
-                                l10n,
-                                bio,
-                                v,
-                              )
-                          : null,
                     );
                   },
                 ),
