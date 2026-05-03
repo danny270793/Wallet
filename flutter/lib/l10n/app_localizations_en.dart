@@ -195,7 +195,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get settingsBiometricUnlockSubtitle =>
-      'Use biometrics to unlock the app when returning from the background.';
+      'Use biometrics to unlock the app.';
 
   @override
   String get settingsBiometricUnavailable =>
