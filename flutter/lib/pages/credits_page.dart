@@ -52,8 +52,6 @@ List<String> _relationNames(TransactionEntity t) => [
   if (t.tagName?.isNotEmpty == true) t.tagName!,
 ];
 
-double _weighted(TransactionEntity t) => t.value * t.percentage / 100.0;
-
 /// Installment is treated as already posted when its local calendar date is on or before today.
 bool _installmentIsPaidThroughToday(TransactionEntity t) {
   final now = DateTime.now();
@@ -63,21 +61,21 @@ bool _installmentIsPaidThroughToday(TransactionEntity t) {
   return !d.isAfter(today);
 }
 
-/// Sum of weighted amounts for installments not yet reached by local calendar date.
-double creditLedgerTotalPendingWeighted(List<TransactionEntity> flat) {
+/// Sum of raw [TransactionEntity.value] for installments not yet reached by local calendar date.
+double creditLedgerTotalPending(List<TransactionEntity> flat) {
   var sum = 0.0;
   for (final t in flat) {
     final g = t.creditLedgerGroupingKey;
     if (g == null || g.isEmpty) continue;
     if (!_installmentIsPaidThroughToday(t)) {
-      sum += _weighted(t);
+      sum += t.value;
     }
   }
   return sum;
 }
 
-/// Weighted sum of installments due in the current local month (due date on or after today).
-double creditLedgerDueThisMonthWeighted(List<TransactionEntity> flat) {
+/// Raw sum of installment values due in the current local month (due date on or after today).
+double creditLedgerDueThisMonth(List<TransactionEntity> flat) {
   final now = DateTime.now();
   final today = DateTime(now.year, now.month, now.day);
   var sum = 0.0;
@@ -88,7 +86,7 @@ double creditLedgerDueThisMonthWeighted(List<TransactionEntity> flat) {
     if (local.year != now.year || local.month != now.month) continue;
     final dueDay = DateTime(local.year, local.month, local.day);
     if (dueDay.isBefore(today)) continue;
-    sum += _weighted(t);
+    sum += t.value;
   }
   return sum;
 }
@@ -96,29 +94,31 @@ double creditLedgerDueThisMonthWeighted(List<TransactionEntity> flat) {
 class _CreditsPendingTotalsBar extends StatelessWidget {
   const _CreditsPendingTotalsBar({
     required this.l10n,
-    required this.pendingWeighted,
-    required this.dueThisMonthWeighted,
+    required this.pendingTotal,
+    required this.dueThisMonthTotal,
   });
 
   final AppLocalizations l10n;
-  final double pendingWeighted;
-  final double dueThisMonthWeighted;
+  /// Sum of raw [TransactionEntity.value] for future credit installments.
+  final double pendingTotal;
+  /// Sum of raw values for credit installments due this month (today onward).
+  final double dueThisMonthTotal;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final amountStr = l10n.transactionAmountValue(
-      pendingWeighted.toStringAsFixed(2),
+      pendingTotal.toStringAsFixed(2),
     );
-    final hasPending = pendingWeighted.abs() > 0.005;
+    final hasPending = pendingTotal.abs() > 0.005;
     final amountColor = hasPending
         ? theme.colorScheme.error
         : theme.colorScheme.onSurfaceVariant;
 
     final monthStr = l10n.transactionAmountValue(
-      dueThisMonthWeighted.toStringAsFixed(2),
+      dueThisMonthTotal.toStringAsFixed(2),
     );
-    final hasMonthDue = dueThisMonthWeighted.abs() > 0.005;
+    final hasMonthDue = dueThisMonthTotal.abs() > 0.005;
     final monthColor = hasMonthDue
         ? theme.colorScheme.error
         : theme.colorScheme.onSurfaceVariant;
@@ -217,23 +217,16 @@ class _CreditGroupTile extends StatelessWidget {
     final theme = Theme.of(context);
     final first = rows.first;
 
-    final totalRaw = rows.fold<double>(0, (a, t) => a + t.value);
-    final groupPartialPct = rows.any(
-      (t) => (t.percentage - 100.0).abs() > 0.01,
-    );
+    final pendingRows =
+        rows.where((t) => !_installmentIsPaidThroughToday(t)).toList();
+    final paidRows = rows.where(_installmentIsPaidThroughToday).toList();
+    final pendingTotal =
+        pendingRows.fold<double>(0, (a, t) => a + t.value);
+    // Sum of each paid installment's full [TransactionEntity.value], not × percentage/100.
+    final paidTotal = paidRows.fold<double>(0, (a, t) => a + t.value);
+    final pendingInstallmentCount = pendingRows.length;
 
-    double paidWeighted = 0;
-    double pendingWeighted = 0;
-    var pendingInstallmentCount = 0;
-    for (final t in rows) {
-      final w = _weighted(t);
-      if (_installmentIsPaidThroughToday(t)) {
-        paidWeighted += w;
-      } else {
-        pendingWeighted += w;
-        pendingInstallmentCount++;
-      }
-    }
+    final fullyPaid = pendingTotal.abs() <= 0.005;
 
     const paidGreen = Color(0xFF1B8736);
 
@@ -246,10 +239,10 @@ class _CreditGroupTile extends StatelessWidget {
       ).trim();
       final hasDesc = displayDesc.isNotEmpty;
 
-      if (!hasDesc && (first.percentage - 100.0).abs() <= 0.01) {
+      if (hasDesc) {
         chunks.add(
           Text(
-            l10n.creditsUntitledGroup,
+            displayDesc,
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
             style: theme.textTheme.bodyLarge?.copyWith(
@@ -257,54 +250,14 @@ class _CreditGroupTile extends StatelessWidget {
             ),
           ),
         );
-      }
-
-      if (hasDesc) {
-        if ((first.percentage - 100.0).abs() > 0.01) {
-          chunks.add(
-            Text.rich(
-              TextSpan(
-                children: [
-                  TextSpan(
-                    text: '(${first.percentage.toStringAsFixed(2)}%) ',
-                    style: theme.textTheme.labelLarge?.copyWith(
-                      color: theme.colorScheme.primary,
-                      fontWeight: FontWeight.w700,
-                      fontFeatures: const [FontFeature.tabularFigures()],
-                    ),
-                  ),
-                  TextSpan(
-                    text: displayDesc,
-                    style: theme.textTheme.bodyLarge?.copyWith(
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ],
-              ),
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-            ),
-          );
-        } else {
-          chunks.add(
-            Text(
-              displayDesc,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-              style: theme.textTheme.bodyLarge?.copyWith(
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          );
-        }
-      } else if ((first.percentage - 100.0).abs() > 0.01) {
+      } else {
         chunks.add(
           Text(
-            '(${first.percentage.toStringAsFixed(2)}%)',
-            style: theme.textTheme.labelLarge?.copyWith(
-              color: theme.colorScheme.primary,
-              fontWeight: FontWeight.w700,
-              fontFeatures: const [FontFeature.tabularFigures()],
+            l10n.creditsUntitledGroup,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: theme.textTheme.bodyLarge?.copyWith(
+              fontWeight: FontWeight.w500,
             ),
           ),
         );
@@ -378,46 +331,35 @@ class _CreditGroupTile extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.end,
       children: [
-        if (pendingWeighted.abs() > 0.005) ...[
+        if (pendingTotal.abs() > 0.005) ...[
           Text(
-            l10n.transactionAmountValue(pendingWeighted.toStringAsFixed(2)),
-            style: theme.textTheme.titleMedium?.copyWith(
+            l10n.transactionAmountValue(pendingTotal.toStringAsFixed(2)),
+            style: theme.textTheme.titleSmall?.copyWith(
               fontWeight: FontWeight.w700,
               color: theme.colorScheme.error,
-              height: 1.2,
-            ),
-          ),
-          const SizedBox(height: 4),
-        ],
-        Text(
-          l10n.transactionAmountValue(
-            paidWeighted.abs() > 0.005
-                ? paidWeighted.abs().toStringAsFixed(2)
-                : '0.00',
-          ),
-          style: theme.textTheme.titleMedium?.copyWith(
-            fontWeight: FontWeight.w700,
-            color: paidGreen,
-            height: 1.2,
-          ),
-        ),
-        if (groupPartialPct) ...[
-          const SizedBox(height: 4),
-          Text(
-            l10n.transactionAmountValue(totalRaw.toStringAsFixed(2)),
-            style: theme.textTheme.bodySmall?.copyWith(
-              color: theme.colorScheme.onSurfaceVariant,
-              height: 1.1,
-              decoration: TextDecoration.lineThrough,
-              decorationColor: theme.colorScheme.onSurfaceVariant,
+              height: 1.15,
               fontFeatures: const [FontFeature.tabularFigures()],
             ),
           ),
+          const SizedBox(height: 2),
         ],
+        Text(
+          l10n.transactionAmountValue(
+            paidTotal.abs() > 0.005 ? paidTotal.toStringAsFixed(2) : '0.00',
+          ),
+          style: theme.textTheme.titleSmall?.copyWith(
+            fontWeight: FontWeight.w700,
+            color: fullyPaid
+                ? theme.colorScheme.onSurfaceVariant
+                : paidGreen,
+            height: 1.15,
+            fontFeatures: const [FontFeature.tabularFigures()],
+          ),
+        ),
       ],
     );
 
-    return SwipeableListTile(
+    Widget tile = SwipeableListTile(
       itemKey: creditLedgerKey,
       title: titleSection(),
       trailing: trailingPrices,
@@ -427,6 +369,10 @@ class _CreditGroupTile extends StatelessWidget {
       onDelete: () =>
           cubit.delete(id: first.id, creditLedgerKey: creditLedgerKey),
     );
+    if (fullyPaid) {
+      tile = Opacity(opacity: 0.52, child: tile);
+    }
+    return tile;
   }
 }
 
@@ -525,8 +471,8 @@ class _CreditsPageState extends State<CreditsPage> {
       bottomNavigationBar: showPendingBar
           ? _CreditsPendingTotalsBar(
               l10n: l10n,
-              pendingWeighted: creditLedgerTotalPendingWeighted(_flat),
-              dueThisMonthWeighted: creditLedgerDueThisMonthWeighted(_flat),
+              pendingTotal: creditLedgerTotalPending(_flat),
+              dueThisMonthTotal: creditLedgerDueThisMonth(_flat),
             )
           : null,
       body: RefreshIndicator(

@@ -1427,21 +1427,34 @@ Widget _transactionSearchResultsList(
   if (list.isEmpty) {
     return Center(child: Text(l10n.transactionsSearchNoResults));
   }
+  final rows = groupedTransactionsForList(list);
   return Column(
     crossAxisAlignment: CrossAxisAlignment.stretch,
     children: [
-      ?top,
+      if (top != null) top,
       Expanded(
         child: ListView.builder(
-          itemCount: list.length,
-          itemBuilder: (context, i) {
-            final t = list[i];
-            return GroupedTxnTransactionTile(
-              cubit: cubit,
-              transaction: t,
-              l10n: l10n,
-              onTap: () => onSelect(t),
-            );
+          physics: const AlwaysScrollableScrollPhysics(),
+          padding: const EdgeInsets.only(bottom: 8),
+          itemCount: rows.length,
+          itemBuilder: (context, index) {
+            return switch (rows[index]) {
+              GroupedTxnDayMarker(:final day) => GroupedTxnDayHeader(day: day),
+              GroupedTxnTxMarker(:final transaction) =>
+                GroupedTxnTransactionTile(
+                  cubit: cubit,
+                  transaction: transaction,
+                  l10n: l10n,
+                  onTap: () => onSelect(transaction),
+                ),
+              GroupedTxnTransferPairMarker(:final source, :final target) =>
+                GroupedTxnTransferPairTile(
+                  source: source,
+                  target: target,
+                  l10n: l10n,
+                  onTap: () => onSelect(target),
+                ),
+            };
           },
         ),
       ),

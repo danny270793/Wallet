@@ -328,11 +328,13 @@ class GroupedTxnTransferPairTile extends StatelessWidget {
     required this.source,
     required this.target,
     required this.l10n,
+    this.onTap,
   });
 
   final TransactionEntity source;
   final TransactionEntity target;
   final AppLocalizations l10n;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
@@ -408,6 +410,7 @@ class GroupedTxnTransferPairTile extends StatelessWidget {
       title: title,
       subtitle: subtitle,
       trailing: trailing,
+      onTap: onTap,
       onEdit: openEdit,
       confirmDelete: () => confirmDeleteTransferPairDialog(context, l10n),
       onDelete: () => cubit.deleteMany([source.id, target.id]),
