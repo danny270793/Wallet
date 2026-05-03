@@ -338,6 +338,42 @@ abstract class AppLocalizations {
   /// **'Dark'**
   String get settingsThemeDark;
 
+  /// No description provided for @settingsSecuritySection.
+  ///
+  /// In en, this message translates to:
+  /// **'Security'**
+  String get settingsSecuritySection;
+
+  /// No description provided for @settingsBiometricUnlockTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Face ID & fingerprint'**
+  String get settingsBiometricUnlockTitle;
+
+  /// No description provided for @settingsBiometricUnlockSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Use biometrics to unlock the app when returning from the background.'**
+  String get settingsBiometricUnlockSubtitle;
+
+  /// No description provided for @settingsBiometricUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Biometric unlock is not available on this device.'**
+  String get settingsBiometricUnavailable;
+
+  /// No description provided for @settingsBiometricAuthReason.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm to enable biometric unlock.'**
+  String get settingsBiometricAuthReason;
+
+  /// No description provided for @settingsBiometricResumeReason.
+  ///
+  /// In en, this message translates to:
+  /// **'Authenticate to continue.'**
+  String get settingsBiometricResumeReason;
+
   /// No description provided for @signOut.
   ///
   /// In en, this message translates to:
