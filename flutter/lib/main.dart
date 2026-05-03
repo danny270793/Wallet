@@ -169,7 +169,11 @@ class _BiometricLockScreen extends StatefulWidget {
 }
 
 class _BiometricLockScreenState extends State<_BiometricLockScreen> {
+  /// True while refresh + system biometric UI may be active — disables the Unlock button.
   bool _busy = false;
+
+  /// Prevents overlapping [_attemptUnlock] runs (e.g. double-tap before first await).
+  bool _unlockInFlight = false;
 
   @override
   void initState() {
@@ -185,31 +189,38 @@ class _BiometricLockScreenState extends State<_BiometricLockScreen> {
       return;
     }
 
-    final bio = getIt<AppBiometricUnlockController>();
-    await bio.refreshAuthenticatorAvailability();
-    if (!mounted) return;
-
-    if (!bio.enabled || !bio.authenticatorAvailable) {
-      widget.onUnlocked();
-      return;
-    }
-
-    final l10n = AppLocalizations.of(context);
-    if (l10n == null) return;
-
+    if (_unlockInFlight) return;
+    _unlockInFlight = true;
     setState(() => _busy = true);
-    final ok = await bio.localAuth.authenticate(
-      localizedReason: l10n.settingsBiometricResumeReason,
-      options: const AuthenticationOptions(
-        biometricOnly: true,
-        stickyAuth: true,
-      ),
-    );
-    if (!mounted) return;
-    setState(() => _busy = false);
 
-    if (ok) {
-      widget.onUnlocked();
+    try {
+      final bio = getIt<AppBiometricUnlockController>();
+      await bio.refreshAuthenticatorAvailability();
+      if (!mounted) return;
+
+      if (!bio.enabled || !bio.authenticatorAvailable) {
+        widget.onUnlocked();
+        return;
+      }
+
+      final l10n = AppLocalizations.of(context);
+      if (l10n == null) return;
+
+      final ok = await bio.localAuth.authenticate(
+        localizedReason: l10n.settingsBiometricResumeReason,
+        options: const AuthenticationOptions(
+          biometricOnly: true,
+          stickyAuth: true,
+        ),
+      );
+      if (!mounted) return;
+
+      if (ok) {
+        widget.onUnlocked();
+      }
+    } finally {
+      _unlockInFlight = false;
+      if (mounted) setState(() => _busy = false);
     }
   }
 
