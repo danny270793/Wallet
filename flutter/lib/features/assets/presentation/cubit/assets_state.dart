@@ -1,4 +1,6 @@
 import 'package:equatable/equatable.dart';
+
+import '../../../../core/remote_load_failure.dart';
 import '../../domain/entities/asset_entity.dart';
 
 sealed class AssetsState extends Equatable {
@@ -25,10 +27,10 @@ class AssetsLoaded extends AssetsState {
 }
 
 class AssetsError extends AssetsState {
-  final String? message;
-  const AssetsError({this.message});
+  final RemoteLoadFailure failure;
+  const AssetsError({this.failure = RemoteLoadFailure.requestFailed});
   @override
-  List<Object?> get props => [message];
+  List<Object?> get props => [failure];
 }
 
 /// Create failed; list is unchanged so the UI can keep showing prior data.
