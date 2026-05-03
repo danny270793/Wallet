@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:wallet/l10n/app_localizations.dart';
 
 import '../core/di/injection.dart';
+import '../core/ui/app_icons.dart';
 import '../features/transactions/presentation/cubit/yearly_dashboard_cubit.dart';
 import '../widgets/dashboard_view_options_bottom_sheet.dart';
 import '../widgets/offline_cached_data_banner.dart';
@@ -81,7 +82,7 @@ class _YearlyDashboardViewState extends State<_YearlyDashboardView> {
               appBarActionsBeforeSettings: switch (state) {
                 YearlyDashboardLoaded() => <Widget>[
                     IconButton(
-                      icon: const Icon(Icons.tune_rounded),
+                      icon: const Icon(AppIcons.filter),
                       tooltip: l10n.monthlyDashboardConfigureTooltip,
                       onPressed: () => showDashboardViewOptionsBottomSheet(
                         context: context,
