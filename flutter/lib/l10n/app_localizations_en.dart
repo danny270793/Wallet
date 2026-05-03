@@ -135,6 +135,27 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsThemeDark => 'Dark';
 
   @override
+  String get settingsSecuritySection => 'Security';
+
+  @override
+  String get settingsBiometricUnlockTitle => 'Face ID & fingerprint';
+
+  @override
+  String get settingsBiometricUnlockSubtitle =>
+      'Use biometrics to unlock the app when returning from the background.';
+
+  @override
+  String get settingsBiometricUnavailable =>
+      'Biometric unlock is not available on this device.';
+
+  @override
+  String get settingsBiometricAuthReason =>
+      'Confirm to enable biometric unlock.';
+
+  @override
+  String get settingsBiometricResumeReason => 'Authenticate to continue.';
+
+  @override
   String get signOut => 'Sign out';
 
   @override
