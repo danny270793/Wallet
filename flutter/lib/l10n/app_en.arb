@@ -104,6 +104,20 @@
       }
     }
   },
+  "cardCutDay": "Cut day",
+  "cardPayDay": "Pay day",
+  "cardDayInvalidRange": "Enter a day from 1 to 30",
+  "cardBillingCycleSummary": "Cut day {cutDay} · Pay day {payDay}",
+  "@cardBillingCycleSummary": {
+    "placeholders": {
+      "cutDay": {
+        "type": "int"
+      },
+      "payDay": {
+        "type": "int"
+      }
+    }
+  },
   "cancel": "Cancel",
   "save": "Save",
   "delete": "Delete",

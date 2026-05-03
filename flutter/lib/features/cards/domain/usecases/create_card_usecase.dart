@@ -5,6 +5,16 @@ class CreateCardUsecase {
   final CardsRepository _repository;
   const CreateCardUsecase(this._repository);
 
-  Future<CardEntity> call({required String name, String? description}) =>
-      _repository.createCard(name: name, description: description);
+  Future<CardEntity> call({
+    required String name,
+    String? description,
+    int cutDay = 24,
+    int payDay = 24,
+  }) =>
+      _repository.createCard(
+        name: name,
+        description: description,
+        cutDay: cutDay,
+        payDay: payDay,
+      );
 }

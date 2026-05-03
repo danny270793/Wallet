@@ -41,20 +41,31 @@ class CardEditorSheet extends StatefulWidget {
 class _CardEditorSheetState extends State<CardEditorSheet> {
   final _formKey = GlobalKey<FormState>();
   late final TextEditingController _nameController;
+  late final TextEditingController _cutDayController;
+  late final TextEditingController _payDayController;
   late final TextEditingController _descriptionController;
   TextEditingController? _balanceController;
   bool _loading = false;
 
+  static String _dayText(int day) => day.toString();
+
   @override
   void initState() {
     super.initState();
-    _nameController = TextEditingController(text: widget.card?.name ?? '');
-    _descriptionController = TextEditingController(
-      text: widget.card?.description ?? '',
+    final card = widget.card;
+    _nameController = TextEditingController(text: card?.name ?? '');
+    _cutDayController = TextEditingController(
+      text: _dayText(card?.cutDay ?? 24),
     );
-    if (widget.card != null) {
+    _payDayController = TextEditingController(
+      text: _dayText(card?.payDay ?? 24),
+    );
+    _descriptionController = TextEditingController(
+      text: card?.description ?? '',
+    );
+    if (card != null) {
       _balanceController = TextEditingController(
-        text: widget.card!.balance.toStringAsFixed(2),
+        text: card.balance.toStringAsFixed(2),
       );
     }
   }
@@ -62,9 +73,18 @@ class _CardEditorSheetState extends State<CardEditorSheet> {
   @override
   void dispose() {
     _nameController.dispose();
+    _cutDayController.dispose();
+    _payDayController.dispose();
     _descriptionController.dispose();
     _balanceController?.dispose();
     super.dispose();
+  }
+
+  String? _validateBillingDay(String? v, AppLocalizations l10n) {
+    if (v == null || v.trim().isEmpty) return l10n.fieldRequired;
+    final n = int.tryParse(v.trim());
+    if (n == null || n < 1 || n > 30) return l10n.cardDayInvalidRange;
+    return null;
   }
 
   Future<void> _submit() async {
@@ -72,12 +92,19 @@ class _CardEditorSheetState extends State<CardEditorSheet> {
     setState(() => _loading = true);
     final cubit = context.read<CardsCubit>();
     final name = _nameController.text.trim();
+    final cutDay = int.parse(_cutDayController.text.trim());
+    final payDay = int.parse(_payDayController.text.trim());
     final description = _descriptionController.text.trim().isEmpty
         ? null
         : _descriptionController.text.trim();
     try {
       if (widget.card == null) {
-        await cubit.create(name: name, description: description);
+        await cubit.create(
+          name: name,
+          description: description,
+          cutDay: cutDay,
+          payDay: payDay,
+        );
       } else {
         final targetBalance = double.tryParse(_balanceController!.text.trim());
         if (targetBalance == null) return;
@@ -85,6 +112,8 @@ class _CardEditorSheetState extends State<CardEditorSheet> {
           id: widget.card!.id,
           name: name,
           description: description,
+          cutDay: cutDay,
+          payDay: payDay,
           previousBalance: widget.card!.balance,
           targetBalance: targetBalance,
         );
@@ -109,6 +138,31 @@ class _CardEditorSheetState extends State<CardEditorSheet> {
             textInputAction: TextInputAction.next,
           ),
           const SizedBox(height: 8),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: TextFormField(
+                  controller: _cutDayController,
+                  decoration: InputDecoration(labelText: l10n.cardCutDay),
+                  keyboardType: TextInputType.number,
+                  validator: (v) => _validateBillingDay(v, l10n),
+                  textInputAction: TextInputAction.next,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: TextFormField(
+                  controller: _payDayController,
+                  decoration: InputDecoration(labelText: l10n.cardPayDay),
+                  keyboardType: TextInputType.number,
+                  validator: (v) => _validateBillingDay(v, l10n),
+                  textInputAction: TextInputAction.next,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
           if (_balanceController != null) ...[
             TextFormField(
               controller: _balanceController,
@@ -119,8 +173,9 @@ class _CardEditorSheetState extends State<CardEditorSheet> {
               ),
               validator: (v) {
                 if (v == null || v.trim().isEmpty) return l10n.fieldRequired;
-                if (double.tryParse(v.trim()) == null)
+                if (double.tryParse(v.trim()) == null) {
                   return l10n.fieldRequired;
+                }
                 return null;
               },
               textInputAction: TextInputAction.next,

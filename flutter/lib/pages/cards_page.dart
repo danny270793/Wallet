@@ -187,13 +187,23 @@ class _CardTile extends StatelessWidget {
     return SwipeableListTile(
       itemKey: card.id,
       title: Text(card.name),
-      subtitle: card.description != null
-          ? Text(
+      subtitle: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (card.description != null && card.description!.isNotEmpty)
+            Text(
               card.description!,
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
-            )
-          : null,
+            ),
+          Text(
+            l10n.cardBillingCycleSummary(card.cutDay, card.payDay),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ],
+      ),
       trailing: WalletListBalanceAmount(l10n: l10n, balance: card.balance),
       onTap: openTransactions,
       onEdit: openEdit,

@@ -638,6 +638,30 @@ abstract class AppLocalizations {
   /// **'Are you sure you want to delete \"{name}\"?'**
   String confirmDeleteCard(String name);
 
+  /// No description provided for @cardCutDay.
+  ///
+  /// In en, this message translates to:
+  /// **'Cut day'**
+  String get cardCutDay;
+
+  /// No description provided for @cardPayDay.
+  ///
+  /// In en, this message translates to:
+  /// **'Pay day'**
+  String get cardPayDay;
+
+  /// No description provided for @cardDayInvalidRange.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a day from 1 to 30'**
+  String get cardDayInvalidRange;
+
+  /// No description provided for @cardBillingCycleSummary.
+  ///
+  /// In en, this message translates to:
+  /// **'Cut day {cutDay} · Pay day {payDay}'**
+  String cardBillingCycleSummary(int cutDay, int payDay);
+
   /// No description provided for @cancel.
   ///
   /// In en, this message translates to:

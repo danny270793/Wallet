@@ -10,12 +10,34 @@ class CardsRepositoryImpl implements CardsRepository {
   Future<List<CardEntity>> getCards() => _datasource.getCards();
 
   @override
-  Future<CardEntity> createCard({required String name, String? description}) =>
-      _datasource.createCard(name: name, description: description);
+  Future<CardEntity> createCard({
+    required String name,
+    String? description,
+    int cutDay = 24,
+    int payDay = 24,
+  }) =>
+      _datasource.createCard(
+        name: name,
+        description: description,
+        cutDay: cutDay,
+        payDay: payDay,
+      );
 
   @override
-  Future<CardEntity> updateCard({required String id, required String name, String? description}) =>
-      _datasource.updateCard(id: id, name: name, description: description);
+  Future<CardEntity> updateCard({
+    required String id,
+    required String name,
+    String? description,
+    required int cutDay,
+    required int payDay,
+  }) =>
+      _datasource.updateCard(
+        id: id,
+        name: name,
+        description: description,
+        cutDay: cutDay,
+        payDay: payDay,
+      );
 
   @override
   Future<void> deleteCard({required String id}) => _datasource.deleteCard(id: id);
