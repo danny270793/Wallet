@@ -3,7 +3,7 @@ import 'package:wallet/l10n/app_localizations.dart';
 
 import '../features/transactions/domain/entities/transaction_entity.dart';
 import 'transaction_month_totals.dart';
-
+import 'wallet_bottom_bar_insets.dart';
 import 'wallet_dual_balance_trailing.dart';
 
 /// Swipe horizontally (with enough speed) on the totals bar to move to next ([forward] true)
@@ -131,39 +131,21 @@ class TransactionsTotalsBar extends StatelessWidget {
       behavior: HitTestBehavior.opaque,
       child: Material(
         color: theme.colorScheme.surfaceContainerHighest,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(8, 10, 8, 10),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  if (primarySubtitle != null) ...[
-                    Text(
-                      primarySubtitle!,
-                      textAlign: TextAlign.center,
-                      style: theme.textTheme.labelSmall?.copyWith(
-                        color: theme.colorScheme.onSurfaceVariant,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                  ],
-                  row(income, outcome, balance, compact: false),
-                  if (dotsRow != null) ...[
-                    const SizedBox(height: 10),
-                    dotsRow,
-                  ],
-                  if (_hasSecondary) ...[
-                    Divider(
-                      height: 20,
-                      thickness: 1,
-                      color: theme.dividerColor,
-                    ),
-                    if (secondarySubtitle != null) ...[
+        child: Padding(
+          padding: EdgeInsets.only(
+            bottom: walletBottomBarExtraBottomInset(context),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(8, 10, 8, 10),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    if (primarySubtitle != null) ...[
                       Text(
-                        secondarySubtitle!,
+                        primarySubtitle!,
                         textAlign: TextAlign.center,
                         style: theme.textTheme.labelSmall?.copyWith(
                           color: theme.colorScheme.onSurfaceVariant,
@@ -172,17 +154,40 @@ class TransactionsTotalsBar extends StatelessWidget {
                       ),
                       const SizedBox(height: 8),
                     ],
-                    row(
-                      secondaryIncome!,
-                      secondaryOutcome!,
-                      secondaryBalance!,
-                      compact: true,
-                    ),
+                    row(income, outcome, balance, compact: false),
+                    if (dotsRow != null) ...[
+                      const SizedBox(height: 10),
+                      dotsRow,
+                    ],
+                    if (_hasSecondary) ...[
+                      Divider(
+                        height: 20,
+                        thickness: 1,
+                        color: theme.dividerColor,
+                      ),
+                      if (secondarySubtitle != null) ...[
+                        Text(
+                          secondarySubtitle!,
+                          textAlign: TextAlign.center,
+                          style: theme.textTheme.labelSmall?.copyWith(
+                            color: theme.colorScheme.onSurfaceVariant,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                      ],
+                      row(
+                        secondaryIncome!,
+                        secondaryOutcome!,
+                        secondaryBalance!,
+                        compact: true,
+                      ),
+                    ],
                   ],
-                ],
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -213,8 +218,7 @@ class TransactionsTotalsBar extends StatelessWidget {
                 border: isOn
                     ? null
                     : Border.all(
-                        color:
-                            scheme.onSurfaceVariant.withValues(alpha: 0.42),
+                        color: scheme.onSurfaceVariant.withValues(alpha: 0.42),
                         width: 1.25,
                       ),
               ),
@@ -227,7 +231,7 @@ class TransactionsTotalsBar extends StatelessWidget {
 }
 
 /// Same four-mode totals bar as the transactions list: swipe horizontally (or use the dots)
-/// between weighted vs raw amounts, with or without ignored rows.
+/// through weighted → weighted excluding ignored → not weighted → not weighted excluding ignored.
 class TransactionsTotalsBarHost extends StatefulWidget {
   const TransactionsTotalsBarHost({
     super.key,
@@ -248,8 +252,8 @@ class _TransactionsTotalsBarHostState extends State<TransactionsTotalsBarHost> {
 
   /// Swipe cycle order (`_totalsMode` 0…3):
   /// * Weighted — `value * percentage / 100` for **all** non–transfer-leg rows (including ignored).
-  /// * Not weighted — raw `value` for **all** such rows (including ignored).
   /// * Weighted excluding ignored — weighted formula only for rows with `ignore == false`.
+  /// * Not weighted — raw `value` for **all** such rows (including ignored).
   /// * Not weighted excluding ignored — raw `value` only for rows with `ignore == false`.
   int _totalsMode = 0;
 
@@ -290,47 +294,47 @@ class _TransactionsTotalsBarHostState extends State<TransactionsTotalsBarHost> {
 
     return switch (_totalsMode) {
       0 => TransactionsTotalsBar(
-          l10n: widget.l10n,
-          primarySubtitle: widget.l10n.transactionsTotalsWeightedHint,
-          income: totalsWeightedAll.income,
-          outcome: totalsWeightedAll.outcome,
-          balance: totalsWeightedAll.balance,
-          onTotalsModeSwipe: _handleTotalsModeSwipe,
-          totalsDotsCount: _kTotalsModeCount,
-          totalsDotsSelectedIndex: _totalsMode,
-        ),
+        l10n: widget.l10n,
+        primarySubtitle: widget.l10n.transactionsTotalsWeightedHint,
+        income: totalsWeightedAll.income,
+        outcome: totalsWeightedAll.outcome,
+        balance: totalsWeightedAll.balance,
+        onTotalsModeSwipe: _handleTotalsModeSwipe,
+        totalsDotsCount: _kTotalsModeCount,
+        totalsDotsSelectedIndex: _totalsMode,
+      ),
       1 => TransactionsTotalsBar(
-          l10n: widget.l10n,
-          primarySubtitle: widget.l10n.transactionsTotalsNotWeightedHint,
-          income: totalsRawValueAll.income,
-          outcome: totalsRawValueAll.outcome,
-          balance: totalsRawValueAll.balance,
-          onTotalsModeSwipe: _handleTotalsModeSwipe,
-          totalsDotsCount: _kTotalsModeCount,
-          totalsDotsSelectedIndex: _totalsMode,
-        ),
+        l10n: widget.l10n,
+        primarySubtitle:
+            widget.l10n.transactionsTotalsWeightedExcludingIgnoredHint,
+        income: totalsWeightedNonIgnoredOnly.income,
+        outcome: totalsWeightedNonIgnoredOnly.outcome,
+        balance: totalsWeightedNonIgnoredOnly.balance,
+        onTotalsModeSwipe: _handleTotalsModeSwipe,
+        totalsDotsCount: _kTotalsModeCount,
+        totalsDotsSelectedIndex: _totalsMode,
+      ),
       2 => TransactionsTotalsBar(
-          l10n: widget.l10n,
-          primarySubtitle:
-              widget.l10n.transactionsTotalsWeightedExcludingIgnoredHint,
-          income: totalsWeightedNonIgnoredOnly.income,
-          outcome: totalsWeightedNonIgnoredOnly.outcome,
-          balance: totalsWeightedNonIgnoredOnly.balance,
-          onTotalsModeSwipe: _handleTotalsModeSwipe,
-          totalsDotsCount: _kTotalsModeCount,
-          totalsDotsSelectedIndex: _totalsMode,
-        ),
+        l10n: widget.l10n,
+        primarySubtitle: widget.l10n.transactionsTotalsNotWeightedHint,
+        income: totalsRawValueAll.income,
+        outcome: totalsRawValueAll.outcome,
+        balance: totalsRawValueAll.balance,
+        onTotalsModeSwipe: _handleTotalsModeSwipe,
+        totalsDotsCount: _kTotalsModeCount,
+        totalsDotsSelectedIndex: _totalsMode,
+      ),
       3 => TransactionsTotalsBar(
-          l10n: widget.l10n,
-          primarySubtitle:
-              widget.l10n.transactionsTotalsNotWeightedExcludingIgnoredHint,
-          income: totalsRawValueNonIgnoredOnly.income,
-          outcome: totalsRawValueNonIgnoredOnly.outcome,
-          balance: totalsRawValueNonIgnoredOnly.balance,
-          onTotalsModeSwipe: _handleTotalsModeSwipe,
-          totalsDotsCount: _kTotalsModeCount,
-          totalsDotsSelectedIndex: _totalsMode,
-        ),
+        l10n: widget.l10n,
+        primarySubtitle:
+            widget.l10n.transactionsTotalsNotWeightedExcludingIgnoredHint,
+        income: totalsRawValueNonIgnoredOnly.income,
+        outcome: totalsRawValueNonIgnoredOnly.outcome,
+        balance: totalsRawValueNonIgnoredOnly.balance,
+        onTotalsModeSwipe: _handleTotalsModeSwipe,
+        totalsDotsCount: _kTotalsModeCount,
+        totalsDotsSelectedIndex: _totalsMode,
+      ),
       _ => throw StateError('totals mode $_totalsMode'),
     };
   }
