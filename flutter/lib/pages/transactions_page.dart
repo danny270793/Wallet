@@ -2031,6 +2031,13 @@ class _TransactionDialogState extends State<_TransactionDialog> {
   /// True while fetching group installments to show summed amount (edit + creditGroupId).
   bool _loadingCreditGroupTotal = false;
 
+  /// New deferred card installments are saved with ignore=true regardless of toggle.
+  bool get _creatingDeferredInstallments =>
+      widget.transaction == null && _deferred && _cardId != null;
+
+  bool get _ignoreSwitchShowsOn =>
+      _creatingDeferredInstallments ? true : _ignore;
+
   Timer? _descriptionSuggestDebounce;
   List<TransactionEntity> _descriptionSuggestionMatches = const [];
   bool _descriptionSuggestLoading = false;
@@ -2524,6 +2531,9 @@ class _TransactionDialogState extends State<_TransactionDialog> {
       } else if (raw.startsWith(_paymentMethodPickCardPrefix)) {
         _cardId = raw.substring(_paymentMethodPickCardPrefix.length);
         _accountId = null;
+        if (_deferred) {
+          _ignore = true;
+        }
       }
     });
     _syncRelationDisplays();
@@ -2925,6 +2935,8 @@ class _TransactionDialogState extends State<_TransactionDialog> {
                               if (!_deferred) {
                                 _graceMonthsController.clear();
                                 _termMonthsController.clear();
+                              } else if (_cardId != null) {
+                                _ignore = true;
                               }
                             });
                           },
@@ -3117,8 +3129,10 @@ class _TransactionDialogState extends State<_TransactionDialog> {
                             ),
                           ),
                           Switch(
-                            value: _ignore,
-                            onChanged: (v) => setState(() => _ignore = v),
+                            value: _ignoreSwitchShowsOn,
+                            onChanged: _creatingDeferredInstallments
+                                    ? null
+                                    : (v) => setState(() => _ignore = v),
                           ),
                         ],
                       ),
