@@ -1,5 +1,6 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/logger/app_logger.dart';
+import '../../../../core/remote_load_failure.dart';
 import '../../../../core/sort_by_name.dart';
 import '../../domain/entities/tag_entity.dart';
 import '../../domain/usecases/get_tags_usecase.dart';
@@ -34,7 +35,7 @@ class TagsCubit extends Cubit<TagsState> {
       emit(TagsLoaded(tags));
     } catch (e, s) {
       AppLogger.error('failed to load tags', e, s);
-      emit(const TagsError());
+      emit(TagsError(failure: classifyRemoteLoadError(e)));
     }
   }
 
