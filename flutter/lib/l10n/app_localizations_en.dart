@@ -133,6 +133,30 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsChangeEmailSameAsCurrent => 'That is already your email.';
 
   @override
+  String get settingsChangePassword => 'Change password';
+
+  @override
+  String get settingsChangePasswordDialogTitle => 'Change password';
+
+  @override
+  String get settingsNewPasswordLabel => 'New password';
+
+  @override
+  String get settingsConfirmNewPasswordLabel => 'Confirm new password';
+
+  @override
+  String get settingsChangePasswordSubmit => 'Update password';
+
+  @override
+  String get settingsChangePasswordSuccess => 'Your password was updated.';
+
+  @override
+  String get settingsPasswordsDoNotMatch => 'Passwords do not match.';
+
+  @override
+  String get settingsPasswordTooShort => 'Use at least 6 characters.';
+
+  @override
   String get settingsAppearance => 'Appearance';
 
   @override
