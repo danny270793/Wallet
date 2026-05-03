@@ -5,6 +5,19 @@ import 'package:path_provider/path_provider.dart';
 
 import '../logger/app_logger.dart';
 
+/// One on-disk JSON cache file for the wallet offline layer.
+class WalletCacheEntry {
+  final String cacheKey;
+  final int bytes;
+  final DateTime modifiedAt;
+
+  const WalletCacheEntry({
+    required this.cacheKey,
+    required this.bytes,
+    required this.modifiedAt,
+  });
+}
+
 /// JSON file cache under app support dir, one folder per [userId].
 class WalletOfflineCache {
   Directory? _root;
@@ -101,6 +114,36 @@ class WalletOfflineCache {
       }
     } catch (e, st) {
       AppLogger.error('offline cache clear user failed', e, st);
+    }
+  }
+
+  /// Lists `.json` cache files for [userId], newest first.
+  Future<List<WalletCacheEntry>> listUserCacheFiles(String userId) async {
+    if (userId.isEmpty) return [];
+    try {
+      final root = await _ensureRoot();
+      final userDir = Directory('${root.path}/$userId');
+      if (!userDir.existsSync()) return [];
+      final out = <WalletCacheEntry>[];
+      for (final ent in userDir.listSync(followLinks: false)) {
+        if (ent is! File) continue;
+        final path = ent.path;
+        final slash = path.lastIndexOf(Platform.pathSeparator);
+        final name = slash < 0 ? path : path.substring(slash + 1);
+        if (!name.endsWith('.json')) continue;
+        final stat = await ent.stat();
+        final key = name.substring(0, name.length - 5);
+        out.add(WalletCacheEntry(
+          cacheKey: key,
+          bytes: stat.size,
+          modifiedAt: stat.modified,
+        ));
+      }
+      out.sort((a, b) => b.modifiedAt.compareTo(a.modifiedAt));
+      return out;
+    } catch (e, st) {
+      AppLogger.error('offline cache list files failed', e, st);
+      return [];
     }
   }
 }
