@@ -11,6 +11,7 @@ import '../core/locale/app_locale_controller.dart';
 import '../core/security/app_biometric_unlock_controller.dart';
 import '../core/theme/app_theme_controller.dart';
 import '../features/auth/domain/usecases/update_email_usecase.dart';
+import '../features/auth/domain/usecases/update_password_usecase.dart';
 import '../features/auth/presentation/cubit/settings_cubit.dart';
 import '../features/auth/presentation/cubit/settings_state.dart';
 import '../widgets/bottom_sheet_pinned_title.dart';
@@ -162,6 +163,29 @@ Future<void> _showChangeEmailSheet(
   }
 }
 
+Future<void> _showChangePasswordSheet(
+  BuildContext context,
+  AppLocalizations l10n,
+) async {
+  final ok = await showModalBottomSheet<bool>(
+    context: context,
+    showDragHandle: false,
+    isScrollControlled: true,
+    builder: (_) => BottomSheetPinnedTitleScrollView(
+      title: l10n.settingsChangePasswordDialogTitle,
+      child: _ChangePasswordSheetBody(
+        hostContext: context,
+        l10n: l10n,
+      ),
+    ),
+  );
+  if (ok == true && context.mounted) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(l10n.settingsChangePasswordSuccess)),
+    );
+  }
+}
+
 class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key});
 
@@ -223,6 +247,16 @@ class _SettingsPageState extends State<SettingsPage> {
                     l10n,
                     onChanged: () => setState(() {}),
                   ),
+                ),
+                ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  leading: Icon(
+                    Icons.lock_outline_rounded,
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                  title: Text(l10n.settingsChangePassword),
+                  trailing: const Icon(Icons.chevron_right),
+                  onTap: () => _showChangePasswordSheet(context, l10n),
                 ),
                 const Padding(
                   padding: EdgeInsets.symmetric(vertical: 16),
@@ -497,6 +531,147 @@ class _ChangeEmailSheetBodyState extends State<_ChangeEmailSheetBody> {
                     child: CircularProgressIndicator(strokeWidth: 2),
                   )
                 : Text(l10n.settingsChangeEmailSubmit),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+const int _kMinPasswordLength = 6;
+
+class _ChangePasswordSheetBody extends StatefulWidget {
+  const _ChangePasswordSheetBody({
+    required this.hostContext,
+    required this.l10n,
+  });
+
+  final BuildContext hostContext;
+  final AppLocalizations l10n;
+
+  @override
+  State<_ChangePasswordSheetBody> createState() =>
+      _ChangePasswordSheetBodyState();
+}
+
+class _ChangePasswordSheetBodyState extends State<_ChangePasswordSheetBody> {
+  final _formKey = GlobalKey<FormState>();
+  late final TextEditingController _newController;
+  late final TextEditingController _confirmController;
+  bool _loading = false;
+  bool _obscureNew = true;
+  bool _obscureConfirm = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _newController = TextEditingController();
+    _confirmController = TextEditingController();
+  }
+
+  @override
+  void dispose() {
+    _newController.dispose();
+    _confirmController.dispose();
+    super.dispose();
+  }
+
+  void _snack(String message) {
+    ScaffoldMessenger.of(widget.hostContext).showSnackBar(
+      SnackBar(content: Text(message)),
+    );
+  }
+
+  Future<void> _submit() async {
+    if (!_formKey.currentState!.validate()) return;
+    setState(() => _loading = true);
+    try {
+      await getIt<UpdatePasswordUsecase>()(newPassword: _newController.text);
+      if (!mounted) return;
+      Navigator.of(context).pop(true);
+    } on AuthException catch (e) {
+      if (mounted) setState(() => _loading = false);
+      _snack(e.message);
+    } catch (_) {
+      if (mounted) setState(() => _loading = false);
+      _snack(widget.l10n.unexpectedError);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = widget.l10n;
+    return Form(
+      key: _formKey,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          TextFormField(
+            controller: _newController,
+            obscureText: _obscureNew,
+            textInputAction: TextInputAction.next,
+            autofocus: true,
+            autofillHints: const [AutofillHints.newPassword],
+            autocorrect: false,
+            enableSuggestions: false,
+            decoration: InputDecoration(
+              labelText: l10n.settingsNewPasswordLabel,
+              suffixIcon: IconButton(
+                icon: Icon(
+                  _obscureNew ? Icons.visibility_off : Icons.visibility,
+                ),
+                onPressed: () =>
+                    setState(() => _obscureNew = !_obscureNew),
+              ),
+            ),
+            enabled: !_loading,
+            validator: (v) {
+              if (v == null || v.isEmpty) return l10n.fieldRequired;
+              if (v.length < _kMinPasswordLength) {
+                return l10n.settingsPasswordTooShort;
+              }
+              return null;
+            },
+          ),
+          const SizedBox(height: 12),
+          TextFormField(
+            controller: _confirmController,
+            obscureText: _obscureConfirm,
+            textInputAction: TextInputAction.done,
+            autofillHints: const [AutofillHints.newPassword],
+            autocorrect: false,
+            enableSuggestions: false,
+            decoration: InputDecoration(
+              labelText: l10n.settingsConfirmNewPasswordLabel,
+              suffixIcon: IconButton(
+                icon: Icon(
+                  _obscureConfirm ? Icons.visibility_off : Icons.visibility,
+                ),
+                onPressed: () =>
+                    setState(() => _obscureConfirm = !_obscureConfirm),
+              ),
+            ),
+            enabled: !_loading,
+            validator: (v) {
+              if (v == null || v.isEmpty) return l10n.fieldRequired;
+              if (v != _newController.text) {
+                return l10n.settingsPasswordsDoNotMatch;
+              }
+              return null;
+            },
+            onFieldSubmitted: (_) => _submit(),
+          ),
+          const SizedBox(height: 20),
+          FilledButton(
+            onPressed: _loading ? null : _submit,
+            child: _loading
+                ? const SizedBox(
+                    height: 20,
+                    width: 20,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : Text(l10n.settingsChangePasswordSubmit),
           ),
         ],
       ),
