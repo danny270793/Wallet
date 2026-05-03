@@ -1,5 +1,6 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/logger/app_logger.dart';
+import '../../../../core/remote_load_failure.dart';
 import '../../../../core/sort_by_name.dart';
 import '../../domain/entities/category_entity.dart';
 import '../../domain/usecases/get_categories_usecase.dart';
@@ -34,7 +35,7 @@ class CategoriesCubit extends Cubit<CategoriesState> {
       emit(CategoriesLoaded(categories));
     } catch (e, s) {
       AppLogger.error('failed to load categories', e, s);
-      emit(const CategoriesError());
+      emit(CategoriesError(failure: classifyRemoteLoadError(e)));
     }
   }
 
