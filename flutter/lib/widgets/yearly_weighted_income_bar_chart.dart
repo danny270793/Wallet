@@ -86,54 +86,50 @@ List<double> weightedNetByMonthForYear(
   return sums;
 }
 
-/// Cumulative net at end of each calendar month in [year] (local dates), including **all**
-/// transactions strictly before the first day of the following month—i.e. lifetime running
-/// net through that month, not YTD-only. [txs] must include every counted transaction through
-/// the end of [year] (yearly dashboard fetch loads from the beginning through that instant).
-/// Rows with [TransactionEntity.creditLedgerGroupingKey] set (installment / credit-linked) are
-/// omitted so the series matches non-credit cashflow only.
-List<double> weightedCumulativeNetByMonthForYear(
-  List<TransactionEntity> txs,
-  int year, {
-  required bool includeIgnored,
-  required bool useWeightedAmounts,
-}) {
+/// Latest month in [year] (1–12) with at least one transaction that has an [TransactionEntity.accountId]
+/// (same scope as `/accounts` balances), or 0 if none.
+int lastMonthWithAccountTransactionsForYear(List<TransactionEntity> txs, int year) {
+  var last = 0;
+  for (final t in txs) {
+    if (t.accountId == null || t.accountId!.isEmpty) continue;
+    final local = t.transactedAt.toLocal();
+    if (local.year != year) continue;
+    final m = local.month;
+    if (m > last) last = m;
+  }
+  return last;
+}
+
+/// Cumulative **accounts total** (sum of raw [TransactionEntity.value]) at end of each month in
+/// [year] using **local** dates: for month *m*, sums every non-deleted row in [txs] with a non-null
+/// [TransactionEntity.accountId] and `transactedAt` strictly before the first day of month *m*+1.
+///
+/// Matches `wallet_accounts_with_balance` aggregated across all accounts (footer total on `/accounts`).
+/// [txs] must list all such transactions through the end of [year] (yearly dashboard fetch).
+List<double> accountsTotalCumulativeByMonthForYear(List<TransactionEntity> txs, int year) {
   final out = List<double>.filled(12, 0);
   for (var m = 0; m < 12; m++) {
     final cutoffExclusive = DateTime(year, m + 2, 1);
     var sum = 0.0;
     for (final t in txs) {
-      if (t.isAccountTransferLeg) continue;
-      if (t.creditLedgerGroupingKey != null) continue;
-      if (!includeIgnored && t.ignore) continue;
+      if (t.accountId == null || t.accountId!.isEmpty) continue;
       final local = t.transactedAt.toLocal();
       if (!local.isBefore(cutoffExclusive)) continue;
-      sum += _effectiveAmount(t, useWeightedAmounts);
+      sum += t.value;
     }
     out[m] = sum;
   }
   return out;
 }
 
-/// Cumulative YTD values for Jan through [lastMonthWithTransactionsForYear], then zeros so the
-/// chart keeps 12 month slots like the net chart but shows no bar after the last month with data.
-List<double> _cumulativeNetMonthlyBarsWithTrailingZeros(
+/// Cumulative accounts-total values for Jan through [lastMonthWithAccountTransactionsForYear], then zeros
+/// so the chart keeps 12 month slots but shows no bar after the last month with account-linked data.
+List<double> _cumulativeAccountsBalanceMonthlyBarsWithTrailingZeros(
   List<TransactionEntity> txs,
-  int year, {
-  required bool includeIgnored,
-  required bool useWeightedAmounts,
-}) {
-  final full = weightedCumulativeNetByMonthForYear(
-    txs,
-    year,
-    includeIgnored: includeIgnored,
-    useWeightedAmounts: useWeightedAmounts,
-  );
-  final last = lastMonthWithTransactionsForYear(
-    txs,
-    year,
-    includeIgnored: includeIgnored,
-  );
+  int year,
+) {
+  final full = accountsTotalCumulativeByMonthForYear(txs, year);
+  final last = lastMonthWithAccountTransactionsForYear(txs, year);
   if (last == 0) return full;
   return List<double>.generate(12, (i) => i < last ? full[i] : 0.0);
 }
@@ -249,31 +245,25 @@ class YearlyWeightedNetBarChart extends StatelessWidget {
   }
 }
 
-/// Bar chart: cumulative net (signed weighted sum YTD) at end of each month.
+/// Bar chart: cumulative **accounts** balance (same basis as `/accounts` total) at end of each month.
 class YearlyCumulativeNetBarChart extends StatelessWidget {
   const YearlyCumulativeNetBarChart({
     super.key,
     required this.l10n,
     required this.year,
     required this.transactions,
-    required this.includeIgnored,
-    required this.useWeightedAmounts,
   });
 
   final AppLocalizations l10n;
   final int year;
   final List<TransactionEntity> transactions;
-  final bool includeIgnored;
-  final bool useWeightedAmounts;
 
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    final monthly = _cumulativeNetMonthlyBarsWithTrailingZeros(
+    final monthly = _cumulativeAccountsBalanceMonthlyBarsWithTrailingZeros(
       transactions,
       year,
-      includeIgnored: includeIgnored,
-      useWeightedAmounts: useWeightedAmounts,
     );
     return _YearlyMonthlyBarChartCore(
       l10n: l10n,
