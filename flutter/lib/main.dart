@@ -1,11 +1,14 @@
+import 'dart:async';
 import 'dart:ui';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:local_auth/local_auth.dart';
 import 'package:wallet/l10n/app_localizations.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'core/di/injection.dart';
 import 'core/locale/app_locale_controller.dart';
+import 'core/security/app_biometric_unlock_controller.dart';
 import 'core/theme/app_theme_controller.dart';
 import 'core/logger/app_logger.dart';
 import 'core/wallet_actions/wallet_actions_reporter.dart';
@@ -25,6 +28,7 @@ Future<void> main() async {
   AppLogger.info('DI setup complete');
   await getIt<AppLocaleController>().load();
   await getIt<AppThemeController>().load();
+  await getIt<AppBiometricUnlockController>().load();
   _bindGlobalErrorReporting();
 
   runApp(const App());
@@ -42,15 +46,73 @@ void _bindGlobalErrorReporting() {
   };
 }
 
-class App extends StatelessWidget {
+class App extends StatefulWidget {
   const App({super.key});
 
-  static Locale? _resolveDeviceLocale(Locale? deviceLocale, Iterable<Locale> supported) {
+  static Locale? _resolveDeviceLocale(
+    Locale? deviceLocale,
+    Iterable<Locale> supported,
+  ) {
     if (deviceLocale == null) return supported.first;
     for (final loc in supported) {
       if (loc.languageCode == deviceLocale.languageCode) return loc;
     }
     return supported.first;
+  }
+
+  @override
+  State<App> createState() => _AppState();
+}
+
+class _AppState extends State<App> with WidgetsBindingObserver {
+  /// True after [AppLifecycleState.paused]; cleared on resume so cold start does not prompt.
+  bool _shouldUnlockOnNextResume = false;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.paused) {
+      _shouldUnlockOnNextResume = true;
+    } else if (state == AppLifecycleState.resumed && _shouldUnlockOnNextResume) {
+      _shouldUnlockOnNextResume = false;
+      unawaited(_promptBiometricUnlockIfNeeded());
+    }
+  }
+
+  Future<void> _promptBiometricUnlockIfNeeded() async {
+    if (Supabase.instance.client.auth.currentSession == null) return;
+    final bio = getIt<AppBiometricUnlockController>();
+    await bio.refreshAuthenticatorAvailability();
+    if (!bio.enabled || !bio.authenticatorAvailable) return;
+
+    var unlocked = false;
+    while (!unlocked) {
+      final ctx = rootNavigatorKey.currentContext;
+      if (ctx == null || !ctx.mounted) return;
+      final l10n = AppLocalizations.of(ctx);
+      if (l10n == null) return;
+      final ok = await bio.localAuth.authenticate(
+        localizedReason: l10n.settingsBiometricResumeReason,
+        options: const AuthenticationOptions(
+          biometricOnly: true,
+          stickyAuth: true,
+        ),
+      );
+      if (ok) {
+        unlocked = true;
+      }
+    }
   }
 
   @override
@@ -66,7 +128,7 @@ class App extends StatelessWidget {
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
           locale: appLocale.materialAppLocale,
-          localeResolutionCallback: _resolveDeviceLocale,
+          localeResolutionCallback: App._resolveDeviceLocale,
           theme: ThemeData(
             colorScheme: ColorScheme.fromSeed(seedColor: seed),
             useMaterial3: true,
