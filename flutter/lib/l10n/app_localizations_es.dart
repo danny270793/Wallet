@@ -208,11 +208,6 @@ class AppLocalizationsEs extends AppLocalizations {
   String get settingsCacheBottomBarCaption => 'Tamaño de archivos en caché';
 
   @override
-  String settingsCacheRowSubtitle(String dateTime, String size) {
-    return '$dateTime · $size';
-  }
-
-  @override
   String settingsCacheKeyTxMonth(String year, String month) {
     return 'Transacciones · $year-$month';
   }
