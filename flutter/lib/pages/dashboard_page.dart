@@ -133,23 +133,7 @@ class _MonthlyDashboardViewState extends State<_MonthlyDashboardView> {
     final l10n = AppLocalizations.of(context)!;
     final monthNotifier = TransactionsMonthScope.of(context);
 
-    return BlocListener<TransactionsCubit, TransactionsState>(
-      listenWhen: (prev, curr) =>
-          curr is TransactionsError && prev is! TransactionsError,
-      listener: (context, state) {
-        final s = state as TransactionsError;
-        final month = TransactionsMonthScope.of(context).value;
-        showRemoteLoadFailureAlert(
-          context,
-          l10n,
-          s.failure,
-          () => context.read<TransactionsCubit>().loadForMonth(
-                month,
-                showLoading: true,
-              ),
-        );
-      },
-      child: BlocConsumer<TransactionsCubit, TransactionsState>(
+    return BlocConsumer<TransactionsCubit, TransactionsState>(
       listener: (context, state) {
         final msg = switch (state) {
           TransactionsActionError(:final message) => message,
@@ -280,7 +264,6 @@ class _MonthlyDashboardViewState extends State<_MonthlyDashboardView> {
           ),
         );
       },
-    ),
     );
   }
 
