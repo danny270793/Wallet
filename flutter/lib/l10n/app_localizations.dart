@@ -1160,6 +1160,12 @@ abstract class AppLocalizations {
   /// **'Due this month'**
   String get creditsDueThisMonthLabel;
 
+  /// No description provided for @creditsDueInMonthLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Due in {monthYear}'**
+  String creditsDueInMonthLabel(String monthYear);
+
   /// No description provided for @creditsNewDeferredPurchase.
   ///
   /// In en, this message translates to:
