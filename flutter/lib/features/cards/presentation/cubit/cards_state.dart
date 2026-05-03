@@ -1,4 +1,6 @@
 import 'package:equatable/equatable.dart';
+
+import '../../../../core/remote_load_failure.dart';
 import '../../domain/entities/card_entity.dart';
 
 sealed class CardsState extends Equatable {
@@ -25,10 +27,10 @@ class CardsLoaded extends CardsState {
 }
 
 class CardsError extends CardsState {
-  final String? message;
-  const CardsError({this.message});
+  final RemoteLoadFailure failure;
+  const CardsError({this.failure = RemoteLoadFailure.requestFailed});
   @override
-  List<Object?> get props => [message];
+  List<Object?> get props => [failure];
 }
 
 class CardsActionError extends CardsState {
