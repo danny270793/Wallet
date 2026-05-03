@@ -91,10 +91,7 @@ class _SettingsCachePageState extends State<SettingsCachePage> {
     return Scaffold(
       appBar: AppBar(
         title: Text(l10n.settingsCachePageTitle),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => context.pop(),
-        ),
+        
       ),
       body: _loading
           ? const Center(child: CircularProgressIndicator())
