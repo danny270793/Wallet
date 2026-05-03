@@ -362,6 +362,28 @@ class _SettingsPageState extends State<SettingsPage> {
                   child: Divider(height: 1),
                 ),
                 Text(
+                  l10n.settingsDataSection,
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  leading: Icon(
+                    Icons.storage_outlined,
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                  title: Text(l10n.settingsOfflineCache),
+                  subtitle: Text(l10n.settingsOfflineCacheSubtitle),
+                  trailing: const Icon(Icons.chevron_right),
+                  onTap: () => context.push('/settings/cache'),
+                ),
+                const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 16),
+                  child: Divider(height: 1),
+                ),
+                Text(
                   l10n.settingsAboutSection,
                   style: theme.textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.w600,
