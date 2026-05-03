@@ -78,9 +78,9 @@ double creditLedgerTotalPending(List<TransactionEntity> flat) {
   return sum;
 }
 
-/// Sum of raw values for installments due in [monthStart]'s calendar month.
-/// For the current local month, only dues on or after today are included.
-double creditLedgerDueInSelectedMonth(
+/// Installments due in [monthStart]'s calendar month (credit rows only).
+/// For the current local month, excludes due dates before today.
+List<TransactionEntity> creditLedgerInstallmentsInSelectedMonth(
   List<TransactionEntity> flat,
   DateTime monthStart,
 ) {
@@ -89,7 +89,7 @@ double creditLedgerDueInSelectedMonth(
   final y = monthStart.year;
   final m = monthStart.month;
   final isCurrentMonth = y == today.year && m == today.month;
-  var sum = 0.0;
+  final out = <TransactionEntity>[];
   for (final t in flat) {
     final g = t.creditLedgerGroupingKey;
     if (g == null || g.isEmpty) continue;
@@ -97,9 +97,19 @@ double creditLedgerDueInSelectedMonth(
     if (local.year != y || local.month != m) continue;
     final dueDay = DateTime(local.year, local.month, local.day);
     if (isCurrentMonth && dueDay.isBefore(today)) continue;
-    sum += t.value;
+    out.add(t);
   }
-  return sum;
+  return out;
+}
+
+/// Sum of raw values for installments due in [monthStart]'s calendar month.
+/// For the current local month, only dues on or after today are included.
+double creditLedgerDueInSelectedMonth(
+  List<TransactionEntity> flat,
+  DateTime monthStart,
+) {
+  return creditLedgerInstallmentsInSelectedMonth(flat, monthStart)
+      .fold<double>(0, (a, t) => a + t.value);
 }
 
 class _CreditsPendingTotalsBar extends StatelessWidget {
@@ -487,9 +497,13 @@ class _CreditsPageState extends State<CreditsPage> {
     return ValueListenableBuilder<DateTime>(
       valueListenable: _dueMonthNotifier,
       builder: (context, visibleMonth, _) {
-        final groups = groupedCreditLedger(_flat);
-        final showPendingBar = !_loading && groups.isNotEmpty;
+        final hasAnyCredits = groupedCreditLedger(_flat).isNotEmpty;
+        final flatMonth =
+            creditLedgerInstallmentsInSelectedMonth(_flat, visibleMonth);
+        final groups = groupedCreditLedger(flatMonth);
+        final showPendingBar = !_loading && hasAnyCredits;
         final dueInMonth = creditLedgerDueInSelectedMonth(_flat, visibleMonth);
+        final pendingForMonth = creditLedgerTotalPending(flatMonth);
 
         return ShellScaffold(
           title: l10n.creditsTitle,
@@ -502,7 +516,7 @@ class _CreditsPageState extends State<CreditsPage> {
           bottomNavigationBar: showPendingBar
               ? _CreditsPendingTotalsBar(
                   l10n: l10n,
-                  pendingTotal: creditLedgerTotalPending(_flat),
+                  pendingTotal: pendingForMonth,
                   dueInSelectedMonthTotal: dueInMonth,
                 )
               : null,
@@ -522,7 +536,7 @@ class _CreditsPageState extends State<CreditsPage> {
                       ),
                     ],
                   )
-                : groups.isEmpty
+                : !hasAnyCredits
                 ? ListView(
                     physics: const AlwaysScrollableScrollPhysics(),
                     padding: const EdgeInsets.fromLTRB(24, 0, 24, 88),
@@ -531,6 +545,22 @@ class _CreditsPageState extends State<CreditsPage> {
                       SizedBox(height: MediaQuery.paddingOf(context).top + 40),
                       Text(
                         l10n.creditsEmpty,
+                        textAlign: TextAlign.center,
+                        style: theme.textTheme.bodyLarge?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                    ],
+                  )
+                : groups.isEmpty
+                ? ListView(
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    padding: const EdgeInsets.fromLTRB(24, 0, 24, 88),
+                    children: [
+                      OfflineCachedDataBanner(visible: _servedFromOfflineCache),
+                      SizedBox(height: MediaQuery.paddingOf(context).top + 40),
+                      Text(
+                        l10n.creditsEmptyForSelectedMonth,
                         textAlign: TextAlign.center,
                         style: theme.textTheme.bodyLarge?.copyWith(
                           color: theme.colorScheme.onSurfaceVariant,
