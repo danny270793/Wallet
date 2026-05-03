@@ -1,4 +1,5 @@
 import '../../../../core/offline/offline_fetch.dart';
+import '../../../../core/offline/offline_served_bundle.dart';
 import '../../../../core/offline/wallet_offline_cache.dart';
 import '../../../../core/offline/wallet_offline_user_context.dart';
 import '../../domain/entities/card_entity.dart';
@@ -17,7 +18,7 @@ class CardsRepositoryImpl implements CardsRepository {
   );
 
   @override
-  Future<List<CardEntity>> getCards() => fetchListWithOfflineCache(
+  Future<OfflineServedBundle<List<CardEntity>>> getCards() => fetchListWithOfflineCache(
         session: _offlineSession,
         cache: _offlineCache,
         cacheKey: WalletOfflineCacheKeys.cards,
