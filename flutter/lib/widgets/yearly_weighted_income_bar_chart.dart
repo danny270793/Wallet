@@ -90,6 +90,8 @@ List<double> weightedNetByMonthForYear(
 /// transactions strictly before the first day of the following month—i.e. lifetime running
 /// net through that month, not YTD-only. [txs] must include every counted transaction through
 /// the end of [year] (yearly dashboard fetch loads from the beginning through that instant).
+/// Rows with [TransactionEntity.creditLedgerGroupingKey] set (installment / credit-linked) are
+/// omitted so the series matches non-credit cashflow only.
 List<double> weightedCumulativeNetByMonthForYear(
   List<TransactionEntity> txs,
   int year, {
@@ -102,6 +104,7 @@ List<double> weightedCumulativeNetByMonthForYear(
     var sum = 0.0;
     for (final t in txs) {
       if (t.isAccountTransferLeg) continue;
+      if (t.creditLedgerGroupingKey != null) continue;
       if (!includeIgnored && t.ignore) continue;
       final local = t.transactedAt.toLocal();
       if (!local.isBefore(cutoffExclusive)) continue;
