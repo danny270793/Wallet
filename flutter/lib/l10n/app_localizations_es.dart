@@ -752,4 +752,24 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get transactionsTotalsNotWeightedExcludingIgnoredHint =>
       'Sin ponderar excluyendo ignoradas';
+
+  @override
+  String get loadFailedNoConnectionTitle => 'Sin conexión a internet';
+
+  @override
+  String get loadFailedNoConnectionBody =>
+      'Comprueba tu red e inténtalo de nuevo. Si tienes conexión, puede que el servidor no esté accesible.';
+
+  @override
+  String get loadFailedRequestFailedTitle => 'No se pudieron cargar los datos';
+
+  @override
+  String get loadFailedRequestFailedBody =>
+      'La solicitud falló. Desliza hacia abajo para actualizar o inténtalo de nuevo en un momento.';
+
+  @override
+  String get retry => 'Reintentar';
+
+  @override
+  String get dialogClose => 'Cerrar';
 }
