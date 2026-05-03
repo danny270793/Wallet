@@ -1136,6 +1136,12 @@ abstract class AppLocalizations {
   /// **'No deferred credit installments yet.'**
   String get creditsEmpty;
 
+  /// No description provided for @creditsEmptyForSelectedMonth.
+  ///
+  /// In en, this message translates to:
+  /// **'No installments due in this month.'**
+  String get creditsEmptyForSelectedMonth;
+
   /// No description provided for @creditsUntitledGroup.
   ///
   /// In en, this message translates to:
