@@ -304,13 +304,13 @@ class GroupedTxnTransactionTile extends StatelessWidget {
       onTap: onTap,
       onEdit: openEdit,
       confirmDelete:
-          transaction.creditGroupId != null &&
-                  transaction.creditGroupId!.isNotEmpty
+          transaction.creditLedgerGroupingKey != null &&
+                  transaction.creditLedgerGroupingKey!.isNotEmpty
               ? () => confirmDeleteCreditGroupTransactionDialog(context, l10n)
               : () => confirmDeleteTransactionDialog(context, l10n),
       onDelete: () => bloc.delete(
         id: transaction.id,
-        creditGroupId: transaction.creditGroupId,
+        creditLedgerKey: transaction.creditLedgerGroupingKey,
       ),
     );
 

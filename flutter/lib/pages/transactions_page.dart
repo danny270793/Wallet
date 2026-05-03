@@ -18,6 +18,7 @@ import '../features/tags/domain/entities/tag_entity.dart';
 import '../features/transactions/domain/entities/transaction_entity.dart';
 import '../features/transactions/domain/usecases/search_transactions_by_description_usecase.dart';
 import '../features/transactions/domain/usecases/get_transactions_by_credit_group_id_usecase.dart';
+import '../features/wallet_credits/domain/usecases/get_wallet_credit_usecase.dart';
 import '../features/transactions/presentation/cubit/transactions_cubit.dart';
 import '../features/transactions/presentation/cubit/transactions_state.dart';
 import '../features/categories/domain/usecases/delete_category_usecase.dart';
@@ -2015,8 +2016,8 @@ class _TransactionDialogState extends State<_TransactionDialog> {
   bool _loadingLookups = true;
 
   bool get _isCreditGroupEdit {
-    final id = widget.transaction?.creditGroupId;
-    return id != null && id.isNotEmpty;
+    final k = widget.transaction?.creditLedgerGroupingKey;
+    return k != null && k.isNotEmpty;
   }
 
   List<AccountEntity> _accounts = [];
@@ -2033,7 +2034,7 @@ class _TransactionDialogState extends State<_TransactionDialog> {
   late final TextEditingController _graceMonthsController;
   late final TextEditingController _termMonthsController;
 
-  /// True while fetching group installments to show summed amount (edit + creditGroupId).
+  /// True while fetching group installments to show summed amount (edit + creditId).
   bool _loadingCreditGroupTotal = false;
 
   /// New deferred card installments are saved with ignore=true regardless of toggle.
@@ -2075,8 +2076,7 @@ class _TransactionDialogState extends State<_TransactionDialog> {
     }
     _descriptionController = TextEditingController(
       text: (t != null &&
-              t.creditGroupId != null &&
-              t.creditGroupId!.isNotEmpty)
+              (t.creditLedgerGroupingKey?.isNotEmpty ?? false))
           ? stripLeadingCreditInstallmentDescription(t.description)
           : (t?.description ?? ''),
     );
@@ -2087,23 +2087,22 @@ class _TransactionDialogState extends State<_TransactionDialog> {
     _tagDisplayController = TextEditingController();
     _graceMonthsController = TextEditingController();
     _termMonthsController = TextEditingController();
-    _deferred = t != null &&
-        t.creditGroupId != null &&
-        t.creditGroupId!.isNotEmpty;
+    _deferred = t != null && (t.creditLedgerGroupingKey?.isNotEmpty ?? false);
     _ignore = t?.ignore ?? false;
     _accountId = t?.accountId ?? widget.preferredAccountId;
     _cardId = t?.cardId ?? widget.preferredCardId;
     _categoryId = t?.categoryId ?? widget.preferredCategoryId;
     _tagId = t?.tagId ?? widget.preferredTagId;
-    _loadingCreditGroupTotal = t?.creditGroupId != null && t!.creditGroupId!.isNotEmpty;
+    _loadingCreditGroupTotal = t?.creditLedgerGroupingKey != null &&
+        t!.creditLedgerGroupingKey!.isNotEmpty;
 
     _loadLookups();
     _descriptionController.addListener(_onDescriptionTextChangedForSuggestions);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       _syncDateTimeDisplay();
-      if (widget.transaction?.creditGroupId != null &&
-          widget.transaction!.creditGroupId!.isNotEmpty) {
+      if (widget.transaction?.creditLedgerGroupingKey != null &&
+          widget.transaction!.creditLedgerGroupingKey!.isNotEmpty) {
         Future.microtask(() => _loadCreditGroupTotal());
       }
       if (widget.transaction != null) return;
@@ -2161,20 +2160,30 @@ class _TransactionDialogState extends State<_TransactionDialog> {
   }
 
   Future<void> _loadCreditGroupTotal() async {
-    final gid = widget.transaction?.creditGroupId;
+    final gid = widget.transaction?.creditLedgerGroupingKey;
     if (gid == null || gid.isEmpty || !mounted) return;
     try {
       final list = await getIt<GetTransactionsByCreditGroupIdUsecase>()(gid);
       if (!mounted) return;
       list.sort((a, b) => a.transactedAt.compareTo(b.transactedAt));
       final sum = list.fold<double>(0, (a, e) => a + e.value);
+      final creditId = widget.transaction?.creditId;
+      final wc = creditId != null && creditId.isNotEmpty
+          ? await getIt<GetWalletCreditUsecase>()(creditId)
+          : null;
+      if (!mounted) return;
       setState(() {
         _valueController.text = sum.toStringAsFixed(2);
-        if (widget.transaction?.creditGroupId != null &&
-            widget.transaction!.creditGroupId!.isNotEmpty) {
-          _termMonthsController.text =
-              list.isEmpty ? '' : '${list.length}';
-          _graceMonthsController.text = '\u2014';
+        if (widget.transaction?.creditLedgerGroupingKey != null &&
+            widget.transaction!.creditLedgerGroupingKey!.isNotEmpty) {
+          if (wc != null) {
+            _termMonthsController.text = '${wc.termMonths}';
+            _graceMonthsController.text = '${wc.graceMonths}';
+          } else {
+            _termMonthsController.text =
+                list.isEmpty ? '' : '${list.length}';
+            _graceMonthsController.text = '\u2014';
+          }
         }
         _loadingCreditGroupTotal = false;
       });
@@ -2756,7 +2765,7 @@ class _TransactionDialogState extends State<_TransactionDialog> {
           ignore: _ignore,
           percentage: pct,
           transferGroupId: widget.transaction!.transferGroupId,
-          creditGroupId: widget.transaction!.creditGroupId,
+          creditId: widget.transaction!.creditId,
         );
       }
     } finally {
@@ -2835,8 +2844,7 @@ class _TransactionDialogState extends State<_TransactionDialog> {
                     Expanded(
                       child: (_loadingCreditGroupTotal &&
                               isEdit &&
-                              widget.transaction?.creditGroupId != null &&
-                              widget.transaction!.creditGroupId!.isNotEmpty)
+                              _isCreditGroupEdit)
                           ? InputDecorator(
                               decoration: InputDecoration(
                                 labelText: l10n.transactionAmount,
@@ -2865,13 +2873,7 @@ class _TransactionDialogState extends State<_TransactionDialog> {
                               decoration: InputDecoration(
                                 labelText: l10n.transactionAmount,
                                 helperText:
-                                    (isEdit &&
-                                        widget.transaction?.creditGroupId !=
-                                            null &&
-                                        widget
-                                            .transaction!
-                                            .creditGroupId!
-                                            .isNotEmpty)
+                                    (isEdit && _isCreditGroupEdit)
                                         ? l10n.transactionAmountCreditGroupHint
                                         : null,
                               ),
@@ -3030,9 +3032,13 @@ class _TransactionDialogState extends State<_TransactionDialog> {
                               textInputAction: TextInputAction.next,
                               decoration: InputDecoration(
                                 labelText: l10n.transactionGraceMonths,
-                                helperText: _isCreditGroupEdit
-                                    ? l10n.creditEditGraceNotApplicable
-                                    : null,
+                                helperText:
+                                    _isCreditGroupEdit &&
+                                            !(widget.transaction?.creditId
+                                                    ?.isNotEmpty ??
+                                                false)
+                                        ? l10n.creditEditGraceNotApplicable
+                                        : null,
                               ),
                               validator: (v) {
                                 if (widget.transaction != null ||

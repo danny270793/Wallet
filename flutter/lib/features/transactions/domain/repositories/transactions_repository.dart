@@ -4,7 +4,7 @@ abstract class TransactionsRepository {
   Future<List<TransactionEntity>> getTransactionsForMonth(DateTime monthStartLocal);
   Future<List<TransactionEntity>> getTransactionsForYear(DateTime yearStartLocal);
   Future<List<TransactionEntity>> searchTransactionsByDescription(String query, {int limit = 200});
-  Future<List<TransactionEntity>> getTransactionsByCreditGroupId(String creditGroupId);
+  Future<List<TransactionEntity>> getTransactionsByCreditGroupId(String creditId);
 
   Future<List<TransactionEntity>> listTransactionsHavingCreditGroup();
 
@@ -19,7 +19,7 @@ abstract class TransactionsRepository {
     required bool ignore,
     required double percentage,
     String? transferGroupId,
-    String? creditGroupId,
+    String? creditId,
   });
   Future<TransactionEntity> updateTransaction({
     required String id,
@@ -33,7 +33,7 @@ abstract class TransactionsRepository {
     required bool ignore,
     required double percentage,
     String? transferGroupId,
-    String? creditGroupId,
+    String? creditId,
   });
   Future<void> deleteTransaction({required String id});
 }

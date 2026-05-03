@@ -12,11 +12,11 @@ abstract class TransactionsRemoteDatasource {
   /// All-time search on [description] (case-insensitive substring). RLS limits to current user.
   Future<List<TransactionEntity>> searchTransactionsByDescription(String query, {int limit = 200});
 
-  /// All rows with non-null [creditGroupId] (deleted excluded), ordered by credit group then date.
+  /// Rows with deferred-installment linkage (creditId set), deleted excluded.
   Future<List<TransactionEntity>> listTransactionsHavingCreditGroup();
 
-  /// All rows sharing [creditGroupId] (deleted rows excluded).
-  Future<List<TransactionEntity>> getTransactionsByCreditGroupId(String creditGroupId);
+  /// All installments with the given wallet_credits row id ([creditId]).
+  Future<List<TransactionEntity>> getTransactionsByCreditGroupId(String creditId);
   Future<TransactionEntity> createTransaction({
     String? accountId,
     String? cardId,
@@ -28,7 +28,7 @@ abstract class TransactionsRemoteDatasource {
     required bool ignore,
     required double percentage,
     String? transferGroupId,
-    String? creditGroupId,
+    String? creditId,
   });
   Future<TransactionEntity> updateTransaction({
     required String id,
@@ -42,7 +42,7 @@ abstract class TransactionsRemoteDatasource {
     required bool ignore,
     required double percentage,
     String? transferGroupId,
-    String? creditGroupId,
+    String? creditId,
   });
   Future<void> deleteTransaction({required String id});
 }
@@ -80,13 +80,13 @@ wallet_tags(name)
   }
 
   @override
-  Future<List<TransactionEntity>> getTransactionsByCreditGroupId(String creditGroupId) async {
-    if (creditGroupId.isEmpty) return [];
-    AppLogger.debug('getTransactionsByCreditGroupId');
+  Future<List<TransactionEntity>> getTransactionsByCreditGroupId(String creditId) async {
+    if (creditId.isEmpty) return [];
+    AppLogger.debug('getTransactionsByCreditId');
     final data = await _client
         .from('wallet_transactions')
         .select(_transactionSelectEmbedded)
-        .eq('creditGroupId', creditGroupId)
+        .eq('creditId', creditId)
         .isFilter('deletedAt', null)
         .order('transactedAt', ascending: true);
     return (data as List).map((e) => TransactionEntity.fromJson(e as Map<String, dynamic>)).toList();
@@ -98,10 +98,9 @@ wallet_tags(name)
     final data = await _client
         .from('wallet_transactions')
         .select(_transactionSelectEmbedded)
-        .not('creditGroupId', 'is', 'null')
+        .not('creditId', 'is', 'null')
         .isFilter('deletedAt', null)
-        .order('creditGroupId', ascending: true)
-        .order('transactedAt', ascending: true);
+        .order('transactedAt', ascending: false);
     return (data as List).map((e) => TransactionEntity.fromJson(e as Map<String, dynamic>)).toList();
   }
 
@@ -152,7 +151,7 @@ wallet_tags(name)
     required bool ignore,
     required double percentage,
     String? transferGroupId,
-    String? creditGroupId,
+    String? creditId,
   }) async {
     AppLogger.debug('createTransaction called');
     final row = <String, dynamic>{
@@ -167,7 +166,7 @@ wallet_tags(name)
       if (tagId != null) 'tagId': tagId,
       if (description != null) 'description': description,
       if (transferGroupId != null) 'transferGroupId': transferGroupId,
-      if (creditGroupId != null) 'creditGroupId': creditGroupId,
+      if (creditId != null) 'creditId': creditId,
     };
     final data = await _client.from('wallet_transactions').insert(row).select(_transactionSelectEmbedded).single();
     return TransactionEntity.fromJson(data);
@@ -186,7 +185,7 @@ wallet_tags(name)
     required bool ignore,
     required double percentage,
     String? transferGroupId,
-    String? creditGroupId,
+    String? creditId,
   }) async {
     AppLogger.debug('updateTransaction called: $id');
     final data = await _client
@@ -202,7 +201,7 @@ wallet_tags(name)
           'ignore': ignore,
           'percentage': percentage,
           'transferGroupId': transferGroupId,
-          'creditGroupId': creditGroupId,
+          'creditId': creditId,
         })
         .eq('id', id)
         .select(_transactionSelectEmbedded)

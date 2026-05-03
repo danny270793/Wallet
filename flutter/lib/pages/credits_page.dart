@@ -12,12 +12,12 @@ import '../widgets/swipeable_list_tile.dart';
 import '../widgets/transaction_delete_dialogs.dart';
 import 'transactions_page.dart' show showTransactionEditorBottomSheet;
 
-/// Groups rows by [TransactionEntity.creditGroupId]; newest groups (by latest date) first.
+/// Groups rows by [TransactionEntity.creditLedgerGroupingKey]; newest groups (by latest date) first.
 List<({String id, List<TransactionEntity> rows})> groupedCreditLedger(
     List<TransactionEntity> flat) {
   final m = <String, List<TransactionEntity>>{};
   for (final t in flat) {
-    final g = t.creditGroupId;
+    final g = t.creditLedgerGroupingKey;
     if (g == null || g.isEmpty) continue;
     m.putIfAbsent(g, () => []).add(t);
   }
@@ -63,7 +63,7 @@ bool _installmentIsPaidThroughToday(TransactionEntity t) {
 double creditLedgerTotalPendingWeighted(List<TransactionEntity> flat) {
   var sum = 0.0;
   for (final t in flat) {
-    final g = t.creditGroupId;
+    final g = t.creditLedgerGroupingKey;
     if (g == null || g.isEmpty) continue;
     if (!_installmentIsPaidThroughToday(t)) {
       sum += _weighted(t);
@@ -128,14 +128,14 @@ class _CreditGroupTile extends StatelessWidget {
   const _CreditGroupTile({
     required this.cubit,
     required this.rows,
-    required this.creditGroupId,
+    required this.creditLedgerKey,
     required this.l10n,
     required this.onSwipeEdit,
   });
 
   final TransactionsCubit cubit;
   final List<TransactionEntity> rows;
-  final String creditGroupId;
+  final String creditLedgerKey;
   final AppLocalizations l10n;
   /// Opens the editor for the group's first installment and reloads the page list.
   final VoidCallback onSwipeEdit;
@@ -322,7 +322,7 @@ class _CreditGroupTile extends StatelessWidget {
     );
 
     return SwipeableListTile(
-      itemKey: creditGroupId,
+      itemKey: creditLedgerKey,
       title: titleSection(),
       trailing: trailingPrices,
       onEdit: onSwipeEdit,
@@ -330,7 +330,7 @@ class _CreditGroupTile extends StatelessWidget {
           confirmDeleteCreditGroupTransactionDialog(context, l10n),
       onDelete: () => cubit.delete(
         id: first.id,
-        creditGroupId: creditGroupId,
+        creditLedgerKey: creditLedgerKey,
       ),
     );
   }
@@ -460,7 +460,7 @@ class _CreditsPageState extends State<CreditsPage> {
                     return _CreditGroupTile(
                       cubit: cubit,
                       rows: g.rows,
-                      creditGroupId: g.id,
+                      creditLedgerKey: g.id,
                       l10n: l10n,
                       onSwipeEdit: () => _openEditor(g.rows.first, l10n),
                     );
