@@ -102,25 +102,11 @@ double creditLedgerDueInSelectedMonth(
   return sum;
 }
 
-String _creditsDueMonthDescription(
-  AppLocalizations l10n,
-  DateTime monthStart,
-  Locale locale,
-) {
-  final now = DateTime.now();
-  if (monthStart.year == now.year && monthStart.month == now.month) {
-    return l10n.creditsDueThisMonthLabel;
-  }
-  final monthYear = DateFormat.yMMMM(locale.toString()).format(monthStart);
-  return l10n.creditsDueInMonthLabel(monthYear);
-}
-
 class _CreditsPendingTotalsBar extends StatelessWidget {
   const _CreditsPendingTotalsBar({
     required this.l10n,
     required this.pendingTotal,
     required this.dueInSelectedMonthTotal,
-    required this.dueMonthDescription,
   });
 
   final AppLocalizations l10n;
@@ -128,7 +114,6 @@ class _CreditsPendingTotalsBar extends StatelessWidget {
   final double pendingTotal;
   /// Sum for installments due in the selected month ([creditLedgerDueInSelectedMonth]).
   final double dueInSelectedMonthTotal;
-  final String dueMonthDescription;
 
   @override
   Widget build(BuildContext context) {
@@ -203,7 +188,7 @@ class _CreditsPendingTotalsBar extends StatelessWidget {
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      dueMonthDescription,
+                      l10n.creditsDueThisMonthLabel,
                       textAlign: TextAlign.center,
                       style: theme.textTheme.labelMedium?.copyWith(
                         color: theme.colorScheme.onSurfaceVariant,
@@ -504,9 +489,7 @@ class _CreditsPageState extends State<CreditsPage> {
       builder: (context, visibleMonth, _) {
         final groups = groupedCreditLedger(_flat);
         final showPendingBar = !_loading && groups.isNotEmpty;
-        final locale = Localizations.localeOf(context);
         final dueInMonth = creditLedgerDueInSelectedMonth(_flat, visibleMonth);
-        final dueDesc = _creditsDueMonthDescription(l10n, visibleMonth, locale);
 
         return ShellScaffold(
           title: l10n.creditsTitle,
@@ -521,7 +504,6 @@ class _CreditsPageState extends State<CreditsPage> {
                   l10n: l10n,
                   pendingTotal: creditLedgerTotalPending(_flat),
                   dueInSelectedMonthTotal: dueInMonth,
-                  dueMonthDescription: dueDesc,
                 )
               : null,
           body: RefreshIndicator(
