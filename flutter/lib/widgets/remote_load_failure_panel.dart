@@ -103,36 +103,3 @@ class RemoteLoadFailurePanel extends StatelessWidget {
     );
   }
 }
-
-/// Alert dialog when a screen enters a load error state (shown once per transition).
-Future<void> showRemoteLoadFailureAlert(
-  BuildContext context,
-  AppLocalizations l10n,
-  RemoteLoadFailure failure,
-  VoidCallback onRetry,
-) {
-  return showDialog<void>(
-    context: context,
-    builder: (ctx) => AlertDialog(
-      icon: Icon(
-        failure.icon,
-        color: Theme.of(ctx).colorScheme.error,
-      ),
-      title: Text(failure.title(l10n)),
-      content: Text(failure.body(l10n)),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(ctx),
-          child: Text(l10n.dialogClose),
-        ),
-        FilledButton(
-          onPressed: () {
-            Navigator.pop(ctx);
-            onRetry();
-          },
-          child: Text(l10n.retry),
-        ),
-      ],
-    ),
-  );
-}
