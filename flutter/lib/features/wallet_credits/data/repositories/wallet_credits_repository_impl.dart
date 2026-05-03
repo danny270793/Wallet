@@ -1,4 +1,5 @@
 import '../../../../core/offline/offline_fetch.dart';
+import '../../../../core/offline/offline_served_bundle.dart';
 import '../../../../core/offline/wallet_offline_cache.dart';
 import '../../../../core/offline/wallet_offline_user_context.dart';
 import '../../domain/entities/wallet_credit_entity.dart';
@@ -31,7 +32,8 @@ class WalletCreditsRepositoryImpl implements WalletCreditsRepository {
       );
 
   @override
-  Future<WalletCreditEntity?> getCredit(String id) => fetchNullableWithOfflineCache(
+  Future<OfflineServedBundle<WalletCreditEntity?>> getCredit(String id) =>
+      fetchNullableWithOfflineCache(
         session: _offlineSession,
         cache: _offlineCache,
         cacheKey: WalletOfflineCacheKeys.walletCredit(id),
