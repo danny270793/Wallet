@@ -1460,6 +1460,12 @@ abstract class AppLocalizations {
   /// **'Check your network and try again. If you are online, the server may be unreachable.'**
   String get loadFailedNoConnectionBody;
 
+  /// No description provided for @cachedDataOfflineBanner.
+  ///
+  /// In en, this message translates to:
+  /// **'Showing saved data — no internet connection.'**
+  String get cachedDataOfflineBanner;
+
   /// No description provided for @loadFailedRequestFailedTitle.
   ///
   /// In en, this message translates to:
