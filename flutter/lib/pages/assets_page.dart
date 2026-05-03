@@ -32,19 +32,7 @@ class _AssetsView extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
 
-    return BlocListener<AssetsCubit, AssetsState>(
-      listenWhen: (prev, curr) =>
-          curr is AssetsError && prev is! AssetsError,
-      listener: (context, state) {
-        final s = state as AssetsError;
-        showRemoteLoadFailureAlert(
-          context,
-          l10n,
-          s.failure,
-          () => context.read<AssetsCubit>().load(showLoading: true),
-        );
-      },
-      child: BlocConsumer<AssetsCubit, AssetsState>(
+    return BlocConsumer<AssetsCubit, AssetsState>(
       listener: (context, state) {
         if (state is AssetsActionError) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -66,7 +54,6 @@ class _AssetsView extends StatelessWidget {
           body: _body(context, state, l10n),
         );
       },
-    ),
     );
   }
 
