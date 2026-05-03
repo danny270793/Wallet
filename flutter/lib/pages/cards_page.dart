@@ -173,13 +173,15 @@ class _CardTile extends StatelessWidget {
       _showCardBottomSheet(context, l10n, card: card);
     }
 
-    void openTransactions() {
-      context.push(
+    Future<void> openTransactions() async {
+      await context.push(
         Uri(
           path: '/transactions',
           queryParameters: {'cardId': card.id, 'cardName': card.name},
         ).toString(),
       );
+      if (!context.mounted) return;
+      await context.read<CardsCubit>().load(showLoading: false);
     }
 
     return SwipeableListTile(

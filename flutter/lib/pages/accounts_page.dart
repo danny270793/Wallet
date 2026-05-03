@@ -173,8 +173,8 @@ class _AccountTile extends StatelessWidget {
       );
     }
 
-    void openTransactions() {
-      context.push(
+    Future<void> openTransactions() async {
+      await context.push(
         Uri(
           path: '/transactions',
           queryParameters: {
@@ -183,6 +183,8 @@ class _AccountTile extends StatelessWidget {
           },
         ).toString(),
       );
+      if (!context.mounted) return;
+      await context.read<AccountsCubit>().load(showLoading: false);
     }
 
     return SwipeableListTile(
