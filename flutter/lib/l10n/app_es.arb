@@ -62,14 +62,7 @@
   "settingsOfflineCacheSubtitle": "Respuestas de la API guardadas en este dispositivo para uso sin conexión",
   "settingsCachePageTitle": "Caché sin conexión",
   "settingsCacheEmpty": "Aún no hay respuestas en caché.",
-  "settingsCacheBottomBarTotal": "Total: {size}",
-  "@settingsCacheBottomBarTotal": {
-    "placeholders": {
-      "size": {
-        "type": "String"
-      }
-    }
-  },
+  "settingsCacheBottomBarCaption": "Tamaño de archivos en caché",
   "settingsCacheRowSubtitle": "{dateTime} · {size}",
   "@settingsCacheRowSubtitle": {
     "placeholders": {
