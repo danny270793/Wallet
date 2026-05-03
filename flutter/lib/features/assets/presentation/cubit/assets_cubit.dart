@@ -1,5 +1,6 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/logger/app_logger.dart';
+import '../../../../core/remote_load_failure.dart';
 import '../../domain/entities/asset_entity.dart';
 import '../../domain/usecases/create_asset_usecase.dart';
 import '../../domain/usecases/delete_asset_usecase.dart';
@@ -33,7 +34,7 @@ class AssetsCubit extends Cubit<AssetsState> {
       emit(AssetsLoaded(assets));
     } catch (e, s) {
       AppLogger.error('failed to load assets', e, s);
-      emit(const AssetsError());
+      emit(AssetsError(failure: classifyRemoteLoadError(e)));
     }
   }
 
