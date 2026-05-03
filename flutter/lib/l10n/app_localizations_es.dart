@@ -208,6 +208,21 @@ class AppLocalizationsEs extends AppLocalizations {
   String get settingsCacheBottomBarCaption => 'Tamaño de archivos en caché';
 
   @override
+  String get settingsCacheSortTooltip => 'Ordenar';
+
+  @override
+  String get settingsCacheSortSheetTitle => 'Ordenar por';
+
+  @override
+  String get settingsCacheSortByDate => 'Fecha';
+
+  @override
+  String get settingsCacheSortBySize => 'Tamaño';
+
+  @override
+  String get settingsCacheSortByName => 'Nombre';
+
+  @override
   String settingsCacheKeyTxMonth(String year, String month) {
     return 'Transacciones · $year-$month';
   }
