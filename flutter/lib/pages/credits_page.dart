@@ -5,9 +5,11 @@ import 'package:wallet/l10n/app_localizations.dart';
 
 import '../core/credit_group_description.dart';
 import '../core/di/injection.dart';
+import '../core/remote_load_failure.dart';
 import '../features/transactions/domain/entities/transaction_entity.dart';
 import '../features/transactions/domain/usecases/list_transactions_having_credit_group_usecase.dart';
 import '../features/transactions/presentation/cubit/transactions_cubit.dart';
+import '../widgets/remote_load_failure_panel.dart';
 import '../widgets/shell_scaffold.dart';
 import '../widgets/wallet_bottom_bar_insets.dart';
 import '../widgets/swipeable_list_tile.dart';
@@ -444,17 +446,18 @@ class _CreditsPageState extends State<CreditsPage> {
     final theme = Theme.of(context);
 
     if (_error != null && !_loading) {
+      final failure = classifyRemoteLoadError(_error!);
       return ShellScaffold(
         title: l10n.creditsTitle,
         floatingActionButton: FloatingActionButton(
           onPressed: () => _openNewCreditPurchase(l10n),
           child: const Icon(Icons.add),
         ),
-        body: Center(
-          child: Padding(
-            padding: const EdgeInsets.all(24),
-            child: Text(l10n.unexpectedError, textAlign: TextAlign.center),
-          ),
+        body: RemoteLoadFailurePanel(
+          l10n: l10n,
+          failure: failure,
+          onRetry: _load,
+          listPadding: const EdgeInsets.fromLTRB(24, 24, 24, 24 + 88),
         ),
       );
     }
