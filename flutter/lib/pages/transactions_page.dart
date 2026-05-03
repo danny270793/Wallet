@@ -2099,6 +2099,20 @@ class _TransactionDialogState extends State<_TransactionDialog> {
   String? _descriptionSnapshotWhenSuggestionsDismissed;
 
   static const _descriptionSuggestDebounceMs = 400;
+  static const double _descriptionSuggestBelowGap = 4;
+  static const double _descriptionSuggestPanelMaxHeight = 280;
+
+  bool get _isDescriptionSuggestionUiActive {
+    if (widget.transaction != null) {
+      return false;
+    }
+    if (_dismissSuggestionsUntilDescriptionChange &&
+        _descriptionController.text ==
+            _descriptionSnapshotWhenSuggestionsDismissed) {
+      return false;
+    }
+    return _descriptionController.text.trim().isNotEmpty;
+  }
 
   @override
   void initState() {
@@ -2407,73 +2421,72 @@ class _TransactionDialogState extends State<_TransactionDialog> {
     });
   }
 
-  Widget _descriptionSuggestionSection(BuildContext context) {
-    if (widget.transaction != null) return const SizedBox.shrink();
-    if (_dismissSuggestionsUntilDescriptionChange &&
-        _descriptionController.text ==
-            _descriptionSnapshotWhenSuggestionsDismissed) {
-      return const SizedBox.shrink();
-    }
-    final q = _descriptionController.text.trim();
-    if (q.isEmpty) return const SizedBox.shrink();
-
+  Widget _descriptionSuggestionPanel(BuildContext context) {
     final theme = Theme.of(context);
     final l10n = widget.l10n;
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        if (_descriptionSuggestLoading && _descriptionSuggestionMatches.isEmpty)
-          const Padding(
-            padding: EdgeInsets.symmetric(vertical: 12),
-            child: Center(
-              child: SizedBox(
-                width: 24,
-                height: 24,
-                child: CircularProgressIndicator(strokeWidth: 2),
-              ),
+    late final Widget panelChild;
+    if (_descriptionSuggestLoading && _descriptionSuggestionMatches.isEmpty) {
+      panelChild = const Center(
+        child: SizedBox(
+          width: 24,
+          height: 24,
+          child: CircularProgressIndicator(strokeWidth: 2),
+        ),
+      );
+    } else if (!_descriptionSuggestLoading &&
+        _descriptionSuggestionMatches.isEmpty) {
+      panelChild = Center(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12),
+          child: Text(
+            l10n.transactionsSearchNoResults,
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
             ),
-          )
-        else if (!_descriptionSuggestLoading &&
-            _descriptionSuggestionMatches.isEmpty)
-          Padding(
-            padding: const EdgeInsets.only(top: 4, bottom: 4),
-            child: Text(
-              l10n.transactionsSearchNoResults,
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
-              ),
-            ),
-          )
-        else
-          SizedBox(
-            height: 280,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                if (_descriptionSuggestLoading)
-                  const LinearProgressIndicator(minHeight: 2),
-                Expanded(
-                  child: ListView.builder(
-                    padding: EdgeInsets.zero,
-                    itemCount: _descriptionSuggestionMatches.length,
-                    itemBuilder: (context, i) {
-                      final t = _descriptionSuggestionMatches[i];
-                      return GroupedTxnTransactionTile(
-                        cubit: widget.cubit,
-                        transaction: t,
-                        l10n: l10n,
-                        onTap: _loadingLookups
-                            ? null
-                            : () => _applyTransactionSuggestion(t),
-                      );
-                    },
-                  ),
-                ),
-              ],
+            textAlign: TextAlign.center,
+          ),
+        ),
+      );
+    } else {
+      panelChild = Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          if (_descriptionSuggestLoading)
+            const LinearProgressIndicator(minHeight: 2),
+          Expanded(
+            child: ListView.builder(
+              primary: false,
+              physics: const ClampingScrollPhysics(),
+              padding: EdgeInsets.zero,
+              itemCount: _descriptionSuggestionMatches.length,
+              itemBuilder: (context, i) {
+                final t = _descriptionSuggestionMatches[i];
+                return GroupedTxnTransactionTile(
+                  cubit: widget.cubit,
+                  transaction: t,
+                  l10n: l10n,
+                  onTap: _loadingLookups
+                      ? null
+                      : () => _applyTransactionSuggestion(t),
+                );
+              },
             ),
           ),
-      ],
+        ],
+      );
+    }
+
+    return Material(
+      elevation: 6,
+      borderRadius: BorderRadius.circular(8),
+      clipBehavior: Clip.antiAlias,
+      color: theme.colorScheme.surface,
+      child: SizedBox(
+        height: _descriptionSuggestPanelMaxHeight,
+        width: double.infinity,
+        child: panelChild,
+      ),
     );
   }
 
@@ -2903,15 +2916,24 @@ class _TransactionDialogState extends State<_TransactionDialog> {
                   ],
                 ),
                 const SizedBox(height: 16),
-                TextFormField(
-                  controller: _descriptionController,
-                  decoration: InputDecoration(
-                    labelText: l10n.accountDescription,
-                  ),
-                  maxLines: 1,
-                  textInputAction: TextInputAction.next,
+                Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    TextFormField(
+                      controller: _descriptionController,
+                      decoration: InputDecoration(
+                        labelText: l10n.accountDescription,
+                      ),
+                      maxLines: 1,
+                      textInputAction: TextInputAction.next,
+                    ),
+                    if (_isDescriptionSuggestionUiActive) ...[
+                      SizedBox(height: _descriptionSuggestBelowGap),
+                      _descriptionSuggestionPanel(context),
+                    ],
+                  ],
                 ),
-                _descriptionSuggestionSection(context),
                 const SizedBox(height: 16),
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
