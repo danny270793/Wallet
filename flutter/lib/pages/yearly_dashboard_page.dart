@@ -72,20 +72,7 @@ class _YearlyDashboardViewState extends State<_YearlyDashboardView> {
       valueListenable: yearNotifier,
       builder: (context, visibleYear, _) {
         final y = visibleYear.year;
-        return BlocConsumer<YearlyDashboardCubit, YearlyDashboardState>(
-          listenWhen: (prev, curr) =>
-              curr is YearlyDashboardError && prev is! YearlyDashboardError,
-          listener: (context, state) {
-            final s = state as YearlyDashboardError;
-            showRemoteLoadFailureAlert(
-              context,
-              l10n,
-              s.failure,
-              () => context
-                  .read<YearlyDashboardCubit>()
-                  .loadYear(visibleYear),
-            );
-          },
+        return BlocBuilder<YearlyDashboardCubit, YearlyDashboardState>(
           builder: (context, state) {
             return ShellScaffold(
               title: l10n.yearlyDashboard,
