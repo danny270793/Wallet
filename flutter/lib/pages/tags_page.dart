@@ -6,6 +6,7 @@ import '../core/di/injection.dart';
 import '../features/tags/domain/entities/tag_entity.dart';
 import '../features/tags/presentation/cubit/tags_cubit.dart';
 import '../features/tags/presentation/cubit/tags_state.dart';
+import '../widgets/remote_load_failure_panel.dart';
 import '../widgets/shell_scaffold.dart';
 import '../widgets/swipeable_list_tile.dart';
 import '../widgets/tag_editor_sheet.dart';
@@ -42,7 +43,18 @@ class _TagsView extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
 
-    return BlocConsumer<TagsCubit, TagsState>(
+    return BlocListener<TagsCubit, TagsState>(
+      listenWhen: (prev, curr) => curr is TagsError && prev is! TagsError,
+      listener: (context, state) {
+        final s = state as TagsError;
+        showRemoteLoadFailureAlert(
+          context,
+          l10n,
+          s.failure,
+          () => context.read<TagsCubit>().load(showLoading: true),
+        );
+      },
+      child: BlocConsumer<TagsCubit, TagsState>(
       listener: (context, state) {
         if (state is TagsActionError) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -60,6 +72,7 @@ class _TagsView extends StatelessWidget {
           body: _body(context, state, l10n),
         );
       },
+    ),
     );
   }
 
@@ -86,29 +99,10 @@ class _TagsView extends StatelessWidget {
     }
 
     if (state is TagsError) {
-      return RefreshIndicator(
-        onRefresh: pullRefresh,
-        child: ListView(
-          physics: const AlwaysScrollableScrollPhysics(),
-          children: [
-            SizedBox(
-              height: MediaQuery.sizeOf(context).height * 0.35,
-              child: Center(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(l10n.unexpectedError),
-                    const SizedBox(height: 12),
-                    ElevatedButton(
-                      onPressed: reloadWithOverlay,
-                      child: const Text('Retry'),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ],
-        ),
+      return RemoteLoadFailurePanel(
+        l10n: l10n,
+        failure: state.failure,
+        onRetry: reloadWithOverlay,
       );
     }
 
