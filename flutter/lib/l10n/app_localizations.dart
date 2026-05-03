@@ -338,6 +338,12 @@ abstract class AppLocalizations {
   /// **'Change password'**
   String get settingsChangePassword;
 
+  /// No description provided for @settingsChangePasswordSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Updates the password you use to sign in to Wallet.'**
+  String get settingsChangePasswordSubtitle;
+
   /// No description provided for @settingsChangePasswordDialogTitle.
   ///
   /// In en, this message translates to:
