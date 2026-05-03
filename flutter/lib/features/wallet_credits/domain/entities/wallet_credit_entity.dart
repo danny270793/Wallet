@@ -41,6 +41,18 @@ class WalletCreditEntity extends Equatable {
     );
   }
 
+  Map<String, dynamic> toJson() => {
+    'id': id,
+    'userId': userId,
+    'transactedAt': transactedAt.toUtc().toIso8601String(),
+    'graceMonths': graceMonths,
+    'termMonths': termMonths,
+    'description': description,
+    'createdAt': createdAt.toUtc().toIso8601String(),
+    'updatedAt': updatedAt.toUtc().toIso8601String(),
+    'deletedAt': deletedAt?.toUtc().toIso8601String(),
+  };
+
   @override
   List<Object?> get props =>
       [id, userId, transactedAt, graceMonths, termMonths, description, createdAt, updatedAt, deletedAt];
