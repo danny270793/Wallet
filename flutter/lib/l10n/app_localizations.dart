@@ -470,11 +470,11 @@ abstract class AppLocalizations {
   /// **'No cached responses yet.'**
   String get settingsCacheEmpty;
 
-  /// No description provided for @settingsCacheBottomBarTotal.
+  /// No description provided for @settingsCacheBottomBarCaption.
   ///
   /// In en, this message translates to:
-  /// **'Total: {size}'**
-  String settingsCacheBottomBarTotal(String size);
+  /// **'Size of cached files'**
+  String get settingsCacheBottomBarCaption;
 
   /// No description provided for @settingsCacheRowSubtitle.
   ///
