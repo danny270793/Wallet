@@ -21,9 +21,10 @@ class AssetsLoading extends AssetsState {
 
 class AssetsLoaded extends AssetsState {
   final List<AssetEntity> assets;
-  const AssetsLoaded(this.assets);
+  final bool servedFromOfflineCache;
+  const AssetsLoaded(this.assets, {this.servedFromOfflineCache = false});
   @override
-  List<Object?> get props => [assets];
+  List<Object?> get props => [assets, servedFromOfflineCache];
 }
 
 class AssetsError extends AssetsState {
@@ -36,7 +37,8 @@ class AssetsError extends AssetsState {
 /// Create failed; list is unchanged so the UI can keep showing prior data.
 class AssetsActionError extends AssetsState {
   final List<AssetEntity> assets;
-  const AssetsActionError(this.assets);
+  final bool servedFromOfflineCache;
+  const AssetsActionError(this.assets, {this.servedFromOfflineCache = false});
   @override
-  List<Object?> get props => [assets];
+  List<Object?> get props => [assets, servedFromOfflineCache];
 }
