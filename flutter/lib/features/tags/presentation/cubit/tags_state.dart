@@ -1,4 +1,6 @@
 import 'package:equatable/equatable.dart';
+
+import '../../../../core/remote_load_failure.dart';
 import '../../domain/entities/tag_entity.dart';
 
 sealed class TagsState extends Equatable {
@@ -25,10 +27,10 @@ class TagsLoaded extends TagsState {
 }
 
 class TagsError extends TagsState {
-  final String? message;
-  const TagsError({this.message});
+  final RemoteLoadFailure failure;
+  const TagsError({this.failure = RemoteLoadFailure.requestFailed});
   @override
-  List<Object?> get props => [message];
+  List<Object?> get props => [failure];
 }
 
 class TagsActionError extends TagsState {
