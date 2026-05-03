@@ -277,6 +277,7 @@
   "creditsNav": "Créditos",
   "creditsTitle": "Créditos",
   "creditsEmpty": "Aún no tienes cuotas diferidas.",
+  "creditsEmptyForSelectedMonth": "No hay cuotas debidas en este mes.",
   "creditsUntitledGroup": "Compra diferida",
   "creditsInstallmentsWithPending": "{count} cuotas - {pending} pendientes",
   "@creditsInstallmentsWithPending": {
