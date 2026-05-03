@@ -2,6 +2,8 @@ import '../entities/transaction_entity.dart';
 
 abstract class TransactionsRepository {
   Future<List<TransactionEntity>> getTransactionsForMonth(DateTime monthStartLocal);
+  /// All non-deleted transactions with [transactedAt] before Jan 1 of the year after
+  /// [yearStartLocal] (i.e. full history through the end of that calendar year), newest first.
   Future<List<TransactionEntity>> getTransactionsForYear(DateTime yearStartLocal);
   Future<List<TransactionEntity>> searchTransactionsByDescription(String query, {int limit = 200});
   Future<List<TransactionEntity>> getTransactionsByCreditGroupId(String creditId);
