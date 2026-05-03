@@ -21,9 +21,10 @@ class CardsLoading extends CardsState {
 
 class CardsLoaded extends CardsState {
   final List<CardEntity> cards;
-  const CardsLoaded(this.cards);
+  final bool servedFromOfflineCache;
+  const CardsLoaded(this.cards, {this.servedFromOfflineCache = false});
   @override
-  List<Object?> get props => [cards];
+  List<Object?> get props => [cards, servedFromOfflineCache];
 }
 
 class CardsError extends CardsState {
@@ -36,7 +37,8 @@ class CardsError extends CardsState {
 class CardsActionError extends CardsState {
   final List<CardEntity> cards;
   final String? message;
-  const CardsActionError(this.cards, {this.message});
+  final bool servedFromOfflineCache;
+  const CardsActionError(this.cards, {this.message, this.servedFromOfflineCache = false});
   @override
-  List<Object?> get props => [cards, message];
+  List<Object?> get props => [cards, message, servedFromOfflineCache];
 }
