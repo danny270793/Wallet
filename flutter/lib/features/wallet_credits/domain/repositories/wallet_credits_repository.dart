@@ -1,3 +1,4 @@
+import '../../../../core/offline/offline_served_bundle.dart';
 import '../entities/wallet_credit_entity.dart';
 
 abstract class WalletCreditsRepository {
@@ -8,7 +9,7 @@ abstract class WalletCreditsRepository {
     String? description,
   });
 
-  Future<WalletCreditEntity?> getCredit(String id);
+  Future<OfflineServedBundle<WalletCreditEntity?>> getCredit(String id);
 
   Future<WalletCreditEntity> updateCreditGracing({
     required String id,
