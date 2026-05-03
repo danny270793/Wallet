@@ -194,6 +194,8 @@
       }
     }
   },
+  "creditsPendingTotalsLabel": "Total pendiente",
+  "creditEditGraceNotApplicable": "El periodo de gracia original no está guardado.",
   "transactionsSearchTooltip": "Buscar transacciones",
   "transactionsSearchHint": "Buscar por descripción",
   "transactionsSearchTypeQuery": "Escribe texto para buscar en todas tus transacciones",

@@ -59,6 +59,71 @@ bool _installmentIsPaidThroughToday(TransactionEntity t) {
   return !d.isAfter(today);
 }
 
+/// Sum of weighted amounts for installments not yet reached by local calendar date.
+double creditLedgerTotalPendingWeighted(List<TransactionEntity> flat) {
+  var sum = 0.0;
+  for (final t in flat) {
+    final g = t.creditGroupId;
+    if (g == null || g.isEmpty) continue;
+    if (!_installmentIsPaidThroughToday(t)) {
+      sum += _weighted(t);
+    }
+  }
+  return sum;
+}
+
+class _CreditsPendingTotalsBar extends StatelessWidget {
+  const _CreditsPendingTotalsBar({
+    required this.l10n,
+    required this.pendingWeighted,
+  });
+
+  final AppLocalizations l10n;
+  final double pendingWeighted;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final amountStr =
+        l10n.transactionAmountValue(pendingWeighted.toStringAsFixed(2));
+    final hasPending = pendingWeighted.abs() > 0.005;
+    final amountColor = hasPending
+        ? theme.colorScheme.error
+        : theme.colorScheme.onSurfaceVariant;
+
+    return Material(
+      color: theme.colorScheme.surfaceContainerHighest,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              amountStr,
+              textAlign: TextAlign.center,
+              style: theme.textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.w700,
+                height: 1.2,
+                fontFeatures: const [FontFeature.tabularFigures()],
+                color: amountColor,
+              ),
+            ),
+            const SizedBox(height: 2),
+            Text(
+              l10n.creditsPendingTotalsLabel,
+              textAlign: TextAlign.center,
+              style: theme.textTheme.labelMedium?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 class _CreditGroupTile extends StatelessWidget {
   const _CreditGroupTile({
     required this.cubit,
@@ -226,19 +291,20 @@ class _CreditGroupTile extends StatelessWidget {
               height: 1.2,
             ),
           ),
-          if (paidWeighted.abs() > 0.005) const SizedBox(height: 4),
+          const SizedBox(height: 4),
         ],
-        if (paidWeighted.abs() > 0.005)
-          Text(
-            l10n.transactionAmountValue(
-              paidWeighted.abs().toStringAsFixed(2),
-            ),
-            style: theme.textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.w700,
-              color: paidGreen,
-              height: 1.2,
-            ),
+        Text(
+          l10n.transactionAmountValue(
+            paidWeighted.abs() > 0.005
+                ? paidWeighted.abs().toStringAsFixed(2)
+                : '0.00',
           ),
+          style: theme.textTheme.titleMedium?.copyWith(
+            fontWeight: FontWeight.w700,
+            color: paidGreen,
+            height: 1.2,
+          ),
+        ),
         if (groupPartialPct) ...[
           const SizedBox(height: 4),
           Text(
@@ -255,7 +321,7 @@ class _CreditGroupTile extends StatelessWidget {
       ],
     );
 
-    Widget tile = SwipeableListTile(
+    return SwipeableListTile(
       itemKey: creditGroupId,
       title: titleSection(),
       trailing: trailingPrices,
@@ -267,13 +333,6 @@ class _CreditGroupTile extends StatelessWidget {
         creditGroupId: creditGroupId,
       ),
     );
-
-    final allIgnored = rows.every((t) => t.ignore);
-    if (allIgnored) {
-      tile = Opacity(opacity: 0.52, child: tile);
-      tile = Tooltip(message: l10n.transactionIgnoredBadge, child: tile);
-    }
-    return tile;
   }
 }
 
@@ -348,9 +407,16 @@ class _CreditsPageState extends State<CreditsPage> {
     }
 
     final groups = groupedCreditLedger(_flat);
+    final showPendingBar = !_loading && groups.isNotEmpty;
 
     return ShellScaffold(
       title: l10n.creditsTitle,
+      bottomNavigationBar: showPendingBar
+          ? _CreditsPendingTotalsBar(
+              l10n: l10n,
+              pendingWeighted: creditLedgerTotalPendingWeighted(_flat),
+            )
+          : null,
       body: RefreshIndicator(
         onRefresh: _load,
         child: _loading

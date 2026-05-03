@@ -431,6 +431,13 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get creditsPendingTotalsLabel => 'Pending total';
+
+  @override
+  String get creditEditGraceNotApplicable =>
+      'Original grace period is not stored.';
+
+  @override
   String get transactionsSearchTooltip => 'Search transactions';
 
   @override

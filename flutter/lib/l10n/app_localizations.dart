@@ -866,6 +866,18 @@ abstract class AppLocalizations {
   /// **'{count} installments - {pending} pending'**
   String creditsInstallmentsWithPending(int count, int pending);
 
+  /// No description provided for @creditsPendingTotalsLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Pending total'**
+  String get creditsPendingTotalsLabel;
+
+  /// No description provided for @creditEditGraceNotApplicable.
+  ///
+  /// In en, this message translates to:
+  /// **'Original grace period is not stored.'**
+  String get creditEditGraceNotApplicable;
+
   /// No description provided for @transactionsSearchTooltip.
   ///
   /// In en, this message translates to:
