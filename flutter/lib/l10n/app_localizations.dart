@@ -476,6 +476,24 @@ abstract class AppLocalizations {
   /// **'Authenticate to continue.'**
   String get settingsBiometricResumeReason;
 
+  /// No description provided for @biometricLockTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'App locked'**
+  String get biometricLockTitle;
+
+  /// No description provided for @biometricLockBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Use Face ID or fingerprint to continue.'**
+  String get biometricLockBody;
+
+  /// No description provided for @biometricLockUnlockButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlock'**
+  String get biometricLockUnlockButton;
+
   /// No description provided for @signOut.
   ///
   /// In en, this message translates to:
