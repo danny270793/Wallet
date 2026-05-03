@@ -324,6 +324,7 @@
   "transactionsTotalsNotWeightedExcludingIgnoredHint": "Sin ponderar excluyendo ignoradas",
   "loadFailedNoConnectionTitle": "Sin conexión a internet",
   "loadFailedNoConnectionBody": "Comprueba tu red e inténtalo de nuevo. Si tienes conexión, puede que el servidor no esté accesible.",
+  "cachedDataOfflineBanner": "Mostrando datos guardados — sin conexión a internet.",
   "loadFailedRequestFailedTitle": "No se pudieron cargar los datos",
   "loadFailedRequestFailedBody": "La solicitud falló. Desliza hacia abajo para actualizar o inténtalo de nuevo en un momento.",
   "retry": "Reintentar",
