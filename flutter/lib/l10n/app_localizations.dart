@@ -1139,7 +1139,7 @@ abstract class AppLocalizations {
   /// No description provided for @creditsEmptyForSelectedMonth.
   ///
   /// In en, this message translates to:
-  /// **'No pending installments due in this month.'**
+  /// **'No credit installments in this month.'**
   String get creditsEmptyForSelectedMonth;
 
   /// No description provided for @creditsUntitledGroup.
