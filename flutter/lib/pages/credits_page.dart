@@ -119,6 +119,22 @@ List<TransactionEntity> creditLedgerInstallmentsInSelectedMonth(
   return out;
 }
 
+/// Credit groups with installments due in [monthStart]'s month (see
+/// [creditLedgerInstallmentsInSelectedMonth]), keeping **all** of those rows
+/// per group, but only including groups that have at least one **unpaid**
+/// installment in that month.
+List<({String id, List<TransactionEntity> rows})>
+    groupedCreditLedgerWithPendingInSelectedMonth(
+  List<TransactionEntity> flat,
+  DateTime monthStart,
+) {
+  final flatMonth = creditLedgerInstallmentsInSelectedMonth(flat, monthStart);
+  final all = groupedCreditLedger(flatMonth);
+  return all
+      .where((g) => g.rows.any((t) => !_installmentIsPaidThroughToday(t)))
+      .toList();
+}
+
 /// Sum of [TransactionEntity.value] for credit installments still unpaid (local due after today)
 /// whose **due date** is on or after the first day of [monthStart]'s month.
 ///
@@ -567,9 +583,8 @@ class _CreditsPageState extends State<CreditsPage> {
       valueListenable: _dueMonthNotifier,
       builder: (context, visibleMonth, _) {
         final hasAnyCredits = groupedCreditLedger(_flat).isNotEmpty;
-        final flatMonth =
-            creditLedgerInstallmentsInSelectedMonth(_flat, visibleMonth);
-        final groups = groupedCreditLedger(flatMonth);
+        final groups =
+            groupedCreditLedgerWithPendingInSelectedMonth(_flat, visibleMonth);
         final showPendingBar = !_loading && hasAnyCredits;
         final dueInMonth = creditLedgerDueInSelectedMonth(_flat, visibleMonth);
         final pendingTotal =
