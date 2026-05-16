@@ -858,7 +858,10 @@ class _TransactionsViewState extends State<_TransactionsView> {
                         cubit: searchCubit,
                         l10n: l10n,
                         search: getIt<SearchTransactionsByDescriptionUsecase>(),
-                        localTransactions: filtered,
+                        accountIdFilter: widget.accountIdFilter,
+                        cardIdFilter: widget.cardIdFilter,
+                        categoryIdFilter: widget.categoryIdFilter,
+                        tagIdFilter: widget.tagIdFilter,
                       ),
                     );
                     if (!context.mounted || tx == null) return;
@@ -927,30 +930,14 @@ class _TransactionsViewState extends State<_TransactionsView> {
     );
   }
 
-  List<TransactionEntity> _filteredTransactions(TransactionsState state) {
-    final rawList = switch (state) {
-      TransactionsLoaded(:final transactions) => transactions,
-      TransactionsActionError(:final transactions) => transactions,
-      _ => <TransactionEntity>[],
-    };
-    var list = rawList;
-    if (widget.accountIdFilter != null && widget.accountIdFilter!.isNotEmpty) {
-      list = list.where((t) => t.accountId == widget.accountIdFilter).toList();
-    }
-    if (widget.cardIdFilter != null && widget.cardIdFilter!.isNotEmpty) {
-      list = list.where((t) => t.cardId == widget.cardIdFilter).toList();
-    }
-    if (widget.categoryIdFilter != null &&
-        widget.categoryIdFilter!.isNotEmpty) {
-      list = list
-          .where((t) => t.categoryId == widget.categoryIdFilter)
-          .toList();
-    }
-    if (widget.tagIdFilter != null && widget.tagIdFilter!.isNotEmpty) {
-      list = list.where((t) => t.tagId == widget.tagIdFilter).toList();
-    }
-    return list;
-  }
+  List<TransactionEntity> _filteredTransactions(TransactionsState state) =>
+      transactionsFilteredForSearchScope(
+        state,
+        accountIdFilter: widget.accountIdFilter,
+        cardIdFilter: widget.cardIdFilter,
+        categoryIdFilter: widget.categoryIdFilter,
+        tagIdFilter: widget.tagIdFilter,
+      );
 
   Widget _body(
     BuildContext context,
@@ -1146,20 +1133,54 @@ void showAccountTransferEditorBottomSheet(
   );
 }
 
+/// Month-scoped list used by the transactions page and in-search local matching.
+List<TransactionEntity> transactionsFilteredForSearchScope(
+  TransactionsState state, {
+  String? accountIdFilter,
+  String? cardIdFilter,
+  String? categoryIdFilter,
+  String? tagIdFilter,
+}) {
+  final rawList = switch (state) {
+    TransactionsLoaded(:final transactions) => transactions,
+    TransactionsActionError(:final transactions) => transactions,
+    _ => <TransactionEntity>[],
+  };
+  var list = rawList;
+  if (accountIdFilter != null && accountIdFilter.isNotEmpty) {
+    list = list.where((t) => t.accountId == accountIdFilter).toList();
+  }
+  if (cardIdFilter != null && cardIdFilter.isNotEmpty) {
+    list = list.where((t) => t.cardId == cardIdFilter).toList();
+  }
+  if (categoryIdFilter != null && categoryIdFilter.isNotEmpty) {
+    list = list.where((t) => t.categoryId == categoryIdFilter).toList();
+  }
+  if (tagIdFilter != null && tagIdFilter.isNotEmpty) {
+    list = list.where((t) => t.tagId == tagIdFilter).toList();
+  }
+  return list;
+}
+
 class _TransactionSearchDelegate extends SearchDelegate<TransactionEntity?> {
   _TransactionSearchDelegate({
     required this.cubit,
     required this.l10n,
     required this.search,
-    required this.localTransactions,
+    this.accountIdFilter,
+    this.cardIdFilter,
+    this.categoryIdFilter,
+    this.tagIdFilter,
   });
 
   final TransactionsCubit cubit;
   final AppLocalizations l10n;
   final SearchTransactionsByDescriptionUsecase search;
 
-  /// Already-loaded list for the visible month (and scoped filters), for instant local search.
-  final List<TransactionEntity> localTransactions;
+  final String? accountIdFilter;
+  final String? cardIdFilter;
+  final String? categoryIdFilter;
+  final String? tagIdFilter;
 
   @override
   String get searchFieldLabel => l10n.transactionsSearchHint;
@@ -1197,9 +1218,12 @@ class _TransactionSearchDelegate extends SearchDelegate<TransactionEntity?> {
       cubit: cubit,
       l10n: l10n,
       query: query,
-      localTransactions: localTransactions,
       search: search,
       onSelect: (t) => close(context, t),
+      accountIdFilter: accountIdFilter,
+      cardIdFilter: cardIdFilter,
+      categoryIdFilter: categoryIdFilter,
+      tagIdFilter: tagIdFilter,
     );
   }
 }
@@ -1236,17 +1260,24 @@ class _TransactionSearchBody extends StatefulWidget {
     required this.cubit,
     required this.l10n,
     required this.query,
-    required this.localTransactions,
     required this.search,
     required this.onSelect,
+    this.accountIdFilter,
+    this.cardIdFilter,
+    this.categoryIdFilter,
+    this.tagIdFilter,
   });
 
   final TransactionsCubit cubit;
   final AppLocalizations l10n;
   final String query;
-  final List<TransactionEntity> localTransactions;
   final SearchTransactionsByDescriptionUsecase search;
   final void Function(TransactionEntity t) onSelect;
+
+  final String? accountIdFilter;
+  final String? cardIdFilter;
+  final String? categoryIdFilter;
+  final String? tagIdFilter;
 
   @override
   State<_TransactionSearchBody> createState() => _TransactionSearchBodyState();
@@ -1322,92 +1353,120 @@ class _TransactionSearchBodyState extends State<_TransactionSearchBody> {
       );
     }
 
-    final local = _localTransactionsMatchingDescription(
-      widget.localTransactions,
-      q,
-    );
-
-    if (_remoteFuture == null) {
-      if (local.isEmpty) {
-        return const Center(child: CircularProgressIndicator());
-      }
-      return _transactionSearchResultsList(
-        context,
-        cubit: widget.cubit,
-        l10n: widget.l10n,
-        list: local,
-        onSelect: widget.onSelect,
-        top: null,
-      );
-    }
-
-    return FutureBuilder<List<TransactionEntity>>(
-      key: ValueKey(_remoteForQuery),
-      future: _remoteFuture,
-      builder: (context, snapshot) {
-        final forQuery = widget.query.trim();
-        final staleRemote =
-            _remoteForQuery != null && _remoteForQuery != forQuery;
-
-        if (snapshot.connectionState == ConnectionState.waiting &&
-            !staleRemote) {
-          if (local.isEmpty) {
-            return const Center(child: CircularProgressIndicator());
-          }
-          return _transactionSearchResultsList(
-            context,
-            cubit: widget.cubit,
-            l10n: widget.l10n,
-            list: local,
-            onSelect: widget.onSelect,
-            top: const LinearProgressIndicator(minHeight: 2),
+    return BlocListener<TransactionsCubit, TransactionsState>(
+      listenWhen: (previous, current) =>
+          current is TransactionsLoaded || current is TransactionsActionError,
+      listener: (context, state) {
+        final trimmed = widget.query.trim();
+        if (trimmed.isEmpty) return;
+        _debounce?.cancel();
+        if (!mounted) return;
+        setState(() {
+          _remoteFuture = widget.search(trimmed);
+          _remoteForQuery = trimmed;
+        });
+      },
+      child: BlocBuilder<TransactionsCubit, TransactionsState>(
+        builder: (context, state) {
+          final local = _localTransactionsMatchingDescription(
+            transactionsFilteredForSearchScope(
+              state,
+              accountIdFilter: widget.accountIdFilter,
+              cardIdFilter: widget.cardIdFilter,
+              categoryIdFilter: widget.categoryIdFilter,
+              tagIdFilter: widget.tagIdFilter,
+            ),
+            q,
           );
-        }
 
-        if (snapshot.hasError && !staleRemote) {
-          if (local.isNotEmpty) {
+          if (_remoteFuture == null) {
+            if (local.isEmpty) {
+              return const Center(child: CircularProgressIndicator());
+            }
             return _transactionSearchResultsList(
               context,
               cubit: widget.cubit,
               l10n: widget.l10n,
               list: local,
               onSelect: widget.onSelect,
-              top: Padding(
-                padding: const EdgeInsets.all(12),
-                child: Text(
-                  widget.l10n.unexpectedError,
-                  style: TextStyle(color: Theme.of(context).colorScheme.error),
-                ),
-              ),
+              top: null,
             );
           }
-          return Center(child: Text(widget.l10n.unexpectedError));
-        }
 
-        if (staleRemote || !snapshot.hasData) {
-          return _transactionSearchResultsList(
-            context,
-            cubit: widget.cubit,
-            l10n: widget.l10n,
-            list: local,
-            onSelect: widget.onSelect,
-            top: null,
+          return FutureBuilder<List<TransactionEntity>>(
+            key: ValueKey(_remoteForQuery),
+            future: _remoteFuture,
+            builder: (context, snapshot) {
+              final forQuery = widget.query.trim();
+              final staleRemote =
+                  _remoteForQuery != null && _remoteForQuery != forQuery;
+
+              if (snapshot.connectionState == ConnectionState.waiting &&
+                  !staleRemote) {
+                if (local.isEmpty) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+                return _transactionSearchResultsList(
+                  context,
+                  cubit: widget.cubit,
+                  l10n: widget.l10n,
+                  list: local,
+                  onSelect: widget.onSelect,
+                  top: const LinearProgressIndicator(minHeight: 2),
+                );
+              }
+
+              if (snapshot.hasError && !staleRemote) {
+                if (local.isNotEmpty) {
+                  return _transactionSearchResultsList(
+                    context,
+                    cubit: widget.cubit,
+                    l10n: widget.l10n,
+                    list: local,
+                    onSelect: widget.onSelect,
+                    top: Padding(
+                      padding: const EdgeInsets.all(12),
+                      child: Text(
+                        widget.l10n.unexpectedError,
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.error,
+                        ),
+                      ),
+                    ),
+                  );
+                }
+                return Center(child: Text(widget.l10n.unexpectedError));
+              }
+
+              if (staleRemote || !snapshot.hasData) {
+                return _transactionSearchResultsList(
+                  context,
+                  cubit: widget.cubit,
+                  l10n: widget.l10n,
+                  list: local,
+                  onSelect: widget.onSelect,
+                  top: null,
+                );
+              }
+
+              final list = snapshot.data!;
+              if (list.isEmpty) {
+                return Center(
+                  child: Text(widget.l10n.transactionsSearchNoResults),
+                );
+              }
+              return _transactionSearchResultsList(
+                context,
+                cubit: widget.cubit,
+                l10n: widget.l10n,
+                list: list,
+                onSelect: widget.onSelect,
+                top: null,
+              );
+            },
           );
-        }
-
-        final list = snapshot.data!;
-        if (list.isEmpty) {
-          return Center(child: Text(widget.l10n.transactionsSearchNoResults));
-        }
-        return _transactionSearchResultsList(
-          context,
-          cubit: widget.cubit,
-          l10n: widget.l10n,
-          list: list,
-          onSelect: widget.onSelect,
-          top: null,
-        );
-      },
+        },
+      ),
     );
   }
 }
