@@ -49,21 +49,21 @@ int creditLedgerTotalInstallmentCountForGroup(
   return n;
 }
 
-/// Non-ignored quotes for [creditLedgerKey] whose due date is strictly before the
-/// first day of the device's current local month (due in a calendar month older than now).
-int creditLedgerQuotesDueBeforeCurrentMonthCount(
+/// Transactions for [creditLedgerKey] whose local due date is **strictly after** the
+/// selected calendar month [monthStart] (on or after the first day of the following month).
+int creditLedgerTransactionCountAfterSelectedMonth(
   List<TransactionEntity> flat,
   String creditLedgerKey,
+  DateTime monthStart,
 ) {
-  final now = DateTime.now();
-  final boundary = DateTime(now.year, now.month, 1);
+  final firstDayAfterSelectedMonth =
+      DateTime(monthStart.year, monthStart.month + 1, 1);
   var n = 0;
   for (final t in flat) {
     if (t.creditLedgerGroupingKey != creditLedgerKey) continue;
-    if (t.ignore) continue;
     final local = t.transactedAt.toLocal();
     final dueDay = DateTime(local.year, local.month, local.day);
-    if (!dueDay.isBefore(boundary)) continue;
+    if (dueDay.isBefore(firstDayAfterSelectedMonth)) continue;
     n++;
   }
   return n;
@@ -221,7 +221,7 @@ class _CreditGroupTile extends StatelessWidget {
     required this.groupLeadRow,
     required this.creditLedgerKey,
     required this.totalInstallmentCount,
-    required this.pendingQuotesBeforeCurrentMonth,
+    required this.pendingCountAfterSelectedMonth,
     required this.totalCreditValue,
     required this.l10n,
     required this.onSwipeEdit,
@@ -237,8 +237,8 @@ class _CreditGroupTile extends StatelessWidget {
   final String creditLedgerKey;
   /// All quotes / installments for this credit (full plan).
   final int totalInstallmentCount;
-  /// Quotes with due date in calendar months before the current local month (non-ignored).
-  final int pendingQuotesBeforeCurrentMonth;
+  /// Transactions for this credit with due date after the visible month (> last day of selected month).
+  final int pendingCountAfterSelectedMonth;
   /// Sum of [TransactionEntity.value] for all installments in this group (full ledger).
   final double totalCreditValue;
   final AppLocalizations l10n;
@@ -337,7 +337,7 @@ class _CreditGroupTile extends StatelessWidget {
           child: Text(
             l10n.creditsInstallmentsWithPending(
               totalInstallmentCount,
-              pendingQuotesBeforeCurrentMonth,
+              pendingCountAfterSelectedMonth,
             ),
             style: theme.textTheme.bodySmall?.copyWith(
               color: theme.colorScheme.onSurfaceVariant,
@@ -614,10 +614,11 @@ class _CreditsPageState extends State<CreditsPage> {
                               _flat,
                               g.id,
                             ),
-                            pendingQuotesBeforeCurrentMonth:
-                                creditLedgerQuotesDueBeforeCurrentMonthCount(
+                            pendingCountAfterSelectedMonth:
+                                creditLedgerTransactionCountAfterSelectedMonth(
                               _flat,
                               g.id,
+                              visibleMonth,
                             ),
                             totalCreditValue:
                                 creditLedgerTotalValueForGroup(_flat, g.id),
