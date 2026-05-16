@@ -120,7 +120,7 @@ class _CreditsPendingTotalsBar extends StatelessWidget {
   });
 
   final AppLocalizations l10n;
-  /// Sum of raw [TransactionEntity.value] for future credit installments.
+  /// Pending installment values due in the same visible month as the list (not yet paid through today).
   final double pendingTotal;
   /// Sum for installments due in the selected month ([creditLedgerDueInSelectedMonth]).
   final double dueInSelectedMonthTotal;
@@ -503,6 +503,7 @@ class _CreditsPageState extends State<CreditsPage> {
         final groups = groupedCreditLedger(flatMonth);
         final showPendingBar = !_loading && hasAnyCredits;
         final dueInMonth = creditLedgerDueInSelectedMonth(_flat, visibleMonth);
+        final pendingInSelectedMonth = creditLedgerTotalPending(flatMonth);
 
         return ShellScaffold(
           title: l10n.creditsTitle,
@@ -515,7 +516,7 @@ class _CreditsPageState extends State<CreditsPage> {
           bottomNavigationBar: showPendingBar
               ? _CreditsPendingTotalsBar(
                   l10n: l10n,
-                  pendingTotal: creditLedgerTotalPending(_flat),
+                  pendingTotal: pendingInSelectedMonth,
                   dueInSelectedMonthTotal: dueInMonth,
                 )
               : null,
