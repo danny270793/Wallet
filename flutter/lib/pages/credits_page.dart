@@ -69,6 +69,26 @@ int creditLedgerTransactionCountAfterSelectedMonth(
   return n;
 }
 
+/// Sum of [TransactionEntity.value] for [creditLedgerKey] rows whose local due date is
+/// on or after the first day of the month **following** [monthStart] (upcoming months).
+double creditLedgerTotalValueAfterSelectedMonth(
+  List<TransactionEntity> flat,
+  String creditLedgerKey,
+  DateTime monthStart,
+) {
+  final firstDayAfterSelectedMonth =
+      DateTime(monthStart.year, monthStart.month + 1, 1);
+  var sum = 0.0;
+  for (final t in flat) {
+    if (t.creditLedgerGroupingKey != creditLedgerKey) continue;
+    final local = t.transactedAt.toLocal();
+    final dueDay = DateTime(local.year, local.month, local.day);
+    if (dueDay.isBefore(firstDayAfterSelectedMonth)) continue;
+    sum += t.value;
+  }
+  return sum;
+}
+
 List<String> _relationNames(TransactionEntity t) => [
   if (t.categoryName?.isNotEmpty == true) t.categoryName!,
   if (t.accountName?.isNotEmpty == true) t.accountName!,
@@ -222,6 +242,7 @@ class _CreditGroupTile extends StatelessWidget {
     required this.creditLedgerKey,
     required this.totalInstallmentCount,
     required this.pendingCountAfterSelectedMonth,
+    required this.futureMonthsPendingTotal,
     required this.totalCreditValue,
     required this.l10n,
     required this.onSwipeEdit,
@@ -230,7 +251,7 @@ class _CreditGroupTile extends StatelessWidget {
   final TransactionsCubit cubit;
   /// Row used for title (relations, purchase time); first in month if any, else first in plan.
   final TransactionEntity headerRow;
-  /// Installments for the visible month only; quote / paid on the right use this (may be empty).
+  /// Installments for the visible month only; first trailing line (this month's quote).
   final List<TransactionEntity> monthRows;
   /// First installment of the plan (chronological); used as delete anchor for the group.
   final TransactionEntity groupLeadRow;
@@ -239,6 +260,8 @@ class _CreditGroupTile extends StatelessWidget {
   final int totalInstallmentCount;
   /// Transactions for this credit with due date after the visible month (> last day of selected month).
   final int pendingCountAfterSelectedMonth;
+  /// Sum of installment values due in months after the visible month (same window as [pendingCountAfterSelectedMonth]).
+  final double futureMonthsPendingTotal;
   /// Sum of [TransactionEntity.value] for all installments in this group (full ledger).
   final double totalCreditValue;
   final AppLocalizations l10n;
@@ -253,11 +276,6 @@ class _CreditGroupTile extends StatelessWidget {
 
     final quoteThisMonth =
         monthRows.fold<double>(0, (a, t) => a + t.value);
-    final paidRows = monthRows.where(installmentIsPaidThroughToday).toList();
-    // Sum of each paid installment's full [TransactionEntity.value], not × percentage/100.
-    final paidTotal = paidRows.fold<double>(0, (a, t) => a + t.value);
-
-    const paidGreen = Color(0xFF1B8736);
 
     final relationNames = _relationNames(first);
 
@@ -387,9 +405,9 @@ class _CreditGroupTile extends StatelessWidget {
         trailingAmountText(quoteThisMonth, theme.colorScheme.error),
         const SizedBox(height: 2),
         trailingAmountText(
-          paidTotal,
-          paidTotal.abs() > 0.005
-              ? paidGreen
+          futureMonthsPendingTotal,
+          futureMonthsPendingTotal.abs() > 0.005
+              ? theme.colorScheme.error
               : theme.colorScheme.onSurfaceVariant,
         ),
         const SizedBox(height: 2),
@@ -626,6 +644,12 @@ class _CreditsPageState extends State<CreditsPage> {
                             ),
                             totalCreditValue:
                                 creditLedgerTotalValueForGroup(_flat, g.id),
+                            futureMonthsPendingTotal:
+                                creditLedgerTotalValueAfterSelectedMonth(
+                              _flat,
+                              g.id,
+                              visibleMonth,
+                            ),
                             l10n: l10n,
                             onSwipeEdit: () =>
                                 _openEditor(headerRow, l10n),
