@@ -412,12 +412,19 @@ class _CreditGroupTile extends StatelessWidget {
       );
     }
 
-    Widget trailingAmountText(double amount, Color amountColor) {
+    Widget trailingAmountText(
+      double amount,
+      Color amountColor, {
+      bool compact = false,
+    }) {
+      final base = compact
+          ? theme.textTheme.bodySmall
+          : theme.textTheme.titleSmall;
       return Text(
         l10n.transactionAmountValue(amount.toStringAsFixed(2)),
         textAlign: TextAlign.end,
-        style: theme.textTheme.titleSmall?.copyWith(
-          fontWeight: FontWeight.w700,
+        style: base?.copyWith(
+          fontWeight: compact ? FontWeight.w600 : FontWeight.w700,
           color: amountColor,
           height: 1.15,
           fontFeatures: const [FontFeature.tabularFigures()],
@@ -429,7 +436,7 @@ class _CreditGroupTile extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.end,
       children: [
-        trailingAmountText(quoteThisMonth, theme.colorScheme.onSurface),
+        trailingAmountText(quoteThisMonth, theme.colorScheme.error),
         const SizedBox(height: 2),
         trailingAmountText(
           paidTotal,
@@ -438,7 +445,11 @@ class _CreditGroupTile extends StatelessWidget {
               : theme.colorScheme.onSurfaceVariant,
         ),
         const SizedBox(height: 2),
-        trailingAmountText(totalCreditValue, theme.colorScheme.onSurface),
+        trailingAmountText(
+          totalCreditValue,
+          theme.colorScheme.onSurface,
+          compact: true,
+        ),
       ],
     );
 
