@@ -586,7 +586,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get creditsEmptyForSelectedMonth =>
-      'No hay cuotas debidas en este mes.';
+      'No hay cuotas pendientes en este mes.';
 
   @override
   String get creditsUntitledGroup => 'Compra diferida';
