@@ -277,7 +277,7 @@
   "creditsNav": "Credits",
   "creditsTitle": "Credits",
   "creditsEmpty": "No deferred credit installments yet.",
-  "creditsEmptyForSelectedMonth": "No installments due in this month.",
+  "creditsEmptyForSelectedMonth": "No pending installments due in this month.",
   "creditsUntitledGroup": "Deferred purchase",
   "creditsInstallmentsWithPending": "{count} installments - {pending} pending",
   "@creditsInstallmentsWithPending": {
