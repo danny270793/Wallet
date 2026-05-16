@@ -311,9 +311,8 @@ class _AssetTile extends StatelessWidget {
       ],
     );
 
-    return SwipeableListTile(
+    Widget tile = SwipeableListTile(
       itemKey: asset.id,
-      contentOpacity: ended ? 0.58 : 1.0,
       tileIsThreeLine: true,
       dense: true,
       minLeadingWidth: 54,
@@ -362,5 +361,10 @@ class _AssetTile extends StatelessWidget {
       },
       onDelete: () => cubit.delete(id: asset.id),
     );
+
+    if (ended) {
+      tile = Opacity(opacity: 0.52, child: tile);
+    }
+    return tile;
   }
 }
