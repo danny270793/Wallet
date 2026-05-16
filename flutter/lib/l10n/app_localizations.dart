@@ -1175,7 +1175,7 @@ abstract class AppLocalizations {
   /// No description provided for @creditsWalletCreditTransactedAt.
   ///
   /// In en, this message translates to:
-  /// **'Credit date: {when}'**
+  /// **'{when}'**
   String creditsWalletCreditTransactedAt(String when);
 
   /// No description provided for @creditEditGraceNotApplicable.
