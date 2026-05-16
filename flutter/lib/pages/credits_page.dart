@@ -298,8 +298,6 @@ class _CreditGroupTile extends StatelessWidget {
     // Sum of each paid installment's full [TransactionEntity.value], not × percentage/100.
     final paidTotal = paidRows.fold<double>(0, (a, t) => a + t.value);
 
-    final fullyPaid = pendingTotal.abs() <= 0.005;
-
     const paidGreen = Color(0xFF1B8736);
 
     final relationNames = _relationNames(first);
@@ -421,9 +419,7 @@ class _CreditGroupTile extends StatelessWidget {
           ),
           style: theme.textTheme.titleSmall?.copyWith(
             fontWeight: FontWeight.w700,
-            color: fullyPaid
-                ? theme.colorScheme.onSurfaceVariant
-                : paidGreen,
+            color: paidGreen,
             height: 1.15,
             fontFeatures: const [FontFeature.tabularFigures()],
           ),
@@ -431,7 +427,7 @@ class _CreditGroupTile extends StatelessWidget {
       ],
     );
 
-    Widget tile = SwipeableListTile(
+    return SwipeableListTile(
       itemKey: creditLedgerKey,
       title: titleSection(),
       trailing: trailingPrices,
@@ -441,10 +437,6 @@ class _CreditGroupTile extends StatelessWidget {
       onDelete: () =>
           cubit.delete(id: first.id, creditLedgerKey: creditLedgerKey),
     );
-    if (fullyPaid) {
-      tile = Opacity(opacity: 0.52, child: tile);
-    }
-    return tile;
   }
 }
 
