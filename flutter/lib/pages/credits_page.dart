@@ -64,6 +64,21 @@ int creditLedgerTotalInstallmentCountForGroup(
   return n;
 }
 
+/// Sum of [TransactionEntity.value] for the credit group [creditLedgerKey] across [flat].
+double creditLedgerTotalValueForGroup(
+  List<TransactionEntity> flat,
+  String creditLedgerKey,
+) {
+  var sum = 0.0;
+  for (final t in flat) {
+    final g = t.creditLedgerGroupingKey;
+    if (g == creditLedgerKey) {
+      sum += t.value;
+    }
+  }
+  return sum;
+}
+
 List<String> _relationNames(TransactionEntity t) => [
   if (t.categoryName?.isNotEmpty == true) t.categoryName!,
   if (t.accountName?.isNotEmpty == true) t.accountName!,
@@ -269,6 +284,7 @@ class _CreditGroupTile extends StatelessWidget {
     required this.creditLedgerKey,
     required this.totalInstallmentCount,
     required this.pendingInstallmentsForwardFromMonth,
+    required this.totalCreditValue,
     required this.l10n,
     required this.onSwipeEdit,
   });
@@ -280,6 +296,8 @@ class _CreditGroupTile extends StatelessWidget {
   final int totalInstallmentCount;
   /// Unpaid installments with due on/after visible month's first day (see [creditLedgerPendingInstallmentCountFromSelectedMonth]).
   final int pendingInstallmentsForwardFromMonth;
+  /// Sum of [TransactionEntity.value] for all installments in this group (full ledger).
+  final double totalCreditValue;
   final AppLocalizations l10n;
 
   /// Opens the editor for the group's first installment and reloads the page list.
@@ -290,11 +308,8 @@ class _CreditGroupTile extends StatelessWidget {
     final theme = Theme.of(context);
     final first = rows.first;
 
-    final pendingRows =
-        rows.where((t) => !_installmentIsPaidThroughToday(t)).toList();
+    final quoteThisMonth = rows.fold<double>(0, (a, t) => a + t.value);
     final paidRows = rows.where(_installmentIsPaidThroughToday).toList();
-    final pendingTotal =
-        pendingRows.fold<double>(0, (a, t) => a + t.value);
     // Sum of each paid installment's full [TransactionEntity.value], not × percentage/100.
     final paidTotal = paidRows.fold<double>(0, (a, t) => a + t.value);
 
@@ -397,34 +412,71 @@ class _CreditGroupTile extends StatelessWidget {
       );
     }
 
-    final trailingPrices = Column(
-      mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.end,
-      children: [
-        if (pendingTotal.abs() > 0.005) ...[
-          Text(
-            l10n.transactionAmountValue(pendingTotal.toStringAsFixed(2)),
-            style: theme.textTheme.titleSmall?.copyWith(
-              fontWeight: FontWeight.w700,
-              color: theme.colorScheme.error,
-              height: 1.15,
-              fontFeatures: const [FontFeature.tabularFigures()],
+    final screenW = MediaQuery.sizeOf(context).width;
+    final trailingWidth = (screenW * 0.42).clamp(220.0, 340.0);
+
+    Widget trailingAmountColumn(
+      String label,
+      double amount,
+      Color amountColor,
+    ) {
+      return Expanded(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.end,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              label,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              textAlign: TextAlign.end,
+              style: theme.textTheme.labelSmall?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+                height: 1.1,
+              ),
             ),
-          ),
-          const SizedBox(height: 2),
-        ],
-        Text(
-          l10n.transactionAmountValue(
-            paidTotal.abs() > 0.005 ? paidTotal.toStringAsFixed(2) : '0.00',
-          ),
-          style: theme.textTheme.titleSmall?.copyWith(
-            fontWeight: FontWeight.w700,
-            color: paidGreen,
-            height: 1.15,
-            fontFeatures: const [FontFeature.tabularFigures()],
-          ),
+            const SizedBox(height: 4),
+            Text(
+              l10n.transactionAmountValue(amount.toStringAsFixed(2)),
+              textAlign: TextAlign.end,
+              style: theme.textTheme.titleSmall?.copyWith(
+                fontWeight: FontWeight.w700,
+                color: amountColor,
+                height: 1.1,
+                fontFeatures: const [FontFeature.tabularFigures()],
+              ),
+            ),
+          ],
         ),
-      ],
+      );
+    }
+
+    final trailingPrices = SizedBox(
+      width: trailingWidth,
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          trailingAmountColumn(
+            l10n.creditsTileQuoteThisMonth,
+            quoteThisMonth,
+            theme.colorScheme.onSurface,
+          ),
+          const SizedBox(width: 6),
+          trailingAmountColumn(
+            l10n.creditsTilePaidThisMonth,
+            paidTotal,
+            paidTotal.abs() > 0.005
+                ? paidGreen
+                : theme.colorScheme.onSurfaceVariant,
+          ),
+          const SizedBox(width: 6),
+          trailingAmountColumn(
+            l10n.creditsTileCreditTotal,
+            totalCreditValue,
+            theme.colorScheme.onSurface,
+          ),
+        ],
+      ),
     );
 
     return SwipeableListTile(
@@ -641,6 +693,8 @@ class _CreditsPageState extends State<CreditsPage> {
                               g.id,
                               visibleMonth,
                             ),
+                            totalCreditValue:
+                                creditLedgerTotalValueForGroup(_flat, g.id),
                             l10n: l10n,
                             onSwipeEdit: () => _openEditor(g.rows.first, l10n),
                           );
