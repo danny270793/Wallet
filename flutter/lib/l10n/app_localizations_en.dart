@@ -583,7 +583,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get creditsEmptyForSelectedMonth =>
-      'No installments due in this month.';
+      'No credit installments in this month.';
 
   @override
   String get creditsUntitledGroup => 'Deferred purchase';
@@ -591,6 +591,11 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String creditsInstallmentsWithPending(int count, int pending) {
     return '$count installments - $pending pending';
+  }
+
+  @override
+  String creditsInstallmentsEndsThisMonth(int count) {
+    return '$count installments · ends this month';
   }
 
   @override
@@ -604,7 +609,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String creditsWalletCreditTransactedAt(String when) {
-    return 'Credit date: $when';
+    return '$when';
   }
 
   @override

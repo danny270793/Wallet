@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import 'package:wallet/l10n/app_localizations.dart';
 
 import '../core/credit_group_description.dart';
+import '../core/credit_ledger_grouping.dart';
 import '../core/di/injection.dart';
 import '../core/remote_load_failure.dart';
 import '../features/transactions/domain/entities/transaction_entity.dart';
@@ -18,38 +19,22 @@ import '../widgets/swipeable_list_tile.dart';
 import '../widgets/transaction_delete_dialogs.dart';
 import 'transactions_page.dart' show showTransactionEditorBottomSheet;
 
-/// Groups rows by [TransactionEntity.creditLedgerGroupingKey]; newest groups (by latest date) first.
-List<({String id, List<TransactionEntity> rows})> groupedCreditLedger(
+/// Sum of [TransactionEntity.value] for the credit group [creditLedgerKey] across [flat].
+double creditLedgerTotalValueForGroup(
   List<TransactionEntity> flat,
+  String creditLedgerKey,
 ) {
-  final m = <String, List<TransactionEntity>>{};
+  var sum = 0.0;
   for (final t in flat) {
     final g = t.creditLedgerGroupingKey;
-    if (g == null || g.isEmpty) continue;
-    m.putIfAbsent(g, () => []).add(t);
-  }
-  for (final rows in m.values) {
-    rows.sort((a, b) => a.transactedAt.compareTo(b.transactedAt));
-  }
-  final out = <({String id, List<TransactionEntity> rows})>[];
-  DateTime newest(List<TransactionEntity> r) {
-    DateTime mx = r.first.transactedAt;
-    for (final x in r) {
-      if (x.transactedAt.isAfter(mx)) mx = x.transactedAt;
+    if (g == creditLedgerKey) {
+      sum += t.value;
     }
-    return mx;
   }
-
-  final keys = m.keys.toList()
-    ..sort((a, b) => newest(m[b]!).compareTo(newest(m[a]!)));
-  for (final k in keys) {
-    final rows = m[k]!;
-    out.add((id: k, rows: rows));
-  }
-  return out;
+  return sum;
 }
 
-/// Number of ledger rows (installments) in the credit group [creditLedgerKey] across [flat].
+/// Number of ledger rows (installments / quotes) for [creditLedgerKey] in [flat].
 int creditLedgerTotalInstallmentCountForGroup(
   List<TransactionEntity> flat,
   String creditLedgerKey,
@@ -64,45 +49,52 @@ int creditLedgerTotalInstallmentCountForGroup(
   return n;
 }
 
+/// Transactions for [creditLedgerKey] whose local due date is **strictly after** the
+/// selected calendar month [monthStart] (on or after the first day of the following month).
+int creditLedgerTransactionCountAfterSelectedMonth(
+  List<TransactionEntity> flat,
+  String creditLedgerKey,
+  DateTime monthStart,
+) {
+  final firstDayAfterSelectedMonth =
+      DateTime(monthStart.year, monthStart.month + 1, 1);
+  var n = 0;
+  for (final t in flat) {
+    if (t.creditLedgerGroupingKey != creditLedgerKey) continue;
+    final local = t.transactedAt.toLocal();
+    final dueDay = DateTime(local.year, local.month, local.day);
+    if (dueDay.isBefore(firstDayAfterSelectedMonth)) continue;
+    n++;
+  }
+  return n;
+}
+
+/// Sum of [TransactionEntity.value] for [creditLedgerKey] rows whose local due date is
+/// on or after the first day of the month **following** [monthStart] (upcoming months).
+double creditLedgerTotalValueAfterSelectedMonth(
+  List<TransactionEntity> flat,
+  String creditLedgerKey,
+  DateTime monthStart,
+) {
+  final firstDayAfterSelectedMonth =
+      DateTime(monthStart.year, monthStart.month + 1, 1);
+  var sum = 0.0;
+  for (final t in flat) {
+    if (t.creditLedgerGroupingKey != creditLedgerKey) continue;
+    final local = t.transactedAt.toLocal();
+    final dueDay = DateTime(local.year, local.month, local.day);
+    if (dueDay.isBefore(firstDayAfterSelectedMonth)) continue;
+    sum += t.value;
+  }
+  return sum;
+}
+
 List<String> _relationNames(TransactionEntity t) => [
   if (t.categoryName?.isNotEmpty == true) t.categoryName!,
   if (t.accountName?.isNotEmpty == true) t.accountName!,
   if (t.cardName?.isNotEmpty == true) t.cardName!,
   if (t.tagName?.isNotEmpty == true) t.tagName!,
 ];
-
-/// Installment is treated as already posted when its local calendar date is on or before today.
-bool _installmentIsPaidThroughToday(TransactionEntity t) {
-  final now = DateTime.now();
-  final local = t.transactedAt.toLocal();
-  final d = DateTime(local.year, local.month, local.day);
-  final today = DateTime(now.year, now.month, now.day);
-  return !d.isAfter(today);
-}
-
-/// Installments due in [monthStart]'s calendar month (credit rows only).
-/// For the current local month, excludes due dates before today.
-List<TransactionEntity> creditLedgerInstallmentsInSelectedMonth(
-  List<TransactionEntity> flat,
-  DateTime monthStart,
-) {
-  final now = DateTime.now();
-  final today = DateTime(now.year, now.month, now.day);
-  final y = monthStart.year;
-  final m = monthStart.month;
-  final isCurrentMonth = y == today.year && m == today.month;
-  final out = <TransactionEntity>[];
-  for (final t in flat) {
-    final g = t.creditLedgerGroupingKey;
-    if (g == null || g.isEmpty) continue;
-    final local = t.transactedAt.toLocal();
-    if (local.year != y || local.month != m) continue;
-    final dueDay = DateTime(local.year, local.month, local.day);
-    if (isCurrentMonth && dueDay.isBefore(today)) continue;
-    out.add(t);
-  }
-  return out;
-}
 
 /// Sum of [TransactionEntity.value] for credit installments still unpaid (local due after today)
 /// whose **due date** is on or after the first day of [monthStart]'s month.
@@ -118,7 +110,7 @@ double creditLedgerPendingTotalFromSelectedMonth(
   for (final t in flat) {
     final g = t.creditLedgerGroupingKey;
     if (g == null || g.isEmpty) continue;
-    if (_installmentIsPaidThroughToday(t)) continue;
+    if (installmentIsPaidThroughToday(t)) continue;
     final local = t.transactedAt.toLocal();
     final dueDay = DateTime(local.year, local.month, local.day);
     if (dueDay.isBefore(monthFirst)) continue;
@@ -127,29 +119,8 @@ double creditLedgerPendingTotalFromSelectedMonth(
   return sum;
 }
 
-/// Unpaid installments in [creditLedgerKey] with due date on or after the first day of
-/// [monthStart] (same window as [creditLedgerPendingTotalFromSelectedMonth] for one group).
-int creditLedgerPendingInstallmentCountFromSelectedMonth(
-  List<TransactionEntity> flat,
-  String creditLedgerKey,
-  DateTime monthStart,
-) {
-  final monthFirst = DateTime(monthStart.year, monthStart.month, 1);
-  var n = 0;
-  for (final t in flat) {
-    final g = t.creditLedgerGroupingKey;
-    if (g != creditLedgerKey) continue;
-    if (_installmentIsPaidThroughToday(t)) continue;
-    final local = t.transactedAt.toLocal();
-    final dueDay = DateTime(local.year, local.month, local.day);
-    if (dueDay.isBefore(monthFirst)) continue;
-    n++;
-  }
-  return n;
-}
-
-/// Sum of raw values for installments due in [monthStart]'s calendar month.
-/// For the current local month, only dues on or after today are included.
+/// Sum of raw values for installments due in [monthStart]'s calendar month
+/// (see [creditLedgerInstallmentsInSelectedMonth]).
 double creditLedgerDueInSelectedMonth(
   List<TransactionEntity> flat,
   DateTime monthStart,
@@ -265,21 +236,34 @@ class _CreditsPendingTotalsBar extends StatelessWidget {
 class _CreditGroupTile extends StatelessWidget {
   const _CreditGroupTile({
     required this.cubit,
-    required this.rows,
+    required this.headerRow,
+    required this.monthRows,
+    required this.groupLeadRow,
     required this.creditLedgerKey,
     required this.totalInstallmentCount,
-    required this.pendingInstallmentsForwardFromMonth,
+    required this.pendingCountAfterSelectedMonth,
+    required this.futureMonthsPendingTotal,
+    required this.totalCreditValue,
     required this.l10n,
     required this.onSwipeEdit,
   });
 
   final TransactionsCubit cubit;
-  final List<TransactionEntity> rows;
+  /// Row used for title (relations, purchase time); first in month if any, else first in plan.
+  final TransactionEntity headerRow;
+  /// Installments for the visible month only; first trailing line (this month's quote).
+  final List<TransactionEntity> monthRows;
+  /// First installment of the plan (chronological); used as delete anchor for the group.
+  final TransactionEntity groupLeadRow;
   final String creditLedgerKey;
-  /// Full credit plan size (all installments in the group), not only [rows] in the visible month.
+  /// All quotes / installments for this credit (full plan).
   final int totalInstallmentCount;
-  /// Unpaid installments with due on/after visible month's first day (see [creditLedgerPendingInstallmentCountFromSelectedMonth]).
-  final int pendingInstallmentsForwardFromMonth;
+  /// Transactions for this credit with due date after the visible month (> last day of selected month).
+  final int pendingCountAfterSelectedMonth;
+  /// Sum of installment values due in months after the visible month (same window as [pendingCountAfterSelectedMonth]).
+  final double futureMonthsPendingTotal;
+  /// Sum of [TransactionEntity.value] for all installments in this group (full ledger).
+  final double totalCreditValue;
   final AppLocalizations l10n;
 
   /// Opens the editor for the group's first installment and reloads the page list.
@@ -288,19 +272,10 @@ class _CreditGroupTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final first = rows.first;
+    final first = headerRow;
 
-    final pendingRows =
-        rows.where((t) => !_installmentIsPaidThroughToday(t)).toList();
-    final paidRows = rows.where(_installmentIsPaidThroughToday).toList();
-    final pendingTotal =
-        pendingRows.fold<double>(0, (a, t) => a + t.value);
-    // Sum of each paid installment's full [TransactionEntity.value], not × percentage/100.
-    final paidTotal = paidRows.fold<double>(0, (a, t) => a + t.value);
-
-    final fullyPaid = pendingTotal.abs() <= 0.005;
-
-    const paidGreen = Color(0xFF1B8736);
+    final quoteThisMonth =
+        monthRows.fold<double>(0, (a, t) => a + t.value);
 
     final relationNames = _relationNames(first);
 
@@ -378,12 +353,18 @@ class _CreditGroupTile extends StatelessWidget {
         Padding(
           padding: EdgeInsets.only(top: chunks.isNotEmpty ? 4 : 0),
           child: Text(
-            l10n.creditsInstallmentsWithPending(
-              totalInstallmentCount,
-              pendingInstallmentsForwardFromMonth,
-            ),
+            pendingCountAfterSelectedMonth > 0
+                ? l10n.creditsInstallmentsWithPending(
+                    totalInstallmentCount,
+                    pendingCountAfterSelectedMonth,
+                  )
+                : l10n.creditsInstallmentsEndsThisMonth(
+                    totalInstallmentCount,
+                  ),
             style: theme.textTheme.bodySmall?.copyWith(
-              color: theme.colorScheme.onSurfaceVariant,
+              color: pendingCountAfterSelectedMonth > 0
+                  ? theme.colorScheme.onSurfaceVariant
+                  : const Color(0xFF1B8736),
             ),
           ),
         ),
@@ -399,39 +380,47 @@ class _CreditGroupTile extends StatelessWidget {
       );
     }
 
+    Widget trailingAmountText(
+      double amount,
+      Color amountColor, {
+      bool compact = false,
+    }) {
+      final base = compact
+          ? theme.textTheme.bodySmall
+          : theme.textTheme.titleSmall;
+      return Text(
+        l10n.transactionAmountValue(amount.toStringAsFixed(2)),
+        textAlign: TextAlign.end,
+        style: base?.copyWith(
+          fontWeight: compact ? FontWeight.w600 : FontWeight.w700,
+          color: amountColor,
+          height: 1.15,
+          fontFeatures: const [FontFeature.tabularFigures()],
+        ),
+      );
+    }
+
     final trailingPrices = Column(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.end,
       children: [
-        if (pendingTotal.abs() > 0.005) ...[
-          Text(
-            l10n.transactionAmountValue(pendingTotal.toStringAsFixed(2)),
-            style: theme.textTheme.titleSmall?.copyWith(
-              fontWeight: FontWeight.w700,
-              color: theme.colorScheme.error,
-              height: 1.15,
-              fontFeatures: const [FontFeature.tabularFigures()],
-            ),
-          ),
-          const SizedBox(height: 2),
-        ],
-        Text(
-          l10n.transactionAmountValue(
-            paidTotal.abs() > 0.005 ? paidTotal.toStringAsFixed(2) : '0.00',
-          ),
-          style: theme.textTheme.titleSmall?.copyWith(
-            fontWeight: FontWeight.w700,
-            color: fullyPaid
-                ? theme.colorScheme.onSurfaceVariant
-                : paidGreen,
-            height: 1.15,
-            fontFeatures: const [FontFeature.tabularFigures()],
-          ),
+        trailingAmountText(quoteThisMonth, theme.colorScheme.error),
+        const SizedBox(height: 2),
+        trailingAmountText(
+          futureMonthsPendingTotal,
+          theme.colorScheme.onSurface,
+          compact: true,
+        ),
+        const SizedBox(height: 2),
+        trailingAmountText(
+          totalCreditValue,
+          theme.colorScheme.onSurface,
+          compact: true,
         ),
       ],
     );
 
-    Widget tile = SwipeableListTile(
+    return SwipeableListTile(
       itemKey: creditLedgerKey,
       title: titleSection(),
       trailing: trailingPrices,
@@ -439,12 +428,8 @@ class _CreditGroupTile extends StatelessWidget {
       confirmDelete: () =>
           confirmDeleteCreditGroupTransactionDialog(context, l10n),
       onDelete: () =>
-          cubit.delete(id: first.id, creditLedgerKey: creditLedgerKey),
+          cubit.delete(id: groupLeadRow.id, creditLedgerKey: creditLedgerKey),
     );
-    if (fullyPaid) {
-      tile = Opacity(opacity: 0.52, child: tile);
-    }
-    return tile;
   }
 }
 
@@ -548,14 +533,18 @@ class _CreditsPageState extends State<CreditsPage> {
     return ValueListenableBuilder<DateTime>(
       valueListenable: _dueMonthNotifier,
       builder: (context, visibleMonth, _) {
-        final hasAnyCredits = groupedCreditLedger(_flat).isNotEmpty;
-        final flatMonth =
+        final allCreditGroups = groupedCreditLedger(_flat);
+        final hasAnyCredits = allCreditGroups.isNotEmpty;
+        final monthInstallments =
             creditLedgerInstallmentsInSelectedMonth(_flat, visibleMonth);
-        final groups = groupedCreditLedger(flatMonth);
+        final groups = groupedCreditLedger(monthInstallments);
         final showPendingBar = !_loading && hasAnyCredits;
         final dueInMonth = creditLedgerDueInSelectedMonth(_flat, visibleMonth);
         final pendingTotal =
             creditLedgerPendingTotalFromSelectedMonth(_flat, visibleMonth);
+        final fullGroupsById = {
+          for (final fg in allCreditGroups) fg.id: fg,
+        };
 
         return ShellScaffold(
           title: l10n.creditsTitle,
@@ -634,23 +623,37 @@ class _CreditsPageState extends State<CreditsPage> {
                           }
                           final gi = i - (_servedFromOfflineCache ? 1 : 0);
                           final g = groups[gi];
+                          final monthRows = g.rows;
+                          final full = fullGroupsById[g.id]!;
+                          final headerRow = monthRows.first;
                           return _CreditGroupTile(
                             cubit: cubit,
-                            rows: g.rows,
+                            headerRow: headerRow,
+                            monthRows: monthRows,
+                            groupLeadRow: full.rows.first,
                             creditLedgerKey: g.id,
                             totalInstallmentCount:
                                 creditLedgerTotalInstallmentCountForGroup(
                               _flat,
                               g.id,
                             ),
-                            pendingInstallmentsForwardFromMonth:
-                                creditLedgerPendingInstallmentCountFromSelectedMonth(
+                            pendingCountAfterSelectedMonth:
+                                creditLedgerTransactionCountAfterSelectedMonth(
+                              _flat,
+                              g.id,
+                              visibleMonth,
+                            ),
+                            totalCreditValue:
+                                creditLedgerTotalValueForGroup(_flat, g.id),
+                            futureMonthsPendingTotal:
+                                creditLedgerTotalValueAfterSelectedMonth(
                               _flat,
                               g.id,
                               visibleMonth,
                             ),
                             l10n: l10n,
-                            onSwipeEdit: () => _openEditor(g.rows.first, l10n),
+                            onSwipeEdit: () =>
+                                _openEditor(headerRow, l10n),
                           );
                         },
                       );

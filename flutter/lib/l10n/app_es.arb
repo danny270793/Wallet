@@ -277,7 +277,7 @@
   "creditsNav": "Créditos",
   "creditsTitle": "Créditos",
   "creditsEmpty": "Aún no tienes cuotas diferidas.",
-  "creditsEmptyForSelectedMonth": "No hay cuotas debidas en este mes.",
+  "creditsEmptyForSelectedMonth": "No hay cuotas de crédito en este mes.",
   "creditsUntitledGroup": "Compra diferida",
   "creditsInstallmentsWithPending": "{count} cuotas - {pending} pendientes",
   "@creditsInstallmentsWithPending": {
@@ -290,10 +290,18 @@
       }
     }
   },
+  "creditsInstallmentsEndsThisMonth": "{count} cuotas · termina este mes",
+  "@creditsInstallmentsEndsThisMonth": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "creditsPendingTotalsLabel": "Total pendiente",
   "creditsDueThisMonthLabel": "A pagar este mes",
   "creditsNewDeferredPurchase": "Nueva compra a crédito",
-  "creditsWalletCreditTransactedAt": "Fecha del crédito: {when}",
+  "creditsWalletCreditTransactedAt": "{when}",
   "@creditsWalletCreditTransactedAt": {
     "placeholders": {
       "when": {

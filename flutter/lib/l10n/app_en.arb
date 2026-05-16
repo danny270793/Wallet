@@ -277,7 +277,7 @@
   "creditsNav": "Credits",
   "creditsTitle": "Credits",
   "creditsEmpty": "No deferred credit installments yet.",
-  "creditsEmptyForSelectedMonth": "No installments due in this month.",
+  "creditsEmptyForSelectedMonth": "No credit installments in this month.",
   "creditsUntitledGroup": "Deferred purchase",
   "creditsInstallmentsWithPending": "{count} installments - {pending} pending",
   "@creditsInstallmentsWithPending": {
@@ -290,10 +290,18 @@
       }
     }
   },
+  "creditsInstallmentsEndsThisMonth": "{count} installments · ends this month",
+  "@creditsInstallmentsEndsThisMonth": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "creditsPendingTotalsLabel": "Pending total",
   "creditsDueThisMonthLabel": "Due this month",
   "creditsNewDeferredPurchase": "New credit purchase",
-  "creditsWalletCreditTransactedAt": "Credit date: {when}",
+  "creditsWalletCreditTransactedAt": "{when}",
   "@creditsWalletCreditTransactedAt": {
     "placeholders": {
       "when": {

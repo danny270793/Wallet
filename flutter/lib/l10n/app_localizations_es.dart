@@ -586,7 +586,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get creditsEmptyForSelectedMonth =>
-      'No hay cuotas debidas en este mes.';
+      'No hay cuotas de crédito en este mes.';
 
   @override
   String get creditsUntitledGroup => 'Compra diferida';
@@ -594,6 +594,11 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String creditsInstallmentsWithPending(int count, int pending) {
     return '$count cuotas - $pending pendientes';
+  }
+
+  @override
+  String creditsInstallmentsEndsThisMonth(int count) {
+    return '$count cuotas · termina este mes';
   }
 
   @override
@@ -607,7 +612,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String creditsWalletCreditTransactedAt(String when) {
-    return 'Fecha del crédito: $when';
+    return '$when';
   }
 
   @override

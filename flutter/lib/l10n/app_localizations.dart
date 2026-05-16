@@ -1139,7 +1139,7 @@ abstract class AppLocalizations {
   /// No description provided for @creditsEmptyForSelectedMonth.
   ///
   /// In en, this message translates to:
-  /// **'No installments due in this month.'**
+  /// **'No credit installments in this month.'**
   String get creditsEmptyForSelectedMonth;
 
   /// No description provided for @creditsUntitledGroup.
@@ -1153,6 +1153,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{count} installments - {pending} pending'**
   String creditsInstallmentsWithPending(int count, int pending);
+
+  /// No description provided for @creditsInstallmentsEndsThisMonth.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} installments · ends this month'**
+  String creditsInstallmentsEndsThisMonth(int count);
 
   /// No description provided for @creditsPendingTotalsLabel.
   ///
@@ -1175,7 +1181,7 @@ abstract class AppLocalizations {
   /// No description provided for @creditsWalletCreditTransactedAt.
   ///
   /// In en, this message translates to:
-  /// **'Credit date: {when}'**
+  /// **'{when}'**
   String creditsWalletCreditTransactedAt(String when);
 
   /// No description provided for @creditEditGraceNotApplicable.
