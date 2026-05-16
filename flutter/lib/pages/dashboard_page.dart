@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:wallet/l10n/app_localizations.dart';
 
 import '../core/di/injection.dart';
+import '../core/ui/app_icons.dart';
 import '../features/transactions/domain/entities/transaction_entity.dart';
 import '../features/transactions/presentation/cubit/transactions_cubit.dart';
 import '../features/transactions/presentation/cubit/transactions_state.dart';
@@ -11,6 +12,8 @@ import '../widgets/dashboard_view_options_bottom_sheet.dart';
 import '../widgets/dashboard_month_transactions_list.dart';
 import '../widgets/monthly_category_expense_pie_chart.dart';
 import '../widgets/monthly_tag_pie_chart.dart';
+import '../widgets/offline_cached_data_banner.dart';
+import '../widgets/remote_load_failure_panel.dart';
 import '../widgets/shell_scaffold.dart';
 import '../widgets/transaction_month_totals.dart';
 import '../widgets/transactions_month_scope.dart';
@@ -135,7 +138,6 @@ class _MonthlyDashboardViewState extends State<_MonthlyDashboardView> {
     return BlocConsumer<TransactionsCubit, TransactionsState>(
       listener: (context, state) {
         final msg = switch (state) {
-          TransactionsError(:final message) => message,
           TransactionsActionError(:final message) => message,
           _ => null,
         };
@@ -189,6 +191,13 @@ class _MonthlyDashboardViewState extends State<_MonthlyDashboardView> {
           tagFilter,
           categoryFilter,
         );
+        final offlineCached = switch (state) {
+          TransactionsLoaded(:final servedFromOfflineCache) =>
+            servedFromOfflineCache,
+          TransactionsActionError(:final servedFromOfflineCache) =>
+            servedFromOfflineCache,
+          _ => false,
+        };
 
         // Income / outcome / balance for the same filtered set as the charts and list below.
         final dashboardViewTotals = transactionMonthTotalsBreakdown(
@@ -217,7 +226,7 @@ class _MonthlyDashboardViewState extends State<_MonthlyDashboardView> {
           appBarActionsBeforeSettings: showBar
               ? <Widget>[
                   IconButton(
-                    icon: const Icon(Icons.tune_rounded),
+                    icon: const Icon(AppIcons.filter),
                     tooltip: l10n.monthlyDashboardConfigureTooltip,
                     onPressed: () =>
                         _showDashboardViewOptionsSheet(context, l10n),
@@ -261,6 +270,7 @@ class _MonthlyDashboardViewState extends State<_MonthlyDashboardView> {
             tagPieTxs,
             categoryPieTxs,
             listTxs,
+            offlineCached,
           ),
         );
       },
@@ -277,6 +287,7 @@ class _MonthlyDashboardViewState extends State<_MonthlyDashboardView> {
     List<TransactionEntity> tagPieTransactions,
     List<TransactionEntity> categoryPieTransactions,
     List<TransactionEntity> listTransactions,
+    bool offlineCached,
   ) {
     Future<void> pullRefresh() =>
         context.read<TransactionsCubit>().loadForMonth(
@@ -308,29 +319,10 @@ class _MonthlyDashboardViewState extends State<_MonthlyDashboardView> {
     }
 
     if (state is TransactionsError) {
-      return RefreshIndicator(
-        onRefresh: pullRefresh,
-        child: ListView(
-          physics: const AlwaysScrollableScrollPhysics(),
-          children: [
-            SizedBox(
-              height: MediaQuery.sizeOf(context).height * 0.35,
-              child: Center(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(state.message ?? l10n.unexpectedError),
-                    const SizedBox(height: 12),
-                    ElevatedButton(
-                      onPressed: reloadWithOverlay,
-                      child: const Text('Retry'),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ],
-        ),
+      return RemoteLoadFailurePanel(
+        l10n: l10n,
+        failure: state.failure,
+        onRetry: reloadWithOverlay,
       );
     }
 
@@ -345,6 +337,7 @@ class _MonthlyDashboardViewState extends State<_MonthlyDashboardView> {
               physics: const AlwaysScrollableScrollPhysics(),
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
               children: [
+                OfflineCachedDataBanner(visible: offlineCached),
                 MonthlyTagPieChart(
                   l10n: l10n,
                   transactions: tagPieTransactions,

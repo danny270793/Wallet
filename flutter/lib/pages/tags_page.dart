@@ -6,6 +6,8 @@ import '../core/di/injection.dart';
 import '../features/tags/domain/entities/tag_entity.dart';
 import '../features/tags/presentation/cubit/tags_cubit.dart';
 import '../features/tags/presentation/cubit/tags_state.dart';
+import '../widgets/offline_cached_data_banner.dart';
+import '../widgets/remote_load_failure_panel.dart';
 import '../widgets/shell_scaffold.dart';
 import '../widgets/swipeable_list_tile.dart';
 import '../widgets/tag_editor_sheet.dart';
@@ -86,31 +88,18 @@ class _TagsView extends StatelessWidget {
     }
 
     if (state is TagsError) {
-      return RefreshIndicator(
-        onRefresh: pullRefresh,
-        child: ListView(
-          physics: const AlwaysScrollableScrollPhysics(),
-          children: [
-            SizedBox(
-              height: MediaQuery.sizeOf(context).height * 0.35,
-              child: Center(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(l10n.unexpectedError),
-                    const SizedBox(height: 12),
-                    ElevatedButton(
-                      onPressed: reloadWithOverlay,
-                      child: const Text('Retry'),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ],
-        ),
+      return RemoteLoadFailurePanel(
+        l10n: l10n,
+        failure: state.failure,
+        onRetry: reloadWithOverlay,
       );
     }
+
+    final offlineCached = switch (state) {
+      TagsLoaded(:final servedFromOfflineCache) => servedFromOfflineCache,
+      TagsActionError(:final servedFromOfflineCache) => servedFromOfflineCache,
+      _ => false,
+    };
 
     final tags = switch (state) {
       TagsLoaded(:final tags) => tags,
@@ -125,8 +114,9 @@ class _TagsView extends StatelessWidget {
           physics: const AlwaysScrollableScrollPhysics(),
           padding: const EdgeInsets.only(bottom: 88),
           children: [
+            OfflineCachedDataBanner(visible: offlineCached),
             SizedBox(
-              height: MediaQuery.sizeOf(context).height * 0.35,
+              height: MediaQuery.sizeOf(context).height * 0.3,
               child: Center(child: Text(l10n.noTags)),
             ),
           ],
@@ -139,8 +129,14 @@ class _TagsView extends StatelessWidget {
       child: ListView.builder(
         physics: const AlwaysScrollableScrollPhysics(),
         padding: const EdgeInsets.only(bottom: 88),
-        itemCount: tags.length,
-        itemBuilder: (context, index) => _TagTile(tag: tags[index]),
+        itemCount: tags.length + (offlineCached ? 1 : 0),
+        itemBuilder: (context, index) {
+          if (offlineCached && index == 0) {
+            return const OfflineCachedDataBanner(visible: true);
+          }
+          final i = index - (offlineCached ? 1 : 0);
+          return _TagTile(tag: tags[i]);
+        },
       ),
     );
   }

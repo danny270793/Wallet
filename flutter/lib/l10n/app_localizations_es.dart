@@ -189,6 +189,69 @@ class AppLocalizationsEs extends AppLocalizations {
   String get settingsThemeDark => 'Oscuro';
 
   @override
+  String get settingsDataSection => 'Datos sin conexión';
+
+  @override
+  String get settingsOfflineCache => 'Respuestas en caché';
+
+  @override
+  String get settingsOfflineCacheSubtitle =>
+      'Respuestas de la API guardadas en este dispositivo para uso sin conexión';
+
+  @override
+  String get settingsCachePageTitle => 'Caché sin conexión';
+
+  @override
+  String get settingsCacheEmpty => 'Aún no hay respuestas en caché.';
+
+  @override
+  String get settingsCacheBottomBarCaption => 'Tamaño de archivos en caché';
+
+  @override
+  String get settingsCacheSortTooltip => 'Ordenar';
+
+  @override
+  String get settingsCacheSortSheetTitle => 'Ordenar por';
+
+  @override
+  String get settingsCacheSortByDate => 'Fecha';
+
+  @override
+  String get settingsCacheSortBySize => 'Tamaño';
+
+  @override
+  String get settingsCacheSortByName => 'Nombre';
+
+  @override
+  String settingsCacheKeyTxMonth(String year, String month) {
+    return 'Transacciones · $year-$month';
+  }
+
+  @override
+  String settingsCacheKeyTxYear(String year) {
+    return 'Transacciones · $year';
+  }
+
+  @override
+  String get settingsCacheKeyTxCreditGroups =>
+      'Transacciones (grupos de crédito)';
+
+  @override
+  String settingsCacheKeyTxCredit(String shortId) {
+    return 'Transacciones (crédito $shortId)';
+  }
+
+  @override
+  String settingsCacheKeyWalletCredit(String shortId) {
+    return 'Crédito de cartera · $shortId';
+  }
+
+  @override
+  String settingsCacheKeyRaw(String key) {
+    return '$key';
+  }
+
+  @override
   String get settingsSecuritySection => 'Seguridad';
 
   @override
@@ -522,6 +585,10 @@ class AppLocalizationsEs extends AppLocalizations {
   String get creditsEmpty => 'Aún no tienes cuotas diferidas.';
 
   @override
+  String get creditsEmptyForSelectedMonth =>
+      'No hay cuotas debidas en este mes.';
+
+  @override
   String get creditsUntitledGroup => 'Compra diferida';
 
   @override
@@ -752,4 +819,28 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get transactionsTotalsNotWeightedExcludingIgnoredHint =>
       'Sin ponderar excluyendo ignoradas';
+
+  @override
+  String get loadFailedNoConnectionTitle => 'Sin conexión a internet';
+
+  @override
+  String get loadFailedNoConnectionBody =>
+      'Comprueba tu red e inténtalo de nuevo. Si tienes conexión, puede que el servidor no esté accesible.';
+
+  @override
+  String get cachedDataOfflineBanner =>
+      'Mostrando datos guardados — sin conexión a internet.';
+
+  @override
+  String get loadFailedRequestFailedTitle => 'No se pudieron cargar los datos';
+
+  @override
+  String get loadFailedRequestFailedBody =>
+      'La solicitud falló. Desliza hacia abajo para actualizar o inténtalo de nuevo en un momento.';
+
+  @override
+  String get retry => 'Reintentar';
+
+  @override
+  String get dialogClose => 'Cerrar';
 }

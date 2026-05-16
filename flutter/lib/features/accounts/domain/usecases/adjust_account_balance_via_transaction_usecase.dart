@@ -30,7 +30,7 @@ class AdjustAccountBalanceViaTransactionUsecase {
   Future<void> call({required String accountId, required double delta}) async {
     if (delta.abs() < 1e-9) return;
 
-    final categories = await _getCategories();
+    final categories = (await _getCategories()).value;
     String? categoryId;
     for (final c in categories) {
       if (c.name == adjustmentLabel) {
@@ -40,7 +40,7 @@ class AdjustAccountBalanceViaTransactionUsecase {
     }
     categoryId ??= (await _createCategory(name: adjustmentLabel)).id;
 
-    final tags = await _getTags();
+    final tags = (await _getTags()).value;
     String? tagId;
     for (final t in tags) {
       if (t.name == adjustmentLabel) {

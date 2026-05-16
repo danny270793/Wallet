@@ -16,6 +16,7 @@ import 'features/transactions/presentation/cubit/transactions_cubit.dart';
 import 'pages/credits_page.dart';
 import 'pages/transactions_page.dart';
 import 'pages/settings_page.dart';
+import 'pages/settings_cache_page.dart';
 import 'pages/legal_info_page.dart';
 
 final rootNavigatorKey = GlobalKey<NavigatorState>();
@@ -55,6 +56,10 @@ final router = GoRouter(
         GoRoute(
           path: 'terms',
           builder: (context, state) => const LegalInfoPage(kind: LegalInfoKind.terms),
+        ),
+        GoRoute(
+          path: 'cache',
+          builder: (context, state) => const SettingsCachePage(),
         ),
       ],
     ),

@@ -188,6 +188,68 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsThemeDark => 'Dark';
 
   @override
+  String get settingsDataSection => 'Offline data';
+
+  @override
+  String get settingsOfflineCache => 'Cached responses';
+
+  @override
+  String get settingsOfflineCacheSubtitle =>
+      'API responses stored on this device for offline use';
+
+  @override
+  String get settingsCachePageTitle => 'Offline cache';
+
+  @override
+  String get settingsCacheEmpty => 'No cached responses yet.';
+
+  @override
+  String get settingsCacheBottomBarCaption => 'Size of cached files';
+
+  @override
+  String get settingsCacheSortTooltip => 'Sort';
+
+  @override
+  String get settingsCacheSortSheetTitle => 'Sort by';
+
+  @override
+  String get settingsCacheSortByDate => 'Date';
+
+  @override
+  String get settingsCacheSortBySize => 'Size';
+
+  @override
+  String get settingsCacheSortByName => 'Name';
+
+  @override
+  String settingsCacheKeyTxMonth(String year, String month) {
+    return 'Transactions · $year-$month';
+  }
+
+  @override
+  String settingsCacheKeyTxYear(String year) {
+    return 'Transactions · $year';
+  }
+
+  @override
+  String get settingsCacheKeyTxCreditGroups => 'Transactions (credit groups)';
+
+  @override
+  String settingsCacheKeyTxCredit(String shortId) {
+    return 'Transactions (credit $shortId)';
+  }
+
+  @override
+  String settingsCacheKeyWalletCredit(String shortId) {
+    return 'Wallet credit · $shortId';
+  }
+
+  @override
+  String settingsCacheKeyRaw(String key) {
+    return '$key';
+  }
+
+  @override
   String get settingsSecuritySection => 'Security';
 
   @override
@@ -520,6 +582,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get creditsEmpty => 'No deferred credit installments yet.';
 
   @override
+  String get creditsEmptyForSelectedMonth =>
+      'No installments due in this month.';
+
+  @override
   String get creditsUntitledGroup => 'Deferred purchase';
 
   @override
@@ -749,4 +815,28 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get transactionsTotalsNotWeightedExcludingIgnoredHint =>
       'Not weighted excluding ignored';
+
+  @override
+  String get loadFailedNoConnectionTitle => 'No internet connection';
+
+  @override
+  String get loadFailedNoConnectionBody =>
+      'Check your network and try again. If you are online, the server may be unreachable.';
+
+  @override
+  String get cachedDataOfflineBanner =>
+      'Showing saved data — no internet connection.';
+
+  @override
+  String get loadFailedRequestFailedTitle => 'Could not load data';
+
+  @override
+  String get loadFailedRequestFailedBody =>
+      'The request failed. Pull down to refresh or try again shortly.';
+
+  @override
+  String get retry => 'Retry';
+
+  @override
+  String get dialogClose => 'Close';
 }

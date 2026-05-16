@@ -34,6 +34,8 @@ import '../widgets/card_editor_sheet.dart';
 import '../widgets/category_editor_sheet.dart';
 import '../widgets/tag_editor_sheet.dart';
 import '../widgets/grouped_transactions_list.dart';
+import '../widgets/offline_cached_data_banner.dart';
+import '../widgets/remote_load_failure_panel.dart';
 import '../widgets/shell_scaffold.dart';
 import '../widgets/swipeable_list_tile.dart';
 import '../widgets/transactions_month_scope.dart';
@@ -390,8 +392,8 @@ class _AccountTransferBottomSheetState
 
   Future<void> _loadPaymentMethods() async {
     try {
-      final accounts = await getIt<GetAccountsUsecase>()();
-      final cards = await getIt<GetCardsUsecase>()();
+      final accounts = (await getIt<GetAccountsUsecase>()()).value;
+      final cards = (await getIt<GetCardsUsecase>()()).value;
       if (!mounted) return;
       setState(() {
         _accounts = accounts;
@@ -986,31 +988,18 @@ class _TransactionsViewState extends State<_TransactionsView> {
     }
 
     if (state is TransactionsError) {
-      return RefreshIndicator(
-        onRefresh: pullRefresh,
-        child: ListView(
-          physics: const AlwaysScrollableScrollPhysics(),
-          children: [
-            SizedBox(
-              height: MediaQuery.sizeOf(context).height * 0.35,
-              child: Center(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(l10n.unexpectedError),
-                    const SizedBox(height: 12),
-                    ElevatedButton(
-                      onPressed: reloadWithOverlay,
-                      child: const Text('Retry'),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ],
-        ),
+      return RemoteLoadFailurePanel(
+        l10n: l10n,
+        failure: state.failure,
+        onRetry: reloadWithOverlay,
       );
     }
+
+    final offlineCached = switch (state) {
+      TransactionsLoaded(:final servedFromOfflineCache) => servedFromOfflineCache,
+      TransactionsActionError(:final servedFromOfflineCache) => servedFromOfflineCache,
+      _ => false,
+    };
 
     return _monthListBody(
       context,
@@ -1019,6 +1008,7 @@ class _TransactionsViewState extends State<_TransactionsView> {
       filteredList,
       pullRefresh,
       context.read<TransactionsCubit>(),
+      offlineCached,
     );
   }
 
@@ -1029,6 +1019,7 @@ class _TransactionsViewState extends State<_TransactionsView> {
     List<TransactionEntity> monthTransactions,
     Future<void> Function() refresh,
     TransactionsCubit cubit,
+    bool offlineCached,
   ) {
     if (monthTransactions.isEmpty) {
       final locale = Localizations.localeOf(context);
@@ -1041,6 +1032,7 @@ class _TransactionsViewState extends State<_TransactionsView> {
           physics: const AlwaysScrollableScrollPhysics(),
           padding: const EdgeInsets.only(bottom: 8),
           children: [
+            OfflineCachedDataBanner(visible: offlineCached),
             SizedBox(
               height: MediaQuery.sizeOf(context).height * 0.3,
               child: Center(child: Text(l10n.noTransactionsInMonth(monthYear))),
@@ -1056,9 +1048,13 @@ class _TransactionsViewState extends State<_TransactionsView> {
       child: ListView.builder(
         physics: const AlwaysScrollableScrollPhysics(),
         padding: const EdgeInsets.only(bottom: 8),
-        itemCount: rows.length,
+        itemCount: rows.length + (offlineCached ? 1 : 0),
         itemBuilder: (context, index) {
-          return switch (rows[index]) {
+          if (offlineCached && index == 0) {
+            return const OfflineCachedDataBanner(visible: true);
+          }
+          final ri = index - (offlineCached ? 1 : 0);
+          return switch (rows[ri]) {
             GroupedTxnDayMarker(:final day) => GroupedTxnDayHeader(day: day),
             GroupedTxnTxMarker(:final transaction) => GroupedTxnTransactionTile(
               transaction: transaction,
@@ -1738,8 +1734,8 @@ class _PaymentMethodPickerSheetState extends State<_PaymentMethodPickerSheet> {
   }
 
   Future<void> _refreshPicker() async {
-    final freshAccounts = await getIt<GetAccountsUsecase>()();
-    final freshCards = await getIt<GetCardsUsecase>()();
+    final freshAccounts = (await getIt<GetAccountsUsecase>()()).value;
+    final freshCards = (await getIt<GetCardsUsecase>()()).value;
     widget.onListsUpdated(freshAccounts, freshCards);
     if (mounted) setState(() {});
   }
@@ -2264,10 +2260,10 @@ class _TransactionDialogState extends State<_TransactionDialog> {
 
   Future<void> _loadLookups() async {
     try {
-      final accounts = await getIt<GetAccountsUsecase>()();
-      final cards = await getIt<GetCardsUsecase>()();
-      final categories = await getIt<GetCategoriesUsecase>()();
-      final tags = await getIt<GetTagsUsecase>()();
+      final accounts = (await getIt<GetAccountsUsecase>()()).value;
+      final cards = (await getIt<GetCardsUsecase>()()).value;
+      final categories = (await getIt<GetCategoriesUsecase>()()).value;
+      final tags = (await getIt<GetTagsUsecase>()()).value;
       if (mounted) {
         setState(() {
           _accounts = accounts;
@@ -2304,13 +2300,13 @@ class _TransactionDialogState extends State<_TransactionDialog> {
     final gid = widget.transaction?.creditLedgerGroupingKey;
     if (gid == null || gid.isEmpty || !mounted) return;
     try {
-      final list = await getIt<GetTransactionsByCreditGroupIdUsecase>()(gid);
+      final list = (await getIt<GetTransactionsByCreditGroupIdUsecase>()(gid)).value;
       if (!mounted) return;
       list.sort((a, b) => a.transactedAt.compareTo(b.transactedAt));
       final sum = list.fold<double>(0, (a, e) => a + e.value);
       final creditId = widget.transaction?.creditId;
       final wc = creditId != null && creditId.isNotEmpty
-          ? await getIt<GetWalletCreditUsecase>()(creditId)
+          ? (await getIt<GetWalletCreditUsecase>()(creditId)).value
           : null;
       if (!mounted) return;
       setState(() {
@@ -2731,7 +2727,7 @@ class _TransactionDialogState extends State<_TransactionDialog> {
       onAddPressed: (sheetContext) =>
           showCategoryEditorBottomSheet(sheetContext, l10n),
       reloadItems: () async {
-        final cats = await getIt<GetCategoriesUsecase>()();
+        final cats = (await getIt<GetCategoriesUsecase>()()).value;
         if (mounted) {
           setState(() {
             _categories = cats;
@@ -2799,7 +2795,7 @@ class _TransactionDialogState extends State<_TransactionDialog> {
       onAddPressed: (sheetContext) =>
           showTagEditorBottomSheet(sheetContext, l10n),
       reloadItems: () async {
-        final tags = await getIt<GetTagsUsecase>()();
+        final tags = (await getIt<GetTagsUsecase>()()).value;
         if (mounted) {
           setState(() {
             _tags = tags;

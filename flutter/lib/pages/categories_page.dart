@@ -7,6 +7,8 @@ import '../features/categories/domain/entities/category_entity.dart';
 import '../features/categories/presentation/cubit/categories_cubit.dart';
 import '../features/categories/presentation/cubit/categories_state.dart';
 import '../widgets/category_editor_sheet.dart';
+import '../widgets/offline_cached_data_banner.dart';
+import '../widgets/remote_load_failure_panel.dart';
 import '../widgets/shell_scaffold.dart';
 import '../widgets/swipeable_list_tile.dart';
 
@@ -90,31 +92,18 @@ class _CategoriesView extends StatelessWidget {
     }
 
     if (state is CategoriesError) {
-      return RefreshIndicator(
-        onRefresh: pullRefresh,
-        child: ListView(
-          physics: const AlwaysScrollableScrollPhysics(),
-          children: [
-            SizedBox(
-              height: MediaQuery.sizeOf(context).height * 0.35,
-              child: Center(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(l10n.unexpectedError),
-                    const SizedBox(height: 12),
-                    ElevatedButton(
-                      onPressed: reloadWithOverlay,
-                      child: const Text('Retry'),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ],
-        ),
+      return RemoteLoadFailurePanel(
+        l10n: l10n,
+        failure: state.failure,
+        onRetry: reloadWithOverlay,
       );
     }
+
+    final offlineCached = switch (state) {
+      CategoriesLoaded(:final servedFromOfflineCache) => servedFromOfflineCache,
+      CategoriesActionError(:final servedFromOfflineCache) => servedFromOfflineCache,
+      _ => false,
+    };
 
     final categories = switch (state) {
       CategoriesLoaded(:final categories) => categories,
@@ -129,8 +118,9 @@ class _CategoriesView extends StatelessWidget {
           physics: const AlwaysScrollableScrollPhysics(),
           padding: const EdgeInsets.only(bottom: 88),
           children: [
+            OfflineCachedDataBanner(visible: offlineCached),
             SizedBox(
-              height: MediaQuery.sizeOf(context).height * 0.35,
+              height: MediaQuery.sizeOf(context).height * 0.3,
               child: Center(child: Text(l10n.noCategories)),
             ),
           ],
@@ -143,9 +133,14 @@ class _CategoriesView extends StatelessWidget {
       child: ListView.builder(
         physics: const AlwaysScrollableScrollPhysics(),
         padding: const EdgeInsets.only(bottom: 88),
-        itemCount: categories.length,
-        itemBuilder: (context, index) =>
-            _CategoryTile(category: categories[index]),
+        itemCount: categories.length + (offlineCached ? 1 : 0),
+        itemBuilder: (context, index) {
+          if (offlineCached && index == 0) {
+            return const OfflineCachedDataBanner(visible: true);
+          }
+          final i = index - (offlineCached ? 1 : 0);
+          return _CategoryTile(category: categories[i]);
+        },
       ),
     );
   }

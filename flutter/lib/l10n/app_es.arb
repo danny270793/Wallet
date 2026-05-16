@@ -57,6 +57,61 @@
   "settingsThemeSystem": "Predeterminado del sistema",
   "settingsThemeLight": "Claro",
   "settingsThemeDark": "Oscuro",
+  "settingsDataSection": "Datos sin conexión",
+  "settingsOfflineCache": "Respuestas en caché",
+  "settingsOfflineCacheSubtitle": "Respuestas de la API guardadas en este dispositivo para uso sin conexión",
+  "settingsCachePageTitle": "Caché sin conexión",
+  "settingsCacheEmpty": "Aún no hay respuestas en caché.",
+  "settingsCacheBottomBarCaption": "Tamaño de archivos en caché",
+  "settingsCacheSortTooltip": "Ordenar",
+  "settingsCacheSortSheetTitle": "Ordenar por",
+  "settingsCacheSortByDate": "Fecha",
+  "settingsCacheSortBySize": "Tamaño",
+  "settingsCacheSortByName": "Nombre",
+  "settingsCacheKeyTxMonth": "Transacciones · {year}-{month}",
+  "@settingsCacheKeyTxMonth": {
+    "placeholders": {
+      "year": {
+        "type": "String"
+      },
+      "month": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsCacheKeyTxYear": "Transacciones · {year}",
+  "@settingsCacheKeyTxYear": {
+    "placeholders": {
+      "year": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsCacheKeyTxCreditGroups": "Transacciones (grupos de crédito)",
+  "settingsCacheKeyTxCredit": "Transacciones (crédito {shortId})",
+  "@settingsCacheKeyTxCredit": {
+    "placeholders": {
+      "shortId": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsCacheKeyWalletCredit": "Crédito de cartera · {shortId}",
+  "@settingsCacheKeyWalletCredit": {
+    "placeholders": {
+      "shortId": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsCacheKeyRaw": "{key}",
+  "@settingsCacheKeyRaw": {
+    "placeholders": {
+      "key": {
+        "type": "String"
+      }
+    }
+  },
   "settingsSecuritySection": "Seguridad",
   "settingsBiometricUnlockTitle": "Face ID y huella dactilar",
   "settingsBiometricUnlockSubtitle": "Usa la biometría para desbloquear la app.",
@@ -222,6 +277,7 @@
   "creditsNav": "Créditos",
   "creditsTitle": "Créditos",
   "creditsEmpty": "Aún no tienes cuotas diferidas.",
+  "creditsEmptyForSelectedMonth": "No hay cuotas debidas en este mes.",
   "creditsUntitledGroup": "Compra diferida",
   "creditsInstallmentsWithPending": "{count} cuotas - {pending} pendientes",
   "@creditsInstallmentsWithPending": {
@@ -321,5 +377,12 @@
   "transactionsTotalsWeightedHint": "Ponderado",
   "transactionsTotalsWeightedExcludingIgnoredHint": "Ponderado excluyendo ignoradas",
   "transactionsTotalsNotWeightedHint": "Sin ponderar",
-  "transactionsTotalsNotWeightedExcludingIgnoredHint": "Sin ponderar excluyendo ignoradas"
+  "transactionsTotalsNotWeightedExcludingIgnoredHint": "Sin ponderar excluyendo ignoradas",
+  "loadFailedNoConnectionTitle": "Sin conexión a internet",
+  "loadFailedNoConnectionBody": "Comprueba tu red e inténtalo de nuevo. Si tienes conexión, puede que el servidor no esté accesible.",
+  "cachedDataOfflineBanner": "Mostrando datos guardados — sin conexión a internet.",
+  "loadFailedRequestFailedTitle": "No se pudieron cargar los datos",
+  "loadFailedRequestFailedBody": "La solicitud falló. Desliza hacia abajo para actualizar o inténtalo de nuevo en un momento.",
+  "retry": "Reintentar",
+  "dialogClose": "Cerrar"
 }

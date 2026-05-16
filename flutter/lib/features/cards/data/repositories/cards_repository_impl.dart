@@ -1,13 +1,31 @@
+import '../../../../core/offline/offline_fetch.dart';
+import '../../../../core/offline/offline_served_bundle.dart';
+import '../../../../core/offline/wallet_offline_cache.dart';
+import '../../../../core/offline/wallet_offline_user_context.dart';
 import '../../domain/entities/card_entity.dart';
 import '../../domain/repositories/cards_repository.dart';
 import '../datasources/cards_remote_datasource.dart';
 
 class CardsRepositoryImpl implements CardsRepository {
   final CardsRemoteDatasource _datasource;
-  const CardsRepositoryImpl(this._datasource);
+  final WalletOfflineCache _offlineCache;
+  final WalletOfflineUserContext _offlineSession;
+
+  const CardsRepositoryImpl(
+    this._datasource,
+    this._offlineCache,
+    this._offlineSession,
+  );
 
   @override
-  Future<List<CardEntity>> getCards() => _datasource.getCards();
+  Future<OfflineServedBundle<List<CardEntity>>> getCards() => fetchListWithOfflineCache(
+        session: _offlineSession,
+        cache: _offlineCache,
+        cacheKey: WalletOfflineCacheKeys.cards,
+        remote: _datasource.getCards,
+        fromJson: CardEntity.fromJson,
+        toJson: (e) => e.toJson(),
+      );
 
   @override
   Future<CardEntity> createCard({

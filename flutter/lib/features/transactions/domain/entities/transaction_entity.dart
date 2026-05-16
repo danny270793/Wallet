@@ -75,6 +75,44 @@ class TransactionEntity extends Equatable {
     );
   }
 
+  Map<String, dynamic> toJson() {
+    final m = <String, dynamic>{
+      'id': id,
+      'userId': userId,
+      'accountId': accountId,
+      'cardId': cardId,
+      'categoryId': categoryId,
+      'tagId': tagId,
+      'description': description,
+      'transactedAt': transactedAt.toUtc().toIso8601String(),
+      'value': value,
+      'ignore': ignore,
+      'percentage': percentage,
+      'transferGroupId': transferGroupId,
+      'creditId': creditId,
+      'createdAt': createdAt.toUtc().toIso8601String(),
+      'updatedAt': updatedAt.toUtc().toIso8601String(),
+    };
+    if (accountName != null) {
+      m['wallet_accounts'] = {'name': accountName};
+    }
+    if (cardName != null) {
+      m['wallet_cards'] = {'name': cardName};
+    }
+    if (categoryName != null) {
+      m['wallet_categories'] = {'name': categoryName};
+    }
+    if (tagName != null) {
+      m['wallet_tags'] = {'name': tagName};
+    }
+    if (creditTransactedAt != null) {
+      m['wallet_credits'] = {
+        'transactedAt': creditTransactedAt!.toUtc().toIso8601String(),
+      };
+    }
+    return m;
+  }
+
   /// Reads `name` from a PostgREST embedded row, e.g. `wallet_accounts: { name: "…" }`.
   static String? _embeddedRelationName(Map<String, dynamic> json, String key) {
     final rel = json[key];

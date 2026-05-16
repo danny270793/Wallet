@@ -1,4 +1,6 @@
 import 'package:equatable/equatable.dart';
+
+import '../../../../core/remote_load_failure.dart';
 import '../../domain/entities/transaction_entity.dart';
 
 sealed class TransactionsState extends Equatable {
@@ -19,22 +21,24 @@ class TransactionsLoading extends TransactionsState {
 
 class TransactionsLoaded extends TransactionsState {
   final List<TransactionEntity> transactions;
-  const TransactionsLoaded(this.transactions);
+  final bool servedFromOfflineCache;
+  const TransactionsLoaded(this.transactions, {this.servedFromOfflineCache = false});
   @override
-  List<Object?> get props => [transactions];
+  List<Object?> get props => [transactions, servedFromOfflineCache];
 }
 
 class TransactionsError extends TransactionsState {
-  final String? message;
-  const TransactionsError({this.message});
+  final RemoteLoadFailure failure;
+  const TransactionsError({this.failure = RemoteLoadFailure.requestFailed});
   @override
-  List<Object?> get props => [message];
+  List<Object?> get props => [failure];
 }
 
 class TransactionsActionError extends TransactionsState {
   final List<TransactionEntity> transactions;
   final String? message;
-  const TransactionsActionError(this.transactions, {this.message});
+  final bool servedFromOfflineCache;
+  const TransactionsActionError(this.transactions, {this.message, this.servedFromOfflineCache = false});
   @override
-  List<Object?> get props => [transactions, message];
+  List<Object?> get props => [transactions, message, servedFromOfflineCache];
 }

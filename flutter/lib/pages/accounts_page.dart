@@ -7,6 +7,8 @@ import '../features/accounts/domain/entities/account_entity.dart';
 import '../features/accounts/presentation/cubit/accounts_cubit.dart';
 import '../features/accounts/presentation/cubit/accounts_state.dart';
 import '../widgets/account_editor_sheet.dart';
+import '../widgets/offline_cached_data_banner.dart';
+import '../widgets/remote_load_failure_panel.dart';
 import '../widgets/shell_scaffold.dart';
 import '../widgets/swipeable_list_tile.dart';
 import '../widgets/wallet_dual_balance_trailing.dart';
@@ -95,31 +97,18 @@ class _AccountsView extends StatelessWidget {
     }
 
     if (state is AccountsError) {
-      return RefreshIndicator(
-        onRefresh: pullRefresh,
-        child: ListView(
-          physics: const AlwaysScrollableScrollPhysics(),
-          children: [
-            SizedBox(
-              height: MediaQuery.sizeOf(context).height * 0.35,
-              child: Center(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(l10n.unexpectedError),
-                    const SizedBox(height: 12),
-                    ElevatedButton(
-                      onPressed: reloadWithOverlay,
-                      child: const Text('Retry'),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ],
-        ),
+      return RemoteLoadFailurePanel(
+        l10n: l10n,
+        failure: state.failure,
+        onRetry: reloadWithOverlay,
       );
     }
+
+    final offlineCached = switch (state) {
+      AccountsLoaded(:final servedFromOfflineCache) => servedFromOfflineCache,
+      AccountsActionError(:final servedFromOfflineCache) => servedFromOfflineCache,
+      _ => false,
+    };
 
     final accounts = switch (state) {
       AccountsLoaded(:final accounts) => accounts,
@@ -134,8 +123,9 @@ class _AccountsView extends StatelessWidget {
           physics: const AlwaysScrollableScrollPhysics(),
           padding: const EdgeInsets.only(bottom: 88),
           children: [
+            OfflineCachedDataBanner(visible: offlineCached),
             SizedBox(
-              height: MediaQuery.sizeOf(context).height * 0.35,
+              height: MediaQuery.sizeOf(context).height * 0.3,
               child: Center(child: Text(l10n.noAccounts)),
             ),
           ],
@@ -148,8 +138,14 @@ class _AccountsView extends StatelessWidget {
       child: ListView.builder(
         physics: const AlwaysScrollableScrollPhysics(),
         padding: const EdgeInsets.only(bottom: 8),
-        itemCount: accounts.length,
-        itemBuilder: (context, index) => _AccountTile(account: accounts[index]),
+        itemCount: accounts.length + (offlineCached ? 1 : 0),
+        itemBuilder: (context, index) {
+          if (offlineCached && index == 0) {
+            return const OfflineCachedDataBanner(visible: true);
+          }
+          final i = index - (offlineCached ? 1 : 0);
+          return _AccountTile(account: accounts[i]);
+        },
       ),
     );
   }

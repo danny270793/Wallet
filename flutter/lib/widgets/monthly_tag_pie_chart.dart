@@ -4,6 +4,7 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:wallet/l10n/app_localizations.dart';
 
+import '../core/ui/app_icons.dart';
 import '../features/transactions/domain/entities/transaction_entity.dart';
 import 'bottom_sheet_pinned_title.dart';
 
@@ -438,7 +439,7 @@ class MonthlyTagPieChart extends StatelessWidget {
                 icon: Badge(
                   isLabelVisible: tagKeysFilter != null,
                   smallSize: 8,
-                  child: const Icon(Icons.filter_list_rounded),
+                  child: const Icon(AppIcons.filter),
                 ),
               ),
             ],

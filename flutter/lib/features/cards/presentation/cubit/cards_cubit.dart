@@ -1,5 +1,6 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/logger/app_logger.dart';
+import '../../../../core/remote_load_failure.dart';
 import '../../../../core/sort_by_name.dart';
 import '../../domain/entities/card_entity.dart';
 import '../../domain/usecases/get_cards_usecase.dart';
@@ -29,16 +30,23 @@ class CardsCubit extends Cubit<CardsState> {
         _adjustBalanceViaTransaction = adjustBalanceViaTransaction,
         super(const CardsInitial());
 
+  bool _preserveOfflineCacheFlag() => switch (state) {
+        CardsLoaded(:final servedFromOfflineCache) => servedFromOfflineCache,
+        CardsActionError(:final servedFromOfflineCache) => servedFromOfflineCache,
+        _ => false,
+      };
+
   Future<void> load({bool showLoading = true}) async {
     AppLogger.debug('loading cards');
     if (showLoading) emit(const CardsLoading());
     try {
-      final cards = sortedByName(await _getCards(), (c) => c.name);
+      final bundle = await _getCards();
+      final cards = sortedByName(bundle.value, (c) => c.name);
       AppLogger.info('cards loaded: ${cards.length}');
-      emit(CardsLoaded(cards));
+      emit(CardsLoaded(cards, servedFromOfflineCache: bundle.servedFromOfflineCache));
     } catch (e, s) {
       AppLogger.error('failed to load cards', e, s);
-      emit(const CardsError());
+      emit(CardsError(failure: classifyRemoteLoadError(e)));
     }
   }
 
@@ -58,11 +66,12 @@ class CardsCubit extends Cubit<CardsState> {
         payDay: payDay,
       );
       AppLogger.info('card created');
-      final cards = sortedByName(await _getCards(), (c) => c.name);
-      emit(CardsLoaded(cards));
+      final bundle = await _getCards();
+      final cards = sortedByName(bundle.value, (c) => c.name);
+      emit(CardsLoaded(cards, servedFromOfflineCache: bundle.servedFromOfflineCache));
     } catch (e, s) {
       AppLogger.error('failed to create card', e, s);
-      emit(CardsActionError(current));
+      emit(CardsActionError(current, servedFromOfflineCache: _preserveOfflineCacheFlag()));
     }
   }
 
@@ -90,15 +99,20 @@ class CardsCubit extends Cubit<CardsState> {
         await _adjustBalanceViaTransaction(cardId: id, delta: delta);
       }
       AppLogger.info('card updated: $id');
-      final cards = sortedByName(await _getCards(), (c) => c.name);
-      emit(CardsLoaded(cards));
+      final bundle = await _getCards();
+      final cards = sortedByName(bundle.value, (c) => c.name);
+      emit(CardsLoaded(cards, servedFromOfflineCache: bundle.servedFromOfflineCache));
     } catch (e, s) {
       AppLogger.error('failed to update card', e, s);
       try {
-        final reloaded = sortedByName(await _getCards(), (c) => c.name);
-        emit(CardsActionError(reloaded));
+        final bundle = await _getCards();
+        final reloaded = sortedByName(bundle.value, (c) => c.name);
+        emit(CardsActionError(
+          reloaded,
+          servedFromOfflineCache: bundle.servedFromOfflineCache,
+        ));
       } catch (_) {
-        emit(CardsActionError(current));
+        emit(CardsActionError(current, servedFromOfflineCache: _preserveOfflineCacheFlag()));
       }
     }
   }
@@ -111,11 +125,12 @@ class CardsCubit extends Cubit<CardsState> {
       AppLogger.info('card deleted: $id');
       emit(CardsLoaded(
         sortedByName(current.where((a) => a.id != id).toList(), (c) => c.name),
+        servedFromOfflineCache: _preserveOfflineCacheFlag(),
       ));
       return true;
     } catch (e, s) {
       AppLogger.error('failed to delete card', e, s);
-      emit(CardsActionError(current));
+      emit(CardsActionError(current, servedFromOfflineCache: _preserveOfflineCacheFlag()));
       return false;
     }
   }

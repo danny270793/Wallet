@@ -1,4 +1,6 @@
 import 'package:equatable/equatable.dart';
+
+import '../../../../core/remote_load_failure.dart';
 import '../../domain/entities/account_entity.dart';
 
 sealed class AccountsState extends Equatable {
@@ -19,23 +21,25 @@ class AccountsLoading extends AccountsState {
 
 class AccountsLoaded extends AccountsState {
   final List<AccountEntity> accounts;
-  const AccountsLoaded(this.accounts);
+  final bool servedFromOfflineCache;
+  const AccountsLoaded(this.accounts, {this.servedFromOfflineCache = false});
   @override
-  List<Object?> get props => [accounts];
+  List<Object?> get props => [accounts, servedFromOfflineCache];
 }
 
 class AccountsError extends AccountsState {
-  final String? message;
-  const AccountsError({this.message});
+  final RemoteLoadFailure failure;
+  const AccountsError({this.failure = RemoteLoadFailure.requestFailed});
   @override
-  List<Object?> get props => [message];
+  List<Object?> get props => [failure];
 }
 
 // Emitted when a CRUD action fails; retains the current list so the UI stays rendered.
 class AccountsActionError extends AccountsState {
   final List<AccountEntity> accounts;
   final String? message;
-  const AccountsActionError(this.accounts, {this.message});
+  final bool servedFromOfflineCache;
+  const AccountsActionError(this.accounts, {this.message, this.servedFromOfflineCache = false});
   @override
-  List<Object?> get props => [accounts, message];
+  List<Object?> get props => [accounts, message, servedFromOfflineCache];
 }

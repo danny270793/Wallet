@@ -1,6 +1,7 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/logger/app_logger.dart';
+import '../../../../core/remote_load_failure.dart';
 import '../../domain/entities/transaction_entity.dart';
 import '../../domain/usecases/get_transactions_for_year_usecase.dart';
 
@@ -17,13 +18,14 @@ final class YearlyDashboardLoading extends YearlyDashboardState {
 }
 
 final class YearlyDashboardLoaded extends YearlyDashboardState {
-  const YearlyDashboardLoaded(this.transactions);
+  const YearlyDashboardLoaded(this.transactions, {this.servedFromOfflineCache = false});
   final List<TransactionEntity> transactions;
+  final bool servedFromOfflineCache;
 }
 
 final class YearlyDashboardError extends YearlyDashboardState {
-  const YearlyDashboardError(this.message);
-  final String? message;
+  const YearlyDashboardError(this.failure);
+  final RemoteLoadFailure failure;
 }
 
 class YearlyDashboardCubit extends Cubit<YearlyDashboardState> {
@@ -37,16 +39,20 @@ class YearlyDashboardCubit extends Cubit<YearlyDashboardState> {
     final gen = ++_generation;
     emit(const YearlyDashboardLoading());
     try {
-      final list = await _getYear(year);
+      final bundle = await _getYear(year);
       if (gen != _generation) return;
       if (isClosed) return;
+      final list = bundle.value;
       AppLogger.info('yearly dashboard loaded ${year.year}: ${list.length}');
-      emit(YearlyDashboardLoaded(list));
+      emit(YearlyDashboardLoaded(
+        list,
+        servedFromOfflineCache: bundle.servedFromOfflineCache,
+      ));
     } catch (e, s) {
       if (gen != _generation) return;
       if (isClosed) return;
       AppLogger.error('yearly dashboard load failed', e, s);
-      emit(YearlyDashboardError(e.toString()));
+      emit(YearlyDashboardError(classifyRemoteLoadError(e)));
     }
   }
 }

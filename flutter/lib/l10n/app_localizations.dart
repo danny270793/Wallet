@@ -440,6 +440,108 @@ abstract class AppLocalizations {
   /// **'Dark'**
   String get settingsThemeDark;
 
+  /// No description provided for @settingsDataSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Offline data'**
+  String get settingsDataSection;
+
+  /// No description provided for @settingsOfflineCache.
+  ///
+  /// In en, this message translates to:
+  /// **'Cached responses'**
+  String get settingsOfflineCache;
+
+  /// No description provided for @settingsOfflineCacheSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'API responses stored on this device for offline use'**
+  String get settingsOfflineCacheSubtitle;
+
+  /// No description provided for @settingsCachePageTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Offline cache'**
+  String get settingsCachePageTitle;
+
+  /// No description provided for @settingsCacheEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No cached responses yet.'**
+  String get settingsCacheEmpty;
+
+  /// No description provided for @settingsCacheBottomBarCaption.
+  ///
+  /// In en, this message translates to:
+  /// **'Size of cached files'**
+  String get settingsCacheBottomBarCaption;
+
+  /// No description provided for @settingsCacheSortTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Sort'**
+  String get settingsCacheSortTooltip;
+
+  /// No description provided for @settingsCacheSortSheetTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Sort by'**
+  String get settingsCacheSortSheetTitle;
+
+  /// No description provided for @settingsCacheSortByDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Date'**
+  String get settingsCacheSortByDate;
+
+  /// No description provided for @settingsCacheSortBySize.
+  ///
+  /// In en, this message translates to:
+  /// **'Size'**
+  String get settingsCacheSortBySize;
+
+  /// No description provided for @settingsCacheSortByName.
+  ///
+  /// In en, this message translates to:
+  /// **'Name'**
+  String get settingsCacheSortByName;
+
+  /// No description provided for @settingsCacheKeyTxMonth.
+  ///
+  /// In en, this message translates to:
+  /// **'Transactions · {year}-{month}'**
+  String settingsCacheKeyTxMonth(String year, String month);
+
+  /// No description provided for @settingsCacheKeyTxYear.
+  ///
+  /// In en, this message translates to:
+  /// **'Transactions · {year}'**
+  String settingsCacheKeyTxYear(String year);
+
+  /// No description provided for @settingsCacheKeyTxCreditGroups.
+  ///
+  /// In en, this message translates to:
+  /// **'Transactions (credit groups)'**
+  String get settingsCacheKeyTxCreditGroups;
+
+  /// No description provided for @settingsCacheKeyTxCredit.
+  ///
+  /// In en, this message translates to:
+  /// **'Transactions (credit {shortId})'**
+  String settingsCacheKeyTxCredit(String shortId);
+
+  /// No description provided for @settingsCacheKeyWalletCredit.
+  ///
+  /// In en, this message translates to:
+  /// **'Wallet credit · {shortId}'**
+  String settingsCacheKeyWalletCredit(String shortId);
+
+  /// No description provided for @settingsCacheKeyRaw.
+  ///
+  /// In en, this message translates to:
+  /// **'{key}'**
+  String settingsCacheKeyRaw(String key);
+
   /// No description provided for @settingsSecuritySection.
   ///
   /// In en, this message translates to:
@@ -1034,6 +1136,12 @@ abstract class AppLocalizations {
   /// **'No deferred credit installments yet.'**
   String get creditsEmpty;
 
+  /// No description provided for @creditsEmptyForSelectedMonth.
+  ///
+  /// In en, this message translates to:
+  /// **'No installments due in this month.'**
+  String get creditsEmptyForSelectedMonth;
+
   /// No description provided for @creditsUntitledGroup.
   ///
   /// In en, this message translates to:
@@ -1447,6 +1555,48 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Not weighted excluding ignored'**
   String get transactionsTotalsNotWeightedExcludingIgnoredHint;
+
+  /// No description provided for @loadFailedNoConnectionTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No internet connection'**
+  String get loadFailedNoConnectionTitle;
+
+  /// No description provided for @loadFailedNoConnectionBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Check your network and try again. If you are online, the server may be unreachable.'**
+  String get loadFailedNoConnectionBody;
+
+  /// No description provided for @cachedDataOfflineBanner.
+  ///
+  /// In en, this message translates to:
+  /// **'Showing saved data — no internet connection.'**
+  String get cachedDataOfflineBanner;
+
+  /// No description provided for @loadFailedRequestFailedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load data'**
+  String get loadFailedRequestFailedTitle;
+
+  /// No description provided for @loadFailedRequestFailedBody.
+  ///
+  /// In en, this message translates to:
+  /// **'The request failed. Pull down to refresh or try again shortly.'**
+  String get loadFailedRequestFailedBody;
+
+  /// No description provided for @retry.
+  ///
+  /// In en, this message translates to:
+  /// **'Retry'**
+  String get retry;
+
+  /// No description provided for @dialogClose.
+  ///
+  /// In en, this message translates to:
+  /// **'Close'**
+  String get dialogClose;
 }
 
 class _AppLocalizationsDelegate

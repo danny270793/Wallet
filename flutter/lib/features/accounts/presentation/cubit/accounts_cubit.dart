@@ -1,5 +1,6 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/logger/app_logger.dart';
+import '../../../../core/remote_load_failure.dart';
 import '../../../../core/sort_by_name.dart';
 import '../../domain/entities/account_entity.dart';
 import '../../domain/usecases/get_accounts_usecase.dart';
@@ -29,16 +30,23 @@ class AccountsCubit extends Cubit<AccountsState> {
         _adjustBalanceViaTransaction = adjustBalanceViaTransaction,
         super(const AccountsInitial());
 
+  bool _preserveOfflineCacheFlag() => switch (state) {
+        AccountsLoaded(:final servedFromOfflineCache) => servedFromOfflineCache,
+        AccountsActionError(:final servedFromOfflineCache) => servedFromOfflineCache,
+        _ => false,
+      };
+
   Future<void> load({bool showLoading = true}) async {
     AppLogger.debug('loading accounts');
     if (showLoading) emit(const AccountsLoading());
     try {
-      final accounts = sortedByName(await _getAccounts(), (a) => a.name);
+      final bundle = await _getAccounts();
+      final accounts = sortedByName(bundle.value, (a) => a.name);
       AppLogger.info('accounts loaded: ${accounts.length}');
-      emit(AccountsLoaded(accounts));
+      emit(AccountsLoaded(accounts, servedFromOfflineCache: bundle.servedFromOfflineCache));
     } catch (e, s) {
       AppLogger.error('failed to load accounts', e, s);
-      emit(const AccountsError());
+      emit(AccountsError(failure: classifyRemoteLoadError(e)));
     }
   }
 
@@ -48,11 +56,12 @@ class AccountsCubit extends Cubit<AccountsState> {
     try {
       await _createAccount(name: name, description: description);
       AppLogger.info('account created');
-      final accounts = sortedByName(await _getAccounts(), (a) => a.name);
-      emit(AccountsLoaded(accounts));
+      final bundle = await _getAccounts();
+      final accounts = sortedByName(bundle.value, (a) => a.name);
+      emit(AccountsLoaded(accounts, servedFromOfflineCache: bundle.servedFromOfflineCache));
     } catch (e, s) {
       AppLogger.error('failed to create account', e, s);
-      emit(AccountsActionError(current));
+      emit(AccountsActionError(current, servedFromOfflineCache: _preserveOfflineCacheFlag()));
     }
   }
 
@@ -71,16 +80,21 @@ class AccountsCubit extends Cubit<AccountsState> {
       if (delta.abs() >= 1e-9) {
         await _adjustBalanceViaTransaction(accountId: id, delta: delta);
       }
-      final accounts = sortedByName(await _getAccounts(), (a) => a.name);
+      final bundle = await _getAccounts();
+      final accounts = sortedByName(bundle.value, (a) => a.name);
       AppLogger.info('account updated: $id');
-      emit(AccountsLoaded(accounts));
+      emit(AccountsLoaded(accounts, servedFromOfflineCache: bundle.servedFromOfflineCache));
     } catch (e, s) {
       AppLogger.error('failed to update account', e, s);
       try {
-        final reloaded = sortedByName(await _getAccounts(), (a) => a.name);
-        emit(AccountsActionError(reloaded));
+        final bundle = await _getAccounts();
+        final reloaded = sortedByName(bundle.value, (a) => a.name);
+        emit(AccountsActionError(
+          reloaded,
+          servedFromOfflineCache: bundle.servedFromOfflineCache,
+        ));
       } catch (_) {
-        emit(AccountsActionError(current));
+        emit(AccountsActionError(current, servedFromOfflineCache: _preserveOfflineCacheFlag()));
       }
     }
   }
@@ -93,11 +107,12 @@ class AccountsCubit extends Cubit<AccountsState> {
       AppLogger.info('account deleted: $id');
       emit(AccountsLoaded(
         sortedByName(current.where((a) => a.id != id).toList(), (a) => a.name),
+        servedFromOfflineCache: _preserveOfflineCacheFlag(),
       ));
       return true;
     } catch (e, s) {
       AppLogger.error('failed to delete account', e, s);
-      emit(AccountsActionError(current));
+      emit(AccountsActionError(current, servedFromOfflineCache: _preserveOfflineCacheFlag()));
       return false;
     }
   }

@@ -3,8 +3,11 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:wallet/l10n/app_localizations.dart';
 
 import '../core/di/injection.dart';
+import '../core/ui/app_icons.dart';
 import '../features/transactions/presentation/cubit/yearly_dashboard_cubit.dart';
 import '../widgets/dashboard_view_options_bottom_sheet.dart';
+import '../widgets/offline_cached_data_banner.dart';
+import '../widgets/remote_load_failure_panel.dart';
 import '../widgets/shell_scaffold.dart';
 import '../widgets/yearly_dashboard_scope.dart';
 import '../widgets/yearly_weighted_income_bar_chart.dart';
@@ -79,7 +82,7 @@ class _YearlyDashboardViewState extends State<_YearlyDashboardView> {
               appBarActionsBeforeSettings: switch (state) {
                 YearlyDashboardLoaded() => <Widget>[
                     IconButton(
-                      icon: const Icon(Icons.tune_rounded),
+                      icon: const Icon(AppIcons.filter),
                       tooltip: l10n.monthlyDashboardConfigureTooltip,
                       onPressed: () => showDashboardViewOptionsBottomSheet(
                         context: context,
@@ -98,28 +101,14 @@ class _YearlyDashboardViewState extends State<_YearlyDashboardView> {
               body: switch (state) {
                 YearlyDashboardInitial() || YearlyDashboardLoading() =>
                   const Center(child: CircularProgressIndicator()),
-                YearlyDashboardError(:final message) => Center(
-                  child: Padding(
-                    padding: const EdgeInsets.all(24),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          message ?? l10n.unexpectedError,
-                          textAlign: TextAlign.center,
-                        ),
-                        const SizedBox(height: 16),
-                        FilledButton(
-                          onPressed: () => context
-                              .read<YearlyDashboardCubit>()
-                              .loadYear(visibleYear),
-                          child: const Text('Retry'),
-                        ),
-                      ],
-                    ),
-                  ),
+                YearlyDashboardError(:final failure) => RemoteLoadFailurePanel(
+                  l10n: l10n,
+                  failure: failure,
+                  onRetry: () => context
+                      .read<YearlyDashboardCubit>()
+                      .loadYear(visibleYear),
                 ),
-                YearlyDashboardLoaded(:final transactions) => RefreshIndicator(
+                YearlyDashboardLoaded(:final transactions, :final servedFromOfflineCache) => RefreshIndicator(
                   onRefresh: () => context
                       .read<YearlyDashboardCubit>()
                       .loadYear(visibleYear),
@@ -130,6 +119,7 @@ class _YearlyDashboardViewState extends State<_YearlyDashboardView> {
                       vertical: 8,
                     ),
                     children: [
+                      OfflineCachedDataBanner(visible: servedFromOfflineCache),
                       YearlyCumulativeNetBarChart(
                         l10n: l10n,
                         year: y,

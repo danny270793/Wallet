@@ -1,5 +1,6 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/logger/app_logger.dart';
+import '../../../../core/remote_load_failure.dart';
 import '../../../../core/sort_by_name.dart';
 import '../../domain/entities/category_entity.dart';
 import '../../domain/usecases/get_categories_usecase.dart';
@@ -25,16 +26,26 @@ class CategoriesCubit extends Cubit<CategoriesState> {
         _deleteCategory = deleteCategory,
         super(const CategoriesInitial());
 
+  bool _preserveOfflineCacheFlag() => switch (state) {
+        CategoriesLoaded(:final servedFromOfflineCache) => servedFromOfflineCache,
+        CategoriesActionError(:final servedFromOfflineCache) => servedFromOfflineCache,
+        _ => false,
+      };
+
   Future<void> load({bool showLoading = true}) async {
     AppLogger.debug('loading categories');
     if (showLoading) emit(const CategoriesLoading());
     try {
-      final categories = sortedByName(await _getCategories(), (c) => c.name);
+      final bundle = await _getCategories();
+      final categories = sortedByName(bundle.value, (c) => c.name);
       AppLogger.info('categories loaded: ${categories.length}');
-      emit(CategoriesLoaded(categories));
+      emit(CategoriesLoaded(
+        categories,
+        servedFromOfflineCache: bundle.servedFromOfflineCache,
+      ));
     } catch (e, s) {
       AppLogger.error('failed to load categories', e, s);
-      emit(const CategoriesError());
+      emit(CategoriesError(failure: classifyRemoteLoadError(e)));
     }
   }
 
@@ -44,10 +55,13 @@ class CategoriesCubit extends Cubit<CategoriesState> {
     try {
       final category = await _createCategory(name: name, description: description);
       AppLogger.info('category created: ${category.id}');
-      emit(CategoriesLoaded(sortedByName([...current, category], (c) => c.name)));
+      emit(CategoriesLoaded(
+        sortedByName([...current, category], (c) => c.name),
+        servedFromOfflineCache: _preserveOfflineCacheFlag(),
+      ));
     } catch (e, s) {
       AppLogger.error('failed to create category', e, s);
-      emit(CategoriesActionError(current));
+      emit(CategoriesActionError(current, servedFromOfflineCache: _preserveOfflineCacheFlag()));
     }
   }
 
@@ -62,10 +76,11 @@ class CategoriesCubit extends Cubit<CategoriesState> {
           current.map((a) => a.id == id ? updated : a).toList(),
           (c) => c.name,
         ),
+        servedFromOfflineCache: _preserveOfflineCacheFlag(),
       ));
     } catch (e, s) {
       AppLogger.error('failed to update category', e, s);
-      emit(CategoriesActionError(current));
+      emit(CategoriesActionError(current, servedFromOfflineCache: _preserveOfflineCacheFlag()));
     }
   }
 
@@ -77,11 +92,12 @@ class CategoriesCubit extends Cubit<CategoriesState> {
       AppLogger.info('category deleted: $id');
       emit(CategoriesLoaded(
         sortedByName(current.where((a) => a.id != id).toList(), (c) => c.name),
+        servedFromOfflineCache: _preserveOfflineCacheFlag(),
       ));
       return true;
     } catch (e, s) {
       AppLogger.error('failed to delete category', e, s);
-      emit(CategoriesActionError(current));
+      emit(CategoriesActionError(current, servedFromOfflineCache: _preserveOfflineCacheFlag()));
       return false;
     }
   }

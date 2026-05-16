@@ -1,4 +1,6 @@
 import 'package:equatable/equatable.dart';
+
+import '../../../../core/remote_load_failure.dart';
 import '../../domain/entities/asset_entity.dart';
 
 sealed class AssetsState extends Equatable {
@@ -19,22 +21,24 @@ class AssetsLoading extends AssetsState {
 
 class AssetsLoaded extends AssetsState {
   final List<AssetEntity> assets;
-  const AssetsLoaded(this.assets);
+  final bool servedFromOfflineCache;
+  const AssetsLoaded(this.assets, {this.servedFromOfflineCache = false});
   @override
-  List<Object?> get props => [assets];
+  List<Object?> get props => [assets, servedFromOfflineCache];
 }
 
 class AssetsError extends AssetsState {
-  final String? message;
-  const AssetsError({this.message});
+  final RemoteLoadFailure failure;
+  const AssetsError({this.failure = RemoteLoadFailure.requestFailed});
   @override
-  List<Object?> get props => [message];
+  List<Object?> get props => [failure];
 }
 
 /// Create failed; list is unchanged so the UI can keep showing prior data.
 class AssetsActionError extends AssetsState {
   final List<AssetEntity> assets;
-  const AssetsActionError(this.assets);
+  final bool servedFromOfflineCache;
+  const AssetsActionError(this.assets, {this.servedFromOfflineCache = false});
   @override
-  List<Object?> get props => [assets];
+  List<Object?> get props => [assets, servedFromOfflineCache];
 }

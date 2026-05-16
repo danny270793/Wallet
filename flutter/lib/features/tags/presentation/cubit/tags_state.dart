@@ -1,4 +1,6 @@
 import 'package:equatable/equatable.dart';
+
+import '../../../../core/remote_load_failure.dart';
 import '../../domain/entities/tag_entity.dart';
 
 sealed class TagsState extends Equatable {
@@ -19,22 +21,24 @@ class TagsLoading extends TagsState {
 
 class TagsLoaded extends TagsState {
   final List<TagEntity> tags;
-  const TagsLoaded(this.tags);
+  final bool servedFromOfflineCache;
+  const TagsLoaded(this.tags, {this.servedFromOfflineCache = false});
   @override
-  List<Object?> get props => [tags];
+  List<Object?> get props => [tags, servedFromOfflineCache];
 }
 
 class TagsError extends TagsState {
-  final String? message;
-  const TagsError({this.message});
+  final RemoteLoadFailure failure;
+  const TagsError({this.failure = RemoteLoadFailure.requestFailed});
   @override
-  List<Object?> get props => [message];
+  List<Object?> get props => [failure];
 }
 
 class TagsActionError extends TagsState {
   final List<TagEntity> tags;
   final String? message;
-  const TagsActionError(this.tags, {this.message});
+  final bool servedFromOfflineCache;
+  const TagsActionError(this.tags, {this.message, this.servedFromOfflineCache = false});
   @override
-  List<Object?> get props => [tags, message];
+  List<Object?> get props => [tags, message, servedFromOfflineCache];
 }

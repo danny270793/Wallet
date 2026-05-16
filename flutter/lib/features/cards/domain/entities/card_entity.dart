@@ -40,6 +40,18 @@ class CardEntity extends Equatable {
     balance: (json['balance'] as num?)?.toDouble() ?? 0,
   );
 
+  Map<String, dynamic> toJson() => {
+    'id': id,
+    'userId': userId,
+    'name': name,
+    'description': description,
+    'createdAt': createdAt.toUtc().toIso8601String(),
+    'updatedAt': updatedAt.toUtc().toIso8601String(),
+    'cutDay': cutDay,
+    'payDay': payDay,
+    'balance': balance,
+  };
+
   @override
   List<Object?> get props => [
         id,

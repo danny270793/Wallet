@@ -2,6 +2,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/credit_group_description.dart';
 import '../../../../core/deferred_credit_installment_schedule.dart';
 import '../../../../core/logger/app_logger.dart';
+import '../../../../core/remote_load_failure.dart';
 import '../../../../core/split_equal_amounts.dart';
 import '../../../cards/domain/usecases/get_cards_usecase.dart';
 import '../../../wallet_credits/domain/usecases/create_wallet_credit_usecase.dart';
@@ -51,6 +52,12 @@ class TransactionsCubit extends Cubit<TransactionsState> {
         _updateWalletCredit = updateWalletCredit,
         super(const TransactionsInitial());
 
+  bool _transactionsOfflineFlag() => switch (state) {
+        TransactionsLoaded(:final servedFromOfflineCache) => servedFromOfflineCache,
+        TransactionsActionError(:final servedFromOfflineCache) => servedFromOfflineCache,
+        _ => false,
+      };
+
   /// Last month that was requested via [loadForMonth] (normalized local day 1).
   DateTime? _loadedMonthStart;
 
@@ -64,16 +71,20 @@ class TransactionsCubit extends Cubit<TransactionsState> {
     final gen = ++_loadGeneration;
     if (showLoading) emit(const TransactionsLoading());
     try {
-      final transactions = await _getTransactions(month);
+      final bundle = await _getTransactions(month);
       if (gen != _loadGeneration) return;
       if (isClosed) return;
+      final transactions = bundle.value;
       AppLogger.info('transactions loaded for ${month.year}-${month.month}: ${transactions.length}');
-      emit(TransactionsLoaded(transactions));
+      emit(TransactionsLoaded(
+        transactions,
+        servedFromOfflineCache: bundle.servedFromOfflineCache,
+      ));
     } catch (e, s) {
       if (gen != _loadGeneration) return;
       if (isClosed) return;
       AppLogger.error('failed to load transactions', e, s);
-      emit(const TransactionsError());
+      emit(TransactionsError(failure: classifyRemoteLoadError(e)));
     }
   }
 
@@ -83,14 +94,20 @@ class TransactionsCubit extends Cubit<TransactionsState> {
     final prev = _currentTransactions();
     final snapshotMonth = DateTime(m.year, m.month, 1);
     try {
-      final list = await _getTransactions(snapshotMonth);
+      final bundle = await _getTransactions(snapshotMonth);
       if (snapshotMonth != _loadedMonthStart) return;
       if (isClosed) return;
-      emit(TransactionsLoaded(list));
+      emit(TransactionsLoaded(
+        bundle.value,
+        servedFromOfflineCache: bundle.servedFromOfflineCache,
+      ));
     } catch (e, s) {
       if (isClosed) return;
       AppLogger.error('failed to refetch transactions', e, s);
-      emit(TransactionsActionError(prev));
+      emit(TransactionsActionError(
+        prev,
+        servedFromOfflineCache: _transactionsOfflineFlag(),
+      ));
     }
   }
 
@@ -121,7 +138,7 @@ class TransactionsCubit extends Cubit<TransactionsState> {
       if (useDeferred) {
         final parts = splitEqualAmountParts(value, deferredTermMonths);
         final anchor = transactedAt;
-        final cards = await _getCards();
+        final cards = (await _getCards()).value;
         final cardIndex = cards.indexWhere((c) => c.id == cardId);
         if (cardIndex < 0) {
           throw StateError(
@@ -179,7 +196,7 @@ class TransactionsCubit extends Cubit<TransactionsState> {
       await _refetchCurrentMonthQuietly();
     } catch (e, s) {
       AppLogger.error('failed to create transaction', e, s);
-      emit(TransactionsActionError(current));
+      emit(TransactionsActionError(current, servedFromOfflineCache: _transactionsOfflineFlag()));
     }
   }
 
@@ -205,7 +222,7 @@ class TransactionsCubit extends Cubit<TransactionsState> {
         (creditId != null && creditId.isNotEmpty) ? creditId : null;
     try {
       if (creditLedgerKey != null && creditLedgerKey.isNotEmpty) {
-        final siblings = await _getTransactionsByCreditGroupId(creditLedgerKey);
+        final siblings = (await _getTransactionsByCreditGroupId(creditLedgerKey)).value;
         if (siblings.isEmpty) {
           await _updateTransaction(
             id: id,
@@ -223,7 +240,7 @@ class TransactionsCubit extends Cubit<TransactionsState> {
           );
         } else {
           siblings.sort((a, b) => a.transactedAt.compareTo(b.transactedAt));
-          final wc = await _getWalletCredit(creditLedgerKey);
+          final wc = (await _getWalletCredit(creditLedgerKey)).value;
           final ng = creditGraceMonths;
           final nt = creditTermMonths;
           final useReschedule = wc != null &&
@@ -239,7 +256,7 @@ class TransactionsCubit extends Cubit<TransactionsState> {
           if (useReschedule) {
             final graceStored = ng.clamp(0, 1200);
             final newTerm = nt;
-            final cards = await _getCards();
+            final cards = (await _getCards()).value;
             final cardIdx = cards.indexWhere((c) => c.id == cardId);
             if (cardIdx < 0) {
               throw StateError(
@@ -379,7 +396,7 @@ class TransactionsCubit extends Cubit<TransactionsState> {
       await _refetchCurrentMonthQuietly();
     } catch (e, s) {
       AppLogger.error('failed to update transaction', e, s);
-      emit(TransactionsActionError(current));
+      emit(TransactionsActionError(current, servedFromOfflineCache: _transactionsOfflineFlag()));
     }
   }
 
@@ -409,7 +426,7 @@ class TransactionsCubit extends Cubit<TransactionsState> {
       return true;
     } catch (e, s) {
       AppLogger.error('failed transfer', e, s);
-      emit(TransactionsActionError(current));
+      emit(TransactionsActionError(current, servedFromOfflineCache: _transactionsOfflineFlag()));
       return false;
     }
   }
@@ -430,7 +447,7 @@ class TransactionsCubit extends Cubit<TransactionsState> {
     final gid = source.transferGroupId;
     if (gid == null || gid.isEmpty || gid != target.transferGroupId) {
       AppLogger.error('updateAccountTransfer: invalid or mismatched group id');
-      emit(TransactionsActionError(current));
+      emit(TransactionsActionError(current, servedFromOfflineCache: _transactionsOfflineFlag()));
       return false;
     }
     AppLogger.debug('transfer update');
@@ -468,7 +485,7 @@ class TransactionsCubit extends Cubit<TransactionsState> {
       return true;
     } catch (e, s) {
       AppLogger.error('failed transfer update', e, s);
-      emit(TransactionsActionError(current));
+      emit(TransactionsActionError(current, servedFromOfflineCache: _transactionsOfflineFlag()));
       return false;
     }
   }
@@ -480,7 +497,7 @@ class TransactionsCubit extends Cubit<TransactionsState> {
       final idsToDelete = <String>{};
       idsToDelete.add(id);
       if (creditLedgerKey != null && creditLedgerKey.isNotEmpty) {
-        final group = await _getTransactionsByCreditGroupId(creditLedgerKey);
+        final group = (await _getTransactionsByCreditGroupId(creditLedgerKey)).value;
         for (final t in group) {
           idsToDelete.add(t.id);
         }
@@ -493,7 +510,7 @@ class TransactionsCubit extends Cubit<TransactionsState> {
       return true;
     } catch (e, s) {
       AppLogger.error('failed to delete transaction', e, s);
-      emit(TransactionsActionError(current));
+      emit(TransactionsActionError(current, servedFromOfflineCache: _transactionsOfflineFlag()));
       return false;
     }
   }
@@ -513,7 +530,7 @@ class TransactionsCubit extends Cubit<TransactionsState> {
       return true;
     } catch (e, s) {
       AppLogger.error('failed to delete transactions', e, s);
-      emit(TransactionsActionError(current));
+      emit(TransactionsActionError(current, servedFromOfflineCache: _transactionsOfflineFlag()));
       return false;
     }
   }

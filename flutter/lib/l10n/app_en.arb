@@ -57,6 +57,61 @@
   "settingsThemeSystem": "System default",
   "settingsThemeLight": "Light",
   "settingsThemeDark": "Dark",
+  "settingsDataSection": "Offline data",
+  "settingsOfflineCache": "Cached responses",
+  "settingsOfflineCacheSubtitle": "API responses stored on this device for offline use",
+  "settingsCachePageTitle": "Offline cache",
+  "settingsCacheEmpty": "No cached responses yet.",
+  "settingsCacheBottomBarCaption": "Size of cached files",
+  "settingsCacheSortTooltip": "Sort",
+  "settingsCacheSortSheetTitle": "Sort by",
+  "settingsCacheSortByDate": "Date",
+  "settingsCacheSortBySize": "Size",
+  "settingsCacheSortByName": "Name",
+  "settingsCacheKeyTxMonth": "Transactions · {year}-{month}",
+  "@settingsCacheKeyTxMonth": {
+    "placeholders": {
+      "year": {
+        "type": "String"
+      },
+      "month": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsCacheKeyTxYear": "Transactions · {year}",
+  "@settingsCacheKeyTxYear": {
+    "placeholders": {
+      "year": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsCacheKeyTxCreditGroups": "Transactions (credit groups)",
+  "settingsCacheKeyTxCredit": "Transactions (credit {shortId})",
+  "@settingsCacheKeyTxCredit": {
+    "placeholders": {
+      "shortId": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsCacheKeyWalletCredit": "Wallet credit · {shortId}",
+  "@settingsCacheKeyWalletCredit": {
+    "placeholders": {
+      "shortId": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsCacheKeyRaw": "{key}",
+  "@settingsCacheKeyRaw": {
+    "placeholders": {
+      "key": {
+        "type": "String"
+      }
+    }
+  },
   "settingsSecuritySection": "Security",
   "settingsBiometricUnlockTitle": "Face ID & fingerprint",
   "settingsBiometricUnlockSubtitle": "Use biometrics to unlock the app.",
@@ -222,6 +277,7 @@
   "creditsNav": "Credits",
   "creditsTitle": "Credits",
   "creditsEmpty": "No deferred credit installments yet.",
+  "creditsEmptyForSelectedMonth": "No installments due in this month.",
   "creditsUntitledGroup": "Deferred purchase",
   "creditsInstallmentsWithPending": "{count} installments - {pending} pending",
   "@creditsInstallmentsWithPending": {
@@ -321,5 +377,12 @@
   "transactionsTotalsWeightedHint": "Weighted",
   "transactionsTotalsWeightedExcludingIgnoredHint": "Weighted excluding ignored",
   "transactionsTotalsNotWeightedHint": "Not weighted",
-  "transactionsTotalsNotWeightedExcludingIgnoredHint": "Not weighted excluding ignored"
+  "transactionsTotalsNotWeightedExcludingIgnoredHint": "Not weighted excluding ignored",
+  "loadFailedNoConnectionTitle": "No internet connection",
+  "loadFailedNoConnectionBody": "Check your network and try again. If you are online, the server may be unreachable.",
+  "cachedDataOfflineBanner": "Showing saved data — no internet connection.",
+  "loadFailedRequestFailedTitle": "Could not load data",
+  "loadFailedRequestFailedBody": "The request failed. Pull down to refresh or try again shortly.",
+  "retry": "Retry",
+  "dialogClose": "Close"
 }

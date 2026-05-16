@@ -1,6 +1,8 @@
 import 'package:get_it/get_it.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../locale/app_locale_controller.dart';
+import '../offline/wallet_offline_cache.dart';
+import '../offline/wallet_offline_user_context.dart';
 import '../security/app_biometric_unlock_controller.dart';
 import '../theme/app_theme_controller.dart';
 import '../wallet_actions/wallet_actions_datasource.dart';
@@ -95,12 +97,21 @@ void setupDi() {
     ),
   );
 
+  getIt.registerLazySingleton<WalletOfflineUserContext>(
+    () => SupabaseWalletOfflineUserContext(Supabase.instance.client),
+  );
+  getIt.registerLazySingleton<WalletOfflineCache>(WalletOfflineCache.new);
+
   // auth
   getIt.registerLazySingleton<AuthRemoteDatasource>(
     () => AuthSupabaseDatasource(Supabase.instance.client),
   );
   getIt.registerLazySingleton<AuthRepository>(
-    () => AuthRepositoryImpl(getIt()),
+    () => AuthRepositoryImpl(
+      getIt<AuthRemoteDatasource>(),
+      getIt<WalletOfflineCache>(),
+      getIt<WalletOfflineUserContext>(),
+    ),
   );
   getIt.registerFactory<SignInUsecase>(() => SignInUsecase(getIt()));
   getIt.registerFactory<SignOutUsecase>(() => SignOutUsecase(getIt()));
@@ -116,7 +127,11 @@ void setupDi() {
     () => AccountsSupabaseDatasource(Supabase.instance.client),
   );
   getIt.registerLazySingleton<AccountsRepository>(
-    () => AccountsRepositoryImpl(getIt()),
+    () => AccountsRepositoryImpl(
+      getIt<AccountsRemoteDatasource>(),
+      getIt<WalletOfflineCache>(),
+      getIt<WalletOfflineUserContext>(),
+    ),
   );
   getIt.registerFactory<GetAccountsUsecase>(() => GetAccountsUsecase(getIt()));
   getIt.registerFactory<CreateAccountUsecase>(() => CreateAccountUsecase(getIt()));
@@ -146,7 +161,11 @@ void setupDi() {
     () => CardsSupabaseDatasource(Supabase.instance.client),
   );
   getIt.registerLazySingleton<CardsRepository>(
-    () => CardsRepositoryImpl(getIt()),
+    () => CardsRepositoryImpl(
+      getIt<CardsRemoteDatasource>(),
+      getIt<WalletOfflineCache>(),
+      getIt<WalletOfflineUserContext>(),
+    ),
   );
   getIt.registerFactory<GetCardsUsecase>(() => GetCardsUsecase(getIt()));
   getIt.registerFactory<CreateCardUsecase>(() => CreateCardUsecase(getIt()));
@@ -176,7 +195,11 @@ void setupDi() {
     () => CategoriesSupabaseDatasource(Supabase.instance.client),
   );
   getIt.registerLazySingleton<CategoriesRepository>(
-    () => CategoriesRepositoryImpl(getIt()),
+    () => CategoriesRepositoryImpl(
+      getIt<CategoriesRemoteDatasource>(),
+      getIt<WalletOfflineCache>(),
+      getIt<WalletOfflineUserContext>(),
+    ),
   );
   getIt.registerFactory<GetCategoriesUsecase>(() => GetCategoriesUsecase(getIt()));
   getIt.registerFactory<CreateCategoryUsecase>(() => CreateCategoryUsecase(getIt()));
@@ -196,7 +219,11 @@ void setupDi() {
     () => TagsSupabaseDatasource(Supabase.instance.client),
   );
   getIt.registerLazySingleton<TagsRepository>(
-    () => TagsRepositoryImpl(getIt()),
+    () => TagsRepositoryImpl(
+      getIt<TagsRemoteDatasource>(),
+      getIt<WalletOfflineCache>(),
+      getIt<WalletOfflineUserContext>(),
+    ),
   );
   getIt.registerFactory<GetTagsUsecase>(() => GetTagsUsecase(getIt()));
   getIt.registerFactory<CreateTagUsecase>(() => CreateTagUsecase(getIt()));
@@ -216,7 +243,11 @@ void setupDi() {
     () => AssetsSupabaseDatasource(Supabase.instance.client),
   );
   getIt.registerLazySingleton<AssetsRepository>(
-    () => AssetsRepositoryImpl(getIt()),
+    () => AssetsRepositoryImpl(
+      getIt<AssetsRemoteDatasource>(),
+      getIt<WalletOfflineCache>(),
+      getIt<WalletOfflineUserContext>(),
+    ),
   );
   getIt.registerFactory<GetAssetsUsecase>(() => GetAssetsUsecase(getIt()));
   getIt.registerFactory<CreateAssetUsecase>(() => CreateAssetUsecase(getIt()));
@@ -236,7 +267,11 @@ void setupDi() {
     () => WalletCreditsSupabaseDatasource(Supabase.instance.client),
   );
   getIt.registerLazySingleton<WalletCreditsRepository>(
-    () => WalletCreditsRepositoryImpl(getIt()),
+    () => WalletCreditsRepositoryImpl(
+      getIt<WalletCreditsRemoteDatasource>(),
+      getIt<WalletOfflineCache>(),
+      getIt<WalletOfflineUserContext>(),
+    ),
   );
   getIt.registerFactory<CreateWalletCreditUsecase>(
     () => CreateWalletCreditUsecase(getIt()),
@@ -250,7 +285,11 @@ void setupDi() {
     () => TransactionsSupabaseDatasource(Supabase.instance.client),
   );
   getIt.registerLazySingleton<TransactionsRepository>(
-    () => TransactionsRepositoryImpl(getIt()),
+    () => TransactionsRepositoryImpl(
+      getIt<TransactionsRemoteDatasource>(),
+      getIt<WalletOfflineCache>(),
+      getIt<WalletOfflineUserContext>(),
+    ),
   );
   getIt.registerFactory<GetTransactionsUsecase>(() => GetTransactionsUsecase(getIt()));
   getIt.registerFactory<GetTransactionsForYearUsecase>(() => GetTransactionsForYearUsecase(getIt()));
