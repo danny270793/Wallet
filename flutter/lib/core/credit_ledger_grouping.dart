@@ -71,33 +71,3 @@ List<({String id, List<TransactionEntity> rows})> groupedCreditLedgerForSelected
   final all = groupedCreditLedger(flatMonth);
   return all.where((g) => g.rows.any((t) => !t.ignore)).toList();
 }
-
-/// Subset of [monthTransactions] that represent credit installments shown on the
-/// Credits screen for [monthStart], using the same grouping rules as
-/// [groupedCreditLedgerForSelectedMonth].
-List<TransactionEntity> filterTransactionsToCreditsViewForMonth(
-  List<TransactionEntity> monthTransactions,
-  DateTime monthStart,
-) {
-  final creditRowsInMonth = monthTransactions
-      .where(
-        (t) =>
-            t.creditLedgerGroupingKey != null &&
-            t.creditLedgerGroupingKey!.isNotEmpty,
-      )
-      .toList();
-  final groups = groupedCreditLedgerForSelectedMonth(creditRowsInMonth, monthStart);
-  final ids = {for (final g in groups) g.id};
-  return monthTransactions
-      .where((t) {
-        final id = t.creditId;
-        return id != null && id.isNotEmpty && ids.contains(id);
-      })
-      .toList();
-}
-
-/// True when [monthStart] is the device's current local calendar month (day ignored).
-bool isCalendarCurrentMonth(DateTime monthStart) {
-  final n = DateTime.now();
-  return monthStart.year == n.year && monthStart.month == n.month;
-}
