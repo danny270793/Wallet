@@ -1154,6 +1154,12 @@ abstract class AppLocalizations {
   /// **'{count} installments - {pending} pending'**
   String creditsInstallmentsWithPending(int count, int pending);
 
+  /// No description provided for @creditsInstallmentsEndsThisMonth.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} installments · ends this month'**
+  String creditsInstallmentsEndsThisMonth(int count);
+
   /// No description provided for @creditsPendingTotalsLabel.
   ///
   /// In en, this message translates to:
