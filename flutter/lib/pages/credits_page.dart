@@ -64,22 +64,6 @@ int creditLedgerTotalInstallmentCountForGroup(
   return n;
 }
 
-/// Installments in [creditLedgerKey] that are not yet paid through today (whole group).
-int creditLedgerPendingInstallmentCountForGroup(
-  List<TransactionEntity> flat,
-  String creditLedgerKey,
-) {
-  var n = 0;
-  for (final t in flat) {
-    final g = t.creditLedgerGroupingKey;
-    if (g != creditLedgerKey) continue;
-    if (!_installmentIsPaidThroughToday(t)) {
-      n++;
-    }
-  }
-  return n;
-}
-
 List<String> _relationNames(TransactionEntity t) => [
   if (t.categoryName?.isNotEmpty == true) t.categoryName!,
   if (t.accountName?.isNotEmpty == true) t.accountName!,
@@ -263,7 +247,6 @@ class _CreditGroupTile extends StatelessWidget {
     required this.rows,
     required this.creditLedgerKey,
     required this.totalInstallmentCount,
-    required this.pendingInstallmentsInGroup,
     required this.l10n,
     required this.onSwipeEdit,
   });
@@ -273,8 +256,6 @@ class _CreditGroupTile extends StatelessWidget {
   final String creditLedgerKey;
   /// Full credit plan size (all installments in the group), not only [rows] in the visible month.
   final int totalInstallmentCount;
-  /// Unpaid installments (due after today) in the whole group; drives the subtitle "pending" count.
-  final int pendingInstallmentsInGroup;
   final AppLocalizations l10n;
 
   /// Opens the editor for the group's first installment and reloads the page list.
@@ -375,7 +356,7 @@ class _CreditGroupTile extends StatelessWidget {
           child: Text(
             l10n.creditsInstallmentsWithPending(
               totalInstallmentCount,
-              pendingInstallmentsInGroup,
+              pendingRows.length,
             ),
             style: theme.textTheme.bodySmall?.copyWith(
               color: theme.colorScheme.onSurfaceVariant,
@@ -635,11 +616,6 @@ class _CreditsPageState extends State<CreditsPage> {
                             creditLedgerKey: g.id,
                             totalInstallmentCount:
                                 creditLedgerTotalInstallmentCountForGroup(
-                              _flat,
-                              g.id,
-                            ),
-                            pendingInstallmentsInGroup:
-                                creditLedgerPendingInstallmentCountForGroup(
                               _flat,
                               g.id,
                             ),
