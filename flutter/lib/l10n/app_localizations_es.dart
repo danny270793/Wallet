@@ -607,7 +607,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String creditsWalletCreditTransactedAt(String when) {
-    return 'Fecha del crédito: $when';
+    return '$when';
   }
 
   @override
