@@ -290,6 +290,9 @@
       }
     }
   },
+  "creditsTileQuoteThisMonth": "Month quote",
+  "creditsTilePaidThisMonth": "Paid this month",
+  "creditsTileCreditTotal": "Credit total",
   "creditsPendingTotalsLabel": "Pending total",
   "creditsDueThisMonthLabel": "Due this month",
   "creditsNewDeferredPurchase": "New credit purchase",
