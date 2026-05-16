@@ -48,6 +48,7 @@ class SwipeableListTile extends StatelessWidget {
 
   /// Passed to inner [ListTile.contentPadding].
   final EdgeInsetsGeometry contentPadding;
+
   final VoidCallback onEdit;
 
   /// Return true to allow delete dismiss after user confirms in dialog.

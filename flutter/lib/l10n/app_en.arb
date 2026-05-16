@@ -383,6 +383,7 @@
   "transactionsTotalOutcome": "Outcome",
   "transactionsTotalBalance": "Balance",
   "transactionsTotalsWeightedHint": "Weighted",
+  "transactionsTotalsWeightedExcludingCreditHint": "Weighted excluding credit",
   "transactionsTotalsWeightedExcludingIgnoredHint": "Weighted excluding ignored",
   "transactionsTotalsNotWeightedHint": "Not weighted",
   "transactionsTotalsNotWeightedExcludingIgnoredHint": "Not weighted excluding ignored",

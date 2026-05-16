@@ -230,8 +230,8 @@ class TransactionsTotalsBar extends StatelessWidget {
   }
 }
 
-/// Same four-mode totals bar as the transactions list: swipe horizontally (or use the dots)
-/// through weighted → weighted excluding ignored → not weighted → not weighted excluding ignored.
+/// Same five-mode totals bar as the transactions list: swipe horizontally (or use the dots)
+/// through weighted → weighted excluding credit → weighted excluding ignored → not weighted → not weighted excluding ignored.
 class TransactionsTotalsBarHost extends StatefulWidget {
   const TransactionsTotalsBarHost({
     super.key,
@@ -248,10 +248,11 @@ class TransactionsTotalsBarHost extends StatefulWidget {
 }
 
 class _TransactionsTotalsBarHostState extends State<TransactionsTotalsBarHost> {
-  static const _kTotalsModeCount = 4;
+  static const _kTotalsModeCount = 5;
 
-  /// Swipe cycle order (`_totalsMode` 0…3):
+  /// Swipe cycle order (`_totalsMode` 0…4):
   /// * Weighted — `value * percentage / 100` for **all** non–transfer-leg rows (including ignored).
+  /// * Weighted excluding credit — weighted for rows without [TransactionEntity.creditId].
   /// * Weighted excluding ignored — weighted formula only for rows with `ignore == false`.
   /// * Not weighted — raw `value` for **all** such rows (including ignored).
   /// * Not weighted excluding ignored — raw `value` only for rows with `ignore == false`.
@@ -274,6 +275,11 @@ class _TransactionsTotalsBarHostState extends State<TransactionsTotalsBarHost> {
     final totalsWeightedAll = transactionMonthTotalsBreakdown(
       txs,
       include: (_) => true,
+      amount: weightedAmount,
+    );
+    final totalsWeightedNoCredit = transactionMonthTotalsBreakdown(
+      txs,
+      include: (t) => t.creditId == null || t.creditId!.isEmpty,
       amount: weightedAmount,
     );
     final totalsRawValueAll = transactionMonthTotalsBreakdown(
@@ -306,6 +312,17 @@ class _TransactionsTotalsBarHostState extends State<TransactionsTotalsBarHost> {
       1 => TransactionsTotalsBar(
         l10n: widget.l10n,
         primarySubtitle:
+            widget.l10n.transactionsTotalsWeightedExcludingCreditHint,
+        income: totalsWeightedNoCredit.income,
+        outcome: totalsWeightedNoCredit.outcome,
+        balance: totalsWeightedNoCredit.balance,
+        onTotalsModeSwipe: _handleTotalsModeSwipe,
+        totalsDotsCount: _kTotalsModeCount,
+        totalsDotsSelectedIndex: _totalsMode,
+      ),
+      2 => TransactionsTotalsBar(
+        l10n: widget.l10n,
+        primarySubtitle:
             widget.l10n.transactionsTotalsWeightedExcludingIgnoredHint,
         income: totalsWeightedNonIgnoredOnly.income,
         outcome: totalsWeightedNonIgnoredOnly.outcome,
@@ -314,7 +331,7 @@ class _TransactionsTotalsBarHostState extends State<TransactionsTotalsBarHost> {
         totalsDotsCount: _kTotalsModeCount,
         totalsDotsSelectedIndex: _totalsMode,
       ),
-      2 => TransactionsTotalsBar(
+      3 => TransactionsTotalsBar(
         l10n: widget.l10n,
         primarySubtitle: widget.l10n.transactionsTotalsNotWeightedHint,
         income: totalsRawValueAll.income,
@@ -324,7 +341,7 @@ class _TransactionsTotalsBarHostState extends State<TransactionsTotalsBarHost> {
         totalsDotsCount: _kTotalsModeCount,
         totalsDotsSelectedIndex: _totalsMode,
       ),
-      3 => TransactionsTotalsBar(
+      4 => TransactionsTotalsBar(
         l10n: widget.l10n,
         primarySubtitle:
             widget.l10n.transactionsTotalsNotWeightedExcludingIgnoredHint,

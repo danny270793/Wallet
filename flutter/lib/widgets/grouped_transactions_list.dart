@@ -325,12 +325,16 @@ class GroupedTxnTransactionTile extends StatelessWidget {
 class GroupedTxnTransferPairTile extends StatelessWidget {
   const GroupedTxnTransferPairTile({
     super.key,
+    /// When null, taken from [BlocProvider<TransactionsCubit>]. Pass in overlays
+    /// (e.g. search) that are not under page-scoped bloc.
+    this.cubit,
     required this.source,
     required this.target,
     required this.l10n,
     this.onTap,
   });
 
+  final TransactionsCubit? cubit;
   final TransactionEntity source;
   final TransactionEntity target;
   final AppLocalizations l10n;
@@ -338,7 +342,7 @@ class GroupedTxnTransferPairTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final cubit = context.read<TransactionsCubit>();
+    final bloc = cubit ?? context.read<TransactionsCubit>();
     final theme = Theme.of(context);
     final locale = Localizations.localeOf(context);
     final timeLocal = source.transactedAt.toLocal();
@@ -395,6 +399,7 @@ class GroupedTxnTransferPairTile extends StatelessWidget {
         l10n: l10n,
         editingSource: source,
         editingTarget: target,
+        cubit: cubit,
       );
     }
 
@@ -413,7 +418,7 @@ class GroupedTxnTransferPairTile extends StatelessWidget {
       onTap: onTap,
       onEdit: openEdit,
       confirmDelete: () => confirmDeleteTransferPairDialog(context, l10n),
-      onDelete: () => cubit.deleteMany([source.id, target.id]),
+      onDelete: () => bloc.deleteMany([source.id, target.id]),
     );
 
     if (source.ignore || target.ignore) {

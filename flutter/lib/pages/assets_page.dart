@@ -151,6 +151,7 @@ class _AssetTile extends StatelessWidget {
     final cubit = context.read<AssetsCubit>();
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
+    final ended = asset.endedAt != null || asset.soldValue != null;
     final tabular = const [FontFeature.tabularFigures()];
 
     TextStyle? muted([double? alpha]) =>
@@ -188,16 +189,19 @@ class _AssetTile extends StatelessWidget {
       fontWeight: FontWeight.w600,
       letterSpacing: -0.25,
       height: 1.25,
+      color: ended ? scheme.onSurfaceVariant : null,
     );
     final trailingMoAsTitle = theme.textTheme.titleMedium?.copyWith(
-      color: scheme.primary,
+      color: ended ? scheme.onSurfaceVariant : scheme.primary,
       fontWeight: FontWeight.w700,
       letterSpacing: -0.2,
       height: 1.2,
       fontFeatures: tabular,
     );
     final trailingTotalAsSubtitle = theme.textTheme.bodySmall?.copyWith(
-      color: scheme.onSurfaceVariant.withValues(alpha: 0.95),
+      color: scheme.onSurfaceVariant.withValues(
+        alpha: ended ? 0.75 : 0.95,
+      ),
       fontWeight: FontWeight.w400,
       height: 1.35,
       fontFeatures: tabular,
@@ -241,7 +245,7 @@ class _AssetTile extends StatelessWidget {
 
     Widget metaLine() => Text(
       period,
-      style: muted(0.88),
+      style: muted(ended ? 0.72 : 0.88),
       maxLines: 2,
       overflow: TextOverflow.ellipsis,
     );
@@ -255,7 +259,9 @@ class _AssetTile extends StatelessWidget {
           child: Text(
             held,
             style: theme.textTheme.labelSmall?.copyWith(
-              color: scheme.onSurfaceVariant,
+              color: scheme.onSurfaceVariant.withValues(
+                alpha: ended ? 0.65 : 1.0,
+              ),
               fontWeight: FontWeight.w700,
               letterSpacing: -0.3,
               height: 1.15,
@@ -286,7 +292,7 @@ class _AssetTile extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         if (provider.isNotEmpty) ...[
-          Text(provider, style: muted(0.92), maxLines: 2),
+          Text(provider, style: muted(ended ? 0.75 : 0.92), maxLines: 2),
           const SizedBox(height: 6),
         ],
         metaLine(),
@@ -297,7 +303,7 @@ class _AssetTile extends StatelessWidget {
             '${l10n.transactionAmountValue(
               asset.soldValue!.toStringAsFixed(2),
             )}',
-            style: muted(0.92),
+            style: muted(ended ? 0.75 : 0.92),
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
           ),
@@ -305,7 +311,7 @@ class _AssetTile extends StatelessWidget {
       ],
     );
 
-    return SwipeableListTile(
+    Widget tile = SwipeableListTile(
       itemKey: asset.id,
       tileIsThreeLine: true,
       dense: true,
@@ -355,5 +361,10 @@ class _AssetTile extends StatelessWidget {
       },
       onDelete: () => cubit.delete(id: asset.id),
     );
+
+    if (ended) {
+      tile = Opacity(opacity: 0.52, child: tile);
+    }
+    return tile;
   }
 }
