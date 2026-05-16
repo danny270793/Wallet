@@ -1154,6 +1154,24 @@ abstract class AppLocalizations {
   /// **'{count} installments - {pending} pending'**
   String creditsInstallmentsWithPending(int count, int pending);
 
+  /// No description provided for @creditsTileQuoteThisMonth.
+  ///
+  /// In en, this message translates to:
+  /// **'Month quote'**
+  String get creditsTileQuoteThisMonth;
+
+  /// No description provided for @creditsTilePaidThisMonth.
+  ///
+  /// In en, this message translates to:
+  /// **'Paid this month'**
+  String get creditsTilePaidThisMonth;
+
+  /// No description provided for @creditsTileCreditTotal.
+  ///
+  /// In en, this message translates to:
+  /// **'Credit total'**
+  String get creditsTileCreditTotal;
+
   /// No description provided for @creditsPendingTotalsLabel.
   ///
   /// In en, this message translates to:
