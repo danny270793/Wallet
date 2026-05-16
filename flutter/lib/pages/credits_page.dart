@@ -362,7 +362,9 @@ class _CreditGroupTile extends StatelessWidget {
                     totalInstallmentCount,
                   ),
             style: theme.textTheme.bodySmall?.copyWith(
-              color: theme.colorScheme.onSurfaceVariant,
+              color: pendingCountAfterSelectedMonth > 0
+                  ? theme.colorScheme.onSurfaceVariant
+                  : const Color(0xFF1B8736),
             ),
           ),
         ),
