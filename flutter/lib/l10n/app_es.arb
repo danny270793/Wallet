@@ -383,6 +383,7 @@
   "transactionsTotalOutcome": "Gastos",
   "transactionsTotalBalance": "Saldo",
   "transactionsTotalsWeightedHint": "Ponderado",
+  "transactionsTotalsWeightedExcludingCreditHint": "Ponderado excluyendo crédito",
   "transactionsTotalsWeightedExcludingIgnoredHint": "Ponderado excluyendo ignoradas",
   "transactionsTotalsNotWeightedHint": "Sin ponderar",
   "transactionsTotalsNotWeightedExcludingIgnoredHint": "Sin ponderar excluyendo ignoradas",
