@@ -290,6 +290,14 @@
       }
     }
   },
+  "creditsInstallmentsEndsThisMonth": "{count} installments · ends this month",
+  "@creditsInstallmentsEndsThisMonth": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "creditsPendingTotalsLabel": "Pending total",
   "creditsDueThisMonthLabel": "Due this month",
   "creditsNewDeferredPurchase": "New credit purchase",
