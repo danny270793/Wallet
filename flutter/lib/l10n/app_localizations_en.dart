@@ -583,7 +583,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get creditsEmptyForSelectedMonth =>
-      'No installments due in this month.';
+      'No pending installments due in this month.';
 
   @override
   String get creditsUntitledGroup => 'Deferred purchase';
