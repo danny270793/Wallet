@@ -503,7 +503,6 @@ class _CreditsPageState extends State<CreditsPage> {
         final groups = groupedCreditLedger(flatMonth);
         final showPendingBar = !_loading && hasAnyCredits;
         final dueInMonth = creditLedgerDueInSelectedMonth(_flat, visibleMonth);
-        final pendingForMonth = creditLedgerTotalPending(flatMonth);
 
         return ShellScaffold(
           title: l10n.creditsTitle,
@@ -516,7 +515,7 @@ class _CreditsPageState extends State<CreditsPage> {
           bottomNavigationBar: showPendingBar
               ? _CreditsPendingTotalsBar(
                   l10n: l10n,
-                  pendingTotal: pendingForMonth,
+                  pendingTotal: creditLedgerTotalPending(_flat),
                   dueInSelectedMonthTotal: dueInMonth,
                 )
               : null,
