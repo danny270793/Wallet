@@ -6,7 +6,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 import 'package:wallet/l10n/app_localizations.dart';
 import '../core/credit_group_description.dart';
-import '../core/credit_ledger_grouping.dart';
 import '../core/di/injection.dart';
 import '../features/accounts/domain/usecases/get_accounts_usecase.dart';
 import '../features/accounts/domain/entities/account_entity.dart';
@@ -837,11 +836,7 @@ class _TransactionsViewState extends State<_TransactionsView> {
         return ValueListenableBuilder<DateTime>(
           valueListenable: monthNotifier,
           builder: (context, visibleMonth, _) {
-            final filtered = _filteredTransactions(
-              state,
-              visibleMonth,
-              restrictToCreditsWhenCurrentMonth: !isScoped,
-            );
+            final filtered = _filteredTransactions(state);
             final showTotalsBar =
                 state is TransactionsLoaded || state is TransactionsActionError;
 
@@ -932,11 +927,7 @@ class _TransactionsViewState extends State<_TransactionsView> {
     );
   }
 
-  List<TransactionEntity> _filteredTransactions(
-    TransactionsState state,
-    DateTime visibleMonth, {
-    required bool restrictToCreditsWhenCurrentMonth,
-  }) {
+  List<TransactionEntity> _filteredTransactions(TransactionsState state) {
     final rawList = switch (state) {
       TransactionsLoaded(:final transactions) => transactions,
       TransactionsActionError(:final transactions) => transactions,
@@ -957,10 +948,6 @@ class _TransactionsViewState extends State<_TransactionsView> {
     }
     if (widget.tagIdFilter != null && widget.tagIdFilter!.isNotEmpty) {
       list = list.where((t) => t.tagId == widget.tagIdFilter).toList();
-    }
-    if (restrictToCreditsWhenCurrentMonth &&
-        isCalendarCurrentMonth(visibleMonth)) {
-      list = filterTransactionsToCreditsViewForMonth(list, visibleMonth);
     }
     return list;
   }
