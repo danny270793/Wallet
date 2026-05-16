@@ -34,6 +34,41 @@ double creditLedgerTotalValueForGroup(
   return sum;
 }
 
+/// Number of ledger rows (installments / quotes) for [creditLedgerKey] in [flat].
+int creditLedgerTotalInstallmentCountForGroup(
+  List<TransactionEntity> flat,
+  String creditLedgerKey,
+) {
+  var n = 0;
+  for (final t in flat) {
+    final g = t.creditLedgerGroupingKey;
+    if (g == creditLedgerKey) {
+      n++;
+    }
+  }
+  return n;
+}
+
+/// Non-ignored quotes for [creditLedgerKey] whose due date is strictly before the
+/// first day of the device's current local month (due in a calendar month older than now).
+int creditLedgerQuotesDueBeforeCurrentMonthCount(
+  List<TransactionEntity> flat,
+  String creditLedgerKey,
+) {
+  final now = DateTime.now();
+  final boundary = DateTime(now.year, now.month, 1);
+  var n = 0;
+  for (final t in flat) {
+    if (t.creditLedgerGroupingKey != creditLedgerKey) continue;
+    if (t.ignore) continue;
+    final local = t.transactedAt.toLocal();
+    final dueDay = DateTime(local.year, local.month, local.day);
+    if (!dueDay.isBefore(boundary)) continue;
+    n++;
+  }
+  return n;
+}
+
 List<String> _relationNames(TransactionEntity t) => [
   if (t.categoryName?.isNotEmpty == true) t.categoryName!,
   if (t.accountName?.isNotEmpty == true) t.accountName!,
@@ -185,6 +220,8 @@ class _CreditGroupTile extends StatelessWidget {
     required this.monthRows,
     required this.groupLeadRow,
     required this.creditLedgerKey,
+    required this.totalInstallmentCount,
+    required this.pendingQuotesBeforeCurrentMonth,
     required this.totalCreditValue,
     required this.l10n,
     required this.onSwipeEdit,
@@ -198,6 +235,10 @@ class _CreditGroupTile extends StatelessWidget {
   /// First installment of the plan (chronological); used as delete anchor for the group.
   final TransactionEntity groupLeadRow;
   final String creditLedgerKey;
+  /// All quotes / installments for this credit (full plan).
+  final int totalInstallmentCount;
+  /// Quotes with due date in calendar months before the current local month (non-ignored).
+  final int pendingQuotesBeforeCurrentMonth;
   /// Sum of [TransactionEntity.value] for all installments in this group (full ledger).
   final double totalCreditValue;
   final AppLocalizations l10n;
@@ -295,8 +336,8 @@ class _CreditGroupTile extends StatelessWidget {
           padding: EdgeInsets.only(top: chunks.isNotEmpty ? 4 : 0),
           child: Text(
             l10n.creditsInstallmentsWithPending(
-              monthRows.length,
-              monthRows.where((t) => !installmentIsPaidThroughToday(t)).length,
+              totalInstallmentCount,
+              pendingQuotesBeforeCurrentMonth,
             ),
             style: theme.textTheme.bodySmall?.copyWith(
               color: theme.colorScheme.onSurfaceVariant,
@@ -469,12 +510,18 @@ class _CreditsPageState extends State<CreditsPage> {
     return ValueListenableBuilder<DateTime>(
       valueListenable: _dueMonthNotifier,
       builder: (context, visibleMonth, _) {
-        final hasAnyCredits = groupedCreditLedger(_flat).isNotEmpty;
-        final groups = groupedCreditLedger(_flat);
+        final allCreditGroups = groupedCreditLedger(_flat);
+        final hasAnyCredits = allCreditGroups.isNotEmpty;
+        final monthInstallments =
+            creditLedgerInstallmentsInSelectedMonth(_flat, visibleMonth);
+        final groups = groupedCreditLedger(monthInstallments);
         final showPendingBar = !_loading && hasAnyCredits;
         final dueInMonth = creditLedgerDueInSelectedMonth(_flat, visibleMonth);
         final pendingTotal =
             creditLedgerPendingTotalFromSelectedMonth(_flat, visibleMonth);
+        final fullGroupsById = {
+          for (final fg in allCreditGroups) fg.id: fg,
+        };
 
         return ShellScaffold(
           title: l10n.creditsTitle,
@@ -523,14 +570,25 @@ class _CreditsPageState extends State<CreditsPage> {
                       ),
                     ],
                   )
+                : groups.isEmpty
+                ? ListView(
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    padding: const EdgeInsets.fromLTRB(24, 0, 24, 88),
+                    children: [
+                      OfflineCachedDataBanner(visible: _servedFromOfflineCache),
+                      SizedBox(height: MediaQuery.paddingOf(context).top + 40),
+                      Text(
+                        l10n.creditsEmptyForSelectedMonth,
+                        textAlign: TextAlign.center,
+                        style: theme.textTheme.bodyLarge?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                    ],
+                  )
                 : Builder(
                     builder: (context) {
                       final cubit = context.read<TransactionsCubit>();
-                      final monthInstallments =
-                          creditLedgerInstallmentsInSelectedMonth(
-                        _flat,
-                        visibleMonth,
-                      );
                       return ListView.builder(
                         physics: const AlwaysScrollableScrollPhysics(),
                         padding: const EdgeInsets.fromLTRB(0, 0, 0, 88),
@@ -542,18 +600,25 @@ class _CreditsPageState extends State<CreditsPage> {
                           }
                           final gi = i - (_servedFromOfflineCache ? 1 : 0);
                           final g = groups[gi];
-                          final monthRows = monthInstallments
-                              .where((t) => t.creditLedgerGroupingKey == g.id)
-                              .toList();
-                          final headerRow = monthRows.isNotEmpty
-                              ? monthRows.first
-                              : g.rows.first;
+                          final monthRows = g.rows;
+                          final full = fullGroupsById[g.id]!;
+                          final headerRow = monthRows.first;
                           return _CreditGroupTile(
                             cubit: cubit,
                             headerRow: headerRow,
                             monthRows: monthRows,
-                            groupLeadRow: g.rows.first,
+                            groupLeadRow: full.rows.first,
                             creditLedgerKey: g.id,
+                            totalInstallmentCount:
+                                creditLedgerTotalInstallmentCountForGroup(
+                              _flat,
+                              g.id,
+                            ),
+                            pendingQuotesBeforeCurrentMonth:
+                                creditLedgerQuotesDueBeforeCurrentMonthCount(
+                              _flat,
+                              g.id,
+                            ),
                             totalCreditValue:
                                 creditLedgerTotalValueForGroup(_flat, g.id),
                             l10n: l10n,
