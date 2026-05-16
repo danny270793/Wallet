@@ -95,44 +95,37 @@ bool _installmentIsPaidThroughToday(TransactionEntity t) {
   return !d.isAfter(today);
 }
 
-/// Installments due in [monthStart]'s calendar month (credit rows only).
-/// For the current local month, excludes due dates before today.
+/// Installments due in [monthStart]'s calendar month (credit rows only), by local
+/// [transactedAt] date — includes all days in the month (nothing is omitted for
+/// “today” when the selected month is the current month).
 List<TransactionEntity> creditLedgerInstallmentsInSelectedMonth(
   List<TransactionEntity> flat,
   DateTime monthStart,
 ) {
-  final now = DateTime.now();
-  final today = DateTime(now.year, now.month, now.day);
   final y = monthStart.year;
   final m = monthStart.month;
-  final isCurrentMonth = y == today.year && m == today.month;
   final out = <TransactionEntity>[];
   for (final t in flat) {
     final g = t.creditLedgerGroupingKey;
     if (g == null || g.isEmpty) continue;
     final local = t.transactedAt.toLocal();
     if (local.year != y || local.month != m) continue;
-    final dueDay = DateTime(local.year, local.month, local.day);
-    if (isCurrentMonth && dueDay.isBefore(today)) continue;
     out.add(t);
   }
   return out;
 }
 
-/// Credit groups with installments due in [monthStart]'s month (see
-/// [creditLedgerInstallmentsInSelectedMonth]), keeping **all** of those rows
-/// per group, but only including groups that have at least one **unpaid**
-/// installment in that month.
+/// Credit groups with at least one **non-ignored** installment in [monthStart]'s
+/// month (see [creditLedgerInstallmentsInSelectedMonth]). Includes installments
+/// already due on or before today so overdue rows still appear for that month.
 List<({String id, List<TransactionEntity> rows})>
-    groupedCreditLedgerWithPendingInSelectedMonth(
+    groupedCreditLedgerForSelectedMonth(
   List<TransactionEntity> flat,
   DateTime monthStart,
 ) {
   final flatMonth = creditLedgerInstallmentsInSelectedMonth(flat, monthStart);
   final all = groupedCreditLedger(flatMonth);
-  return all
-      .where((g) => g.rows.any((t) => !_installmentIsPaidThroughToday(t)))
-      .toList();
+  return all.where((g) => g.rows.any((t) => !t.ignore)).toList();
 }
 
 /// Sum of [TransactionEntity.value] for credit installments still unpaid (local due after today)
@@ -179,8 +172,8 @@ int creditLedgerPendingInstallmentCountFromSelectedMonth(
   return n;
 }
 
-/// Sum of raw values for installments due in [monthStart]'s calendar month.
-/// For the current local month, only dues on or after today are included.
+/// Sum of raw values for installments due in [monthStart]'s calendar month
+/// (see [creditLedgerInstallmentsInSelectedMonth]).
 double creditLedgerDueInSelectedMonth(
   List<TransactionEntity> flat,
   DateTime monthStart,
@@ -584,7 +577,7 @@ class _CreditsPageState extends State<CreditsPage> {
       builder: (context, visibleMonth, _) {
         final hasAnyCredits = groupedCreditLedger(_flat).isNotEmpty;
         final groups =
-            groupedCreditLedgerWithPendingInSelectedMonth(_flat, visibleMonth);
+            groupedCreditLedgerForSelectedMonth(_flat, visibleMonth);
         final showPendingBar = !_loading && hasAnyCredits;
         final dueInMonth = creditLedgerDueInSelectedMonth(_flat, visibleMonth);
         final pendingTotal =
