@@ -290,9 +290,6 @@
       }
     }
   },
-  "creditsTileQuoteThisMonth": "Cuota del mes",
-  "creditsTilePaidThisMonth": "Pagado el mes",
-  "creditsTileCreditTotal": "Total del crédito",
   "creditsPendingTotalsLabel": "Total pendiente",
   "creditsDueThisMonthLabel": "A pagar este mes",
   "creditsNewDeferredPurchase": "Nueva compra a crédito",
