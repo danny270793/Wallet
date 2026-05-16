@@ -59,15 +59,3 @@ List<TransactionEntity> creditLedgerInstallmentsInSelectedMonth(
   }
   return out;
 }
-
-/// Credit groups with at least one **non-ignored** installment in [monthStart]'s
-/// month (see [creditLedgerInstallmentsInSelectedMonth]). Includes installments
-/// already due on or before today so overdue rows still appear for that month.
-List<({String id, List<TransactionEntity> rows})> groupedCreditLedgerForSelectedMonth(
-  List<TransactionEntity> flat,
-  DateTime monthStart,
-) {
-  final flatMonth = creditLedgerInstallmentsInSelectedMonth(flat, monthStart);
-  final all = groupedCreditLedger(flatMonth);
-  return all.where((g) => g.rows.any((t) => !t.ignore)).toList();
-}
