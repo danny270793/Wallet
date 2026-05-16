@@ -217,7 +217,9 @@ class _CreditsPendingTotalsBar extends StatelessWidget {
 class _CreditGroupTile extends StatelessWidget {
   const _CreditGroupTile({
     required this.cubit,
-    required this.rows,
+    required this.headerRow,
+    required this.monthRows,
+    required this.groupLeadRow,
     required this.creditLedgerKey,
     required this.totalInstallmentCount,
     required this.pendingInstallmentsForwardFromMonth,
@@ -227,9 +229,14 @@ class _CreditGroupTile extends StatelessWidget {
   });
 
   final TransactionsCubit cubit;
-  final List<TransactionEntity> rows;
+  /// Row used for title (relations, purchase time); first in month if any, else first in plan.
+  final TransactionEntity headerRow;
+  /// Installments for the visible month only; quote / paid on the right use this (may be empty).
+  final List<TransactionEntity> monthRows;
+  /// First installment of the plan (chronological); used as delete anchor for the group.
+  final TransactionEntity groupLeadRow;
   final String creditLedgerKey;
-  /// Full credit plan size (all installments in the group), not only [rows] in the visible month.
+  /// Full credit plan size (all installments in the group), not only [monthRows].
   final int totalInstallmentCount;
   /// Unpaid installments with due on/after visible month's first day (see [creditLedgerPendingInstallmentCountFromSelectedMonth]).
   final int pendingInstallmentsForwardFromMonth;
@@ -243,10 +250,11 @@ class _CreditGroupTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final first = rows.first;
+    final first = headerRow;
 
-    final quoteThisMonth = rows.fold<double>(0, (a, t) => a + t.value);
-    final paidRows = rows.where(installmentIsPaidThroughToday).toList();
+    final quoteThisMonth =
+        monthRows.fold<double>(0, (a, t) => a + t.value);
+    final paidRows = monthRows.where(installmentIsPaidThroughToday).toList();
     // Sum of each paid installment's full [TransactionEntity.value], not × percentage/100.
     final paidTotal = paidRows.fold<double>(0, (a, t) => a + t.value);
 
@@ -398,7 +406,7 @@ class _CreditGroupTile extends StatelessWidget {
       confirmDelete: () =>
           confirmDeleteCreditGroupTransactionDialog(context, l10n),
       onDelete: () =>
-          cubit.delete(id: first.id, creditLedgerKey: creditLedgerKey),
+          cubit.delete(id: groupLeadRow.id, creditLedgerKey: creditLedgerKey),
     );
   }
 }
@@ -504,8 +512,7 @@ class _CreditsPageState extends State<CreditsPage> {
       valueListenable: _dueMonthNotifier,
       builder: (context, visibleMonth, _) {
         final hasAnyCredits = groupedCreditLedger(_flat).isNotEmpty;
-        final groups =
-            groupedCreditLedgerForSelectedMonth(_flat, visibleMonth);
+        final groups = groupedCreditLedger(_flat);
         final showPendingBar = !_loading && hasAnyCredits;
         final dueInMonth = creditLedgerDueInSelectedMonth(_flat, visibleMonth);
         final pendingTotal =
@@ -558,25 +565,14 @@ class _CreditsPageState extends State<CreditsPage> {
                       ),
                     ],
                   )
-                : groups.isEmpty
-                ? ListView(
-                    physics: const AlwaysScrollableScrollPhysics(),
-                    padding: const EdgeInsets.fromLTRB(24, 0, 24, 88),
-                    children: [
-                      OfflineCachedDataBanner(visible: _servedFromOfflineCache),
-                      SizedBox(height: MediaQuery.paddingOf(context).top + 40),
-                      Text(
-                        l10n.creditsEmptyForSelectedMonth,
-                        textAlign: TextAlign.center,
-                        style: theme.textTheme.bodyLarge?.copyWith(
-                          color: theme.colorScheme.onSurfaceVariant,
-                        ),
-                      ),
-                    ],
-                  )
                 : Builder(
                     builder: (context) {
                       final cubit = context.read<TransactionsCubit>();
+                      final monthInstallments =
+                          creditLedgerInstallmentsInSelectedMonth(
+                        _flat,
+                        visibleMonth,
+                      );
                       return ListView.builder(
                         physics: const AlwaysScrollableScrollPhysics(),
                         padding: const EdgeInsets.fromLTRB(0, 0, 0, 88),
@@ -588,9 +584,17 @@ class _CreditsPageState extends State<CreditsPage> {
                           }
                           final gi = i - (_servedFromOfflineCache ? 1 : 0);
                           final g = groups[gi];
+                          final monthRows = monthInstallments
+                              .where((t) => t.creditLedgerGroupingKey == g.id)
+                              .toList();
+                          final headerRow = monthRows.isNotEmpty
+                              ? monthRows.first
+                              : g.rows.first;
                           return _CreditGroupTile(
                             cubit: cubit,
-                            rows: g.rows,
+                            headerRow: headerRow,
+                            monthRows: monthRows,
+                            groupLeadRow: g.rows.first,
                             creditLedgerKey: g.id,
                             totalInstallmentCount:
                                 creditLedgerTotalInstallmentCountForGroup(
@@ -606,7 +610,8 @@ class _CreditsPageState extends State<CreditsPage> {
                             totalCreditValue:
                                 creditLedgerTotalValueForGroup(_flat, g.id),
                             l10n: l10n,
-                            onSwipeEdit: () => _openEditor(g.rows.first, l10n),
+                            onSwipeEdit: () =>
+                                _openEditor(headerRow, l10n),
                           );
                         },
                       );
