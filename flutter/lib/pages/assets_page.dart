@@ -151,7 +151,7 @@ class _AssetTile extends StatelessWidget {
     final cubit = context.read<AssetsCubit>();
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
-    final ended = asset.endedAt != null;
+    final ended = asset.endedAt != null || asset.soldValue != null;
     final tabular = const [FontFeature.tabularFigures()];
 
     TextStyle? muted([double? alpha]) =>
@@ -313,6 +313,7 @@ class _AssetTile extends StatelessWidget {
 
     return SwipeableListTile(
       itemKey: asset.id,
+      contentOpacity: ended ? 0.58 : 1.0,
       tileIsThreeLine: true,
       dense: true,
       minLeadingWidth: 54,
