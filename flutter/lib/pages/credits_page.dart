@@ -335,10 +335,14 @@ class _CreditGroupTile extends StatelessWidget {
         Padding(
           padding: EdgeInsets.only(top: chunks.isNotEmpty ? 4 : 0),
           child: Text(
-            l10n.creditsInstallmentsWithPending(
-              totalInstallmentCount,
-              pendingCountAfterSelectedMonth,
-            ),
+            pendingCountAfterSelectedMonth > 0
+                ? l10n.creditsInstallmentsWithPending(
+                    totalInstallmentCount,
+                    pendingCountAfterSelectedMonth,
+                  )
+                : l10n.creditsInstallmentsEndsThisMonth(
+                    totalInstallmentCount,
+                  ),
             style: theme.textTheme.bodySmall?.copyWith(
               color: theme.colorScheme.onSurfaceVariant,
             ),
