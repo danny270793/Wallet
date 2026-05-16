@@ -815,6 +815,10 @@ class AppLocalizationsEs extends AppLocalizations {
   String get transactionsTotalsWeightedHint => 'Ponderado';
 
   @override
+  String get transactionsTotalsWeightedExcludingCreditHint =>
+      'Ponderado excluyendo crédito';
+
+  @override
   String get transactionsTotalsWeightedExcludingIgnoredHint =>
       'Ponderado excluyendo ignoradas';
 
