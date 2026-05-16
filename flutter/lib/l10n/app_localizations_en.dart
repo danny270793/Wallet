@@ -811,6 +811,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get transactionsTotalsWeightedHint => 'Weighted';
 
   @override
+  String get transactionsTotalsWeightedExcludingCreditHint =>
+      'Weighted excluding credit';
+
+  @override
   String get transactionsTotalsWeightedExcludingIgnoredHint =>
       'Weighted excluding ignored';
 
