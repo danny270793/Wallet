@@ -412,71 +412,34 @@ class _CreditGroupTile extends StatelessWidget {
       );
     }
 
-    final screenW = MediaQuery.sizeOf(context).width;
-    final trailingWidth = (screenW * 0.42).clamp(220.0, 340.0);
-
-    Widget trailingAmountColumn(
-      String label,
-      double amount,
-      Color amountColor,
-    ) {
-      return Expanded(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.end,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              label,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-              textAlign: TextAlign.end,
-              style: theme.textTheme.labelSmall?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
-                height: 1.1,
-              ),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              l10n.transactionAmountValue(amount.toStringAsFixed(2)),
-              textAlign: TextAlign.end,
-              style: theme.textTheme.titleSmall?.copyWith(
-                fontWeight: FontWeight.w700,
-                color: amountColor,
-                height: 1.1,
-                fontFeatures: const [FontFeature.tabularFigures()],
-              ),
-            ),
-          ],
+    Widget trailingAmountText(double amount, Color amountColor) {
+      return Text(
+        l10n.transactionAmountValue(amount.toStringAsFixed(2)),
+        textAlign: TextAlign.end,
+        style: theme.textTheme.titleSmall?.copyWith(
+          fontWeight: FontWeight.w700,
+          color: amountColor,
+          height: 1.15,
+          fontFeatures: const [FontFeature.tabularFigures()],
         ),
       );
     }
 
-    final trailingPrices = SizedBox(
-      width: trailingWidth,
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          trailingAmountColumn(
-            l10n.creditsTileQuoteThisMonth,
-            quoteThisMonth,
-            theme.colorScheme.onSurface,
-          ),
-          const SizedBox(width: 6),
-          trailingAmountColumn(
-            l10n.creditsTilePaidThisMonth,
-            paidTotal,
-            paidTotal.abs() > 0.005
-                ? paidGreen
-                : theme.colorScheme.onSurfaceVariant,
-          ),
-          const SizedBox(width: 6),
-          trailingAmountColumn(
-            l10n.creditsTileCreditTotal,
-            totalCreditValue,
-            theme.colorScheme.onSurface,
-          ),
-        ],
-      ),
+    final trailingPrices = Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.end,
+      children: [
+        trailingAmountText(quoteThisMonth, theme.colorScheme.onSurface),
+        const SizedBox(height: 2),
+        trailingAmountText(
+          paidTotal,
+          paidTotal.abs() > 0.005
+              ? paidGreen
+              : theme.colorScheme.onSurfaceVariant,
+        ),
+        const SizedBox(height: 2),
+        trailingAmountText(totalCreditValue, theme.colorScheme.onSurface),
+      ],
     );
 
     return SwipeableListTile(
