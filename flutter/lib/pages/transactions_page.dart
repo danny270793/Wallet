@@ -1117,15 +1117,16 @@ void showAccountTransferEditorBottomSheet(
   required AppLocalizations l10n,
   required TransactionEntity editingSource,
   required TransactionEntity editingTarget,
+  TransactionsCubit? cubit,
 }) {
-  final cubit = context.read<TransactionsCubit>();
+  final bloc = cubit ?? context.read<TransactionsCubit>();
   showModalBottomSheet<void>(
     context: context,
     isScrollControlled: true,
     showDragHandle: false,
     useSafeArea: true,
     builder: (_) => _AccountTransferBottomSheet(
-      cubit: cubit,
+      cubit: bloc,
       l10n: l10n,
       editingSource: editingSource,
       editingTarget: editingTarget,
@@ -1354,6 +1355,7 @@ class _TransactionSearchBodyState extends State<_TransactionSearchBody> {
     }
 
     return BlocListener<TransactionsCubit, TransactionsState>(
+      bloc: widget.cubit,
       listenWhen: (previous, current) =>
           current is TransactionsLoaded || current is TransactionsActionError,
       listener: (context, state) {
@@ -1367,6 +1369,7 @@ class _TransactionSearchBodyState extends State<_TransactionSearchBody> {
         });
       },
       child: BlocBuilder<TransactionsCubit, TransactionsState>(
+        bloc: widget.cubit,
         builder: (context, state) {
           final local = _localTransactionsMatchingDescription(
             transactionsFilteredForSearchScope(
@@ -1504,6 +1507,7 @@ Widget _transactionSearchResultsList(
                 ),
               GroupedTxnTransferPairMarker(:final source, :final target) =>
                 GroupedTxnTransferPairTile(
+                  cubit: cubit,
                   source: source,
                   target: target,
                   l10n: l10n,
