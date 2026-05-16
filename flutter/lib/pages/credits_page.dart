@@ -49,6 +49,21 @@ List<({String id, List<TransactionEntity> rows})> groupedCreditLedger(
   return out;
 }
 
+/// Number of ledger rows (installments) in the credit group [creditLedgerKey] across [flat].
+int creditLedgerTotalInstallmentCountForGroup(
+  List<TransactionEntity> flat,
+  String creditLedgerKey,
+) {
+  var n = 0;
+  for (final t in flat) {
+    final g = t.creditLedgerGroupingKey;
+    if (g == creditLedgerKey) {
+      n++;
+    }
+  }
+  return n;
+}
+
 List<String> _relationNames(TransactionEntity t) => [
   if (t.categoryName?.isNotEmpty == true) t.categoryName!,
   if (t.accountName?.isNotEmpty == true) t.accountName!,
@@ -231,6 +246,7 @@ class _CreditGroupTile extends StatelessWidget {
     required this.cubit,
     required this.rows,
     required this.creditLedgerKey,
+    required this.totalInstallmentCount,
     required this.l10n,
     required this.onSwipeEdit,
   });
@@ -238,6 +254,8 @@ class _CreditGroupTile extends StatelessWidget {
   final TransactionsCubit cubit;
   final List<TransactionEntity> rows;
   final String creditLedgerKey;
+  /// Full credit plan size (all installments in the group), not only [rows] in the visible month.
+  final int totalInstallmentCount;
   final AppLocalizations l10n;
 
   /// Opens the editor for the group's first installment and reloads the page list.
@@ -338,7 +356,7 @@ class _CreditGroupTile extends StatelessWidget {
           padding: EdgeInsets.only(top: chunks.isNotEmpty ? 4 : 0),
           child: Text(
             l10n.creditsInstallmentsWithPending(
-              rows.length,
+              totalInstallmentCount,
               pendingInstallmentCount,
             ),
             style: theme.textTheme.bodySmall?.copyWith(
@@ -597,6 +615,11 @@ class _CreditsPageState extends State<CreditsPage> {
                             cubit: cubit,
                             rows: g.rows,
                             creditLedgerKey: g.id,
+                            totalInstallmentCount:
+                                creditLedgerTotalInstallmentCountForGroup(
+                              _flat,
+                              g.id,
+                            ),
                             l10n: l10n,
                             onSwipeEdit: () => _openEditor(g.rows.first, l10n),
                           );
