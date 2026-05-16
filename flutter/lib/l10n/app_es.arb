@@ -290,6 +290,14 @@
       }
     }
   },
+  "creditsInstallmentsEndsThisMonth": "{count} cuotas · termina este mes",
+  "@creditsInstallmentsEndsThisMonth": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "creditsPendingTotalsLabel": "Total pendiente",
   "creditsDueThisMonthLabel": "A pagar este mes",
   "creditsNewDeferredPurchase": "Nueva compra a crédito",
