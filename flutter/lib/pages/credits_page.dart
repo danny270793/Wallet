@@ -65,19 +65,6 @@ bool _installmentIsPaidThroughToday(TransactionEntity t) {
   return !d.isAfter(today);
 }
 
-/// Sum of raw [TransactionEntity.value] for installments not yet reached by local calendar date.
-double creditLedgerTotalPending(List<TransactionEntity> flat) {
-  var sum = 0.0;
-  for (final t in flat) {
-    final g = t.creditLedgerGroupingKey;
-    if (g == null || g.isEmpty) continue;
-    if (!_installmentIsPaidThroughToday(t)) {
-      sum += t.value;
-    }
-  }
-  return sum;
-}
-
 /// Installments due in [monthStart]'s calendar month (credit rows only).
 /// For the current local month, excludes due dates before today.
 List<TransactionEntity> creditLedgerInstallmentsInSelectedMonth(
@@ -102,6 +89,29 @@ List<TransactionEntity> creditLedgerInstallmentsInSelectedMonth(
   return out;
 }
 
+/// Sum of [TransactionEntity.value] for credit installments still unpaid (local due after today)
+/// whose **due date** is on or after the first day of [monthStart]'s month.
+///
+/// Advancing the selected month excludes installments due in earlier months, e.g. three \$100
+/// dues in three consecutive months show 300 → 200 → 100 → 0.
+double creditLedgerPendingTotalFromSelectedMonth(
+  List<TransactionEntity> flat,
+  DateTime monthStart,
+) {
+  final monthFirst = DateTime(monthStart.year, monthStart.month, 1);
+  var sum = 0.0;
+  for (final t in flat) {
+    final g = t.creditLedgerGroupingKey;
+    if (g == null || g.isEmpty) continue;
+    if (_installmentIsPaidThroughToday(t)) continue;
+    final local = t.transactedAt.toLocal();
+    final dueDay = DateTime(local.year, local.month, local.day);
+    if (dueDay.isBefore(monthFirst)) continue;
+    sum += t.value;
+  }
+  return sum;
+}
+
 /// Sum of raw values for installments due in [monthStart]'s calendar month.
 /// For the current local month, only dues on or after today are included.
 double creditLedgerDueInSelectedMonth(
@@ -120,7 +130,7 @@ class _CreditsPendingTotalsBar extends StatelessWidget {
   });
 
   final AppLocalizations l10n;
-  /// Pending installment values due in the same visible month as the list (not yet paid through today).
+  /// Remaining installment principal for dues on or after the visible month (see [creditLedgerPendingTotalFromSelectedMonth]).
   final double pendingTotal;
   /// Sum for installments due in the selected month ([creditLedgerDueInSelectedMonth]).
   final double dueInSelectedMonthTotal;
@@ -503,7 +513,8 @@ class _CreditsPageState extends State<CreditsPage> {
         final groups = groupedCreditLedger(flatMonth);
         final showPendingBar = !_loading && hasAnyCredits;
         final dueInMonth = creditLedgerDueInSelectedMonth(_flat, visibleMonth);
-        final pendingInSelectedMonth = creditLedgerTotalPending(flatMonth);
+        final pendingTotal =
+            creditLedgerPendingTotalFromSelectedMonth(_flat, visibleMonth);
 
         return ShellScaffold(
           title: l10n.creditsTitle,
@@ -516,7 +527,7 @@ class _CreditsPageState extends State<CreditsPage> {
           bottomNavigationBar: showPendingBar
               ? _CreditsPendingTotalsBar(
                   l10n: l10n,
-                  pendingTotal: pendingInSelectedMonth,
+                  pendingTotal: pendingTotal,
                   dueInSelectedMonthTotal: dueInMonth,
                 )
               : null,
