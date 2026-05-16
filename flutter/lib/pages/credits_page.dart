@@ -406,9 +406,8 @@ class _CreditGroupTile extends StatelessWidget {
         const SizedBox(height: 2),
         trailingAmountText(
           futureMonthsPendingTotal,
-          futureMonthsPendingTotal.abs() > 0.005
-              ? theme.colorScheme.error
-              : theme.colorScheme.onSurfaceVariant,
+          theme.colorScheme.onSurface,
+          compact: true,
         ),
         const SizedBox(height: 2),
         trailingAmountText(
