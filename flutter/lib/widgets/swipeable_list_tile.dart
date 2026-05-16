@@ -19,6 +19,7 @@ class SwipeableListTile extends StatelessWidget {
     this.minLeadingWidth,
     this.horizontalTitleGap,
     this.contentPadding = const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
+    this.contentOpacity = 1.0,
     required this.onEdit,
     required this.confirmDelete,
     required this.onDelete,
@@ -48,6 +49,10 @@ class SwipeableListTile extends StatelessWidget {
 
   /// Passed to inner [ListTile.contentPadding].
   final EdgeInsetsGeometry contentPadding;
+
+  /// Visual strength of the row foreground (1 = full); dim archive / inactive rows.
+  final double contentOpacity;
+
   final VoidCallback onEdit;
 
   /// Return true to allow delete dismiss after user confirms in dialog.
@@ -76,6 +81,9 @@ class SwipeableListTile extends StatelessWidget {
       shape: RoundedRectangleBorder(borderRadius: radius),
     );
 
+    final tileChild = contentOpacity >= 1.0
+        ? tile
+        : Opacity(opacity: contentOpacity.clamp(0.0, 1.0), child: tile);
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 0, vertical: 0),
       child: Dismissible(
@@ -132,7 +140,7 @@ class SwipeableListTile extends StatelessWidget {
             ),
           ),
         ),
-        child: tile,
+        child: tileChild,
       ),
     );
   }
