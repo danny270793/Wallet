@@ -127,6 +127,27 @@ double creditLedgerPendingTotalFromSelectedMonth(
   return sum;
 }
 
+/// Unpaid installments in [creditLedgerKey] with due date on or after the first day of
+/// [monthStart] (same window as [creditLedgerPendingTotalFromSelectedMonth] for one group).
+int creditLedgerPendingInstallmentCountFromSelectedMonth(
+  List<TransactionEntity> flat,
+  String creditLedgerKey,
+  DateTime monthStart,
+) {
+  final monthFirst = DateTime(monthStart.year, monthStart.month, 1);
+  var n = 0;
+  for (final t in flat) {
+    final g = t.creditLedgerGroupingKey;
+    if (g != creditLedgerKey) continue;
+    if (_installmentIsPaidThroughToday(t)) continue;
+    final local = t.transactedAt.toLocal();
+    final dueDay = DateTime(local.year, local.month, local.day);
+    if (dueDay.isBefore(monthFirst)) continue;
+    n++;
+  }
+  return n;
+}
+
 /// Sum of raw values for installments due in [monthStart]'s calendar month.
 /// For the current local month, only dues on or after today are included.
 double creditLedgerDueInSelectedMonth(
@@ -247,6 +268,7 @@ class _CreditGroupTile extends StatelessWidget {
     required this.rows,
     required this.creditLedgerKey,
     required this.totalInstallmentCount,
+    required this.pendingInstallmentsForwardFromMonth,
     required this.l10n,
     required this.onSwipeEdit,
   });
@@ -256,6 +278,8 @@ class _CreditGroupTile extends StatelessWidget {
   final String creditLedgerKey;
   /// Full credit plan size (all installments in the group), not only [rows] in the visible month.
   final int totalInstallmentCount;
+  /// Unpaid installments with due on/after visible month's first day (see [creditLedgerPendingInstallmentCountFromSelectedMonth]).
+  final int pendingInstallmentsForwardFromMonth;
   final AppLocalizations l10n;
 
   /// Opens the editor for the group's first installment and reloads the page list.
@@ -273,7 +297,6 @@ class _CreditGroupTile extends StatelessWidget {
         pendingRows.fold<double>(0, (a, t) => a + t.value);
     // Sum of each paid installment's full [TransactionEntity.value], not × percentage/100.
     final paidTotal = paidRows.fold<double>(0, (a, t) => a + t.value);
-    final pendingInstallmentCount = pendingRows.length;
 
     final fullyPaid = pendingTotal.abs() <= 0.005;
 
@@ -357,7 +380,7 @@ class _CreditGroupTile extends StatelessWidget {
           child: Text(
             l10n.creditsInstallmentsWithPending(
               totalInstallmentCount,
-              pendingInstallmentCount,
+              pendingInstallmentsForwardFromMonth,
             ),
             style: theme.textTheme.bodySmall?.copyWith(
               color: theme.colorScheme.onSurfaceVariant,
@@ -619,6 +642,12 @@ class _CreditsPageState extends State<CreditsPage> {
                                 creditLedgerTotalInstallmentCountForGroup(
                               _flat,
                               g.id,
+                            ),
+                            pendingInstallmentsForwardFromMonth:
+                                creditLedgerPendingInstallmentCountFromSelectedMonth(
+                              _flat,
+                              g.id,
+                              visibleMonth,
                             ),
                             l10n: l10n,
                             onSwipeEdit: () => _openEditor(g.rows.first, l10n),
