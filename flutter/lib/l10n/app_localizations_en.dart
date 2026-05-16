@@ -594,6 +594,15 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get creditsTileQuoteThisMonth => 'Month quote';
+
+  @override
+  String get creditsTilePaidThisMonth => 'Paid this month';
+
+  @override
+  String get creditsTileCreditTotal => 'Credit total';
+
+  @override
   String get creditsPendingTotalsLabel => 'Pending total';
 
   @override
