@@ -594,6 +594,11 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String creditsInstallmentsEndsThisMonth(int count) {
+    return '$count installments · ends this month';
+  }
+
+  @override
   String get creditsPendingTotalsLabel => 'Pending total';
 
   @override
