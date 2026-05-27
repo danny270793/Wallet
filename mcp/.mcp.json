@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "wallet": {
+      "type": "stdio",
+      "command": "node",
+      "args": [
+        "/Users/dvaca/Downloads/mine/wallet/mcp/dist/index.js"
+      ],
+      "env": {}
+    }
+  }
+}
