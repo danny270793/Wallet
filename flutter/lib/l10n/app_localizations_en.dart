@@ -656,6 +656,9 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get noTransactionsThisDay => 'No transactions this day';
+
+  @override
   String get newTransaction => 'New transaction';
 
   @override
