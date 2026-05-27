@@ -329,6 +329,7 @@
       }
     }
   },
+  "noTransactionsThisDay": "No hay transacciones este día",
   "newTransaction": "Nueva transacción",
   "transactionsFabTransfer": "Transferir",
   "transferSheetTitle": "Transferir",
