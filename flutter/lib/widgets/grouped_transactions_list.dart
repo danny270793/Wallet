@@ -39,22 +39,60 @@ final class GroupedTxnTransferPairMarker extends GroupedTxnRow {
   final TransactionEntity target;
 }
 
+/// Marker for a calendar day in the visible range that has no transactions.
+/// Emitted only when `groupedTransactionsForList` is called with a `fillRange`.
+final class GroupedTxnEmptyDayMarker extends GroupedTxnRow {
+  const GroupedTxnEmptyDayMarker(this.day);
+  final DateTime day;
+}
+
 /// Groups by descending day, intra-day descending time; pairs transfers by group id like [transactions_page].
-List<GroupedTxnRow> groupedTransactionsForList(List<TransactionEntity> list) {
+///
+/// When [fillRange] is provided, every calendar day in `[fillRange.start, fillRange.endExclusive)`
+/// is emitted in the result — days without transactions get a [GroupedTxnEmptyDayMarker]
+/// after their [GroupedTxnDayMarker] header. Days outside the range that have transactions
+/// are still included (they appear before the range, descending), so a misconfigured range
+/// can't drop real data.
+List<GroupedTxnRow> groupedTransactionsForList(
+  List<TransactionEntity> list, {
+  ({DateTime start, DateTime endExclusive})? fillRange,
+}) {
   final byDay = <DateTime, List<TransactionEntity>>{};
   for (final t in list) {
     final k = groupedTxCalendarDayLocal(t.transactedAt);
     byDay.putIfAbsent(k, () => []).add(t);
   }
-  final days = byDay.keys.toList()..sort((a, b) => b.compareTo(a));
-  for (final d in days) {
+  final daySet = <DateTime>{...byDay.keys};
+  if (fillRange != null) {
+    final start = DateTime(
+      fillRange.start.year,
+      fillRange.start.month,
+      fillRange.start.day,
+    );
+    final endExclusive = DateTime(
+      fillRange.endExclusive.year,
+      fillRange.endExclusive.month,
+      fillRange.endExclusive.day,
+    );
+    var d = start;
+    while (d.isBefore(endExclusive)) {
+      daySet.add(d);
+      d = DateTime(d.year, d.month, d.day + 1);
+    }
+  }
+  final days = daySet.toList()..sort((a, b) => b.compareTo(a));
+  for (final d in byDay.keys) {
     byDay[d]!.sort((a, b) => b.transactedAt.compareTo(a.transactedAt));
   }
 
   final entries = <GroupedTxnRow>[];
   for (final d in days) {
     entries.add(GroupedTxnDayMarker(d));
-    final dayList = byDay[d]!;
+    final dayList = byDay[d];
+    if (dayList == null || dayList.isEmpty) {
+      entries.add(GroupedTxnEmptyDayMarker(d));
+      continue;
+    }
     final byGroup = <String, List<TransactionEntity>>{};
     for (final t in dayList) {
       final g = t.transferGroupId;
@@ -103,16 +141,62 @@ class GroupedTxnDayHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final text = DateFormat('yyyy-MM-dd').format(day);
+    final locale = Localizations.localeOf(context).toString();
+    final today = groupedTxCalendarDayLocal(DateTime.now());
+    final text = today.year == day.year
+        ? DateFormat.MMMEd(locale).format(day)
+        : DateFormat.yMMMEd(locale).format(day);
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 6),
-      child: Align(
-        alignment: Alignment.centerLeft,
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 6),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Expanded(
+            child: Divider(
+              height: 1,
+              thickness: 1,
+              color: theme.colorScheme.outlineVariant,
+            ),
+          ),
+          const SizedBox(width: 12),
+          Text(
+            text,
+            style: theme.textTheme.titleSmall?.copyWith(
+              color: theme.colorScheme.onSurface,
+              fontWeight: FontWeight.w600,
+              letterSpacing: 0.2,
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Divider(
+              height: 1,
+              thickness: 1,
+              color: theme.colorScheme.outlineVariant,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class GroupedTxnEmptyDayLabel extends StatelessWidget {
+  const GroupedTxnEmptyDayLabel({super.key, required this.l10n});
+
+  final AppLocalizations l10n;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 4, 16, 12),
+      child: Center(
         child: Text(
-          text,
-          style: theme.textTheme.titleSmall?.copyWith(
+          l10n.noTransactionsThisDay,
+          textAlign: TextAlign.center,
+          style: theme.textTheme.bodySmall?.copyWith(
             color: theme.colorScheme.onSurfaceVariant,
-            fontWeight: FontWeight.w600,
           ),
         ),
       ),

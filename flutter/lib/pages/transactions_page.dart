@@ -1029,7 +1029,24 @@ class _TransactionsViewState extends State<_TransactionsView> {
       );
     }
 
-    final rows = groupedTransactionsForList(monthTransactions);
+    final monthStart = DateTime(visibleMonth.year, visibleMonth.month, 1);
+    final monthEndExclusive = DateTime(
+      visibleMonth.year,
+      visibleMonth.month + 1,
+      1,
+    );
+    final now = DateTime.now();
+    final tomorrow = DateTime(now.year, now.month, now.day + 1);
+    final endExclusive = monthEndExclusive.isBefore(tomorrow)
+        ? monthEndExclusive
+        : tomorrow;
+    final fillRange = endExclusive.isAfter(monthStart)
+        ? (start: monthStart, endExclusive: endExclusive)
+        : null;
+    final rows = groupedTransactionsForList(
+      monthTransactions,
+      fillRange: fillRange,
+    );
     return RefreshIndicator(
       onRefresh: refresh,
       child: ListView.builder(
@@ -1043,6 +1060,7 @@ class _TransactionsViewState extends State<_TransactionsView> {
           final ri = index - (offlineCached ? 1 : 0);
           return switch (rows[ri]) {
             GroupedTxnDayMarker(:final day) => GroupedTxnDayHeader(day: day),
+            GroupedTxnEmptyDayMarker() => GroupedTxnEmptyDayLabel(l10n: l10n),
             GroupedTxnTxMarker(:final transaction) => GroupedTxnTransactionTile(
               transaction: transaction,
               l10n: l10n,
@@ -1498,6 +1516,7 @@ Widget _transactionSearchResultsList(
           itemBuilder: (context, index) {
             return switch (rows[index]) {
               GroupedTxnDayMarker(:final day) => GroupedTxnDayHeader(day: day),
+              GroupedTxnEmptyDayMarker() => GroupedTxnEmptyDayLabel(l10n: l10n),
               GroupedTxnTxMarker(:final transaction) =>
                 GroupedTxnTransactionTile(
                   cubit: cubit,

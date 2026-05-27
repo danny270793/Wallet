@@ -329,6 +329,7 @@
       }
     }
   },
+  "noTransactionsThisDay": "No transactions this day",
   "newTransaction": "New transaction",
   "transactionsFabTransfer": "Transfer",
   "transferSheetTitle": "Transfer",
