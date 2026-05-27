@@ -660,6 +660,9 @@ class AppLocalizationsEs extends AppLocalizations {
   }
 
   @override
+  String get noTransactionsThisDay => 'No hay transacciones este día';
+
+  @override
   String get newTransaction => 'Nueva transacción';
 
   @override
