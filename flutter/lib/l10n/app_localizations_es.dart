@@ -15,6 +15,9 @@ class AppLocalizationsEs extends AppLocalizations {
   String get signIn => 'Iniciar sesión';
 
   @override
+  String get signInSubtitle => 'Inicia sesión para continuar';
+
+  @override
   String get email => 'Correo electrónico';
 
   @override
@@ -45,6 +48,9 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get dashboardUseWeightedAmounts => 'Importes ponderados (%)';
+
+  @override
+  String get dashboardShowCredits => 'Mostrar créditos';
 
   @override
   String get monthlyDashboardTagPieTitle => 'Gastos por etiqueta';
@@ -511,6 +517,13 @@ class AppLocalizationsEs extends AppLocalizations {
   String confirmDeleteTag(String name) {
     return '¿Seguro que quieres eliminar «$name»?';
   }
+
+  @override
+  String get tagHidden => 'Oculta';
+
+  @override
+  String get tagHiddenHint =>
+      'Las etiquetas ocultas no aparecerán al elegir una etiqueta para una transacción';
 
   @override
   String get assets => 'Activos';
