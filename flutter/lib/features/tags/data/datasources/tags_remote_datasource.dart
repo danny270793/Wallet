@@ -5,7 +5,12 @@ import '../../domain/entities/tag_entity.dart';
 abstract class TagsRemoteDatasource {
   Future<List<TagEntity>> getTags();
   Future<TagEntity> createTag({required String name, String? description});
-  Future<TagEntity> updateTag({required String id, required String name, String? description});
+  Future<TagEntity> updateTag({
+    required String id,
+    required String name,
+    String? description,
+    bool hidden = false,
+  });
   Future<void> deleteTag({required String id});
 }
 
@@ -44,11 +49,12 @@ class TagsSupabaseDatasource implements TagsRemoteDatasource {
     required String id,
     required String name,
     String? description,
+    bool hidden = false,
   }) async {
     AppLogger.debug('updateTag called: $id');
     final data = await _client
         .from('wallet_tags')
-        .update({'name': name, 'description': description})
+        .update({'name': name, 'description': description, 'hidden': hidden})
         .eq('id', id)
         .select()
         .single();
