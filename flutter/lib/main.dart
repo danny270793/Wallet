@@ -1,8 +1,10 @@
 import 'dart:async';
+import 'dart:io';
 import 'dart:ui';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:local_auth/local_auth.dart';
 import 'package:wallet/l10n/app_localizations.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -14,8 +16,26 @@ import 'core/logger/app_logger.dart';
 import 'core/wallet_actions/wallet_actions_reporter.dart';
 import 'router.dart';
 
+// Dart's HttpClient (used under the hood by package:http and thus by
+// Supabase) has its own bundled trust store, independent of the Android/iOS
+// OS trust store - installing a corporate proxy's root CA (e.g. Zscaler) at
+// the OS level does nothing for it. Debug-only: trust it here too, so local
+// dev works behind a TLS-intercepting proxy. Never runs in release builds.
+Future<void> _trustDevProxyCertificateIfNeeded() async {
+  if (!kDebugMode) return;
+  try {
+    final bytes = await rootBundle.load('assets/certs/zscaler_root_ca.pem');
+    SecurityContext.defaultContext
+        .setTrustedCertificatesBytes(bytes.buffer.asUint8List());
+    AppLogger.info('trusted dev proxy certificate');
+  } catch (e) {
+    AppLogger.info('no dev proxy certificate to trust: $e');
+  }
+}
+
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await _trustDevProxyCertificateIfNeeded();
 
   AppLogger.info('initializing Supabase');
   await Supabase.initialize(
