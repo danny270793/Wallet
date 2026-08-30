@@ -2872,7 +2872,10 @@ class _TransactionDialogState extends State<_TransactionDialog> {
       noResultsMessage: l10n.transferAccountSearchNoResults,
       emptyMessage: l10n.noTags,
       allowNone: false,
-      getItems: () => _tags.map((t) => (id: t.id, name: t.name)).toList(),
+      getItems: () => _tags
+          .where((t) => !t.hidden)
+          .map((t) => (id: t.id, name: t.name))
+          .toList(),
       addTooltip: l10n.newTag,
       onAddPressed: (sheetContext) =>
           showTagEditorBottomSheet(sheetContext, l10n),
