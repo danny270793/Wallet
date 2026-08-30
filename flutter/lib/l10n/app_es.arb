@@ -2,6 +2,7 @@
   "@@locale": "es",
   "appTitle": "Cartera",
   "signIn": "Iniciar sesión",
+  "signInSubtitle": "Inicia sesión para continuar",
   "email": "Correo electrónico",
   "password": "Contraseña",
   "fieldRequired": "Obligatorio",
@@ -12,6 +13,7 @@
   "monthlyDashboardTransactionsListTitle": "Transacciones",
   "dashboardIncludeIgnoredInTotals": "Incluir transacciones ignoradas",
   "dashboardUseWeightedAmounts": "Importes ponderados (%)",
+  "dashboardShowCredits": "Mostrar créditos",
   "monthlyDashboardTagPieTitle": "Gastos por etiqueta",
   "monthlyDashboardCategoryPieTitle": "Gastos por categoría",
   "dashboardCategoryPieNoData": "No hay gastos con categoría que mostrar este mes con el filtro actual.",
@@ -221,6 +223,8 @@
   "editTag": "Editar etiqueta",
   "deleteTag": "Eliminar etiqueta",
   "confirmDeleteTag": "¿Seguro que quieres eliminar «{name}»?",
+  "tagHidden": "Oculta",
+  "tagHiddenHint": "Las etiquetas ocultas no aparecerán al elegir una etiqueta para una transacción",
   "@confirmDeleteTag": {
     "placeholders": {
       "name": {
