@@ -62,6 +62,7 @@ dev_dependencies:
   # Apply after editing the quoted name: dart run rename_app:main all="Wallet"
   rename_app: ^1.6.5
   flutter_launcher_icons: ^0.14.4
+  flutter_native_splash: ^2.4.4
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
@@ -130,3 +131,16 @@ flutter_launcher_icons:
   macos:
     generate: true
     image_path: assets/launcher.png
+
+# Regenerate the splash screen: dart run flutter_native_splash:create
+flutter_native_splash:
+  color: "#673AB7"
+  image: assets/splash_icon.png
+  color_dark: "#1C1033"
+  image_dark: assets/splash_icon.png
+  android_12:
+    image: assets/splash_icon.png
+    color: "#673AB7"
+    image_dark: assets/splash_icon.png
+    color_dark: "#1C1033"
+  web: false
