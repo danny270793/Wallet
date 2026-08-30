@@ -4,6 +4,7 @@ import 'package:wallet/l10n/app_localizations.dart';
 
 import '../core/di/injection.dart';
 import '../core/ui/app_icons.dart';
+import '../features/transactions/domain/entities/transaction_entity.dart';
 import '../features/transactions/presentation/cubit/yearly_dashboard_cubit.dart';
 import '../widgets/dashboard_view_options_bottom_sheet.dart';
 import '../widgets/offline_cached_data_banner.dart';
@@ -42,6 +43,15 @@ class _YearlyDashboardViewState extends State<_YearlyDashboardView> {
 
   /// When true, monthly bars use `value × percentage`; when false, raw row value.
   bool _useWeightedAmounts = true;
+
+  /// When false, transactions linked to a credit (installments) are excluded entirely.
+  bool _showCredits = true;
+
+  /// Respects [_showCredits]: excludes credit-linked installments entirely when off.
+  List<TransactionEntity> _filterCredits(List<TransactionEntity> txs) {
+    if (_showCredits) return txs;
+    return txs.where((t) => t.creditId == null || t.creditId!.isEmpty).toList();
+  }
 
   @override
   void didChangeDependencies() {
@@ -89,9 +99,11 @@ class _YearlyDashboardViewState extends State<_YearlyDashboardView> {
                         l10n: l10n,
                         includeIgnored: _includeIgnored,
                         useWeightedAmounts: _useWeightedAmounts,
-                        onApply: (inc, wt) => setState(() {
+                        showCredits: _showCredits,
+                        onApply: (inc, wt, credits) => setState(() {
                           _includeIgnored = inc;
                           _useWeightedAmounts = wt;
+                          _showCredits = credits;
                         }),
                       ),
                     ),
@@ -123,26 +135,26 @@ class _YearlyDashboardViewState extends State<_YearlyDashboardView> {
                       YearlyCumulativeNetBarChart(
                         l10n: l10n,
                         year: y,
-                        transactions: transactions,
+                        transactions: _filterCredits(transactions),
                       ),
                       YearlyWeightedNetBarChart(
                         l10n: l10n,
                         year: y,
-                        transactions: transactions,
+                        transactions: _filterCredits(transactions),
                         includeIgnored: _includeIgnored,
                         useWeightedAmounts: _useWeightedAmounts,
                       ),
                       YearlyWeightedIncomeBarChart(
                         l10n: l10n,
                         year: y,
-                        transactions: transactions,
+                        transactions: _filterCredits(transactions),
                         includeIgnored: _includeIgnored,
                         useWeightedAmounts: _useWeightedAmounts,
                       ),
                       YearlyWeightedOutcomeBarChart(
                         l10n: l10n,
                         year: y,
-                        transactions: transactions,
+                        transactions: _filterCredits(transactions),
                         includeIgnored: _includeIgnored,
                         useWeightedAmounts: _useWeightedAmounts,
                       ),
