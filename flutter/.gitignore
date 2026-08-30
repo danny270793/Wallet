@@ -45,3 +45,10 @@ app.*.map.json
 /android/app/release
 
 .env.json
+
+# Personal corporate-proxy dev cert - environment-specific, not a secret but
+# not portable to other machines either. See main.dart's
+# _trustDevProxyCertificateIfNeeded, which already no-ops if this is absent.
+# The directory itself (and .gitkeep) stays tracked so pubspec.yaml's
+# "assets/certs/" entry doesn't break a fresh checkout's build.
+assets/certs/*.pem
