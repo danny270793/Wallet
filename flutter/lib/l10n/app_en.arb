@@ -2,6 +2,7 @@
   "@@locale": "en",
   "appTitle": "Wallet",
   "signIn": "Sign in",
+  "signInSubtitle": "Sign in to continue",
   "email": "Email",
   "password": "Password",
   "fieldRequired": "Required",
@@ -12,6 +13,7 @@
   "monthlyDashboardTransactionsListTitle": "Transactions",
   "dashboardIncludeIgnoredInTotals": "Include ignored transactions",
   "dashboardUseWeightedAmounts": "Weighted amounts (%)",
+  "dashboardShowCredits": "Show credits",
   "monthlyDashboardTagPieTitle": "Expenses by tag",
   "monthlyDashboardCategoryPieTitle": "Expenses by category",
   "dashboardCategoryPieNoData": "No categorized expenses to show for this month with the current filter.",
@@ -221,6 +223,8 @@
   "editTag": "Edit tag",
   "deleteTag": "Delete tag",
   "confirmDeleteTag": "Are you sure you want to delete \"{name}\"?",
+  "tagHidden": "Hidden",
+  "tagHiddenHint": "Hidden tags won't appear when picking a tag for a transaction",
   "@confirmDeleteTag": {
     "placeholders": {
       "name": {
