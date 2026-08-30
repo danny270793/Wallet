@@ -42,6 +42,7 @@ class _TagEditorSheetState extends State<TagEditorSheet> {
   final _formKey = GlobalKey<FormState>();
   late final TextEditingController _nameController;
   late final TextEditingController _descriptionController;
+  late bool _hidden;
   bool _loading = false;
 
   @override
@@ -51,6 +52,7 @@ class _TagEditorSheetState extends State<TagEditorSheet> {
     _descriptionController = TextEditingController(
       text: widget.tag?.description ?? '',
     );
+    _hidden = widget.tag?.hidden ?? false;
   }
 
   @override
@@ -76,6 +78,7 @@ class _TagEditorSheetState extends State<TagEditorSheet> {
           id: widget.tag!.id,
           name: name,
           description: description,
+          hidden: _hidden,
         );
       }
     } finally {
@@ -103,6 +106,15 @@ class _TagEditorSheetState extends State<TagEditorSheet> {
             decoration: InputDecoration(labelText: l10n.accountDescription),
             maxLines: 3,
           ),
+          if (widget.tag != null)
+            CheckboxListTile(
+              value: _hidden,
+              onChanged: (v) => setState(() => _hidden = v ?? false),
+              title: Text(l10n.tagHidden),
+              subtitle: Text(l10n.tagHiddenHint),
+              controlAffinity: ListTileControlAffinity.leading,
+              contentPadding: EdgeInsets.zero,
+            ),
         ],
       ),
     );
