@@ -110,6 +110,12 @@ abstract class AppLocalizations {
   /// **'Sign in'**
   String get signIn;
 
+  /// No description provided for @signInSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in to continue'**
+  String get signInSubtitle;
+
   /// No description provided for @email.
   ///
   /// In en, this message translates to:
@@ -169,6 +175,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Weighted amounts (%)'**
   String get dashboardUseWeightedAmounts;
+
+  /// No description provided for @dashboardShowCredits.
+  ///
+  /// In en, this message translates to:
+  /// **'Show credits'**
+  String get dashboardShowCredits;
 
   /// No description provided for @monthlyDashboardTagPieTitle.
   ///
@@ -1009,6 +1021,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Are you sure you want to delete \"{name}\"?'**
   String confirmDeleteTag(String name);
+
+  /// No description provided for @tagHidden.
+  ///
+  /// In en, this message translates to:
+  /// **'Hidden'**
+  String get tagHidden;
+
+  /// No description provided for @tagHiddenHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Hidden tags won\'t appear when picking a tag for a transaction'**
+  String get tagHiddenHint;
 
   /// No description provided for @assets.
   ///
