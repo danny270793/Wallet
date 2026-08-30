@@ -52,6 +52,9 @@ class _MonthlyDashboardViewState extends State<_MonthlyDashboardView> {
   /// When true, list row amounts mirror `value × percentage`; when false, full row value.
   bool _useWeightedAmounts = true;
 
+  /// When false, transactions linked to a credit (installments) are excluded entirely.
+  bool _showCredits = true;
+
   bool _fabMenuOpen = false;
 
   /// Same semantics as [MonthlyTagPieChart.tagKeysFilter]: null = all tags.
@@ -123,9 +126,11 @@ class _MonthlyDashboardViewState extends State<_MonthlyDashboardView> {
       l10n: l10n,
       includeIgnored: _includeIgnored,
       useWeightedAmounts: _useWeightedAmounts,
-      onApply: (inc, wt) => setState(() {
+      showCredits: _showCredits,
+      onApply: (inc, wt, credits) => setState(() {
         _includeIgnored = inc;
         _useWeightedAmounts = wt;
+        _showCredits = credits;
       }),
     );
   }
@@ -148,7 +153,10 @@ class _MonthlyDashboardViewState extends State<_MonthlyDashboardView> {
         }
       },
       builder: (context, state) {
-        final txs = _monthTransactions(state);
+        final monthTxs = _monthTransactions(state);
+        final txs = _showCredits
+            ? monthTxs
+            : monthTxs.where((t) => t.creditId == null || t.creditId!.isEmpty).toList();
         // Prune filters using the same ignored basis as pies and list.
         var categoryFilter = pruneCategoryKeysFilter(
           txs,
