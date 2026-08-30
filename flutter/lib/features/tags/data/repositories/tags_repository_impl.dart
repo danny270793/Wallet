@@ -32,8 +32,13 @@ class TagsRepositoryImpl implements TagsRepository {
       _datasource.createTag(name: name, description: description);
 
   @override
-  Future<TagEntity> updateTag({required String id, required String name, String? description}) =>
-      _datasource.updateTag(id: id, name: name, description: description);
+  Future<TagEntity> updateTag({
+    required String id,
+    required String name,
+    String? description,
+    bool hidden = false,
+  }) =>
+      _datasource.updateTag(id: id, name: name, description: description, hidden: hidden);
 
   @override
   Future<void> deleteTag({required String id}) => _datasource.deleteTag(id: id);

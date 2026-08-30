@@ -5,6 +5,7 @@ class TagEntity extends Equatable {
   final String userId;
   final String name;
   final String? description;
+  final bool hidden;
   final DateTime createdAt;
   final DateTime updatedAt;
 
@@ -13,6 +14,7 @@ class TagEntity extends Equatable {
     required this.userId,
     required this.name,
     this.description,
+    this.hidden = false,
     required this.createdAt,
     required this.updatedAt,
   });
@@ -22,6 +24,7 @@ class TagEntity extends Equatable {
     userId: json['userId'] as String,
     name: json['name'] as String,
     description: json['description'] as String?,
+    hidden: json['hidden'] as bool? ?? false,
     createdAt: DateTime.parse(json['createdAt'] as String),
     updatedAt: DateTime.parse(json['updatedAt'] as String),
   );
@@ -31,10 +34,11 @@ class TagEntity extends Equatable {
     'userId': userId,
     'name': name,
     'description': description,
+    'hidden': hidden,
     'createdAt': createdAt.toUtc().toIso8601String(),
     'updatedAt': updatedAt.toUtc().toIso8601String(),
   };
 
   @override
-  List<Object?> get props => [id, userId, name, description, createdAt, updatedAt];
+  List<Object?> get props => [id, userId, name, description, hidden, createdAt, updatedAt];
 }

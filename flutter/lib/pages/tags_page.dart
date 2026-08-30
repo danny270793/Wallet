@@ -164,12 +164,19 @@ class _TagTile extends StatelessWidget {
       );
     }
 
+    final disabledColor = Theme.of(context).disabledColor;
     return SwipeableListTile(
       itemKey: tag.id,
-      title: Text(tag.name),
+      title: Text(tag.name, style: tag.hidden ? TextStyle(color: disabledColor) : null),
       subtitle: tag.description != null
-          ? Text(tag.description!, maxLines: 2, overflow: TextOverflow.ellipsis)
+          ? Text(
+              tag.description!,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: tag.hidden ? TextStyle(color: disabledColor) : null,
+            )
           : null,
+      trailing: tag.hidden ? Icon(Icons.visibility_off_outlined, color: disabledColor) : null,
       onTap: openTransactions,
       onEdit: openEdit,
       confirmDelete: () async {

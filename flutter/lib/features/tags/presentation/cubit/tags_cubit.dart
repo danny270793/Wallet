@@ -62,11 +62,16 @@ class TagsCubit extends Cubit<TagsState> {
     }
   }
 
-  Future<void> update({required String id, required String name, String? description}) async {
+  Future<void> update({
+    required String id,
+    required String name,
+    String? description,
+    bool hidden = false,
+  }) async {
     final current = _currentTags();
     AppLogger.debug('updating tag: $id');
     try {
-      final updated = await _updateTag(id: id, name: name, description: description);
+      final updated = await _updateTag(id: id, name: name, description: description, hidden: hidden);
       AppLogger.info('tag updated: ${updated.id}');
       emit(TagsLoaded(
         sortedByName(

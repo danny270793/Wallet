@@ -3,7 +3,8 @@ import 'package:wallet/l10n/app_localizations.dart';
 
 import 'bottom_sheet_pinned_title.dart';
 
-/// Same sheet on monthly and yearly dashboards: include ignored rows, weighted vs raw values.
+/// Same sheet on monthly and yearly dashboards: include ignored rows, weighted vs raw values,
+/// show/hide credit-linked installments.
 ///
 /// [onApply] is called after Save; the sheet is popped first (caller handles [setState]).
 Future<void> showDashboardViewOptionsBottomSheet({
@@ -11,14 +12,19 @@ Future<void> showDashboardViewOptionsBottomSheet({
   required AppLocalizations l10n,
   required bool includeIgnored,
   required bool useWeightedAmounts,
-  required void Function(bool includeIgnored, bool useWeightedAmounts) onApply,
+  required bool showCredits,
+  required void Function(
+    bool includeIgnored,
+    bool useWeightedAmounts,
+    bool showCredits,
+  ) onApply,
 }) async {
   await showModalBottomSheet<void>(
     context: context,
     isScrollControlled: true,
     showDragHandle: false,
     builder: (sheetContext) {
-      final draft = [includeIgnored, useWeightedAmounts];
+      final draft = [includeIgnored, useWeightedAmounts, showCredits];
 
       return SafeArea(
         child: StatefulBuilder(
@@ -43,11 +49,17 @@ Future<void> showDashboardViewOptionsBottomSheet({
                     value: draft[1],
                     onChanged: (v) => setModal(() => draft[1] = v),
                   ),
+                  SwitchListTile(
+                    contentPadding: EdgeInsets.zero,
+                    title: Text(l10n.dashboardShowCredits),
+                    value: draft[2],
+                    onChanged: (v) => setModal(() => draft[2] = v),
+                  ),
                   const SizedBox(height: 12),
                   FilledButton(
                     onPressed: () {
                       Navigator.of(sheetContext).pop();
-                      onApply(draft[0], draft[1]);
+                      onApply(draft[0], draft[1], draft[2]);
                     },
                     child: Text(l10n.save),
                   ),

@@ -15,6 +15,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get signIn => 'Sign in';
 
   @override
+  String get signInSubtitle => 'Sign in to continue';
+
+  @override
   String get email => 'Email';
 
   @override
@@ -43,6 +46,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get dashboardUseWeightedAmounts => 'Weighted amounts (%)';
+
+  @override
+  String get dashboardShowCredits => 'Show credits';
 
   @override
   String get monthlyDashboardTagPieTitle => 'Expenses by tag';
@@ -508,6 +514,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String confirmDeleteTag(String name) {
     return 'Are you sure you want to delete \"$name\"?';
   }
+
+  @override
+  String get tagHidden => 'Hidden';
+
+  @override
+  String get tagHiddenHint =>
+      'Hidden tags won\'t appear when picking a tag for a transaction';
 
   @override
   String get assets => 'Assets';
