@@ -1,0 +1,402 @@
+{
+  "@@locale": "es",
+  "appTitle": "Cartera",
+  "signIn": "Iniciar sesión",
+  "signInSubtitle": "Inicia sesión para continuar",
+  "email": "Correo electrónico",
+  "password": "Contraseña",
+  "fieldRequired": "Obligatorio",
+  "unexpectedError": "Ocurrió un error inesperado",
+  "monthlyDashboard": "Panel mensual",
+  "monthlyDashboardConfigureTooltip": "Opciones de gráficos y totales",
+  "monthlyDashboardOptionsSheetTitle": "Opciones de vista",
+  "monthlyDashboardTransactionsListTitle": "Transacciones",
+  "dashboardIncludeIgnoredInTotals": "Incluir transacciones ignoradas",
+  "dashboardUseWeightedAmounts": "Importes ponderados (%)",
+  "dashboardShowCredits": "Mostrar créditos",
+  "monthlyDashboardTagPieTitle": "Gastos por etiqueta",
+  "monthlyDashboardCategoryPieTitle": "Gastos por categoría",
+  "dashboardCategoryPieNoData": "No hay gastos con categoría que mostrar este mes con el filtro actual.",
+  "dashboardTagPieNoData": "No hay importes que mostrar este mes con el filtro actual.",
+  "dashboardTagPieFilterTags": "Filtrar etiquetas",
+  "dashboardTagPieFilterDescription": "Elige qué etiquetas incluir en el gráfico.",
+  "dashboardTagPieNeedOneTag": "Selecciona al menos una etiqueta",
+  "dashboardCategoryPieFilterCategories": "Filtrar categorías",
+  "dashboardCategoryPieFilterDescription": "Elige qué categorías incluir en el gráfico.",
+  "dashboardCategoryPieNeedOneCategory": "Selecciona al menos una categoría",
+  "dashboardPieDeselectAll": "Deseleccionar todo",
+  "dashboardPieSelectAll": "Seleccionar todo",
+  "yearlyDashboard": "Panel anual",
+  "yearlyDashboardIncomeByMonthTitle": "Ingresos por mes",
+  "yearlyDashboardOutcomeByMonthTitle": "Gastos por mes",
+  "yearlyDashboardNetByMonthTitle": "Saldo por mes",
+  "yearlyDashboardCumulativeByMonthTitle": "Saldo acumulado por mes",
+  "navigationDashboards": "Paneles",
+  "settings": "Ajustes",
+  "settingsProfileSection": "Perfil",
+  "settingsChangeEmail": "Cambiar correo",
+  "settingsChangeEmailDialogTitle": "Cambiar correo",
+  "settingsNewEmailLabel": "Correo nuevo",
+  "settingsChangeEmailSubmit": "Actualizar",
+  "settingsChangeEmailSuccess": "Revisa tu correo nuevo para confirmar el cambio.",
+  "settingsChangeEmailInvalid": "Introduce un correo válido.",
+  "settingsChangeEmailSameAsCurrent": "Ese ya es tu correo.",
+  "settingsChangePassword": "Cambiar contraseña",
+  "settingsChangePasswordSubtitle": "Actualiza la contraseña con la que inicias sesión.",
+  "settingsChangePasswordDialogTitle": "Cambiar contraseña",
+  "settingsNewPasswordLabel": "Contraseña nueva",
+  "settingsConfirmNewPasswordLabel": "Confirmar contraseña",
+  "settingsChangePasswordSubmit": "Actualizar contraseña",
+  "settingsChangePasswordSuccess": "Tu contraseña se actualizó.",
+  "settingsPasswordsDoNotMatch": "Las contraseñas no coinciden.",
+  "settingsPasswordTooShort": "Usa al menos 6 caracteres.",
+  "settingsAppearance": "Apariencia",
+  "settingsLanguage": "Idioma",
+  "settingsLanguageSystem": "Predeterminado del sistema",
+  "settingsLanguageEnglish": "Inglés",
+  "settingsLanguageSpanish": "Español",
+  "settingsTheme": "Tema",
+  "settingsThemeSystem": "Predeterminado del sistema",
+  "settingsThemeLight": "Claro",
+  "settingsThemeDark": "Oscuro",
+  "settingsDataSection": "Datos sin conexión",
+  "settingsOfflineCache": "Respuestas en caché",
+  "settingsOfflineCacheSubtitle": "Respuestas de la API guardadas en este dispositivo para uso sin conexión",
+  "settingsCachePageTitle": "Caché sin conexión",
+  "settingsCacheEmpty": "Aún no hay respuestas en caché.",
+  "settingsCacheBottomBarCaption": "Tamaño de archivos en caché",
+  "settingsCacheSortTooltip": "Ordenar",
+  "settingsCacheSortSheetTitle": "Ordenar por",
+  "settingsCacheSortByDate": "Fecha",
+  "settingsCacheSortBySize": "Tamaño",
+  "settingsCacheSortByName": "Nombre",
+  "settingsCacheKeyTxMonth": "Transacciones · {year}-{month}",
+  "@settingsCacheKeyTxMonth": {
+    "placeholders": {
+      "year": {
+        "type": "String"
+      },
+      "month": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsCacheKeyTxYear": "Transacciones · {year}",
+  "@settingsCacheKeyTxYear": {
+    "placeholders": {
+      "year": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsCacheKeyTxCreditGroups": "Transacciones (grupos de crédito)",
+  "settingsCacheKeyTxCredit": "Transacciones (crédito {shortId})",
+  "@settingsCacheKeyTxCredit": {
+    "placeholders": {
+      "shortId": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsCacheKeyWalletCredit": "Crédito de cartera · {shortId}",
+  "@settingsCacheKeyWalletCredit": {
+    "placeholders": {
+      "shortId": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsCacheKeyRaw": "{key}",
+  "@settingsCacheKeyRaw": {
+    "placeholders": {
+      "key": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsSecuritySection": "Seguridad",
+  "settingsBiometricUnlockTitle": "Face ID y huella dactilar",
+  "settingsBiometricUnlockSubtitle": "Usa la biometría para desbloquear la app.",
+  "settingsBiometricUnavailable": "El desbloqueo biométrico no está disponible en este dispositivo.",
+  "settingsBiometricAuthReason": "Confirma para activar el desbloqueo biométrico.",
+  "settingsBiometricResumeReason": "Autentícate para continuar.",
+  "biometricLockTitle": "App bloqueada",
+  "biometricLockBody": "Usa Face ID o la huella para continuar.",
+  "biometricLockUnlockButton": "Desbloquear",
+  "signOut": "Cerrar sesión",
+  "settingsAboutSection": "Acerca de",
+  "settingsAboutApp": "Acerca de",
+  "settingsPrivacyPolicy": "Política de privacidad",
+  "settingsPrivacyTagline": "Cómo trata esta app tu información.",
+  "settingsPrivacyDataTitle": "Qué guardas",
+  "settingsPrivacyDataBody": "Wallet conserva los datos financieros que introduces—cuentas, tarjetas, movimientos, categorías, etiquetas y transferencias—para mostrar saldos e historial. La app no recopila datos que no hayas guardado con tu sesión iniciada.",
+  "settingsPrivacyInfraTitle": "Dónde reside",
+  "settingsPrivacyInfraBody": "Tus registros se almacenan en el backend que configures (por ejemplo Supabase) y el inicio de sesión que uses. La seguridad, copias de seguridad y quién puede acceder dependen de ese proveedor y de la configuración de tu proyecto. Usa contraseñas fuertes y protege las claves API.",
+  "settingsPrivacySharingTitle": "Compartir y publicidad",
+  "settingsPrivacySharingBody": "No vendemos tu información personal ni usamos tu libro de cuentas para mostrarte anuncios segmentados. Salvo el backend y el servicio de autenticación que elijas, la app no está pensada para enviar tus datos a intermediarios ni anunciantes.",
+  "settingsPrivacyNoticeTitle": "Antes de publicar",
+  "settingsPrivacyNoticeBody": "Este texto es un resumen orientativo, no asesoramiento legal. Antes de producción o de publicar en una tienda de apps, publica una política de privacidad acorde a tu jurisdicción, tu organización y cómo tratas los datos en la práctica.",
+  "settingsTermsOfUse": "Términos de uso",
+  "settingsTermsTagline": "Normas para usar esta app.",
+  "settingsTermsAcceptanceTitle": "Aceptación",
+  "settingsTermsAcceptanceBody": "Al acceder o usar Wallet aceptas estos términos. Si no estás de acuerdo, no uses la app.",
+  "settingsTermsDisclaimerTitle": "No es asesoramiento profesional",
+  "settingsTermsDisclaimerBody": "Wallet es una herramienta para organizar tus propios registros. Nada en la app ni en estos términos constituye asesoramiento financiero, legal, contable o fiscal. Usas la app y cualquier información en ella bajo tu propio riesgo al tomar decisiones.",
+  "settingsTermsLiabilityTitle": "Limitación de responsabilidad",
+  "settingsTermsLiabilityBody": "En la medida máxima permitida por la ley, los autores y colaboradores no serán responsables de daños indirectos, incidentales o consecuenciales, ni de pérdidas o decisiones que tomes basándote en la app. La app se ofrece «tal cual», sin garantías de ningún tipo.",
+  "settingsTermsResponsibilitiesTitle": "Tus responsabilidades",
+  "settingsTermsResponsibilitiesBody": "Eres responsable de proteger tu cuenta, credenciales, claves API y dispositivos. Debes cumplir las leyes y normas que te apliquen, incluidas las relativas a registros financieros e impuestos en tu jurisdicción.",
+  "settingsTermsNoticeTitle": "Cambios y antes de publicar",
+  "settingsTermsNoticeBody": "Estos términos pueden actualizarse ocasionalmente. Si sigues usando la app tras publicarse cambios, ello implica que aceptas los términos actualizados. Este texto es un resumen orientativo, no asesoramiento legal. Antes de producción o de publicar en una tienda de apps, publica términos acordes a tu jurisdicción, tu organización y tu servicio.",
+  "settingsAboutTagline": "Tus finanzas personales en un solo lugar.",
+  "settingsAboutVersionLabel": "Versión",
+  "settingsAboutFeaturesHeading": "Qué puedes hacer",
+  "settingsAboutBulletAccounts": "Conecta cuentas y tarjetas para reflejar tus saldos en la app.",
+  "settingsAboutBulletLedger": "Registra movimientos, transferencias, categorías y etiquetas en un libro claro.",
+  "settingsAboutBulletMonth": "Revisa cada mes y busca en tu historial cuando lo necesites.",
+  "settingsAboutDataHeading": "Tus datos",
+  "settingsAboutDataBody": "Lo que guardas se almacena en el backend que configures (por ejemplo Supabase) y queda asociado a tu sesión. Esta versión está pensada para uso personal.",
+  "accounts": "Cuentas",
+  "noAccounts": "No hay cuentas aún",
+  "newAccount": "Nueva cuenta",
+  "accountName": "Nombre",
+  "accountDescription": "Descripción",
+  "accountBalance": "Saldo",
+  "listBalanceTotalLabel": "Total",
+  "editAccount": "Editar cuenta",
+  "accountSubmitCreate": "Crear",
+  "deleteAccount": "Eliminar cuenta",
+  "confirmDeleteAccount": "¿Seguro que quieres eliminar «{name}»?",
+  "@confirmDeleteAccount": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "cards": "Tarjetas",
+  "noCards": "No hay tarjetas aún",
+  "newCard": "Nueva tarjeta",
+  "editCard": "Editar tarjeta",
+  "deleteCard": "Eliminar tarjeta",
+  "confirmDeleteCard": "¿Seguro que quieres eliminar «{name}»?",
+  "@confirmDeleteCard": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "cardCutDay": "Día de corte",
+  "cardPayDay": "Día de pago",
+  "cardDayInvalidRange": "Introduce un día del 1 al 30",
+  "cardBillingCycleSummary": "Corte día {cutDay} · Pago día {payDay}",
+  "@cardBillingCycleSummary": {
+    "placeholders": {
+      "cutDay": {
+        "type": "int"
+      },
+      "payDay": {
+        "type": "int"
+      }
+    }
+  },
+  "cancel": "Cancelar",
+  "save": "Guardar",
+  "delete": "Eliminar",
+  "categories": "Categorías",
+  "noCategories": "No hay categorías aún",
+  "newCategory": "Nueva categoría",
+  "editCategory": "Editar categoría",
+  "deleteCategory": "Eliminar categoría",
+  "confirmDeleteCategory": "¿Seguro que quieres eliminar «{name}»?",
+  "@confirmDeleteCategory": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "tags": "Etiquetas",
+  "noTags": "No hay etiquetas aún",
+  "newTag": "Nueva etiqueta",
+  "editTag": "Editar etiqueta",
+  "deleteTag": "Eliminar etiqueta",
+  "confirmDeleteTag": "¿Seguro que quieres eliminar «{name}»?",
+  "tagHidden": "Oculta",
+  "tagHiddenHint": "Las etiquetas ocultas no aparecerán al elegir una etiqueta para una transacción",
+  "@confirmDeleteTag": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "assets": "Activos",
+  "noAssets": "No hay activos aún",
+  "assetSold": "Vendido",
+  "newAsset": "Nuevo activo",
+  "assetProvider": "Proveedor",
+  "assetValue": "Valor",
+  "assetPurchaseDate": "Fecha de compra",
+  "assetEndDate": "Fecha de fin",
+  "assetSoldAmountField": "Importe de venta",
+  "assetInvalidNumber": "Introduce un número válido",
+  "assetEndBeforePurchase": "La fecha de fin debe ser igual o posterior a la de compra",
+  "assetHeldDuration": "Tenencia: {duration}",
+  "@assetHeldDuration": {
+    "placeholders": {
+      "duration": {
+        "type": "String"
+      }
+    }
+  },
+  "assetValuePerApproximateMonth": "~{amount}/mes (prom.)",
+  "@assetValuePerApproximateMonth": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "assetSoldPerApproximateMonth": "~{amount}/mes (venta prom.)",
+  "@assetSoldPerApproximateMonth": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "editAsset": "Editar activo",
+  "deleteAsset": "Eliminar activo",
+  "confirmDeleteAsset": "¿Seguro que quieres eliminar «{name}»?",
+  "@confirmDeleteAsset": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "transactions": "Transacciones",
+  "creditsNav": "Créditos",
+  "creditsTitle": "Créditos",
+  "creditsEmpty": "Aún no tienes cuotas diferidas.",
+  "creditsEmptyForSelectedMonth": "No hay cuotas de crédito en este mes.",
+  "creditsUntitledGroup": "Compra diferida",
+  "creditsInstallmentsWithPending": "{count} cuotas - {pending} pendientes",
+  "@creditsInstallmentsWithPending": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "pending": {
+        "type": "int"
+      }
+    }
+  },
+  "creditsInstallmentsEndsThisMonth": "{count} cuotas · termina este mes",
+  "@creditsInstallmentsEndsThisMonth": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "creditsPendingTotalsLabel": "Total pendiente",
+  "creditsDueThisMonthLabel": "A pagar este mes",
+  "creditsNewDeferredPurchase": "Nueva compra a crédito",
+  "creditsWalletCreditTransactedAt": "{when}",
+  "@creditsWalletCreditTransactedAt": {
+    "placeholders": {
+      "when": {
+        "type": "String"
+      }
+    }
+  },
+  "creditEditGraceNotApplicable": "El periodo de gracia original no está guardado.",
+  "transactionsSearchTooltip": "Buscar transacciones",
+  "transactionsSearchHint": "Buscar por descripción",
+  "transactionsSearchTypeQuery": "Escribe texto para buscar en todas tus transacciones",
+  "transactionsSearchNoResults": "No hay transacciones que coincidan",
+  "transactionsPickMonth": "Elegir mes",
+  "transactionsPickPreviousYear": "Año anterior",
+  "transactionsPickNextYear": "Año siguiente",
+  "yearlyPickYear": "Elegir año",
+  "year": "Año",
+  "month": "Mes",
+  "noTransactions": "No hay transacciones aún",
+  "noTransactionsInMonth": "No hay transacciones en {monthYear}",
+  "@noTransactionsInMonth": {
+    "placeholders": {
+      "monthYear": {
+        "type": "String"
+      }
+    }
+  },
+  "noTransactionsThisDay": "No hay transacciones este día",
+  "newTransaction": "Nueva transacción",
+  "transactionsFabTransfer": "Transferir",
+  "transferSheetTitle": "Transferir",
+  "transferSourceAccount": "Origen",
+  "transferTargetAccount": "Destino",
+  "transferDateLabel": "Fecha",
+  "transferTimeLabel": "Hora",
+  "transferAccountsMustDiffer": "El origen y el destino deben ser distintos",
+  "transferNeedTwoAccounts": "Añade al menos dos cuentas o tarjetas para transferir entre ellas",
+  "transferAccountSearch": "Buscar por nombre",
+  "transferAccountSearchHint": "Filtrar por nombre de cuenta",
+  "transferAccountSearchNoResults": "Ninguna cuenta coincide con tu búsqueda",
+  "editTransferTitle": "Editar transferencia",
+  "editTransaction": "Editar transacción",
+  "deleteTransaction": "Eliminar transacción",
+  "confirmDeleteTransaction": "¿Seguro que quieres eliminar esta transacción?",
+  "confirmDeleteCreditGroupTransaction": "Esta cuota forma parte de un pago diferido. Se eliminarán todas las cuotas de este grupo.",
+  "deleteTransferPair": "Eliminar transferencia",
+  "confirmDeleteTransferPair": "Esto eliminará ambos apuntes de la transferencia del registro.",
+  "none": "Ninguno",
+  "transactionDateTime": "Cuándo",
+  "transactionAccount": "Cuenta",
+  "transactionCard": "Tarjeta",
+  "transactionPaymentMethod": "Medio de pago",
+  "paymentMethodAddChoiceTitle": "Añadir cuenta o tarjeta",
+  "transactionPaymentMethodSearchNoResults": "Ningún medio de pago coincide con tu búsqueda",
+  "transactionDeferred": "Diferido",
+  "transactionGraceMonths": "Meses de gracia",
+  "transactionMesesPlazo": "Meses plazo",
+  "transactionGraceMonthsInvalid": "Los meses de gracia deben ser 0 o más",
+  "transactionTermMonthsInvalid": "Indica al menos 2 meses de plazo",
+  "transactionCategory": "Categoría",
+  "transactionTag": "Etiqueta",
+  "transactionAmount": "Importe",
+  "transactionAmountCreditGroupHint": "El importe mostrado es el total del grupo repartido a partes iguales. Al guardar se actualizan todas las cuotas y las fechas se desplazan la misma cantidad.",
+  "transactionAmountInvalidNumber": "Introduce un número válido (signo y decimales opcionales)",
+  "transactionAmountMustBeNonZero": "El importe no puede ser cero",
+  "transferAmountMustBePositive": "Introduce un importe mayor que cero",
+  "transactionPercentage": "Porcentaje",
+  "transactionPercentageInvalidRange": "Introduce un número entre 0 y 100",
+  "transactionIgnore": "Ignorar",
+  "transactionIgnoredBadge": "Ignorado",
+  "transactionAmountValue": "{amount}",
+  "@transactionAmountValue": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "transactionsTotalIncome": "Ingresos",
+  "transactionsTotalOutcome": "Gastos",
+  "transactionsTotalBalance": "Saldo",
+  "transactionsTotalsWeightedHint": "Ponderado",
+  "transactionsTotalsWeightedExcludingCreditHint": "Ponderado excluyendo crédito",
+  "transactionsTotalsWeightedExcludingIgnoredHint": "Ponderado excluyendo ignoradas",
+  "transactionsTotalsNotWeightedHint": "Sin ponderar",
+  "transactionsTotalsNotWeightedExcludingIgnoredHint": "Sin ponderar excluyendo ignoradas",
+  "loadFailedNoConnectionTitle": "Sin conexión a internet",
+  "loadFailedNoConnectionBody": "Comprueba tu red e inténtalo de nuevo. Si tienes conexión, puede que el servidor no esté accesible.",
+  "cachedDataOfflineBanner": "Mostrando datos guardados — sin conexión a internet.",
+  "loadFailedRequestFailedTitle": "No se pudieron cargar los datos",
+  "loadFailedRequestFailedBody": "La solicitud falló. Desliza hacia abajo para actualizar o inténtalo de nuevo en un momento.",
+  "retry": "Reintentar",
+  "dialogClose": "Cerrar"
+}

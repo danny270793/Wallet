@@ -1,0 +1,402 @@
+{
+  "@@locale": "en",
+  "appTitle": "Wallet",
+  "signIn": "Sign in",
+  "signInSubtitle": "Sign in to continue",
+  "email": "Email",
+  "password": "Password",
+  "fieldRequired": "Required",
+  "unexpectedError": "An unexpected error occurred",
+  "monthlyDashboard": "Monthly dashboard",
+  "monthlyDashboardConfigureTooltip": "Charts and totals options",
+  "monthlyDashboardOptionsSheetTitle": "View options",
+  "monthlyDashboardTransactionsListTitle": "Transactions",
+  "dashboardIncludeIgnoredInTotals": "Include ignored transactions",
+  "dashboardUseWeightedAmounts": "Weighted amounts (%)",
+  "dashboardShowCredits": "Show credits",
+  "monthlyDashboardTagPieTitle": "Expenses by tag",
+  "monthlyDashboardCategoryPieTitle": "Expenses by category",
+  "dashboardCategoryPieNoData": "No categorized expenses to show for this month with the current filter.",
+  "dashboardTagPieNoData": "No amounts to show for this month with the current filter.",
+  "dashboardTagPieFilterTags": "Filter tags",
+  "dashboardTagPieFilterDescription": "Choose which tags are included in the chart.",
+  "dashboardTagPieNeedOneTag": "Select at least one tag",
+  "dashboardCategoryPieFilterCategories": "Filter categories",
+  "dashboardCategoryPieFilterDescription": "Choose which categories are included in the chart.",
+  "dashboardCategoryPieNeedOneCategory": "Select at least one category",
+  "dashboardPieDeselectAll": "Deselect all",
+  "dashboardPieSelectAll": "Select all",
+  "yearlyDashboard": "Yearly dashboard",
+  "yearlyDashboardIncomeByMonthTitle": "Income by month",
+  "yearlyDashboardOutcomeByMonthTitle": "Outcome by month",
+  "yearlyDashboardNetByMonthTitle": "Balance by month",
+  "yearlyDashboardCumulativeByMonthTitle": "Cumulative balance by month",
+  "navigationDashboards": "Dashboards",
+  "settings": "Settings",
+  "settingsProfileSection": "Profile",
+  "settingsChangeEmail": "Change email",
+  "settingsChangeEmailDialogTitle": "Change email",
+  "settingsNewEmailLabel": "New email",
+  "settingsChangeEmailSubmit": "Update",
+  "settingsChangeEmailSuccess": "Check your new email to confirm the change.",
+  "settingsChangeEmailInvalid": "Enter a valid email address.",
+  "settingsChangeEmailSameAsCurrent": "That is already your email.",
+  "settingsChangePassword": "Change password",
+  "settingsChangePasswordSubtitle": "Updates the password you use to sign in.",
+  "settingsChangePasswordDialogTitle": "Change password",
+  "settingsNewPasswordLabel": "New password",
+  "settingsConfirmNewPasswordLabel": "Confirm new password",
+  "settingsChangePasswordSubmit": "Update password",
+  "settingsChangePasswordSuccess": "Your password was updated.",
+  "settingsPasswordsDoNotMatch": "Passwords do not match.",
+  "settingsPasswordTooShort": "Use at least 6 characters.",
+  "settingsAppearance": "Appearance",
+  "settingsLanguage": "Language",
+  "settingsLanguageSystem": "System default",
+  "settingsLanguageEnglish": "English",
+  "settingsLanguageSpanish": "Spanish",
+  "settingsTheme": "Theme",
+  "settingsThemeSystem": "System default",
+  "settingsThemeLight": "Light",
+  "settingsThemeDark": "Dark",
+  "settingsDataSection": "Offline data",
+  "settingsOfflineCache": "Cached responses",
+  "settingsOfflineCacheSubtitle": "API responses stored on this device for offline use",
+  "settingsCachePageTitle": "Offline cache",
+  "settingsCacheEmpty": "No cached responses yet.",
+  "settingsCacheBottomBarCaption": "Size of cached files",
+  "settingsCacheSortTooltip": "Sort",
+  "settingsCacheSortSheetTitle": "Sort by",
+  "settingsCacheSortByDate": "Date",
+  "settingsCacheSortBySize": "Size",
+  "settingsCacheSortByName": "Name",
+  "settingsCacheKeyTxMonth": "Transactions · {year}-{month}",
+  "@settingsCacheKeyTxMonth": {
+    "placeholders": {
+      "year": {
+        "type": "String"
+      },
+      "month": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsCacheKeyTxYear": "Transactions · {year}",
+  "@settingsCacheKeyTxYear": {
+    "placeholders": {
+      "year": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsCacheKeyTxCreditGroups": "Transactions (credit groups)",
+  "settingsCacheKeyTxCredit": "Transactions (credit {shortId})",
+  "@settingsCacheKeyTxCredit": {
+    "placeholders": {
+      "shortId": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsCacheKeyWalletCredit": "Wallet credit · {shortId}",
+  "@settingsCacheKeyWalletCredit": {
+    "placeholders": {
+      "shortId": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsCacheKeyRaw": "{key}",
+  "@settingsCacheKeyRaw": {
+    "placeholders": {
+      "key": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsSecuritySection": "Security",
+  "settingsBiometricUnlockTitle": "Face ID & fingerprint",
+  "settingsBiometricUnlockSubtitle": "Use biometrics to unlock the app.",
+  "settingsBiometricUnavailable": "Biometric unlock is not available on this device.",
+  "settingsBiometricAuthReason": "Confirm to enable biometric unlock.",
+  "settingsBiometricResumeReason": "Authenticate to continue.",
+  "biometricLockTitle": "App locked",
+  "biometricLockBody": "Use Face ID or fingerprint to continue.",
+  "biometricLockUnlockButton": "Unlock",
+  "signOut": "Sign out",
+  "settingsAboutSection": "About",
+  "settingsAboutApp": "About",
+  "settingsPrivacyPolicy": "Privacy policy",
+  "settingsPrivacyTagline": "How this app treats your information.",
+  "settingsPrivacyDataTitle": "What you store",
+  "settingsPrivacyDataBody": "Wallet keeps the financial details you enter—accounts, cards, transactions, categories, tags, and transfers—so you can see balances and history. The app does not collect data you never saved while signed in.",
+  "settingsPrivacyInfraTitle": "Where it lives",
+  "settingsPrivacyInfraBody": "Your records are stored in the backend you configure (for example Supabase) and the authentication you use. Security, backups, and who can access data depend on that provider and your project settings. Use strong passwords and protect API keys.",
+  "settingsPrivacySharingTitle": "Sharing and ads",
+  "settingsPrivacySharingBody": "We do not sell your personal information or use your ledger to target ads. Apart from your chosen backend and sign-in service, this app is not designed to send your data to brokers or advertisers.",
+  "settingsPrivacyNoticeTitle": "Before you ship",
+  "settingsPrivacyNoticeBody": "This text is a simple placeholder, not legal advice. Before production or an app store release, publish a privacy policy that matches your jurisdiction, your organization, and how you actually process data.",
+  "settingsTermsOfUse": "Terms of use",
+  "settingsTermsTagline": "Rules for using this app.",
+  "settingsTermsAcceptanceTitle": "Acceptance",
+  "settingsTermsAcceptanceBody": "By accessing or using Wallet, you agree to these terms. If you do not agree, do not use the app.",
+  "settingsTermsDisclaimerTitle": "Not professional advice",
+  "settingsTermsDisclaimerBody": "Wallet is a tool for organizing your own records. Nothing in the app or these terms is financial, legal, accounting, or tax advice. You use the app and any information in it at your own risk when making decisions.",
+  "settingsTermsLiabilityTitle": "Limitation of liability",
+  "settingsTermsLiabilityBody": "To the fullest extent permitted by law, the authors and contributors are not liable for any indirect, incidental, or consequential damages, or for losses or decisions you make based on the app. The app is provided as-is without warranties of any kind.",
+  "settingsTermsResponsibilitiesTitle": "Your responsibilities",
+  "settingsTermsResponsibilitiesBody": "You are responsible for protecting your account, credentials, API keys, and devices. You must comply with laws and regulations that apply to you, including those governing financial record-keeping and taxes in your jurisdiction.",
+  "settingsTermsNoticeTitle": "Changes and before you ship",
+  "settingsTermsNoticeBody": "These terms may be updated from time to time. If you continue to use the app after changes are posted, that indicates your acceptance of the updated terms. This text is a simple placeholder, not legal advice. Before production or an app store release, publish terms that match your jurisdiction, your organization, and your service.",
+  "settingsAboutTagline": "Personal finance in one place.",
+  "settingsAboutVersionLabel": "Version",
+  "settingsAboutFeaturesHeading": "What you can do",
+  "settingsAboutBulletAccounts": "Connect accounts and cards to mirror your balances in the app.",
+  "settingsAboutBulletLedger": "Log transactions, transfers, categories, and tags in a clear ledger.",
+  "settingsAboutBulletMonth": "Review each month and search your history when you need answers.",
+  "settingsAboutDataHeading": "Your data",
+  "settingsAboutDataBody": "What you save is stored in the backend you configure (for example Supabase) and is tied to your sign-in. This build is intended for personal use.",
+  "accounts": "Accounts",
+  "noAccounts": "No accounts yet",
+  "newAccount": "New account",
+  "accountName": "Name",
+  "accountDescription": "Description",
+  "accountBalance": "Balance",
+  "listBalanceTotalLabel": "Total",
+  "editAccount": "Edit account",
+  "accountSubmitCreate": "Create",
+  "deleteAccount": "Delete account",
+  "confirmDeleteAccount": "Are you sure you want to delete \"{name}\"?",
+  "@confirmDeleteAccount": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "cards": "Cards",
+  "noCards": "No cards yet",
+  "newCard": "New card",
+  "editCard": "Edit card",
+  "deleteCard": "Delete card",
+  "confirmDeleteCard": "Are you sure you want to delete \"{name}\"?",
+  "@confirmDeleteCard": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "cardCutDay": "Cut day",
+  "cardPayDay": "Pay day",
+  "cardDayInvalidRange": "Enter a day from 1 to 30",
+  "cardBillingCycleSummary": "Cut day {cutDay} · Pay day {payDay}",
+  "@cardBillingCycleSummary": {
+    "placeholders": {
+      "cutDay": {
+        "type": "int"
+      },
+      "payDay": {
+        "type": "int"
+      }
+    }
+  },
+  "cancel": "Cancel",
+  "save": "Save",
+  "delete": "Delete",
+  "categories": "Categories",
+  "noCategories": "No categories yet",
+  "newCategory": "New category",
+  "editCategory": "Edit category",
+  "deleteCategory": "Delete category",
+  "confirmDeleteCategory": "Are you sure you want to delete \"{name}\"?",
+  "@confirmDeleteCategory": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "tags": "Tags",
+  "noTags": "No tags yet",
+  "newTag": "New tag",
+  "editTag": "Edit tag",
+  "deleteTag": "Delete tag",
+  "confirmDeleteTag": "Are you sure you want to delete \"{name}\"?",
+  "tagHidden": "Hidden",
+  "tagHiddenHint": "Hidden tags won't appear when picking a tag for a transaction",
+  "@confirmDeleteTag": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "assets": "Assets",
+  "noAssets": "No assets yet",
+  "assetSold": "Sold",
+  "newAsset": "New asset",
+  "assetProvider": "Provider",
+  "assetValue": "Value",
+  "assetPurchaseDate": "Purchase date",
+  "assetEndDate": "End date",
+  "assetSoldAmountField": "Sold amount",
+  "assetInvalidNumber": "Enter a valid number",
+  "assetEndBeforePurchase": "End date must be on or after purchase date",
+  "assetHeldDuration": "Held {duration}",
+  "@assetHeldDuration": {
+    "placeholders": {
+      "duration": {
+        "type": "String"
+      }
+    }
+  },
+  "assetValuePerApproximateMonth": "~{amount}/mo avg.",
+  "@assetValuePerApproximateMonth": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "assetSoldPerApproximateMonth": "~{amount}/mo avg. (sold)",
+  "@assetSoldPerApproximateMonth": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "editAsset": "Edit asset",
+  "deleteAsset": "Delete asset",
+  "confirmDeleteAsset": "Are you sure you want to delete \"{name}\"?",
+  "@confirmDeleteAsset": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "transactions": "Transactions",
+  "creditsNav": "Credits",
+  "creditsTitle": "Credits",
+  "creditsEmpty": "No deferred credit installments yet.",
+  "creditsEmptyForSelectedMonth": "No credit installments in this month.",
+  "creditsUntitledGroup": "Deferred purchase",
+  "creditsInstallmentsWithPending": "{count} installments - {pending} pending",
+  "@creditsInstallmentsWithPending": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "pending": {
+        "type": "int"
+      }
+    }
+  },
+  "creditsInstallmentsEndsThisMonth": "{count} installments · ends this month",
+  "@creditsInstallmentsEndsThisMonth": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "creditsPendingTotalsLabel": "Pending total",
+  "creditsDueThisMonthLabel": "Due this month",
+  "creditsNewDeferredPurchase": "New credit purchase",
+  "creditsWalletCreditTransactedAt": "{when}",
+  "@creditsWalletCreditTransactedAt": {
+    "placeholders": {
+      "when": {
+        "type": "String"
+      }
+    }
+  },
+  "creditEditGraceNotApplicable": "Original grace period is not stored.",
+  "transactionsSearchTooltip": "Search transactions",
+  "transactionsSearchHint": "Search by description",
+  "transactionsSearchTypeQuery": "Enter text to search all your transactions",
+  "transactionsSearchNoResults": "No matching transactions",
+  "transactionsPickMonth": "Choose month",
+  "transactionsPickPreviousYear": "Previous year",
+  "transactionsPickNextYear": "Next year",
+  "yearlyPickYear": "Choose year",
+  "year": "Year",
+  "month": "Month",
+  "noTransactions": "No transactions yet",
+  "noTransactionsInMonth": "No transactions in {monthYear}",
+  "@noTransactionsInMonth": {
+    "placeholders": {
+      "monthYear": {
+        "type": "String"
+      }
+    }
+  },
+  "noTransactionsThisDay": "No transactions this day",
+  "newTransaction": "New transaction",
+  "transactionsFabTransfer": "Transfer",
+  "transferSheetTitle": "Transfer",
+  "transferSourceAccount": "Source",
+  "transferTargetAccount": "Target",
+  "transferDateLabel": "Date",
+  "transferTimeLabel": "Time",
+  "transferAccountsMustDiffer": "Source and target must be different",
+  "transferNeedTwoAccounts": "Add at least two accounts or cards to transfer money between them",
+  "transferAccountSearch": "Search by name",
+  "transferAccountSearchHint": "Filter by account name",
+  "transferAccountSearchNoResults": "No accounts match your search",
+  "editTransferTitle": "Edit transfer",
+  "editTransaction": "Edit transaction",
+  "deleteTransaction": "Delete transaction",
+  "confirmDeleteTransaction": "Are you sure you want to delete this transaction?",
+  "confirmDeleteCreditGroupTransaction": "This installment is part of a deferred split. All installments in this group will be deleted.",
+  "deleteTransferPair": "Delete transfer",
+  "confirmDeleteTransferPair": "This removes both sides of the transfer from the ledger.",
+  "none": "None",
+  "transactionDateTime": "When",
+  "transactionAccount": "Account",
+  "transactionCard": "Card",
+  "transactionPaymentMethod": "Payment method",
+  "paymentMethodAddChoiceTitle": "Add account or card",
+  "transactionPaymentMethodSearchNoResults": "No payment methods match your search",
+  "transactionDeferred": "Deferred",
+  "transactionGraceMonths": "Grace months",
+  "transactionMesesPlazo": "Term (months)",
+  "transactionGraceMonthsInvalid": "Grace months must be 0 or greater",
+  "transactionTermMonthsInvalid": "Enter at least 2 installment months",
+  "transactionCategory": "Category",
+  "transactionTag": "Tag",
+  "transactionAmount": "Amount",
+  "transactionAmountCreditGroupHint": "Shown amount is the group total split evenly across installments. Saving updates every installment and shifts dates by the same amount.",
+  "transactionAmountInvalidNumber": "Enter a valid number (optional minus sign and decimals)",
+  "transactionAmountMustBeNonZero": "Amount cannot be zero",
+  "transferAmountMustBePositive": "Enter an amount greater than zero",
+  "transactionPercentage": "Percentage",
+  "transactionPercentageInvalidRange": "Enter a number from 0 to 100",
+  "transactionIgnore": "Ignore",
+  "transactionIgnoredBadge": "Ignored",
+  "transactionAmountValue": "{amount}",
+  "@transactionAmountValue": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "transactionsTotalIncome": "Income",
+  "transactionsTotalOutcome": "Outcome",
+  "transactionsTotalBalance": "Balance",
+  "transactionsTotalsWeightedHint": "Weighted",
+  "transactionsTotalsWeightedExcludingCreditHint": "Weighted excluding credit",
+  "transactionsTotalsWeightedExcludingIgnoredHint": "Weighted excluding ignored",
+  "transactionsTotalsNotWeightedHint": "Not weighted",
+  "transactionsTotalsNotWeightedExcludingIgnoredHint": "Not weighted excluding ignored",
+  "loadFailedNoConnectionTitle": "No internet connection",
+  "loadFailedNoConnectionBody": "Check your network and try again. If you are online, the server may be unreachable.",
+  "cachedDataOfflineBanner": "Showing saved data — no internet connection.",
+  "loadFailedRequestFailedTitle": "Could not load data",
+  "loadFailedRequestFailedBody": "The request failed. Pull down to refresh or try again shortly.",
+  "retry": "Retry",
+  "dialogClose": "Close"
+}

@@ -1,0 +1,1676 @@
+import 'dart:async';
+
+import 'package:flutter/foundation.dart';
+import 'package:flutter/widgets.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:intl/intl.dart' as intl;
+
+import 'app_localizations_en.dart';
+import 'app_localizations_es.dart';
+
+// ignore_for_file: type=lint
+
+/// Callers can lookup localized strings with an instance of AppLocalizations
+/// returned by `AppLocalizations.of(context)`.
+///
+/// Applications need to include `AppLocalizations.delegate()` in their app's
+/// `localizationDelegates` list, and the locales they support in the app's
+/// `supportedLocales` list. For example:
+///
+/// ```dart
+/// import 'l10n/app_localizations.dart';
+///
+/// return MaterialApp(
+///   localizationsDelegates: AppLocalizations.localizationsDelegates,
+///   supportedLocales: AppLocalizations.supportedLocales,
+///   home: MyApplicationHome(),
+/// );
+/// ```
+///
+/// ## Update pubspec.yaml
+///
+/// Please make sure to update your pubspec.yaml to include the following
+/// packages:
+///
+/// ```yaml
+/// dependencies:
+///   # Internationalization support.
+///   flutter_localizations:
+///     sdk: flutter
+///   intl: any # Use the pinned version from flutter_localizations
+///
+///   # Rest of dependencies
+/// ```
+///
+/// ## iOS Applications
+///
+/// iOS applications define key application metadata, including supported
+/// locales, in an Info.plist file that is built into the application bundle.
+/// To configure the locales supported by your app, you’ll need to edit this
+/// file.
+///
+/// First, open your project’s ios/Runner.xcworkspace Xcode workspace file.
+/// Then, in the Project Navigator, open the Info.plist file under the Runner
+/// project’s Runner folder.
+///
+/// Next, select the Information Property List item, select Add Item from the
+/// Editor menu, then select Localizations from the pop-up menu.
+///
+/// Select and expand the newly-created Localizations item then, for each
+/// locale your application supports, add a new item and select the locale
+/// you wish to add from the pop-up menu in the Value field. This list should
+/// be consistent with the languages listed in the AppLocalizations.supportedLocales
+/// property.
+abstract class AppLocalizations {
+  AppLocalizations(String locale)
+    : localeName = intl.Intl.canonicalizedLocale(locale.toString());
+
+  final String localeName;
+
+  static AppLocalizations? of(BuildContext context) {
+    return Localizations.of<AppLocalizations>(context, AppLocalizations);
+  }
+
+  static const LocalizationsDelegate<AppLocalizations> delegate =
+      _AppLocalizationsDelegate();
+
+  /// A list of this localizations delegate along with the default localizations
+  /// delegates.
+  ///
+  /// Returns a list of localizations delegates containing this delegate along with
+  /// GlobalMaterialLocalizations.delegate, GlobalCupertinoLocalizations.delegate,
+  /// and GlobalWidgetsLocalizations.delegate.
+  ///
+  /// Additional delegates can be added by appending to this list in
+  /// MaterialApp. This list does not have to be used at all if a custom list
+  /// of delegates is preferred or required.
+  static const List<LocalizationsDelegate<dynamic>> localizationsDelegates =
+      <LocalizationsDelegate<dynamic>>[
+        delegate,
+        GlobalMaterialLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+      ];
+
+  /// A list of this localizations delegate's supported locales.
+  static const List<Locale> supportedLocales = <Locale>[
+    Locale('en'),
+    Locale('es'),
+  ];
+
+  /// No description provided for @appTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Wallet'**
+  String get appTitle;
+
+  /// No description provided for @signIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in'**
+  String get signIn;
+
+  /// No description provided for @signInSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in to continue'**
+  String get signInSubtitle;
+
+  /// No description provided for @email.
+  ///
+  /// In en, this message translates to:
+  /// **'Email'**
+  String get email;
+
+  /// No description provided for @password.
+  ///
+  /// In en, this message translates to:
+  /// **'Password'**
+  String get password;
+
+  /// No description provided for @fieldRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Required'**
+  String get fieldRequired;
+
+  /// No description provided for @unexpectedError.
+  ///
+  /// In en, this message translates to:
+  /// **'An unexpected error occurred'**
+  String get unexpectedError;
+
+  /// No description provided for @monthlyDashboard.
+  ///
+  /// In en, this message translates to:
+  /// **'Monthly dashboard'**
+  String get monthlyDashboard;
+
+  /// No description provided for @monthlyDashboardConfigureTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Charts and totals options'**
+  String get monthlyDashboardConfigureTooltip;
+
+  /// No description provided for @monthlyDashboardOptionsSheetTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'View options'**
+  String get monthlyDashboardOptionsSheetTitle;
+
+  /// No description provided for @monthlyDashboardTransactionsListTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Transactions'**
+  String get monthlyDashboardTransactionsListTitle;
+
+  /// No description provided for @dashboardIncludeIgnoredInTotals.
+  ///
+  /// In en, this message translates to:
+  /// **'Include ignored transactions'**
+  String get dashboardIncludeIgnoredInTotals;
+
+  /// No description provided for @dashboardUseWeightedAmounts.
+  ///
+  /// In en, this message translates to:
+  /// **'Weighted amounts (%)'**
+  String get dashboardUseWeightedAmounts;
+
+  /// No description provided for @dashboardShowCredits.
+  ///
+  /// In en, this message translates to:
+  /// **'Show credits'**
+  String get dashboardShowCredits;
+
+  /// No description provided for @monthlyDashboardTagPieTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Expenses by tag'**
+  String get monthlyDashboardTagPieTitle;
+
+  /// No description provided for @monthlyDashboardCategoryPieTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Expenses by category'**
+  String get monthlyDashboardCategoryPieTitle;
+
+  /// No description provided for @dashboardCategoryPieNoData.
+  ///
+  /// In en, this message translates to:
+  /// **'No categorized expenses to show for this month with the current filter.'**
+  String get dashboardCategoryPieNoData;
+
+  /// No description provided for @dashboardTagPieNoData.
+  ///
+  /// In en, this message translates to:
+  /// **'No amounts to show for this month with the current filter.'**
+  String get dashboardTagPieNoData;
+
+  /// No description provided for @dashboardTagPieFilterTags.
+  ///
+  /// In en, this message translates to:
+  /// **'Filter tags'**
+  String get dashboardTagPieFilterTags;
+
+  /// No description provided for @dashboardTagPieFilterDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose which tags are included in the chart.'**
+  String get dashboardTagPieFilterDescription;
+
+  /// No description provided for @dashboardTagPieNeedOneTag.
+  ///
+  /// In en, this message translates to:
+  /// **'Select at least one tag'**
+  String get dashboardTagPieNeedOneTag;
+
+  /// No description provided for @dashboardCategoryPieFilterCategories.
+  ///
+  /// In en, this message translates to:
+  /// **'Filter categories'**
+  String get dashboardCategoryPieFilterCategories;
+
+  /// No description provided for @dashboardCategoryPieFilterDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose which categories are included in the chart.'**
+  String get dashboardCategoryPieFilterDescription;
+
+  /// No description provided for @dashboardCategoryPieNeedOneCategory.
+  ///
+  /// In en, this message translates to:
+  /// **'Select at least one category'**
+  String get dashboardCategoryPieNeedOneCategory;
+
+  /// No description provided for @dashboardPieDeselectAll.
+  ///
+  /// In en, this message translates to:
+  /// **'Deselect all'**
+  String get dashboardPieDeselectAll;
+
+  /// No description provided for @dashboardPieSelectAll.
+  ///
+  /// In en, this message translates to:
+  /// **'Select all'**
+  String get dashboardPieSelectAll;
+
+  /// No description provided for @yearlyDashboard.
+  ///
+  /// In en, this message translates to:
+  /// **'Yearly dashboard'**
+  String get yearlyDashboard;
+
+  /// No description provided for @yearlyDashboardIncomeByMonthTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Income by month'**
+  String get yearlyDashboardIncomeByMonthTitle;
+
+  /// No description provided for @yearlyDashboardOutcomeByMonthTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Outcome by month'**
+  String get yearlyDashboardOutcomeByMonthTitle;
+
+  /// No description provided for @yearlyDashboardNetByMonthTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Balance by month'**
+  String get yearlyDashboardNetByMonthTitle;
+
+  /// No description provided for @yearlyDashboardCumulativeByMonthTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Cumulative balance by month'**
+  String get yearlyDashboardCumulativeByMonthTitle;
+
+  /// No description provided for @navigationDashboards.
+  ///
+  /// In en, this message translates to:
+  /// **'Dashboards'**
+  String get navigationDashboards;
+
+  /// No description provided for @settings.
+  ///
+  /// In en, this message translates to:
+  /// **'Settings'**
+  String get settings;
+
+  /// No description provided for @settingsProfileSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Profile'**
+  String get settingsProfileSection;
+
+  /// No description provided for @settingsChangeEmail.
+  ///
+  /// In en, this message translates to:
+  /// **'Change email'**
+  String get settingsChangeEmail;
+
+  /// No description provided for @settingsChangeEmailDialogTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Change email'**
+  String get settingsChangeEmailDialogTitle;
+
+  /// No description provided for @settingsNewEmailLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'New email'**
+  String get settingsNewEmailLabel;
+
+  /// No description provided for @settingsChangeEmailSubmit.
+  ///
+  /// In en, this message translates to:
+  /// **'Update'**
+  String get settingsChangeEmailSubmit;
+
+  /// No description provided for @settingsChangeEmailSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Check your new email to confirm the change.'**
+  String get settingsChangeEmailSuccess;
+
+  /// No description provided for @settingsChangeEmailInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a valid email address.'**
+  String get settingsChangeEmailInvalid;
+
+  /// No description provided for @settingsChangeEmailSameAsCurrent.
+  ///
+  /// In en, this message translates to:
+  /// **'That is already your email.'**
+  String get settingsChangeEmailSameAsCurrent;
+
+  /// No description provided for @settingsChangePassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Change password'**
+  String get settingsChangePassword;
+
+  /// No description provided for @settingsChangePasswordSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Updates the password you use to sign in.'**
+  String get settingsChangePasswordSubtitle;
+
+  /// No description provided for @settingsChangePasswordDialogTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Change password'**
+  String get settingsChangePasswordDialogTitle;
+
+  /// No description provided for @settingsNewPasswordLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'New password'**
+  String get settingsNewPasswordLabel;
+
+  /// No description provided for @settingsConfirmNewPasswordLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm new password'**
+  String get settingsConfirmNewPasswordLabel;
+
+  /// No description provided for @settingsChangePasswordSubmit.
+  ///
+  /// In en, this message translates to:
+  /// **'Update password'**
+  String get settingsChangePasswordSubmit;
+
+  /// No description provided for @settingsChangePasswordSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Your password was updated.'**
+  String get settingsChangePasswordSuccess;
+
+  /// No description provided for @settingsPasswordsDoNotMatch.
+  ///
+  /// In en, this message translates to:
+  /// **'Passwords do not match.'**
+  String get settingsPasswordsDoNotMatch;
+
+  /// No description provided for @settingsPasswordTooShort.
+  ///
+  /// In en, this message translates to:
+  /// **'Use at least 6 characters.'**
+  String get settingsPasswordTooShort;
+
+  /// No description provided for @settingsAppearance.
+  ///
+  /// In en, this message translates to:
+  /// **'Appearance'**
+  String get settingsAppearance;
+
+  /// No description provided for @settingsLanguage.
+  ///
+  /// In en, this message translates to:
+  /// **'Language'**
+  String get settingsLanguage;
+
+  /// No description provided for @settingsLanguageSystem.
+  ///
+  /// In en, this message translates to:
+  /// **'System default'**
+  String get settingsLanguageSystem;
+
+  /// No description provided for @settingsLanguageEnglish.
+  ///
+  /// In en, this message translates to:
+  /// **'English'**
+  String get settingsLanguageEnglish;
+
+  /// No description provided for @settingsLanguageSpanish.
+  ///
+  /// In en, this message translates to:
+  /// **'Spanish'**
+  String get settingsLanguageSpanish;
+
+  /// No description provided for @settingsTheme.
+  ///
+  /// In en, this message translates to:
+  /// **'Theme'**
+  String get settingsTheme;
+
+  /// No description provided for @settingsThemeSystem.
+  ///
+  /// In en, this message translates to:
+  /// **'System default'**
+  String get settingsThemeSystem;
+
+  /// No description provided for @settingsThemeLight.
+  ///
+  /// In en, this message translates to:
+  /// **'Light'**
+  String get settingsThemeLight;
+
+  /// No description provided for @settingsThemeDark.
+  ///
+  /// In en, this message translates to:
+  /// **'Dark'**
+  String get settingsThemeDark;
+
+  /// No description provided for @settingsDataSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Offline data'**
+  String get settingsDataSection;
+
+  /// No description provided for @settingsOfflineCache.
+  ///
+  /// In en, this message translates to:
+  /// **'Cached responses'**
+  String get settingsOfflineCache;
+
+  /// No description provided for @settingsOfflineCacheSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'API responses stored on this device for offline use'**
+  String get settingsOfflineCacheSubtitle;
+
+  /// No description provided for @settingsCachePageTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Offline cache'**
+  String get settingsCachePageTitle;
+
+  /// No description provided for @settingsCacheEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No cached responses yet.'**
+  String get settingsCacheEmpty;
+
+  /// No description provided for @settingsCacheBottomBarCaption.
+  ///
+  /// In en, this message translates to:
+  /// **'Size of cached files'**
+  String get settingsCacheBottomBarCaption;
+
+  /// No description provided for @settingsCacheSortTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Sort'**
+  String get settingsCacheSortTooltip;
+
+  /// No description provided for @settingsCacheSortSheetTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Sort by'**
+  String get settingsCacheSortSheetTitle;
+
+  /// No description provided for @settingsCacheSortByDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Date'**
+  String get settingsCacheSortByDate;
+
+  /// No description provided for @settingsCacheSortBySize.
+  ///
+  /// In en, this message translates to:
+  /// **'Size'**
+  String get settingsCacheSortBySize;
+
+  /// No description provided for @settingsCacheSortByName.
+  ///
+  /// In en, this message translates to:
+  /// **'Name'**
+  String get settingsCacheSortByName;
+
+  /// No description provided for @settingsCacheKeyTxMonth.
+  ///
+  /// In en, this message translates to:
+  /// **'Transactions · {year}-{month}'**
+  String settingsCacheKeyTxMonth(String year, String month);
+
+  /// No description provided for @settingsCacheKeyTxYear.
+  ///
+  /// In en, this message translates to:
+  /// **'Transactions · {year}'**
+  String settingsCacheKeyTxYear(String year);
+
+  /// No description provided for @settingsCacheKeyTxCreditGroups.
+  ///
+  /// In en, this message translates to:
+  /// **'Transactions (credit groups)'**
+  String get settingsCacheKeyTxCreditGroups;
+
+  /// No description provided for @settingsCacheKeyTxCredit.
+  ///
+  /// In en, this message translates to:
+  /// **'Transactions (credit {shortId})'**
+  String settingsCacheKeyTxCredit(String shortId);
+
+  /// No description provided for @settingsCacheKeyWalletCredit.
+  ///
+  /// In en, this message translates to:
+  /// **'Wallet credit · {shortId}'**
+  String settingsCacheKeyWalletCredit(String shortId);
+
+  /// No description provided for @settingsCacheKeyRaw.
+  ///
+  /// In en, this message translates to:
+  /// **'{key}'**
+  String settingsCacheKeyRaw(String key);
+
+  /// No description provided for @settingsSecuritySection.
+  ///
+  /// In en, this message translates to:
+  /// **'Security'**
+  String get settingsSecuritySection;
+
+  /// No description provided for @settingsBiometricUnlockTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Face ID & fingerprint'**
+  String get settingsBiometricUnlockTitle;
+
+  /// No description provided for @settingsBiometricUnlockSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Use biometrics to unlock the app.'**
+  String get settingsBiometricUnlockSubtitle;
+
+  /// No description provided for @settingsBiometricUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Biometric unlock is not available on this device.'**
+  String get settingsBiometricUnavailable;
+
+  /// No description provided for @settingsBiometricAuthReason.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm to enable biometric unlock.'**
+  String get settingsBiometricAuthReason;
+
+  /// No description provided for @settingsBiometricResumeReason.
+  ///
+  /// In en, this message translates to:
+  /// **'Authenticate to continue.'**
+  String get settingsBiometricResumeReason;
+
+  /// No description provided for @biometricLockTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'App locked'**
+  String get biometricLockTitle;
+
+  /// No description provided for @biometricLockBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Use Face ID or fingerprint to continue.'**
+  String get biometricLockBody;
+
+  /// No description provided for @biometricLockUnlockButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlock'**
+  String get biometricLockUnlockButton;
+
+  /// No description provided for @signOut.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign out'**
+  String get signOut;
+
+  /// No description provided for @settingsAboutSection.
+  ///
+  /// In en, this message translates to:
+  /// **'About'**
+  String get settingsAboutSection;
+
+  /// No description provided for @settingsAboutApp.
+  ///
+  /// In en, this message translates to:
+  /// **'About'**
+  String get settingsAboutApp;
+
+  /// No description provided for @settingsPrivacyPolicy.
+  ///
+  /// In en, this message translates to:
+  /// **'Privacy policy'**
+  String get settingsPrivacyPolicy;
+
+  /// No description provided for @settingsPrivacyTagline.
+  ///
+  /// In en, this message translates to:
+  /// **'How this app treats your information.'**
+  String get settingsPrivacyTagline;
+
+  /// No description provided for @settingsPrivacyDataTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'What you store'**
+  String get settingsPrivacyDataTitle;
+
+  /// No description provided for @settingsPrivacyDataBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Wallet keeps the financial details you enter—accounts, cards, transactions, categories, tags, and transfers—so you can see balances and history. The app does not collect data you never saved while signed in.'**
+  String get settingsPrivacyDataBody;
+
+  /// No description provided for @settingsPrivacyInfraTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Where it lives'**
+  String get settingsPrivacyInfraTitle;
+
+  /// No description provided for @settingsPrivacyInfraBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Your records are stored in the backend you configure (for example Supabase) and the authentication you use. Security, backups, and who can access data depend on that provider and your project settings. Use strong passwords and protect API keys.'**
+  String get settingsPrivacyInfraBody;
+
+  /// No description provided for @settingsPrivacySharingTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Sharing and ads'**
+  String get settingsPrivacySharingTitle;
+
+  /// No description provided for @settingsPrivacySharingBody.
+  ///
+  /// In en, this message translates to:
+  /// **'We do not sell your personal information or use your ledger to target ads. Apart from your chosen backend and sign-in service, this app is not designed to send your data to brokers or advertisers.'**
+  String get settingsPrivacySharingBody;
+
+  /// No description provided for @settingsPrivacyNoticeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Before you ship'**
+  String get settingsPrivacyNoticeTitle;
+
+  /// No description provided for @settingsPrivacyNoticeBody.
+  ///
+  /// In en, this message translates to:
+  /// **'This text is a simple placeholder, not legal advice. Before production or an app store release, publish a privacy policy that matches your jurisdiction, your organization, and how you actually process data.'**
+  String get settingsPrivacyNoticeBody;
+
+  /// No description provided for @settingsTermsOfUse.
+  ///
+  /// In en, this message translates to:
+  /// **'Terms of use'**
+  String get settingsTermsOfUse;
+
+  /// No description provided for @settingsTermsTagline.
+  ///
+  /// In en, this message translates to:
+  /// **'Rules for using this app.'**
+  String get settingsTermsTagline;
+
+  /// No description provided for @settingsTermsAcceptanceTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Acceptance'**
+  String get settingsTermsAcceptanceTitle;
+
+  /// No description provided for @settingsTermsAcceptanceBody.
+  ///
+  /// In en, this message translates to:
+  /// **'By accessing or using Wallet, you agree to these terms. If you do not agree, do not use the app.'**
+  String get settingsTermsAcceptanceBody;
+
+  /// No description provided for @settingsTermsDisclaimerTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Not professional advice'**
+  String get settingsTermsDisclaimerTitle;
+
+  /// No description provided for @settingsTermsDisclaimerBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Wallet is a tool for organizing your own records. Nothing in the app or these terms is financial, legal, accounting, or tax advice. You use the app and any information in it at your own risk when making decisions.'**
+  String get settingsTermsDisclaimerBody;
+
+  /// No description provided for @settingsTermsLiabilityTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Limitation of liability'**
+  String get settingsTermsLiabilityTitle;
+
+  /// No description provided for @settingsTermsLiabilityBody.
+  ///
+  /// In en, this message translates to:
+  /// **'To the fullest extent permitted by law, the authors and contributors are not liable for any indirect, incidental, or consequential damages, or for losses or decisions you make based on the app. The app is provided as-is without warranties of any kind.'**
+  String get settingsTermsLiabilityBody;
+
+  /// No description provided for @settingsTermsResponsibilitiesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Your responsibilities'**
+  String get settingsTermsResponsibilitiesTitle;
+
+  /// No description provided for @settingsTermsResponsibilitiesBody.
+  ///
+  /// In en, this message translates to:
+  /// **'You are responsible for protecting your account, credentials, API keys, and devices. You must comply with laws and regulations that apply to you, including those governing financial record-keeping and taxes in your jurisdiction.'**
+  String get settingsTermsResponsibilitiesBody;
+
+  /// No description provided for @settingsTermsNoticeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Changes and before you ship'**
+  String get settingsTermsNoticeTitle;
+
+  /// No description provided for @settingsTermsNoticeBody.
+  ///
+  /// In en, this message translates to:
+  /// **'These terms may be updated from time to time. If you continue to use the app after changes are posted, that indicates your acceptance of the updated terms. This text is a simple placeholder, not legal advice. Before production or an app store release, publish terms that match your jurisdiction, your organization, and your service.'**
+  String get settingsTermsNoticeBody;
+
+  /// No description provided for @settingsAboutTagline.
+  ///
+  /// In en, this message translates to:
+  /// **'Personal finance in one place.'**
+  String get settingsAboutTagline;
+
+  /// No description provided for @settingsAboutVersionLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Version'**
+  String get settingsAboutVersionLabel;
+
+  /// No description provided for @settingsAboutFeaturesHeading.
+  ///
+  /// In en, this message translates to:
+  /// **'What you can do'**
+  String get settingsAboutFeaturesHeading;
+
+  /// No description provided for @settingsAboutBulletAccounts.
+  ///
+  /// In en, this message translates to:
+  /// **'Connect accounts and cards to mirror your balances in the app.'**
+  String get settingsAboutBulletAccounts;
+
+  /// No description provided for @settingsAboutBulletLedger.
+  ///
+  /// In en, this message translates to:
+  /// **'Log transactions, transfers, categories, and tags in a clear ledger.'**
+  String get settingsAboutBulletLedger;
+
+  /// No description provided for @settingsAboutBulletMonth.
+  ///
+  /// In en, this message translates to:
+  /// **'Review each month and search your history when you need answers.'**
+  String get settingsAboutBulletMonth;
+
+  /// No description provided for @settingsAboutDataHeading.
+  ///
+  /// In en, this message translates to:
+  /// **'Your data'**
+  String get settingsAboutDataHeading;
+
+  /// No description provided for @settingsAboutDataBody.
+  ///
+  /// In en, this message translates to:
+  /// **'What you save is stored in the backend you configure (for example Supabase) and is tied to your sign-in. This build is intended for personal use.'**
+  String get settingsAboutDataBody;
+
+  /// No description provided for @accounts.
+  ///
+  /// In en, this message translates to:
+  /// **'Accounts'**
+  String get accounts;
+
+  /// No description provided for @noAccounts.
+  ///
+  /// In en, this message translates to:
+  /// **'No accounts yet'**
+  String get noAccounts;
+
+  /// No description provided for @newAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'New account'**
+  String get newAccount;
+
+  /// No description provided for @accountName.
+  ///
+  /// In en, this message translates to:
+  /// **'Name'**
+  String get accountName;
+
+  /// No description provided for @accountDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Description'**
+  String get accountDescription;
+
+  /// No description provided for @accountBalance.
+  ///
+  /// In en, this message translates to:
+  /// **'Balance'**
+  String get accountBalance;
+
+  /// No description provided for @listBalanceTotalLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Total'**
+  String get listBalanceTotalLabel;
+
+  /// No description provided for @editAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit account'**
+  String get editAccount;
+
+  /// No description provided for @accountSubmitCreate.
+  ///
+  /// In en, this message translates to:
+  /// **'Create'**
+  String get accountSubmitCreate;
+
+  /// No description provided for @deleteAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete account'**
+  String get deleteAccount;
+
+  /// No description provided for @confirmDeleteAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to delete \"{name}\"?'**
+  String confirmDeleteAccount(String name);
+
+  /// No description provided for @cards.
+  ///
+  /// In en, this message translates to:
+  /// **'Cards'**
+  String get cards;
+
+  /// No description provided for @noCards.
+  ///
+  /// In en, this message translates to:
+  /// **'No cards yet'**
+  String get noCards;
+
+  /// No description provided for @newCard.
+  ///
+  /// In en, this message translates to:
+  /// **'New card'**
+  String get newCard;
+
+  /// No description provided for @editCard.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit card'**
+  String get editCard;
+
+  /// No description provided for @deleteCard.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete card'**
+  String get deleteCard;
+
+  /// No description provided for @confirmDeleteCard.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to delete \"{name}\"?'**
+  String confirmDeleteCard(String name);
+
+  /// No description provided for @cardCutDay.
+  ///
+  /// In en, this message translates to:
+  /// **'Cut day'**
+  String get cardCutDay;
+
+  /// No description provided for @cardPayDay.
+  ///
+  /// In en, this message translates to:
+  /// **'Pay day'**
+  String get cardPayDay;
+
+  /// No description provided for @cardDayInvalidRange.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a day from 1 to 30'**
+  String get cardDayInvalidRange;
+
+  /// No description provided for @cardBillingCycleSummary.
+  ///
+  /// In en, this message translates to:
+  /// **'Cut day {cutDay} · Pay day {payDay}'**
+  String cardBillingCycleSummary(int cutDay, int payDay);
+
+  /// No description provided for @cancel.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get cancel;
+
+  /// No description provided for @save.
+  ///
+  /// In en, this message translates to:
+  /// **'Save'**
+  String get save;
+
+  /// No description provided for @delete.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete'**
+  String get delete;
+
+  /// No description provided for @categories.
+  ///
+  /// In en, this message translates to:
+  /// **'Categories'**
+  String get categories;
+
+  /// No description provided for @noCategories.
+  ///
+  /// In en, this message translates to:
+  /// **'No categories yet'**
+  String get noCategories;
+
+  /// No description provided for @newCategory.
+  ///
+  /// In en, this message translates to:
+  /// **'New category'**
+  String get newCategory;
+
+  /// No description provided for @editCategory.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit category'**
+  String get editCategory;
+
+  /// No description provided for @deleteCategory.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete category'**
+  String get deleteCategory;
+
+  /// No description provided for @confirmDeleteCategory.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to delete \"{name}\"?'**
+  String confirmDeleteCategory(String name);
+
+  /// No description provided for @tags.
+  ///
+  /// In en, this message translates to:
+  /// **'Tags'**
+  String get tags;
+
+  /// No description provided for @noTags.
+  ///
+  /// In en, this message translates to:
+  /// **'No tags yet'**
+  String get noTags;
+
+  /// No description provided for @newTag.
+  ///
+  /// In en, this message translates to:
+  /// **'New tag'**
+  String get newTag;
+
+  /// No description provided for @editTag.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit tag'**
+  String get editTag;
+
+  /// No description provided for @deleteTag.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete tag'**
+  String get deleteTag;
+
+  /// No description provided for @confirmDeleteTag.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to delete \"{name}\"?'**
+  String confirmDeleteTag(String name);
+
+  /// No description provided for @tagHidden.
+  ///
+  /// In en, this message translates to:
+  /// **'Hidden'**
+  String get tagHidden;
+
+  /// No description provided for @tagHiddenHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Hidden tags won\'t appear when picking a tag for a transaction'**
+  String get tagHiddenHint;
+
+  /// No description provided for @assets.
+  ///
+  /// In en, this message translates to:
+  /// **'Assets'**
+  String get assets;
+
+  /// No description provided for @noAssets.
+  ///
+  /// In en, this message translates to:
+  /// **'No assets yet'**
+  String get noAssets;
+
+  /// No description provided for @assetSold.
+  ///
+  /// In en, this message translates to:
+  /// **'Sold'**
+  String get assetSold;
+
+  /// No description provided for @newAsset.
+  ///
+  /// In en, this message translates to:
+  /// **'New asset'**
+  String get newAsset;
+
+  /// No description provided for @assetProvider.
+  ///
+  /// In en, this message translates to:
+  /// **'Provider'**
+  String get assetProvider;
+
+  /// No description provided for @assetValue.
+  ///
+  /// In en, this message translates to:
+  /// **'Value'**
+  String get assetValue;
+
+  /// No description provided for @assetPurchaseDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Purchase date'**
+  String get assetPurchaseDate;
+
+  /// No description provided for @assetEndDate.
+  ///
+  /// In en, this message translates to:
+  /// **'End date'**
+  String get assetEndDate;
+
+  /// No description provided for @assetSoldAmountField.
+  ///
+  /// In en, this message translates to:
+  /// **'Sold amount'**
+  String get assetSoldAmountField;
+
+  /// No description provided for @assetInvalidNumber.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a valid number'**
+  String get assetInvalidNumber;
+
+  /// No description provided for @assetEndBeforePurchase.
+  ///
+  /// In en, this message translates to:
+  /// **'End date must be on or after purchase date'**
+  String get assetEndBeforePurchase;
+
+  /// No description provided for @assetHeldDuration.
+  ///
+  /// In en, this message translates to:
+  /// **'Held {duration}'**
+  String assetHeldDuration(String duration);
+
+  /// No description provided for @assetValuePerApproximateMonth.
+  ///
+  /// In en, this message translates to:
+  /// **'~{amount}/mo avg.'**
+  String assetValuePerApproximateMonth(String amount);
+
+  /// No description provided for @assetSoldPerApproximateMonth.
+  ///
+  /// In en, this message translates to:
+  /// **'~{amount}/mo avg. (sold)'**
+  String assetSoldPerApproximateMonth(String amount);
+
+  /// No description provided for @editAsset.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit asset'**
+  String get editAsset;
+
+  /// No description provided for @deleteAsset.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete asset'**
+  String get deleteAsset;
+
+  /// No description provided for @confirmDeleteAsset.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to delete \"{name}\"?'**
+  String confirmDeleteAsset(String name);
+
+  /// No description provided for @transactions.
+  ///
+  /// In en, this message translates to:
+  /// **'Transactions'**
+  String get transactions;
+
+  /// No description provided for @creditsNav.
+  ///
+  /// In en, this message translates to:
+  /// **'Credits'**
+  String get creditsNav;
+
+  /// No description provided for @creditsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Credits'**
+  String get creditsTitle;
+
+  /// No description provided for @creditsEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No deferred credit installments yet.'**
+  String get creditsEmpty;
+
+  /// No description provided for @creditsEmptyForSelectedMonth.
+  ///
+  /// In en, this message translates to:
+  /// **'No credit installments in this month.'**
+  String get creditsEmptyForSelectedMonth;
+
+  /// No description provided for @creditsUntitledGroup.
+  ///
+  /// In en, this message translates to:
+  /// **'Deferred purchase'**
+  String get creditsUntitledGroup;
+
+  /// No description provided for @creditsInstallmentsWithPending.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} installments - {pending} pending'**
+  String creditsInstallmentsWithPending(int count, int pending);
+
+  /// No description provided for @creditsInstallmentsEndsThisMonth.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} installments · ends this month'**
+  String creditsInstallmentsEndsThisMonth(int count);
+
+  /// No description provided for @creditsPendingTotalsLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Pending total'**
+  String get creditsPendingTotalsLabel;
+
+  /// No description provided for @creditsDueThisMonthLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Due this month'**
+  String get creditsDueThisMonthLabel;
+
+  /// No description provided for @creditsNewDeferredPurchase.
+  ///
+  /// In en, this message translates to:
+  /// **'New credit purchase'**
+  String get creditsNewDeferredPurchase;
+
+  /// No description provided for @creditsWalletCreditTransactedAt.
+  ///
+  /// In en, this message translates to:
+  /// **'{when}'**
+  String creditsWalletCreditTransactedAt(String when);
+
+  /// No description provided for @creditEditGraceNotApplicable.
+  ///
+  /// In en, this message translates to:
+  /// **'Original grace period is not stored.'**
+  String get creditEditGraceNotApplicable;
+
+  /// No description provided for @transactionsSearchTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Search transactions'**
+  String get transactionsSearchTooltip;
+
+  /// No description provided for @transactionsSearchHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Search by description'**
+  String get transactionsSearchHint;
+
+  /// No description provided for @transactionsSearchTypeQuery.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter text to search all your transactions'**
+  String get transactionsSearchTypeQuery;
+
+  /// No description provided for @transactionsSearchNoResults.
+  ///
+  /// In en, this message translates to:
+  /// **'No matching transactions'**
+  String get transactionsSearchNoResults;
+
+  /// No description provided for @transactionsPickMonth.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose month'**
+  String get transactionsPickMonth;
+
+  /// No description provided for @transactionsPickPreviousYear.
+  ///
+  /// In en, this message translates to:
+  /// **'Previous year'**
+  String get transactionsPickPreviousYear;
+
+  /// No description provided for @transactionsPickNextYear.
+  ///
+  /// In en, this message translates to:
+  /// **'Next year'**
+  String get transactionsPickNextYear;
+
+  /// No description provided for @yearlyPickYear.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose year'**
+  String get yearlyPickYear;
+
+  /// No description provided for @year.
+  ///
+  /// In en, this message translates to:
+  /// **'Year'**
+  String get year;
+
+  /// No description provided for @month.
+  ///
+  /// In en, this message translates to:
+  /// **'Month'**
+  String get month;
+
+  /// No description provided for @noTransactions.
+  ///
+  /// In en, this message translates to:
+  /// **'No transactions yet'**
+  String get noTransactions;
+
+  /// No description provided for @noTransactionsInMonth.
+  ///
+  /// In en, this message translates to:
+  /// **'No transactions in {monthYear}'**
+  String noTransactionsInMonth(String monthYear);
+
+  /// No description provided for @noTransactionsThisDay.
+  ///
+  /// In en, this message translates to:
+  /// **'No transactions this day'**
+  String get noTransactionsThisDay;
+
+  /// No description provided for @newTransaction.
+  ///
+  /// In en, this message translates to:
+  /// **'New transaction'**
+  String get newTransaction;
+
+  /// No description provided for @transactionsFabTransfer.
+  ///
+  /// In en, this message translates to:
+  /// **'Transfer'**
+  String get transactionsFabTransfer;
+
+  /// No description provided for @transferSheetTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Transfer'**
+  String get transferSheetTitle;
+
+  /// No description provided for @transferSourceAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Source'**
+  String get transferSourceAccount;
+
+  /// No description provided for @transferTargetAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Target'**
+  String get transferTargetAccount;
+
+  /// No description provided for @transferDateLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Date'**
+  String get transferDateLabel;
+
+  /// No description provided for @transferTimeLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Time'**
+  String get transferTimeLabel;
+
+  /// No description provided for @transferAccountsMustDiffer.
+  ///
+  /// In en, this message translates to:
+  /// **'Source and target must be different'**
+  String get transferAccountsMustDiffer;
+
+  /// No description provided for @transferNeedTwoAccounts.
+  ///
+  /// In en, this message translates to:
+  /// **'Add at least two accounts or cards to transfer money between them'**
+  String get transferNeedTwoAccounts;
+
+  /// No description provided for @transferAccountSearch.
+  ///
+  /// In en, this message translates to:
+  /// **'Search by name'**
+  String get transferAccountSearch;
+
+  /// No description provided for @transferAccountSearchHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Filter by account name'**
+  String get transferAccountSearchHint;
+
+  /// No description provided for @transferAccountSearchNoResults.
+  ///
+  /// In en, this message translates to:
+  /// **'No accounts match your search'**
+  String get transferAccountSearchNoResults;
+
+  /// No description provided for @editTransferTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit transfer'**
+  String get editTransferTitle;
+
+  /// No description provided for @editTransaction.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit transaction'**
+  String get editTransaction;
+
+  /// No description provided for @deleteTransaction.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete transaction'**
+  String get deleteTransaction;
+
+  /// No description provided for @confirmDeleteTransaction.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to delete this transaction?'**
+  String get confirmDeleteTransaction;
+
+  /// No description provided for @confirmDeleteCreditGroupTransaction.
+  ///
+  /// In en, this message translates to:
+  /// **'This installment is part of a deferred split. All installments in this group will be deleted.'**
+  String get confirmDeleteCreditGroupTransaction;
+
+  /// No description provided for @deleteTransferPair.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete transfer'**
+  String get deleteTransferPair;
+
+  /// No description provided for @confirmDeleteTransferPair.
+  ///
+  /// In en, this message translates to:
+  /// **'This removes both sides of the transfer from the ledger.'**
+  String get confirmDeleteTransferPair;
+
+  /// No description provided for @none.
+  ///
+  /// In en, this message translates to:
+  /// **'None'**
+  String get none;
+
+  /// No description provided for @transactionDateTime.
+  ///
+  /// In en, this message translates to:
+  /// **'When'**
+  String get transactionDateTime;
+
+  /// No description provided for @transactionAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Account'**
+  String get transactionAccount;
+
+  /// No description provided for @transactionCard.
+  ///
+  /// In en, this message translates to:
+  /// **'Card'**
+  String get transactionCard;
+
+  /// No description provided for @transactionPaymentMethod.
+  ///
+  /// In en, this message translates to:
+  /// **'Payment method'**
+  String get transactionPaymentMethod;
+
+  /// No description provided for @paymentMethodAddChoiceTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Add account or card'**
+  String get paymentMethodAddChoiceTitle;
+
+  /// No description provided for @transactionPaymentMethodSearchNoResults.
+  ///
+  /// In en, this message translates to:
+  /// **'No payment methods match your search'**
+  String get transactionPaymentMethodSearchNoResults;
+
+  /// No description provided for @transactionDeferred.
+  ///
+  /// In en, this message translates to:
+  /// **'Deferred'**
+  String get transactionDeferred;
+
+  /// No description provided for @transactionGraceMonths.
+  ///
+  /// In en, this message translates to:
+  /// **'Grace months'**
+  String get transactionGraceMonths;
+
+  /// No description provided for @transactionMesesPlazo.
+  ///
+  /// In en, this message translates to:
+  /// **'Term (months)'**
+  String get transactionMesesPlazo;
+
+  /// No description provided for @transactionGraceMonthsInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'Grace months must be 0 or greater'**
+  String get transactionGraceMonthsInvalid;
+
+  /// No description provided for @transactionTermMonthsInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter at least 2 installment months'**
+  String get transactionTermMonthsInvalid;
+
+  /// No description provided for @transactionCategory.
+  ///
+  /// In en, this message translates to:
+  /// **'Category'**
+  String get transactionCategory;
+
+  /// No description provided for @transactionTag.
+  ///
+  /// In en, this message translates to:
+  /// **'Tag'**
+  String get transactionTag;
+
+  /// No description provided for @transactionAmount.
+  ///
+  /// In en, this message translates to:
+  /// **'Amount'**
+  String get transactionAmount;
+
+  /// No description provided for @transactionAmountCreditGroupHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Shown amount is the group total split evenly across installments. Saving updates every installment and shifts dates by the same amount.'**
+  String get transactionAmountCreditGroupHint;
+
+  /// No description provided for @transactionAmountInvalidNumber.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a valid number (optional minus sign and decimals)'**
+  String get transactionAmountInvalidNumber;
+
+  /// No description provided for @transactionAmountMustBeNonZero.
+  ///
+  /// In en, this message translates to:
+  /// **'Amount cannot be zero'**
+  String get transactionAmountMustBeNonZero;
+
+  /// No description provided for @transferAmountMustBePositive.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter an amount greater than zero'**
+  String get transferAmountMustBePositive;
+
+  /// No description provided for @transactionPercentage.
+  ///
+  /// In en, this message translates to:
+  /// **'Percentage'**
+  String get transactionPercentage;
+
+  /// No description provided for @transactionPercentageInvalidRange.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a number from 0 to 100'**
+  String get transactionPercentageInvalidRange;
+
+  /// No description provided for @transactionIgnore.
+  ///
+  /// In en, this message translates to:
+  /// **'Ignore'**
+  String get transactionIgnore;
+
+  /// No description provided for @transactionIgnoredBadge.
+  ///
+  /// In en, this message translates to:
+  /// **'Ignored'**
+  String get transactionIgnoredBadge;
+
+  /// No description provided for @transactionAmountValue.
+  ///
+  /// In en, this message translates to:
+  /// **'{amount}'**
+  String transactionAmountValue(String amount);
+
+  /// No description provided for @transactionsTotalIncome.
+  ///
+  /// In en, this message translates to:
+  /// **'Income'**
+  String get transactionsTotalIncome;
+
+  /// No description provided for @transactionsTotalOutcome.
+  ///
+  /// In en, this message translates to:
+  /// **'Outcome'**
+  String get transactionsTotalOutcome;
+
+  /// No description provided for @transactionsTotalBalance.
+  ///
+  /// In en, this message translates to:
+  /// **'Balance'**
+  String get transactionsTotalBalance;
+
+  /// No description provided for @transactionsTotalsWeightedHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Weighted'**
+  String get transactionsTotalsWeightedHint;
+
+  /// No description provided for @transactionsTotalsWeightedExcludingCreditHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Weighted excluding credit'**
+  String get transactionsTotalsWeightedExcludingCreditHint;
+
+  /// No description provided for @transactionsTotalsWeightedExcludingIgnoredHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Weighted excluding ignored'**
+  String get transactionsTotalsWeightedExcludingIgnoredHint;
+
+  /// No description provided for @transactionsTotalsNotWeightedHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Not weighted'**
+  String get transactionsTotalsNotWeightedHint;
+
+  /// No description provided for @transactionsTotalsNotWeightedExcludingIgnoredHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Not weighted excluding ignored'**
+  String get transactionsTotalsNotWeightedExcludingIgnoredHint;
+
+  /// No description provided for @loadFailedNoConnectionTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No internet connection'**
+  String get loadFailedNoConnectionTitle;
+
+  /// No description provided for @loadFailedNoConnectionBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Check your network and try again. If you are online, the server may be unreachable.'**
+  String get loadFailedNoConnectionBody;
+
+  /// No description provided for @cachedDataOfflineBanner.
+  ///
+  /// In en, this message translates to:
+  /// **'Showing saved data — no internet connection.'**
+  String get cachedDataOfflineBanner;
+
+  /// No description provided for @loadFailedRequestFailedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load data'**
+  String get loadFailedRequestFailedTitle;
+
+  /// No description provided for @loadFailedRequestFailedBody.
+  ///
+  /// In en, this message translates to:
+  /// **'The request failed. Pull down to refresh or try again shortly.'**
+  String get loadFailedRequestFailedBody;
+
+  /// No description provided for @retry.
+  ///
+  /// In en, this message translates to:
+  /// **'Retry'**
+  String get retry;
+
+  /// No description provided for @dialogClose.
+  ///
+  /// In en, this message translates to:
+  /// **'Close'**
+  String get dialogClose;
+}
+
+class _AppLocalizationsDelegate
+    extends LocalizationsDelegate<AppLocalizations> {
+  const _AppLocalizationsDelegate();
+
+  @override
+  Future<AppLocalizations> load(Locale locale) {
+    return SynchronousFuture<AppLocalizations>(lookupAppLocalizations(locale));
+  }
+
+  @override
+  bool isSupported(Locale locale) =>
+      <String>['en', 'es'].contains(locale.languageCode);
+
+  @override
+  bool shouldReload(_AppLocalizationsDelegate old) => false;
+}
+
+AppLocalizations lookupAppLocalizations(Locale locale) {
+  // Lookup logic when only language code is specified.
+  switch (locale.languageCode) {
+    case 'en':
+      return AppLocalizationsEn();
+    case 'es':
+      return AppLocalizationsEs();
+  }
+
+  throw FlutterError(
+    'AppLocalizations.delegate failed to load unsupported locale "$locale". This is likely '
+    'an issue with the localizations generation tool. Please file an issue '
+    'on GitHub with a reproducible sample app and the gen-l10n configuration '
+    'that was used.',
+  );
+}
