@@ -1,1 +1,1 @@
-Consulta [AGENTS.md](./AGENTS.md) para instrucciones de colaboradores y agentes.
+See [AGENTS.md](./AGENTS.md) for collaborator and agent instructions.
