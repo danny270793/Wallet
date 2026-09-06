@@ -300,21 +300,22 @@ class AppLocalizationsEs extends AppLocalizations {
   String get settingsPrivacyPolicy => 'Política de privacidad';
 
   @override
-  String get settingsPrivacyTagline => 'Cómo trata esta app tu información.';
+  String get settingsPrivacyTagline =>
+      'El inicio de sesión usa Supabase y es opcional hasta que quieras tus datos en la nube.';
 
   @override
-  String get settingsPrivacyDataTitle => 'Qué guardas';
+  String get settingsPrivacyDataTitle => 'Cuenta (opcional)';
 
   @override
   String get settingsPrivacyDataBody =>
-      'Wallet conserva los datos financieros que introduces—cuentas, tarjetas, movimientos, categorías, etiquetas y transferencias—para mostrar saldos e historial. La app no recopila datos que no hayas guardado con tu sesión iniciada.';
+      'Puedes explorar Wallet sin iniciar sesión. Si creas una cuenta, la autenticación la proporciona Supabase. Tu correo y credenciales los procesa Supabase; esta app no guarda tu contraseña.';
 
   @override
-  String get settingsPrivacyInfraTitle => 'Dónde reside';
+  String get settingsPrivacyInfraTitle => 'Qué guardamos hoy — y más adelante';
 
   @override
   String get settingsPrivacyInfraBody =>
-      'Tus registros se almacenan en el backend que configures (por ejemplo Supabase) y el inicio de sesión que uses. La seguridad, copias de seguridad y quién puede acceder dependen de ese proveedor y de la configuración de tu proyecto. Usa contraseñas fuertes y protege las claves API.';
+      'Cuando has iniciado sesión, los registros financieros que introduces (cuentas, tarjetas, movimientos, categorías, etiquetas y transferencias) se guardan en Supabase y quedan ligados a tu cuenta. El uso como invitado se queda en este dispositivo. En el futuro también podremos guardar otra información generada por la app en Supabase si has iniciado sesión. La seguridad y las copias de seguridad dependen de ese servicio. Usa una contraseña fuerte.';
 
   @override
   String get settingsPrivacySharingTitle => 'Compartir y publicidad';
@@ -341,7 +342,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get settingsTermsAcceptanceBody =>
-      'Al acceder o usar Wallet aceptas estos términos. Si no estás de acuerdo, no uses la app.';
+      'Al acceder o usar Wallet aceptas estos términos. Si no estás de acuerdo, no uses la app. El inicio de sesión es opcional y, si lo usas, lo gestiona Supabase. Los registros financieros con sesión iniciada se guardan en Supabase. Versiones posteriores podrán guardar de la misma forma datos adicionales generados por la app.';
 
   @override
   String get settingsTermsDisclaimerTitle => 'No es asesoramiento profesional';
