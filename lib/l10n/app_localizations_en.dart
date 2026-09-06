@@ -298,21 +298,22 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsPrivacyPolicy => 'Privacy policy';
 
   @override
-  String get settingsPrivacyTagline => 'How this app treats your information.';
+  String get settingsPrivacyTagline =>
+      'Sign-in uses Supabase and is optional until you want your data in the cloud.';
 
   @override
-  String get settingsPrivacyDataTitle => 'What you store';
+  String get settingsPrivacyDataTitle => 'Account (optional)';
 
   @override
   String get settingsPrivacyDataBody =>
-      'Wallet keeps the financial details you enter—accounts, cards, transactions, categories, tags, and transfers—so you can see balances and history. The app does not collect data you never saved while signed in.';
+      'You can explore Wallet without signing in. If you create an account, authentication is provided by Supabase. Your email and credentials are processed by Supabase; this app does not store your password.';
 
   @override
-  String get settingsPrivacyInfraTitle => 'Where it lives';
+  String get settingsPrivacyInfraTitle => 'What we store today — and later';
 
   @override
   String get settingsPrivacyInfraBody =>
-      'Your records are stored in the backend you configure (for example Supabase) and the authentication you use. Security, backups, and who can access data depend on that provider and your project settings. Use strong passwords and protect API keys.';
+      'When you are signed in, the financial records you enter (accounts, cards, transactions, categories, tags, and transfers) are stored in Supabase and tied to your account. Guest use stays on this device. In the future we may also store other app-generated information in Supabase when you are signed in. Security and backups depend on that service. Use a strong password.';
 
   @override
   String get settingsPrivacySharingTitle => 'Sharing and ads';
@@ -339,7 +340,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get settingsTermsAcceptanceBody =>
-      'By accessing or using Wallet, you agree to these terms. If you do not agree, do not use the app.';
+      'By accessing or using Wallet, you agree to these terms. If you do not agree, do not use the app. Sign-in is optional and, when you use it, is handled by Supabase. Signed-in financial records are stored in Supabase. Later versions may store additional app-generated data in the same way.';
 
   @override
   String get settingsTermsDisclaimerTitle => 'Not professional advice';
