@@ -22,7 +22,10 @@ class TransactionsLoading extends TransactionsState {
 class TransactionsLoaded extends TransactionsState {
   final List<TransactionEntity> transactions;
   final bool servedFromOfflineCache;
-  const TransactionsLoaded(this.transactions, {this.servedFromOfflineCache = false});
+  const TransactionsLoaded(
+    this.transactions, {
+    this.servedFromOfflineCache = false,
+  });
   @override
   List<Object?> get props => [transactions, servedFromOfflineCache];
 }
@@ -38,7 +41,11 @@ class TransactionsActionError extends TransactionsState {
   final List<TransactionEntity> transactions;
   final String? message;
   final bool servedFromOfflineCache;
-  const TransactionsActionError(this.transactions, {this.message, this.servedFromOfflineCache = false});
+  const TransactionsActionError(
+    this.transactions, {
+    this.message,
+    this.servedFromOfflineCache = false,
+  });
   @override
   List<Object?> get props => [transactions, message, servedFromOfflineCache];
 }

@@ -635,31 +635,31 @@ abstract class AppLocalizations {
   /// No description provided for @settingsPrivacyTagline.
   ///
   /// In en, this message translates to:
-  /// **'How this app treats your information.'**
+  /// **'Sign-in uses Supabase and is optional until you want your data in the cloud.'**
   String get settingsPrivacyTagline;
 
   /// No description provided for @settingsPrivacyDataTitle.
   ///
   /// In en, this message translates to:
-  /// **'What you store'**
+  /// **'Account (optional)'**
   String get settingsPrivacyDataTitle;
 
   /// No description provided for @settingsPrivacyDataBody.
   ///
   /// In en, this message translates to:
-  /// **'Wallet keeps the financial details you enter—accounts, cards, transactions, categories, tags, and transfers—so you can see balances and history. The app does not collect data you never saved while signed in.'**
+  /// **'You can explore Wallet without signing in. If you create an account, authentication is provided by Supabase. Your email and credentials are processed by Supabase; this app does not store your password.'**
   String get settingsPrivacyDataBody;
 
   /// No description provided for @settingsPrivacyInfraTitle.
   ///
   /// In en, this message translates to:
-  /// **'Where it lives'**
+  /// **'What we store today — and later'**
   String get settingsPrivacyInfraTitle;
 
   /// No description provided for @settingsPrivacyInfraBody.
   ///
   /// In en, this message translates to:
-  /// **'Your records are stored in the backend you configure (for example Supabase) and the authentication you use. Security, backups, and who can access data depend on that provider and your project settings. Use strong passwords and protect API keys.'**
+  /// **'When you are signed in, the financial records you enter (accounts, cards, transactions, categories, tags, and transfers) are stored in Supabase and tied to your account. Guest use stays on this device. In the future we may also store other app-generated information in Supabase when you are signed in. Security and backups depend on that service. Use a strong password.'**
   String get settingsPrivacyInfraBody;
 
   /// No description provided for @settingsPrivacySharingTitle.
@@ -707,7 +707,7 @@ abstract class AppLocalizations {
   /// No description provided for @settingsTermsAcceptanceBody.
   ///
   /// In en, this message translates to:
-  /// **'By accessing or using Wallet, you agree to these terms. If you do not agree, do not use the app.'**
+  /// **'By accessing or using Wallet, you agree to these terms. If you do not agree, do not use the app. Sign-in is optional and, when you use it, is handled by Supabase. Signed-in financial records are stored in Supabase. Later versions may store additional app-generated data in the same way.'**
   String get settingsTermsAcceptanceBody;
 
   /// No description provided for @settingsTermsDisclaimerTitle.
@@ -805,6 +805,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'What you save is stored in the backend you configure (for example Supabase) and is tied to your sign-in. This build is intended for personal use.'**
   String get settingsAboutDataBody;
+
+  /// No description provided for @settingsAboutDeveloperHeading.
+  ///
+  /// In en, this message translates to:
+  /// **'Developer'**
+  String get settingsAboutDeveloperHeading;
+
+  /// No description provided for @settingsAboutDeveloperGithub.
+  ///
+  /// In en, this message translates to:
+  /// **'GitHub'**
+  String get settingsAboutDeveloperGithub;
+
+  /// No description provided for @settingsAboutDeveloperWebsite.
+  ///
+  /// In en, this message translates to:
+  /// **'Website'**
+  String get settingsAboutDeveloperWebsite;
+
+  /// No description provided for @settingsAboutDeveloperYoutube.
+  ///
+  /// In en, this message translates to:
+  /// **'YouTube'**
+  String get settingsAboutDeveloperYoutube;
+
+  /// No description provided for @settingsAboutDeveloperLinkedin.
+  ///
+  /// In en, this message translates to:
+  /// **'LinkedIn'**
+  String get settingsAboutDeveloperLinkedin;
 
   /// No description provided for @accounts.
   ///

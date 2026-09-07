@@ -2,14 +2,24 @@ import '../../../../core/offline/offline_served_bundle.dart';
 import '../entities/transaction_entity.dart';
 
 abstract class TransactionsRepository {
-  Future<OfflineServedBundle<List<TransactionEntity>>> getTransactionsForMonth(DateTime monthStartLocal);
+  Future<OfflineServedBundle<List<TransactionEntity>>> getTransactionsForMonth(
+    DateTime monthStartLocal,
+  );
+
   /// All non-deleted transactions with [transactedAt] before Jan 1 of the year after
   /// [yearStartLocal] (i.e. full history through the end of that calendar year), newest first.
-  Future<OfflineServedBundle<List<TransactionEntity>>> getTransactionsForYear(DateTime yearStartLocal);
-  Future<List<TransactionEntity>> searchTransactionsByDescription(String query, {int limit = 200});
-  Future<OfflineServedBundle<List<TransactionEntity>>> getTransactionsByCreditGroupId(String creditId);
+  Future<OfflineServedBundle<List<TransactionEntity>>> getTransactionsForYear(
+    DateTime yearStartLocal,
+  );
+  Future<List<TransactionEntity>> searchTransactionsByDescription(
+    String query, {
+    int limit = 200,
+  });
+  Future<OfflineServedBundle<List<TransactionEntity>>>
+  getTransactionsByCreditGroupId(String creditId);
 
-  Future<OfflineServedBundle<List<TransactionEntity>>> listTransactionsHavingCreditGroup();
+  Future<OfflineServedBundle<List<TransactionEntity>>>
+  listTransactionsHavingCreditGroup();
 
   Future<TransactionEntity> createTransaction({
     String? accountId,

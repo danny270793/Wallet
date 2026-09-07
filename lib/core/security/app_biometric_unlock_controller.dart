@@ -37,8 +37,7 @@ class AppBiometricUnlockController extends ChangeNotifier {
       final supported = await _localAuth.isDeviceSupported();
       final canCheck = await _localAuth.canCheckBiometrics;
       final types = await _localAuth.getAvailableBiometrics();
-      _authenticatorAvailable =
-          supported && (types.isNotEmpty || canCheck);
+      _authenticatorAvailable = supported && (types.isNotEmpty || canCheck);
     } catch (_) {
       _authenticatorAvailable = false;
     }

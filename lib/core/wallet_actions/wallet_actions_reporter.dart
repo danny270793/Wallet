@@ -11,8 +11,8 @@ class WalletActionsReporter {
   WalletActionsReporter({
     required WalletActionsDatasource datasource,
     SupabaseClient? supabase,
-  })  : _datasource = datasource,
-        _supabase = supabase ?? Supabase.instance.client;
+  }) : _datasource = datasource,
+       _supabase = supabase ?? Supabase.instance.client;
 
   final WalletActionsDatasource _datasource;
   final SupabaseClient _supabase;
@@ -25,14 +25,16 @@ class WalletActionsReporter {
 
   Future<String> _appVersion() {
     if (_cachedVersion != null) return Future.value(_cachedVersion);
-    _versionFuture ??= PackageInfo.fromPlatform().then((info) {
-      final v = '${info.version}+${info.buildNumber}';
-      _cachedVersion = v;
-      return v;
-    }).catchError((_) {
-      _cachedVersion = 'unknown';
-      return _cachedVersion!;
-    });
+    _versionFuture ??= PackageInfo.fromPlatform()
+        .then((info) {
+          final v = '${info.version}+${info.buildNumber}';
+          _cachedVersion = v;
+          return v;
+        })
+        .catchError((_) {
+          _cachedVersion = 'unknown';
+          return _cachedVersion!;
+        });
     return _versionFuture!;
   }
 
@@ -69,8 +71,12 @@ class WalletActionsReporter {
         type: type,
         customTitle: customTitle,
         customPayload: customPayload,
-        errorMessage: errorMessage != null && errorMessage.isNotEmpty ? errorMessage : null,
-        errorStack: errorStack != null && errorStack.isNotEmpty ? errorStack : null,
+        errorMessage: errorMessage != null && errorMessage.isNotEmpty
+            ? errorMessage
+            : null,
+        errorStack: errorStack != null && errorStack.isNotEmpty
+            ? errorStack
+            : null,
         appVersion: version,
         userId: _currentUserId(),
         os: _osLabel(),
@@ -82,41 +88,53 @@ class WalletActionsReporter {
 
   /// Use in `catch` blocks: [error] and [stackTrace] from the catch clause.
   void recordCaught(Object error, StackTrace? stackTrace) {
-    unawaited(_safeInsert(
-      type: 'error',
-      errorMessage: _trim(error.toString(), _maxMessageLength),
-      errorStack: _trim(stackTrace?.toString(), _maxStackLength),
-    ));
+    unawaited(
+      _safeInsert(
+        type: 'error',
+        errorMessage: _trim(error.toString(), _maxMessageLength),
+        errorStack: _trim(stackTrace?.toString(), _maxStackLength),
+      ),
+    );
   }
 
   /// Like [recordCaught] but prefixes a log/context line (e.g. from [AppLogger.error]).
-  void recordCaughtWithContext(String context, Object error, StackTrace? stackTrace) {
+  void recordCaughtWithContext(
+    String context,
+    Object error,
+    StackTrace? stackTrace,
+  ) {
     final msg = context.isEmpty
         ? error.toString()
         : '${_trim(context, 2000)}: $error';
-    unawaited(_safeInsert(
-      type: 'error',
-      errorMessage: _trim(msg, _maxMessageLength),
-      errorStack: _trim(stackTrace?.toString(), _maxStackLength),
-    ));
+    unawaited(
+      _safeInsert(
+        type: 'error',
+        errorMessage: _trim(msg, _maxMessageLength),
+        errorStack: _trim(stackTrace?.toString(), _maxStackLength),
+      ),
+    );
   }
 
   /// [message] plus optional [stackTrace] when no exception object exists.
   void recordErrorMessage(String message, [StackTrace? stackTrace]) {
-    unawaited(_safeInsert(
-      type: 'error',
-      errorMessage: _trim(message, _maxMessageLength),
-      errorStack: _trim(stackTrace?.toString(), _maxStackLength),
-    ));
+    unawaited(
+      _safeInsert(
+        type: 'error',
+        errorMessage: _trim(message, _maxMessageLength),
+        errorStack: _trim(stackTrace?.toString(), _maxStackLength),
+      ),
+    );
   }
 
   /// Flutter framework error (e.g. build/layout); call from [FlutterError.onError].
   void recordFlutterError(FlutterErrorDetails details) {
-    unawaited(_safeInsert(
-      type: 'error',
-      errorMessage: _trim(details.exceptionAsString(), _maxMessageLength),
-      errorStack: _trim(details.stack?.toString(), _maxStackLength),
-    ));
+    unawaited(
+      _safeInsert(
+        type: 'error',
+        errorMessage: _trim(details.exceptionAsString(), _maxMessageLength),
+        errorStack: _trim(details.stack?.toString(), _maxStackLength),
+      ),
+    );
   }
 
   /// Async / isolate uncaught error; use from [PlatformDispatcher.onError].
@@ -126,10 +144,12 @@ class WalletActionsReporter {
 
   /// Custom analytic or diagnostic event (not necessarily an exception).
   void recordCustom({required String title, Map<String, dynamic>? payload}) {
-    unawaited(_safeInsert(
-      type: 'custom',
-      customTitle: _trim(title, 512),
-      customPayload: payload,
-    ));
+    unawaited(
+      _safeInsert(
+        type: 'custom',
+        customTitle: _trim(title, 512),
+        customPayload: payload,
+      ),
+    );
   }
 }

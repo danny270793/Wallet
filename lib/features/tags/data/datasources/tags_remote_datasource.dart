@@ -26,11 +26,16 @@ class TagsSupabaseDatasource implements TagsRemoteDatasource {
         .select()
         .isFilter('deletedAt', null)
         .order('createdAt');
-    return (data as List).map((e) => TagEntity.fromJson(e as Map<String, dynamic>)).toList();
+    return (data as List)
+        .map((e) => TagEntity.fromJson(e as Map<String, dynamic>))
+        .toList();
   }
 
   @override
-  Future<TagEntity> createTag({required String name, String? description}) async {
+  Future<TagEntity> createTag({
+    required String name,
+    String? description,
+  }) async {
     AppLogger.debug('createTag called: $name');
     final data = await _client
         .from('wallet_tags')

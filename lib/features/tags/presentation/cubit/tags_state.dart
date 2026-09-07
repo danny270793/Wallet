@@ -38,7 +38,11 @@ class TagsActionError extends TagsState {
   final List<TagEntity> tags;
   final String? message;
   final bool servedFromOfflineCache;
-  const TagsActionError(this.tags, {this.message, this.servedFromOfflineCache = false});
+  const TagsActionError(
+    this.tags, {
+    this.message,
+    this.servedFromOfflineCache = false,
+  });
   @override
   List<Object?> get props => [tags, message, servedFromOfflineCache];
 }

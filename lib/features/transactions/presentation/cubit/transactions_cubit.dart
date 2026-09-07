@@ -35,28 +35,30 @@ class TransactionsCubit extends Cubit<TransactionsState> {
     required UpdateTransactionUsecase updateTransaction,
     required DeleteTransactionUsecase deleteTransaction,
     required CreateAccountTransferUsecase createAccountTransfer,
-    required GetTransactionsByCreditGroupIdUsecase getTransactionsByCreditGroupId,
+    required GetTransactionsByCreditGroupIdUsecase
+    getTransactionsByCreditGroupId,
     required CreateWalletCreditUsecase createWalletCredit,
     required GetCardsUsecase getCards,
     required GetWalletCreditUsecase getWalletCredit,
     required UpdateWalletCreditUsecase updateWalletCredit,
-  })  : _getTransactions = getTransactions,
-        _createTransaction = createTransaction,
-        _updateTransaction = updateTransaction,
-        _deleteTransaction = deleteTransaction,
-        _createAccountTransfer = createAccountTransfer,
-        _getTransactionsByCreditGroupId = getTransactionsByCreditGroupId,
-        _createWalletCredit = createWalletCredit,
-        _getCards = getCards,
-        _getWalletCredit = getWalletCredit,
-        _updateWalletCredit = updateWalletCredit,
-        super(const TransactionsInitial());
+  }) : _getTransactions = getTransactions,
+       _createTransaction = createTransaction,
+       _updateTransaction = updateTransaction,
+       _deleteTransaction = deleteTransaction,
+       _createAccountTransfer = createAccountTransfer,
+       _getTransactionsByCreditGroupId = getTransactionsByCreditGroupId,
+       _createWalletCredit = createWalletCredit,
+       _getCards = getCards,
+       _getWalletCredit = getWalletCredit,
+       _updateWalletCredit = updateWalletCredit,
+       super(const TransactionsInitial());
 
   bool _transactionsOfflineFlag() => switch (state) {
-        TransactionsLoaded(:final servedFromOfflineCache) => servedFromOfflineCache,
-        TransactionsActionError(:final servedFromOfflineCache) => servedFromOfflineCache,
-        _ => false,
-      };
+    TransactionsLoaded(:final servedFromOfflineCache) => servedFromOfflineCache,
+    TransactionsActionError(:final servedFromOfflineCache) =>
+      servedFromOfflineCache,
+    _ => false,
+  };
 
   /// Last month that was requested via [loadForMonth] (normalized local day 1).
   DateTime? _loadedMonthStart;
@@ -65,7 +67,10 @@ class TransactionsCubit extends Cubit<TransactionsState> {
 
   /// Loads rows for the local calendar month of [monthStartLocal] (year/month; day ignored).
   /// Discards responses from older requests if the user switches month quickly.
-  Future<void> loadForMonth(DateTime monthStartLocal, {bool showLoading = true}) async {
+  Future<void> loadForMonth(
+    DateTime monthStartLocal, {
+    bool showLoading = true,
+  }) async {
     final month = DateTime(monthStartLocal.year, monthStartLocal.month, 1);
     _loadedMonthStart = month;
     final gen = ++_loadGeneration;
@@ -75,11 +80,15 @@ class TransactionsCubit extends Cubit<TransactionsState> {
       if (gen != _loadGeneration) return;
       if (isClosed) return;
       final transactions = bundle.value;
-      AppLogger.info('transactions loaded for ${month.year}-${month.month}: ${transactions.length}');
-      emit(TransactionsLoaded(
-        transactions,
-        servedFromOfflineCache: bundle.servedFromOfflineCache,
-      ));
+      AppLogger.info(
+        'transactions loaded for ${month.year}-${month.month}: ${transactions.length}',
+      );
+      emit(
+        TransactionsLoaded(
+          transactions,
+          servedFromOfflineCache: bundle.servedFromOfflineCache,
+        ),
+      );
     } catch (e, s) {
       if (gen != _loadGeneration) return;
       if (isClosed) return;
@@ -97,17 +106,21 @@ class TransactionsCubit extends Cubit<TransactionsState> {
       final bundle = await _getTransactions(snapshotMonth);
       if (snapshotMonth != _loadedMonthStart) return;
       if (isClosed) return;
-      emit(TransactionsLoaded(
-        bundle.value,
-        servedFromOfflineCache: bundle.servedFromOfflineCache,
-      ));
+      emit(
+        TransactionsLoaded(
+          bundle.value,
+          servedFromOfflineCache: bundle.servedFromOfflineCache,
+        ),
+      );
     } catch (e, s) {
       if (isClosed) return;
       AppLogger.error('failed to refetch transactions', e, s);
-      emit(TransactionsActionError(
-        prev,
-        servedFromOfflineCache: _transactionsOfflineFlag(),
-      ));
+      emit(
+        TransactionsActionError(
+          prev,
+          servedFromOfflineCache: _transactionsOfflineFlag(),
+        ),
+      );
     }
   }
 
@@ -128,11 +141,9 @@ class TransactionsCubit extends Cubit<TransactionsState> {
   }) async {
     final current = _currentTransactions();
     AppLogger.debug('creating transaction');
-    final graceMonths =
-        deferredGraceMonths.clamp(0, 1200);
-    final useDeferred = deferredCredit &&
-        cardId != null &&
-        deferredTermMonths >= 2;
+    final graceMonths = deferredGraceMonths.clamp(0, 1200);
+    final useDeferred =
+        deferredCredit && cardId != null && deferredTermMonths >= 2;
 
     try {
       if (useDeferred) {
@@ -196,7 +207,12 @@ class TransactionsCubit extends Cubit<TransactionsState> {
       await _refetchCurrentMonthQuietly();
     } catch (e, s) {
       AppLogger.error('failed to create transaction', e, s);
-      emit(TransactionsActionError(current, servedFromOfflineCache: _transactionsOfflineFlag()));
+      emit(
+        TransactionsActionError(
+          current,
+          servedFromOfflineCache: _transactionsOfflineFlag(),
+        ),
+      );
     }
   }
 
@@ -218,11 +234,14 @@ class TransactionsCubit extends Cubit<TransactionsState> {
   }) async {
     final current = _currentTransactions();
     AppLogger.debug('updating transaction: $id');
-    final creditLedgerKey =
-        (creditId != null && creditId.isNotEmpty) ? creditId : null;
+    final creditLedgerKey = (creditId != null && creditId.isNotEmpty)
+        ? creditId
+        : null;
     try {
       if (creditLedgerKey != null && creditLedgerKey.isNotEmpty) {
-        final siblings = (await _getTransactionsByCreditGroupId(creditLedgerKey)).value;
+        final siblings = (await _getTransactionsByCreditGroupId(
+          creditLedgerKey,
+        )).value;
         if (siblings.isEmpty) {
           await _updateTransaction(
             id: id,
@@ -243,7 +262,8 @@ class TransactionsCubit extends Cubit<TransactionsState> {
           final wc = (await _getWalletCredit(creditLedgerKey)).value;
           final ng = creditGraceMonths;
           final nt = creditTermMonths;
-          final useReschedule = wc != null &&
+          final useReschedule =
+              wc != null &&
               cardId != null &&
               cardId.isNotEmpty &&
               ng != null &&
@@ -396,7 +416,12 @@ class TransactionsCubit extends Cubit<TransactionsState> {
       await _refetchCurrentMonthQuietly();
     } catch (e, s) {
       AppLogger.error('failed to update transaction', e, s);
-      emit(TransactionsActionError(current, servedFromOfflineCache: _transactionsOfflineFlag()));
+      emit(
+        TransactionsActionError(
+          current,
+          servedFromOfflineCache: _transactionsOfflineFlag(),
+        ),
+      );
     }
   }
 
@@ -426,7 +451,12 @@ class TransactionsCubit extends Cubit<TransactionsState> {
       return true;
     } catch (e, s) {
       AppLogger.error('failed transfer', e, s);
-      emit(TransactionsActionError(current, servedFromOfflineCache: _transactionsOfflineFlag()));
+      emit(
+        TransactionsActionError(
+          current,
+          servedFromOfflineCache: _transactionsOfflineFlag(),
+        ),
+      );
       return false;
     }
   }
@@ -447,7 +477,12 @@ class TransactionsCubit extends Cubit<TransactionsState> {
     final gid = source.transferGroupId;
     if (gid == null || gid.isEmpty || gid != target.transferGroupId) {
       AppLogger.error('updateAccountTransfer: invalid or mismatched group id');
-      emit(TransactionsActionError(current, servedFromOfflineCache: _transactionsOfflineFlag()));
+      emit(
+        TransactionsActionError(
+          current,
+          servedFromOfflineCache: _transactionsOfflineFlag(),
+        ),
+      );
       return false;
     }
     AppLogger.debug('transfer update');
@@ -485,7 +520,12 @@ class TransactionsCubit extends Cubit<TransactionsState> {
       return true;
     } catch (e, s) {
       AppLogger.error('failed transfer update', e, s);
-      emit(TransactionsActionError(current, servedFromOfflineCache: _transactionsOfflineFlag()));
+      emit(
+        TransactionsActionError(
+          current,
+          servedFromOfflineCache: _transactionsOfflineFlag(),
+        ),
+      );
       return false;
     }
   }
@@ -497,7 +537,9 @@ class TransactionsCubit extends Cubit<TransactionsState> {
       final idsToDelete = <String>{};
       idsToDelete.add(id);
       if (creditLedgerKey != null && creditLedgerKey.isNotEmpty) {
-        final group = (await _getTransactionsByCreditGroupId(creditLedgerKey)).value;
+        final group = (await _getTransactionsByCreditGroupId(
+          creditLedgerKey,
+        )).value;
         for (final t in group) {
           idsToDelete.add(t.id);
         }
@@ -510,7 +552,12 @@ class TransactionsCubit extends Cubit<TransactionsState> {
       return true;
     } catch (e, s) {
       AppLogger.error('failed to delete transaction', e, s);
-      emit(TransactionsActionError(current, servedFromOfflineCache: _transactionsOfflineFlag()));
+      emit(
+        TransactionsActionError(
+          current,
+          servedFromOfflineCache: _transactionsOfflineFlag(),
+        ),
+      );
       return false;
     }
   }
@@ -530,7 +577,12 @@ class TransactionsCubit extends Cubit<TransactionsState> {
       return true;
     } catch (e, s) {
       AppLogger.error('failed to delete transactions', e, s);
-      emit(TransactionsActionError(current, servedFromOfflineCache: _transactionsOfflineFlag()));
+      emit(
+        TransactionsActionError(
+          current,
+          servedFromOfflineCache: _transactionsOfflineFlag(),
+        ),
+      );
       return false;
     }
   }

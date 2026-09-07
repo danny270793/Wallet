@@ -20,17 +20,17 @@ class TagsCubit extends Cubit<TagsState> {
     required CreateTagUsecase createTag,
     required UpdateTagUsecase updateTag,
     required DeleteTagUsecase deleteTag,
-  })  : _getTags = getTags,
-        _createTag = createTag,
-        _updateTag = updateTag,
-        _deleteTag = deleteTag,
-        super(const TagsInitial());
+  }) : _getTags = getTags,
+       _createTag = createTag,
+       _updateTag = updateTag,
+       _deleteTag = deleteTag,
+       super(const TagsInitial());
 
   bool _preserveOfflineCacheFlag() => switch (state) {
-        TagsLoaded(:final servedFromOfflineCache) => servedFromOfflineCache,
-        TagsActionError(:final servedFromOfflineCache) => servedFromOfflineCache,
-        _ => false,
-      };
+    TagsLoaded(:final servedFromOfflineCache) => servedFromOfflineCache,
+    TagsActionError(:final servedFromOfflineCache) => servedFromOfflineCache,
+    _ => false,
+  };
 
   Future<void> load({bool showLoading = true}) async {
     AppLogger.debug('loading tags');
@@ -39,7 +39,9 @@ class TagsCubit extends Cubit<TagsState> {
       final bundle = await _getTags();
       final tags = sortedByName(bundle.value, (t) => t.name);
       AppLogger.info('tags loaded: ${tags.length}');
-      emit(TagsLoaded(tags, servedFromOfflineCache: bundle.servedFromOfflineCache));
+      emit(
+        TagsLoaded(tags, servedFromOfflineCache: bundle.servedFromOfflineCache),
+      );
     } catch (e, s) {
       AppLogger.error('failed to load tags', e, s);
       emit(TagsError(failure: classifyRemoteLoadError(e)));
@@ -52,13 +54,20 @@ class TagsCubit extends Cubit<TagsState> {
     try {
       final tag = await _createTag(name: name, description: description);
       AppLogger.info('tag created: ${tag.id}');
-      emit(TagsLoaded(
-        sortedByName([...current, tag], (t) => t.name),
-        servedFromOfflineCache: _preserveOfflineCacheFlag(),
-      ));
+      emit(
+        TagsLoaded(
+          sortedByName([...current, tag], (t) => t.name),
+          servedFromOfflineCache: _preserveOfflineCacheFlag(),
+        ),
+      );
     } catch (e, s) {
       AppLogger.error('failed to create tag', e, s);
-      emit(TagsActionError(current, servedFromOfflineCache: _preserveOfflineCacheFlag()));
+      emit(
+        TagsActionError(
+          current,
+          servedFromOfflineCache: _preserveOfflineCacheFlag(),
+        ),
+      );
     }
   }
 
@@ -71,18 +80,30 @@ class TagsCubit extends Cubit<TagsState> {
     final current = _currentTags();
     AppLogger.debug('updating tag: $id');
     try {
-      final updated = await _updateTag(id: id, name: name, description: description, hidden: hidden);
+      final updated = await _updateTag(
+        id: id,
+        name: name,
+        description: description,
+        hidden: hidden,
+      );
       AppLogger.info('tag updated: ${updated.id}');
-      emit(TagsLoaded(
-        sortedByName(
-          current.map((a) => a.id == id ? updated : a).toList(),
-          (t) => t.name,
+      emit(
+        TagsLoaded(
+          sortedByName(
+            current.map((a) => a.id == id ? updated : a).toList(),
+            (t) => t.name,
+          ),
+          servedFromOfflineCache: _preserveOfflineCacheFlag(),
         ),
-        servedFromOfflineCache: _preserveOfflineCacheFlag(),
-      ));
+      );
     } catch (e, s) {
       AppLogger.error('failed to update tag', e, s);
-      emit(TagsActionError(current, servedFromOfflineCache: _preserveOfflineCacheFlag()));
+      emit(
+        TagsActionError(
+          current,
+          servedFromOfflineCache: _preserveOfflineCacheFlag(),
+        ),
+      );
     }
   }
 
@@ -92,14 +113,24 @@ class TagsCubit extends Cubit<TagsState> {
     try {
       await _deleteTag(id: id);
       AppLogger.info('tag deleted: $id');
-      emit(TagsLoaded(
-        sortedByName(current.where((a) => a.id != id).toList(), (t) => t.name),
-        servedFromOfflineCache: _preserveOfflineCacheFlag(),
-      ));
+      emit(
+        TagsLoaded(
+          sortedByName(
+            current.where((a) => a.id != id).toList(),
+            (t) => t.name,
+          ),
+          servedFromOfflineCache: _preserveOfflineCacheFlag(),
+        ),
+      );
       return true;
     } catch (e, s) {
       AppLogger.error('failed to delete tag', e, s);
-      emit(TagsActionError(current, servedFromOfflineCache: _preserveOfflineCacheFlag()));
+      emit(
+        TagsActionError(
+          current,
+          servedFromOfflineCache: _preserveOfflineCacheFlag(),
+        ),
+      );
       return false;
     }
   }

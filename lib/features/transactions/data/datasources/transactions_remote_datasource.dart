@@ -4,19 +4,28 @@ import '../../domain/entities/transaction_entity.dart';
 
 abstract class TransactionsRemoteDatasource {
   /// [monthStartLocal] normalized to local calendar day 1; range is \[start local, next month local).
-  Future<List<TransactionEntity>> getTransactionsForMonth(DateTime monthStartLocal);
+  Future<List<TransactionEntity>> getTransactionsForMonth(
+    DateTime monthStartLocal,
+  );
 
   /// [yearStartLocal] normalized to Jan 1 local; range is \[Jan 1, Jan 1 next year).
-  Future<List<TransactionEntity>> getTransactionsForYear(DateTime yearStartLocal);
+  Future<List<TransactionEntity>> getTransactionsForYear(
+    DateTime yearStartLocal,
+  );
 
   /// All-time search on [description] (case-insensitive substring). RLS limits to current user.
-  Future<List<TransactionEntity>> searchTransactionsByDescription(String query, {int limit = 200});
+  Future<List<TransactionEntity>> searchTransactionsByDescription(
+    String query, {
+    int limit = 200,
+  });
 
   /// Rows with deferred-installment linkage (creditId set), deleted excluded.
   Future<List<TransactionEntity>> listTransactionsHavingCreditGroup();
 
   /// All installments with the given wallet_credits row id ([creditId]).
-  Future<List<TransactionEntity>> getTransactionsByCreditGroupId(String creditId);
+  Future<List<TransactionEntity>> getTransactionsByCreditGroupId(
+    String creditId,
+  );
   Future<TransactionEntity> createTransaction({
     String? accountId,
     String? cardId,
@@ -62,7 +71,9 @@ wallet_credits(transactedAt)
 ''';
 
   @override
-  Future<List<TransactionEntity>> getTransactionsForMonth(DateTime monthStartLocal) async {
+  Future<List<TransactionEntity>> getTransactionsForMonth(
+    DateTime monthStartLocal,
+  ) async {
     final y = monthStartLocal.year;
     final m = monthStartLocal.month;
     final startLocal = DateTime(y, m, 1);
@@ -77,11 +88,15 @@ wallet_credits(transactedAt)
         .gte('transactedAt', startUtc)
         .lt('transactedAt', endUtc)
         .order('transactedAt', ascending: false);
-    return (data as List).map((e) => TransactionEntity.fromJson(e as Map<String, dynamic>)).toList();
+    return (data as List)
+        .map((e) => TransactionEntity.fromJson(e as Map<String, dynamic>))
+        .toList();
   }
 
   @override
-  Future<List<TransactionEntity>> getTransactionsByCreditGroupId(String creditId) async {
+  Future<List<TransactionEntity>> getTransactionsByCreditGroupId(
+    String creditId,
+  ) async {
     if (creditId.isEmpty) return [];
     AppLogger.debug('getTransactionsByCreditId');
     final data = await _client
@@ -90,7 +105,9 @@ wallet_credits(transactedAt)
         .eq('creditId', creditId)
         .isFilter('deletedAt', null)
         .order('transactedAt', ascending: true);
-    return (data as List).map((e) => TransactionEntity.fromJson(e as Map<String, dynamic>)).toList();
+    return (data as List)
+        .map((e) => TransactionEntity.fromJson(e as Map<String, dynamic>))
+        .toList();
   }
 
   @override
@@ -102,11 +119,15 @@ wallet_credits(transactedAt)
         .not('creditId', 'is', 'null')
         .isFilter('deletedAt', null)
         .order('transactedAt', ascending: false);
-    return (data as List).map((e) => TransactionEntity.fromJson(e as Map<String, dynamic>)).toList();
+    return (data as List)
+        .map((e) => TransactionEntity.fromJson(e as Map<String, dynamic>))
+        .toList();
   }
 
   @override
-  Future<List<TransactionEntity>> getTransactionsForYear(DateTime yearStartLocal) async {
+  Future<List<TransactionEntity>> getTransactionsForYear(
+    DateTime yearStartLocal,
+  ) async {
     final y = yearStartLocal.year;
     final endExclusiveLocal = DateTime(y + 1, 1, 1);
     final endUtc = endExclusiveLocal.toUtc().toIso8601String();
@@ -117,14 +138,22 @@ wallet_credits(transactedAt)
         .isFilter('deletedAt', null)
         .lt('transactedAt', endUtc)
         .order('transactedAt', ascending: false);
-    return (data as List).map((e) => TransactionEntity.fromJson(e as Map<String, dynamic>)).toList();
+    return (data as List)
+        .map((e) => TransactionEntity.fromJson(e as Map<String, dynamic>))
+        .toList();
   }
 
   @override
-  Future<List<TransactionEntity>> searchTransactionsByDescription(String query, {int limit = 200}) async {
+  Future<List<TransactionEntity>> searchTransactionsByDescription(
+    String query, {
+    int limit = 200,
+  }) async {
     final q = query.trim();
     if (q.isEmpty) return [];
-    final escaped = q.replaceAll('\\', r'\\').replaceAll('%', r'\%').replaceAll('_', r'\_');
+    final escaped = q
+        .replaceAll('\\', r'\\')
+        .replaceAll('%', r'\%')
+        .replaceAll('_', r'\_');
     final pattern = '%$escaped%';
     AppLogger.debug('searchTransactionsByDescription: ${q.length} chars');
     final data = await _client
@@ -134,7 +163,9 @@ wallet_credits(transactedAt)
         .ilike('description', pattern)
         .order('transactedAt', ascending: false)
         .limit(limit);
-    return (data as List).map((e) => TransactionEntity.fromJson(e as Map<String, dynamic>)).toList();
+    return (data as List)
+        .map((e) => TransactionEntity.fromJson(e as Map<String, dynamic>))
+        .toList();
   }
 
   @override
@@ -166,7 +197,11 @@ wallet_credits(transactedAt)
       if (transferGroupId != null) 'transferGroupId': transferGroupId,
       if (creditId != null) 'creditId': creditId,
     };
-    final data = await _client.from('wallet_transactions').insert(row).select(_transactionSelectEmbedded).single();
+    final data = await _client
+        .from('wallet_transactions')
+        .insert(row)
+        .select(_transactionSelectEmbedded)
+        .single();
     return TransactionEntity.fromJson(data);
   }
 

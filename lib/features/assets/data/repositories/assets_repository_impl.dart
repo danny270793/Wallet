@@ -18,7 +18,8 @@ class AssetsRepositoryImpl implements AssetsRepository {
   );
 
   @override
-  Future<OfflineServedBundle<List<AssetEntity>>> getAssets() => fetchListWithOfflineCache(
+  Future<OfflineServedBundle<List<AssetEntity>>> getAssets() =>
+      fetchListWithOfflineCache(
         session: _offlineSession,
         cache: _offlineCache,
         cacheKey: WalletOfflineCacheKeys.assets,
@@ -35,15 +36,14 @@ class AssetsRepositoryImpl implements AssetsRepository {
     required DateTime boughtAt,
     DateTime? endedAt,
     double? soldValue,
-  }) =>
-      _datasource.createAsset(
-        name: name,
-        provider: provider,
-        value: value,
-        boughtAt: boughtAt,
-        endedAt: endedAt,
-        soldValue: soldValue,
-      );
+  }) => _datasource.createAsset(
+    name: name,
+    provider: provider,
+    value: value,
+    boughtAt: boughtAt,
+    endedAt: endedAt,
+    soldValue: soldValue,
+  );
 
   @override
   Future<AssetEntity> updateAsset({
@@ -54,16 +54,15 @@ class AssetsRepositoryImpl implements AssetsRepository {
     required DateTime boughtAt,
     DateTime? endedAt,
     double? soldValue,
-  }) =>
-      _datasource.updateAsset(
-        id: id,
-        name: name,
-        provider: provider,
-        value: value,
-        boughtAt: boughtAt,
-        endedAt: endedAt,
-        soldValue: soldValue,
-      );
+  }) => _datasource.updateAsset(
+    id: id,
+    name: name,
+    provider: provider,
+    value: value,
+    boughtAt: boughtAt,
+    endedAt: endedAt,
+    soldValue: soldValue,
+  );
 
   @override
   Future<void> deleteAsset({required String id}) =>

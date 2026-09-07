@@ -189,15 +189,14 @@ class _TagLegendRow extends StatelessWidget {
                     label,
                     overflow: TextOverflow.ellipsis,
                     style: theme.textTheme.bodyMedium?.copyWith(
-                      fontWeight:
-                          selected ? FontWeight.w600 : FontWeight.normal,
+                      fontWeight: selected
+                          ? FontWeight.w600
+                          : FontWeight.normal,
                     ),
                   ),
                 ),
                 Text(
-                  l10n.transactionAmountValue(
-                    expenseTotal.toStringAsFixed(2),
-                  ),
+                  l10n.transactionAmountValue(expenseTotal.toStringAsFixed(2)),
                   style: theme.textTheme.bodyMedium?.copyWith(
                     fontWeight: FontWeight.w600,
                     fontFeatures: const [FontFeature.tabularFigures()],
@@ -232,6 +231,7 @@ class MonthlyTagPieChart extends StatelessWidget {
   final AppLocalizations l10n;
   final List<TransactionEntity> transactions;
   final bool includeIgnored;
+
   /// When true, pies use `value × percentage`; when false, full row [TransactionEntity.value].
   final bool useWeightedAmounts;
   final Set<String>? tagKeysFilter;
@@ -463,11 +463,13 @@ class MonthlyTagPieChart extends StatelessWidget {
               color: s.color,
               l10n: l10n,
               theme: theme,
-              selected: tagKeysFilter != null &&
+              selected:
+                  tagKeysFilter != null &&
                   tagKeysFilter!.length == 1 &&
                   tagKeysFilter!.contains(s.keyId),
               onTap: () {
-                final onlyThis = tagKeysFilter?.length == 1 &&
+                final onlyThis =
+                    tagKeysFilter?.length == 1 &&
                     tagKeysFilter!.contains(s.keyId);
                 onTagKeysFilterChanged(onlyThis ? null : {s.keyId});
               },

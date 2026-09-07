@@ -7,8 +7,8 @@ class SettingsCubit extends Cubit<SettingsState> {
   final SignOutUsecase _signOut;
 
   SettingsCubit({required SignOutUsecase signOut})
-      : _signOut = signOut,
-        super(const SettingsInitial());
+    : _signOut = signOut,
+      super(const SettingsInitial());
 
   Future<void> signOut() async {
     AppLogger.debug('sign out requested');

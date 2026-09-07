@@ -6,5 +6,6 @@ class GetAccountsUsecase {
   final AccountsRepository _repository;
   const GetAccountsUsecase(this._repository);
 
-  Future<OfflineServedBundle<List<AccountEntity>>> call() => _repository.getAccounts();
+  Future<OfflineServedBundle<List<AccountEntity>>> call() =>
+      _repository.getAccounts();
 }

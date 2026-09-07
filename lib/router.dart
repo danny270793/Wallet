@@ -47,15 +47,18 @@ final router = GoRouter(
       routes: [
         GoRoute(
           path: 'about',
-          builder: (context, state) => const LegalInfoPage(kind: LegalInfoKind.about),
+          builder: (context, state) =>
+              const LegalInfoPage(kind: LegalInfoKind.about),
         ),
         GoRoute(
           path: 'privacy',
-          builder: (context, state) => const LegalInfoPage(kind: LegalInfoKind.privacy),
+          builder: (context, state) =>
+              const LegalInfoPage(kind: LegalInfoKind.privacy),
         ),
         GoRoute(
           path: 'terms',
-          builder: (context, state) => const LegalInfoPage(kind: LegalInfoKind.terms),
+          builder: (context, state) =>
+              const LegalInfoPage(kind: LegalInfoKind.terms),
         ),
         GoRoute(
           path: 'cache',
@@ -73,13 +76,28 @@ final router = GoRouter(
             child: const CreditsPage(),
           ),
         ),
-        GoRoute(path: '/dashboard/monthly', builder: (context, state) => const DashboardPage()),
-        GoRoute(path: '/dashboard/yearly', builder: (context, state) => const YearlyDashboardPage()),
-        GoRoute(path: '/accounts', builder: (context, state) => const AccountsPage()),
+        GoRoute(
+          path: '/dashboard/monthly',
+          builder: (context, state) => const DashboardPage(),
+        ),
+        GoRoute(
+          path: '/dashboard/yearly',
+          builder: (context, state) => const YearlyDashboardPage(),
+        ),
+        GoRoute(
+          path: '/accounts',
+          builder: (context, state) => const AccountsPage(),
+        ),
         GoRoute(path: '/cards', builder: (context, state) => const CardsPage()),
-        GoRoute(path: '/categories', builder: (context, state) => const CategoriesPage()),
+        GoRoute(
+          path: '/categories',
+          builder: (context, state) => const CategoriesPage(),
+        ),
         GoRoute(path: '/tags', builder: (context, state) => const TagsPage()),
-        GoRoute(path: '/assets', builder: (context, state) => const AssetsPage()),
+        GoRoute(
+          path: '/assets',
+          builder: (context, state) => const AssetsPage(),
+        ),
         GoRoute(
           path: '/transactions',
           builder: (context, state) {
@@ -92,14 +110,26 @@ final router = GoRouter(
             final tagId = state.uri.queryParameters['tagId'];
             final tagName = state.uri.queryParameters['tagName'];
             return TransactionsPage(
-              accountIdFilter: (accountId == null || accountId.isEmpty) ? null : accountId,
-              accountNameFilter: (accountName == null || accountName.isEmpty) ? null : accountName,
+              accountIdFilter: (accountId == null || accountId.isEmpty)
+                  ? null
+                  : accountId,
+              accountNameFilter: (accountName == null || accountName.isEmpty)
+                  ? null
+                  : accountName,
               cardIdFilter: (cardId == null || cardId.isEmpty) ? null : cardId,
-              cardNameFilter: (cardName == null || cardName.isEmpty) ? null : cardName,
-              categoryIdFilter: (categoryId == null || categoryId.isEmpty) ? null : categoryId,
-              categoryNameFilter: (categoryName == null || categoryName.isEmpty) ? null : categoryName,
+              cardNameFilter: (cardName == null || cardName.isEmpty)
+                  ? null
+                  : cardName,
+              categoryIdFilter: (categoryId == null || categoryId.isEmpty)
+                  ? null
+                  : categoryId,
+              categoryNameFilter: (categoryName == null || categoryName.isEmpty)
+                  ? null
+                  : categoryName,
               tagIdFilter: (tagId == null || tagId.isEmpty) ? null : tagId,
-              tagNameFilter: (tagName == null || tagName.isEmpty) ? null : tagName,
+              tagNameFilter: (tagName == null || tagName.isEmpty)
+                  ? null
+                  : tagName,
             );
           },
         ),

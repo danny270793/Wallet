@@ -1,5 +1,7 @@
 /// Optional leading "(n/m) " label for deferred credit installment rows.
-final RegExp leadingCreditInstallmentDescriptionPrefix = RegExp(r'^\(\d+/\d+\)\s*');
+final RegExp leadingCreditInstallmentDescriptionPrefix = RegExp(
+  r'^\(\d+/\d+\)\s*',
+);
 
 /// Removes a leading "(n/m) " prefix saved on [description] (for edit UX).
 String stripLeadingCreditInstallmentDescription(String? description) {

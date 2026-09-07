@@ -7,10 +7,7 @@ class NoDeviceConnectivityException implements Exception {
 }
 
 /// Distinguishes offline / transport failures from other remote errors for UX copy.
-enum RemoteLoadFailure {
-  networkUnavailable,
-  requestFailed,
-}
+enum RemoteLoadFailure { networkUnavailable, requestFailed }
 
 /// Classifies [error] from HTTP / Supabase / [SocketException] chains (no [BuildContext]).
 RemoteLoadFailure classifyRemoteLoadError(Object error) {

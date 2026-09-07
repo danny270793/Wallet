@@ -62,8 +62,11 @@ class AssetsSupabaseDatasource implements AssetsRemoteDatasource {
       if (endedAt case final e?) 'endedAt': e.toUtc().toIso8601String(),
       if (soldValue case final v?) 'soldValue': v,
     };
-    final dynamic data =
-        await _client.from('wallet_assets').insert(row).select().single();
+    final dynamic data = await _client
+        .from('wallet_assets')
+        .insert(row)
+        .select()
+        .single();
     final map = Map<String, dynamic>.from(data as Map);
     return AssetEntity.fromJson(map);
   }
@@ -87,8 +90,12 @@ class AssetsSupabaseDatasource implements AssetsRemoteDatasource {
       'endedAt': endedAt?.toUtc().toIso8601String(),
       'soldValue': soldValue,
     };
-    final dynamic data =
-        await _client.from('wallet_assets').update(row).eq('id', id).select().single();
+    final dynamic data = await _client
+        .from('wallet_assets')
+        .update(row)
+        .eq('id', id)
+        .select()
+        .single();
     final map = Map<String, dynamic>.from(data as Map);
     return AssetEntity.fromJson(map);
   }

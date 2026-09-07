@@ -66,7 +66,9 @@ class _AssetEditorSheetState extends State<AssetEditorSheet> {
     if (a != null) {
       _nameController = TextEditingController(text: a.name);
       _providerController = TextEditingController(text: a.provider);
-      _valueController = TextEditingController(text: a.value.toStringAsFixed(2));
+      _valueController = TextEditingController(
+        text: a.value.toStringAsFixed(2),
+      );
       _soldController = TextEditingController(
         text: a.soldValue != null ? a.soldValue!.toStringAsFixed(2) : '',
       );
@@ -108,8 +110,9 @@ class _AssetEditorSheetState extends State<AssetEditorSheet> {
   void _syncEndedDisplay() {
     final e = _endedAt;
     final locale = Localizations.localeOf(context).toString();
-    _endedDisplayController.text =
-        e == null ? '' : DateFormat.yMd(locale).format(e);
+    _endedDisplayController.text = e == null
+        ? ''
+        : DateFormat.yMd(locale).format(e);
   }
 
   Future<void> _pickBought() async {
@@ -164,11 +167,13 @@ class _AssetEditorSheetState extends State<AssetEditorSheet> {
       return;
     }
 
-    final v = double.tryParse(_valueController.text.trim().replaceAll(',', '.'));
+    final v = double.tryParse(
+      _valueController.text.trim().replaceAll(',', '.'),
+    );
     if (v == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(widget.l10n.assetInvalidNumber)),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(widget.l10n.assetInvalidNumber)));
       return;
     }
 
@@ -177,9 +182,9 @@ class _AssetEditorSheetState extends State<AssetEditorSheet> {
     if (soldText.isNotEmpty) {
       sold = double.tryParse(soldText.replaceAll(',', '.'));
       if (sold == null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(widget.l10n.assetInvalidNumber)),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(widget.l10n.assetInvalidNumber)));
         return;
       }
     }
@@ -242,8 +247,9 @@ class _AssetEditorSheetState extends State<AssetEditorSheet> {
                 TextFormField(
                   controller: _nameController,
                   decoration: InputDecoration(labelText: l10n.accountName),
-                  validator: (v) =>
-                      (v == null || v.trim().isEmpty) ? l10n.fieldRequired : null,
+                  validator: (v) => (v == null || v.trim().isEmpty)
+                      ? l10n.fieldRequired
+                      : null,
                   autofocus: isCreate,
                   textInputAction: TextInputAction.next,
                 ),
@@ -257,11 +263,15 @@ class _AssetEditorSheetState extends State<AssetEditorSheet> {
                 TextFormField(
                   controller: _valueController,
                   decoration: InputDecoration(labelText: l10n.assetValue),
-                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                  keyboardType: const TextInputType.numberWithOptions(
+                    decimal: true,
+                  ),
                   textInputAction: TextInputAction.next,
                   validator: (s) {
-                    if (s == null || s.trim().isEmpty) return l10n.fieldRequired;
-                    if (double.tryParse(s.trim().replaceAll(',', '.')) == null) {
+                    if (s == null || s.trim().isEmpty)
+                      return l10n.fieldRequired;
+                    if (double.tryParse(s.trim().replaceAll(',', '.')) ==
+                        null) {
                       return l10n.assetInvalidNumber;
                     }
                     return null;
@@ -279,7 +289,10 @@ class _AssetEditorSheetState extends State<AssetEditorSheet> {
                         controller: _boughtDisplayController,
                         decoration: InputDecoration(
                           labelText: l10n.assetPurchaseDate,
-                          suffixIcon: const Icon(Icons.calendar_today_outlined, size: 20),
+                          suffixIcon: const Icon(
+                            Icons.calendar_today_outlined,
+                            size: 20,
+                          ),
                         ),
                         onTap: _pickBought,
                       ),
@@ -294,8 +307,12 @@ class _AssetEditorSheetState extends State<AssetEditorSheet> {
                         decoration: InputDecoration(
                           labelText: l10n.assetEndDate,
                           hintText: '—',
-                          suffixIcon:
-                              Icon(_endedAt != null ? Icons.event : Icons.event_outlined, size: 20),
+                          suffixIcon: Icon(
+                            _endedAt != null
+                                ? Icons.event
+                                : Icons.event_outlined,
+                            size: 20,
+                          ),
                         ),
                         onTap: _pickEnded,
                       ),
@@ -303,7 +320,9 @@ class _AssetEditorSheetState extends State<AssetEditorSheet> {
                     if (_endedAt != null)
                       IconButton(
                         icon: const Icon(Icons.clear_rounded),
-                        tooltip: MaterialLocalizations.of(context).cancelButtonLabel,
+                        tooltip: MaterialLocalizations.of(
+                          context,
+                        ).cancelButtonLabel,
                         onPressed: _clearEnded,
                       ),
                   ],
@@ -311,8 +330,12 @@ class _AssetEditorSheetState extends State<AssetEditorSheet> {
                 const SizedBox(height: 12),
                 TextFormField(
                   controller: _soldController,
-                  decoration: InputDecoration(labelText: l10n.assetSoldAmountField),
-                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                  decoration: InputDecoration(
+                    labelText: l10n.assetSoldAmountField,
+                  ),
+                  keyboardType: const TextInputType.numberWithOptions(
+                    decimal: true,
+                  ),
                 ),
               ],
             ),

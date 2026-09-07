@@ -23,13 +23,12 @@ class WalletCreditsRepositoryImpl implements WalletCreditsRepository {
     required int graceMonths,
     required int termMonths,
     String? description,
-  }) =>
-      _datasource.insertCredit(
-        transactedAt: transactedAt,
-        graceMonths: graceMonths,
-        termMonths: termMonths,
-        description: description,
-      );
+  }) => _datasource.insertCredit(
+    transactedAt: transactedAt,
+    graceMonths: graceMonths,
+    termMonths: termMonths,
+    description: description,
+  );
 
   @override
   Future<OfflineServedBundle<WalletCreditEntity?>> getCredit(String id) =>
@@ -48,11 +47,10 @@ class WalletCreditsRepositoryImpl implements WalletCreditsRepository {
     required int graceMonths,
     required int termMonths,
     DateTime? transactedAt,
-  }) =>
-      _datasource.updateCreditGracing(
-        id: id,
-        graceMonths: graceMonths,
-        termMonths: termMonths,
-        transactedAt: transactedAt,
-      );
+  }) => _datasource.updateCreditGracing(
+    id: id,
+    graceMonths: graceMonths,
+    termMonths: termMonths,
+    transactedAt: transactedAt,
+  );
 }

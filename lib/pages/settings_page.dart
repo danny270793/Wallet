@@ -123,10 +123,7 @@ Future<void> _setBiometricUnlockEnabled(
   }
   final ok = await ctrl.localAuth.authenticate(
     localizedReason: l10n.settingsBiometricAuthReason,
-    options: const AuthenticationOptions(
-      biometricOnly: true,
-      stickyAuth: true,
-    ),
+    options: const AuthenticationOptions(biometricOnly: true, stickyAuth: true),
   );
   if (!context.mounted) {
     return;
@@ -157,9 +154,9 @@ Future<void> _showChangeEmailSheet(
   );
   if (ok == true && context.mounted) {
     onChanged?.call();
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(l10n.settingsChangeEmailSuccess)),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(l10n.settingsChangeEmailSuccess)));
   }
 }
 
@@ -173,16 +170,13 @@ Future<void> _showChangePasswordSheet(
     isScrollControlled: true,
     builder: (_) => BottomSheetPinnedTitleScrollView(
       title: l10n.settingsChangePasswordDialogTitle,
-      child: _ChangePasswordSheetBody(
-        hostContext: context,
-        l10n: l10n,
-      ),
+      child: _ChangePasswordSheetBody(hostContext: context, l10n: l10n),
     ),
   );
   if (ok == true && context.mounted) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(l10n.settingsChangePasswordSuccess)),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(l10n.settingsChangePasswordSuccess)));
   }
 }
 
@@ -199,7 +193,10 @@ class _SettingsPageState extends State<SettingsPage> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
-      unawaited(getIt<AppBiometricUnlockController>().refreshAuthenticatorAvailability());
+      unawaited(
+        getIt<AppBiometricUnlockController>()
+            .refreshAuthenticatorAvailability(),
+      );
     });
   }
 
@@ -300,11 +297,11 @@ class _SettingsPageState extends State<SettingsPage> {
                       value: bio.enabled,
                       onChanged: bio.authenticatorAvailable
                           ? (v) => _setBiometricUnlockEnabled(
-                                context,
-                                l10n,
-                                bio,
-                                v,
-                              )
+                              context,
+                              l10n,
+                              bio,
+                              v,
+                            )
                           : null,
                     );
                   },
@@ -498,9 +495,9 @@ class _ChangeEmailSheetBodyState extends State<_ChangeEmailSheetBody> {
   }
 
   void _snack(String message) {
-    ScaffoldMessenger.of(widget.hostContext).showSnackBar(
-      SnackBar(content: Text(message)),
-    );
+    ScaffoldMessenger.of(
+      widget.hostContext,
+    ).showSnackBar(SnackBar(content: Text(message)));
   }
 
   Future<void> _submit() async {
@@ -607,9 +604,9 @@ class _ChangePasswordSheetBodyState extends State<_ChangePasswordSheetBody> {
   }
 
   void _snack(String message) {
-    ScaffoldMessenger.of(widget.hostContext).showSnackBar(
-      SnackBar(content: Text(message)),
-    );
+    ScaffoldMessenger.of(
+      widget.hostContext,
+    ).showSnackBar(SnackBar(content: Text(message)));
   }
 
   Future<void> _submit() async {
@@ -651,8 +648,7 @@ class _ChangePasswordSheetBodyState extends State<_ChangePasswordSheetBody> {
                 icon: Icon(
                   _obscureNew ? Icons.visibility_off : Icons.visibility,
                 ),
-                onPressed: () =>
-                    setState(() => _obscureNew = !_obscureNew),
+                onPressed: () => setState(() => _obscureNew = !_obscureNew),
               ),
             ),
             enabled: !_loading,

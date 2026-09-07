@@ -106,7 +106,8 @@ class _AccountsView extends StatelessWidget {
 
     final offlineCached = switch (state) {
       AccountsLoaded(:final servedFromOfflineCache) => servedFromOfflineCache,
-      AccountsActionError(:final servedFromOfflineCache) => servedFromOfflineCache,
+      AccountsActionError(:final servedFromOfflineCache) =>
+        servedFromOfflineCache,
       _ => false,
     };
 

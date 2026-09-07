@@ -17,18 +17,17 @@ class CreateTransactionUsecase {
     required double percentage,
     String? transferGroupId,
     String? creditId,
-  }) =>
-      _repository.createTransaction(
-        accountId: accountId,
-        cardId: cardId,
-        categoryId: categoryId,
-        tagId: tagId,
-        description: description,
-        transactedAt: transactedAt,
-        value: value,
-        ignore: ignore,
-        percentage: percentage,
-        transferGroupId: transferGroupId,
-        creditId: creditId,
-      );
+  }) => _repository.createTransaction(
+    accountId: accountId,
+    cardId: cardId,
+    categoryId: categoryId,
+    tagId: tagId,
+    description: description,
+    transactedAt: transactedAt,
+    value: value,
+    ignore: ignore,
+    percentage: percentage,
+    transferGroupId: transferGroupId,
+    creditId: creditId,
+  );
 }

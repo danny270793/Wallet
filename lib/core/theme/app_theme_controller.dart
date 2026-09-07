@@ -19,16 +19,16 @@ enum AppThemePreference {
   }
 
   String get storageValue => switch (this) {
-        AppThemePreference.system => 'system',
-        AppThemePreference.light => 'light',
-        AppThemePreference.dark => 'dark',
-      };
+    AppThemePreference.system => 'system',
+    AppThemePreference.light => 'light',
+    AppThemePreference.dark => 'dark',
+  };
 
   ThemeMode get themeMode => switch (this) {
-        AppThemePreference.system => ThemeMode.system,
-        AppThemePreference.light => ThemeMode.light,
-        AppThemePreference.dark => ThemeMode.dark,
-      };
+    AppThemePreference.system => ThemeMode.system,
+    AppThemePreference.light => ThemeMode.light,
+    AppThemePreference.dark => ThemeMode.dark,
+  };
 }
 
 class AppThemeController extends ChangeNotifier {

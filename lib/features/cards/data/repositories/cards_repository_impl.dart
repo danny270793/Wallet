@@ -18,7 +18,8 @@ class CardsRepositoryImpl implements CardsRepository {
   );
 
   @override
-  Future<OfflineServedBundle<List<CardEntity>>> getCards() => fetchListWithOfflineCache(
+  Future<OfflineServedBundle<List<CardEntity>>> getCards() =>
+      fetchListWithOfflineCache(
         session: _offlineSession,
         cache: _offlineCache,
         cacheKey: WalletOfflineCacheKeys.cards,
@@ -33,13 +34,12 @@ class CardsRepositoryImpl implements CardsRepository {
     String? description,
     int cutDay = 24,
     int payDay = 24,
-  }) =>
-      _datasource.createCard(
-        name: name,
-        description: description,
-        cutDay: cutDay,
-        payDay: payDay,
-      );
+  }) => _datasource.createCard(
+    name: name,
+    description: description,
+    cutDay: cutDay,
+    payDay: payDay,
+  );
 
   @override
   Future<CardEntity> updateCard({
@@ -48,15 +48,15 @@ class CardsRepositoryImpl implements CardsRepository {
     String? description,
     required int cutDay,
     required int payDay,
-  }) =>
-      _datasource.updateCard(
-        id: id,
-        name: name,
-        description: description,
-        cutDay: cutDay,
-        payDay: payDay,
-      );
+  }) => _datasource.updateCard(
+    id: id,
+    name: name,
+    description: description,
+    cutDay: cutDay,
+    payDay: payDay,
+  );
 
   @override
-  Future<void> deleteCard({required String id}) => _datasource.deleteCard(id: id);
+  Future<void> deleteCard({required String id}) =>
+      _datasource.deleteCard(id: id);
 }

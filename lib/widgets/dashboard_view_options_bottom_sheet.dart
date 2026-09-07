@@ -17,7 +17,8 @@ Future<void> showDashboardViewOptionsBottomSheet({
     bool includeIgnored,
     bool useWeightedAmounts,
     bool showCredits,
-  ) onApply,
+  )
+  onApply,
 }) async {
   await showModalBottomSheet<void>(
     context: context,

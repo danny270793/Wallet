@@ -16,10 +16,13 @@ class TransactionEntity extends Equatable {
   final double value;
   final bool ignore;
   final double percentage;
+
   /// Shared id for paired rows (e.g. account transfers); null for normal transactions.
   final String? transferGroupId;
+
   /// FK to wallet_credits when this row is a deferred installment.
   final String? creditId;
+
   /// [wallet_credits.transactedAt] when the credit group row is embedded in the query.
   final DateTime? creditTransactedAt;
   final DateTime createdAt;
@@ -130,7 +133,9 @@ class TransactionEntity extends Equatable {
     Map<String, dynamic>? m;
     if (rel is Map<String, dynamic>) {
       m = rel;
-    } else if (rel is List && rel.isNotEmpty && rel.first is Map<String, dynamic>) {
+    } else if (rel is List &&
+        rel.isNotEmpty &&
+        rel.first is Map<String, dynamic>) {
       m = rel.first as Map<String, dynamic>;
     }
     final ts = m?['transactedAt'];
@@ -148,25 +153,25 @@ class TransactionEntity extends Equatable {
 
   @override
   List<Object?> get props => [
-        id,
-        userId,
-        accountId,
-        cardId,
-        categoryId,
-        tagId,
-        accountName,
-        cardName,
-        categoryName,
-        tagName,
-        description,
-        transactedAt,
-        value,
-        ignore,
-        percentage,
-        transferGroupId,
-        creditId,
-        creditTransactedAt,
-        createdAt,
-        updatedAt,
-      ];
+    id,
+    userId,
+    accountId,
+    cardId,
+    categoryId,
+    tagId,
+    accountName,
+    cardName,
+    categoryName,
+    tagName,
+    description,
+    transactedAt,
+    value,
+    ignore,
+    percentage,
+    transferGroupId,
+    creditId,
+    creditTransactedAt,
+    createdAt,
+    updatedAt,
+  ];
 }

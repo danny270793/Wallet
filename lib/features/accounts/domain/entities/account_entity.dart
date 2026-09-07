@@ -7,6 +7,7 @@ class AccountEntity extends Equatable {
   final String? description;
   final DateTime createdAt;
   final DateTime updatedAt;
+
   /// Sum of transaction `value` amounts (full row amounts, not value×percentage÷100).
   /// From [wallet_accounts_with_balance].
   final double balance;
@@ -42,6 +43,13 @@ class AccountEntity extends Equatable {
   };
 
   @override
-  List<Object?> get props =>
-      [id, userId, name, description, createdAt, updatedAt, balance];
+  List<Object?> get props => [
+    id,
+    userId,
+    name,
+    description,
+    createdAt,
+    updatedAt,
+    balance,
+  ];
 }

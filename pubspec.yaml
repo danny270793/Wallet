@@ -46,6 +46,7 @@ dependencies:
   shared_preferences: ^2.5.3
   local_auth: ^2.3.0
   package_info_plus: ^8.1.2
+  url_launcher: ^6.3.2
   fl_chart: ^1.2.0
 
 dev_dependencies:

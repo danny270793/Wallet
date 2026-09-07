@@ -4,5 +4,6 @@ class DeleteTransactionUsecase {
   final TransactionsRepository _repository;
   const DeleteTransactionUsecase(this._repository);
 
-  Future<void> call({required String id}) => _repository.deleteTransaction(id: id);
+  Future<void> call({required String id}) =>
+      _repository.deleteTransaction(id: id);
 }

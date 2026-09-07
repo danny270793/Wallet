@@ -25,8 +25,9 @@ Future<void> _trustDevProxyCertificateIfNeeded() async {
   if (!kDebugMode) return;
   try {
     final bytes = await rootBundle.load('assets/certs/zscaler_root_ca.pem');
-    SecurityContext.defaultContext
-        .setTrustedCertificatesBytes(bytes.buffer.asUint8List());
+    SecurityContext.defaultContext.setTrustedCertificatesBytes(
+      bytes.buffer.asUint8List(),
+    );
     AppLogger.info('trusted dev proxy certificate');
   } catch (e) {
     AppLogger.info('no dev proxy certificate to trust: $e');
@@ -166,9 +167,7 @@ class _AppState extends State<App> with WidgetsBindingObserver {
             if (_biometricLockActive) {
               return PopScope(
                 canPop: false,
-                child: _BiometricLockScreen(
-                  onUnlocked: _clearBiometricLock,
-                ),
+                child: _BiometricLockScreen(onUnlocked: _clearBiometricLock),
               );
             }
             return child ?? const SizedBox.shrink();

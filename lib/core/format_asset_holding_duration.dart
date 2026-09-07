@@ -36,7 +36,11 @@ AssetHoldingYmd? assetHoldingCalendarYmd(DateTime boughtAt, DateTime? endedAt) {
 /// Matches intuitive cases such as exactly `2m` → divisor `2`; `200 / 2 = 100` per mo.
 ///
 /// Returns `null` when the holding length is effectively zero calendar days (`0y 0m 0d`) or inverted.
-double? assetValuePerApproximateCalendarMonth(double value, DateTime boughtAt, DateTime? endedAt) {
+double? assetValuePerApproximateCalendarMonth(
+  double value,
+  DateTime boughtAt,
+  DateTime? endedAt,
+) {
   final ymd = assetHoldingCalendarYmd(boughtAt, endedAt);
   if (ymd == null) {
     return null;

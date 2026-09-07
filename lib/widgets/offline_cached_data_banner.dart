@@ -37,9 +37,9 @@ class OfflineCachedDataBanner extends StatelessWidget {
                 child: Text(
                   l10n.cachedDataOfflineBanner,
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: scheme.onSecondaryContainer,
-                        fontWeight: FontWeight.w600,
-                      ),
+                    color: scheme.onSecondaryContainer,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
               ),
             ],

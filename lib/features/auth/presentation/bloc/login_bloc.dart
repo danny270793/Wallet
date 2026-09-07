@@ -9,8 +9,8 @@ class LoginBloc extends Bloc<LoginEvent, LoginState> {
   final SignInUsecase _signIn;
 
   LoginBloc({required SignInUsecase signIn})
-      : _signIn = signIn,
-        super(const LoginInitial()) {
+    : _signIn = signIn,
+      super(const LoginInitial()) {
     on<LoginSubmitted>(_onSubmitted);
   }
 

@@ -4,8 +4,15 @@ import '../../domain/entities/category_entity.dart';
 
 abstract class CategoriesRemoteDatasource {
   Future<List<CategoryEntity>> getCategories();
-  Future<CategoryEntity> createCategory({required String name, String? description});
-  Future<CategoryEntity> updateCategory({required String id, required String name, String? description});
+  Future<CategoryEntity> createCategory({
+    required String name,
+    String? description,
+  });
+  Future<CategoryEntity> updateCategory({
+    required String id,
+    required String name,
+    String? description,
+  });
   Future<void> deleteCategory({required String id});
 }
 
@@ -21,11 +28,16 @@ class CategoriesSupabaseDatasource implements CategoriesRemoteDatasource {
         .select()
         .isFilter('deletedAt', null)
         .order('createdAt');
-    return (data as List).map((e) => CategoryEntity.fromJson(e as Map<String, dynamic>)).toList();
+    return (data as List)
+        .map((e) => CategoryEntity.fromJson(e as Map<String, dynamic>))
+        .toList();
   }
 
   @override
-  Future<CategoryEntity> createCategory({required String name, String? description}) async {
+  Future<CategoryEntity> createCategory({
+    required String name,
+    String? description,
+  }) async {
     AppLogger.debug('createCategory called: $name');
     final data = await _client
         .from('wallet_categories')

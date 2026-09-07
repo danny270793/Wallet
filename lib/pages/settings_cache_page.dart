@@ -53,17 +53,13 @@ String _cacheEntryTitle(String key, AppLocalizations l10n) {
   return l10n.settingsCacheKeyRaw(key);
 }
 
-enum _CacheSortBy {
-  date,
-  size,
-  name,
-}
+enum _CacheSortBy { date, size, name }
 
 String _cacheSortLabel(AppLocalizations l10n, _CacheSortBy by) => switch (by) {
-      _CacheSortBy.date => l10n.settingsCacheSortByDate,
-      _CacheSortBy.size => l10n.settingsCacheSortBySize,
-      _CacheSortBy.name => l10n.settingsCacheSortByName,
-    };
+  _CacheSortBy.date => l10n.settingsCacheSortByDate,
+  _CacheSortBy.size => l10n.settingsCacheSortBySize,
+  _CacheSortBy.name => l10n.settingsCacheSortByName,
+};
 
 class SettingsCachePage extends StatefulWidget {
   const SettingsCachePage({super.key});
@@ -87,8 +83,8 @@ class _SettingsCachePageState extends State<SettingsCachePage> {
       case _CacheSortBy.name:
         copy.sort(
           (a, b) => _cacheEntryTitle(a.cacheKey, l10n).toLowerCase().compareTo(
-                _cacheEntryTitle(b.cacheKey, l10n).toLowerCase(),
-              ),
+            _cacheEntryTitle(b.cacheKey, l10n).toLowerCase(),
+          ),
         );
     }
     return copy;

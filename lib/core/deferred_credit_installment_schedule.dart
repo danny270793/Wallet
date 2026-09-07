@@ -21,7 +21,11 @@ List<DateTime> scheduleDeferredCreditInstallmentsLocal({
     throw ArgumentError.value(termMonths, 'termMonths', 'must be at least 2');
   }
   if (graceMonths < 0) {
-    throw ArgumentError.value(graceMonths, 'graceMonths', 'must be non-negative');
+    throw ArgumentError.value(
+      graceMonths,
+      'graceMonths',
+      'must be non-negative',
+    );
   }
 
   final beforeCut = purchaseLocal.day < cardCutDay;
@@ -59,8 +63,5 @@ List<DateTime> scheduleDeferredCreditInstallmentsLocal({
   }
 
   final firstDue = withPurchaseDayOnCalendarMonth(firstMonth);
-  return List.generate(
-    termMonths,
-    (i) => addCalendarMonths(firstDue, i),
-  );
+  return List.generate(termMonths, (i) => addCalendarMonths(firstDue, i));
 }

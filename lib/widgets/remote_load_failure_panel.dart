@@ -5,21 +5,19 @@ import '../core/remote_load_failure.dart';
 
 extension RemoteLoadFailureL10n on RemoteLoadFailure {
   String title(AppLocalizations l10n) => switch (this) {
-        RemoteLoadFailure.networkUnavailable =>
-          l10n.loadFailedNoConnectionTitle,
-        RemoteLoadFailure.requestFailed => l10n.loadFailedRequestFailedTitle,
-      };
+    RemoteLoadFailure.networkUnavailable => l10n.loadFailedNoConnectionTitle,
+    RemoteLoadFailure.requestFailed => l10n.loadFailedRequestFailedTitle,
+  };
 
   String body(AppLocalizations l10n) => switch (this) {
-        RemoteLoadFailure.networkUnavailable =>
-          l10n.loadFailedNoConnectionBody,
-        RemoteLoadFailure.requestFailed => l10n.loadFailedRequestFailedBody,
-      };
+    RemoteLoadFailure.networkUnavailable => l10n.loadFailedNoConnectionBody,
+    RemoteLoadFailure.requestFailed => l10n.loadFailedRequestFailedBody,
+  };
 
   IconData get icon => switch (this) {
-        RemoteLoadFailure.networkUnavailable => Icons.wifi_off_rounded,
-        RemoteLoadFailure.requestFailed => Icons.cloud_off_outlined,
-      };
+    RemoteLoadFailure.networkUnavailable => Icons.wifi_off_rounded,
+    RemoteLoadFailure.requestFailed => Icons.cloud_off_outlined,
+  };
 }
 
 /// Pull-to-refresh + alert-style card for failed initial / reload remote fetches.
@@ -65,11 +63,7 @@ class RemoteLoadFailurePanel extends StatelessWidget {
                   Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Icon(
-                        failure.icon,
-                        size: 28,
-                        color: scheme.error,
-                      ),
+                      Icon(failure.icon, size: 28, color: scheme.error),
                       const SizedBox(width: 12),
                       Expanded(
                         child: Text(

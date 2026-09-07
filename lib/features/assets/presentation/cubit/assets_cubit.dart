@@ -19,17 +19,17 @@ class AssetsCubit extends Cubit<AssetsState> {
     required CreateAssetUsecase createAsset,
     required UpdateAssetUsecase updateAsset,
     required DeleteAssetUsecase deleteAsset,
-  })  : _getAssets = getAssets,
-        _createAssetUsecase = createAsset,
-        _updateAssetUsecase = updateAsset,
-        _deleteAssetUsecase = deleteAsset,
-        super(const AssetsInitial());
+  }) : _getAssets = getAssets,
+       _createAssetUsecase = createAsset,
+       _updateAssetUsecase = updateAsset,
+       _deleteAssetUsecase = deleteAsset,
+       super(const AssetsInitial());
 
   bool _preserveOfflineCacheFlag() => switch (state) {
-        AssetsLoaded(:final servedFromOfflineCache) => servedFromOfflineCache,
-        AssetsActionError(:final servedFromOfflineCache) => servedFromOfflineCache,
-        _ => false,
-      };
+    AssetsLoaded(:final servedFromOfflineCache) => servedFromOfflineCache,
+    AssetsActionError(:final servedFromOfflineCache) => servedFromOfflineCache,
+    _ => false,
+  };
 
   Future<void> load({bool showLoading = true}) async {
     AppLogger.debug('loading assets');
@@ -38,7 +38,12 @@ class AssetsCubit extends Cubit<AssetsState> {
       final bundle = await _getAssets();
       final assets = _sortedByBoughtAt(bundle.value);
       AppLogger.info('assets loaded: ${assets.length}');
-      emit(AssetsLoaded(assets, servedFromOfflineCache: bundle.servedFromOfflineCache));
+      emit(
+        AssetsLoaded(
+          assets,
+          servedFromOfflineCache: bundle.servedFromOfflineCache,
+        ),
+      );
     } catch (e, s) {
       AppLogger.error('failed to load assets', e, s);
       emit(AssetsError(failure: classifyRemoteLoadError(e)));
@@ -65,13 +70,20 @@ class AssetsCubit extends Cubit<AssetsState> {
         soldValue: soldValue,
       );
       AppLogger.info('asset created: ${asset.id}');
-      emit(AssetsLoaded(
-        _sortedByBoughtAt([...current, asset]),
-        servedFromOfflineCache: _preserveOfflineCacheFlag(),
-      ));
+      emit(
+        AssetsLoaded(
+          _sortedByBoughtAt([...current, asset]),
+          servedFromOfflineCache: _preserveOfflineCacheFlag(),
+        ),
+      );
     } catch (e, s) {
       AppLogger.error('failed to create asset', e, s);
-      emit(AssetsActionError(current, servedFromOfflineCache: _preserveOfflineCacheFlag()));
+      emit(
+        AssetsActionError(
+          current,
+          servedFromOfflineCache: _preserveOfflineCacheFlag(),
+        ),
+      );
     }
   }
 
@@ -106,7 +118,12 @@ class AssetsCubit extends Cubit<AssetsState> {
       );
     } catch (e, s) {
       AppLogger.error('failed to update asset', e, s);
-      emit(AssetsActionError(current, servedFromOfflineCache: _preserveOfflineCacheFlag()));
+      emit(
+        AssetsActionError(
+          current,
+          servedFromOfflineCache: _preserveOfflineCacheFlag(),
+        ),
+      );
     }
   }
 
@@ -124,7 +141,12 @@ class AssetsCubit extends Cubit<AssetsState> {
       return true;
     } catch (e, s) {
       AppLogger.error('failed to delete asset', e, s);
-      emit(AssetsActionError(current, servedFromOfflineCache: _preserveOfflineCacheFlag()));
+      emit(
+        AssetsActionError(
+          current,
+          servedFromOfflineCache: _preserveOfflineCacheFlag(),
+        ),
+      );
       return false;
     }
   }

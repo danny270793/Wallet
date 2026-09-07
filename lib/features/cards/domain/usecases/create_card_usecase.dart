@@ -10,11 +10,10 @@ class CreateCardUsecase {
     String? description,
     int cutDay = 24,
     int payDay = 24,
-  }) =>
-      _repository.createCard(
-        name: name,
-        description: description,
-        cutDay: cutDay,
-        payDay: payDay,
-      );
+  }) => _repository.createCard(
+    name: name,
+    description: description,
+    cutDay: cutDay,
+    payDay: payDay,
+  );
 }

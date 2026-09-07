@@ -101,7 +101,8 @@ class _CategoriesView extends StatelessWidget {
 
     final offlineCached = switch (state) {
       CategoriesLoaded(:final servedFromOfflineCache) => servedFromOfflineCache,
-      CategoriesActionError(:final servedFromOfflineCache) => servedFromOfflineCache,
+      CategoriesActionError(:final servedFromOfflineCache) =>
+        servedFromOfflineCache,
       _ => false,
     };
 

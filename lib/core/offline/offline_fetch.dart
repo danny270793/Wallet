@@ -33,16 +33,9 @@ Future<OfflineServedBundle<List<E>>> fetchListWithOfflineCache<E>({
   try {
     final list = await remote();
     if (userId != null && userId.isNotEmpty) {
-      await cache.saveList(
-        userId,
-        cacheKey,
-        list.map(toJson).toList(),
-      );
+      await cache.saveList(userId, cacheKey, list.map(toJson).toList());
     }
-    return OfflineServedBundle(
-      value: list,
-      servedFromOfflineCache: false,
-    );
+    return OfflineServedBundle(value: list, servedFromOfflineCache: false);
   } catch (e) {
     final cached = await loadFromCache();
     final deviceOffline = !await deviceReportsOnline();
@@ -91,10 +84,7 @@ Future<OfflineServedBundle<T?>> fetchNullableWithOfflineCache<T>({
     if (value != null && userId != null && userId.isNotEmpty) {
       await cache.saveItem(userId, cacheKey, toJson(value));
     }
-    return OfflineServedBundle(
-      value: value,
-      servedFromOfflineCache: false,
-    );
+    return OfflineServedBundle(value: value, servedFromOfflineCache: false);
   } catch (e) {
     final cached = await loadFromCache();
     final deviceOffline = !await deviceReportsOnline();

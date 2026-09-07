@@ -54,7 +54,11 @@ class WalletCreditsSupabaseDatasource implements WalletCreditsRemoteDatasource {
   @override
   Future<WalletCreditEntity?> fetchCredit(String id) async {
     if (id.isEmpty) return null;
-    final data = await _client.from('wallet_credits').select(_select).eq('id', id).maybeSingle();
+    final data = await _client
+        .from('wallet_credits')
+        .select(_select)
+        .eq('id', id)
+        .maybeSingle();
     if (data == null) return null;
     return WalletCreditEntity.fromJson(Map<String, dynamic>.from(data));
   }
