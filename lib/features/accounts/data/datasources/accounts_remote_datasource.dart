@@ -4,8 +4,15 @@ import '../../domain/entities/account_entity.dart';
 
 abstract class AccountsRemoteDatasource {
   Future<List<AccountEntity>> getAccounts();
-  Future<AccountEntity> createAccount({required String name, String? description});
-  Future<AccountEntity> updateAccount({required String id, required String name, String? description});
+  Future<AccountEntity> createAccount({
+    required String name,
+    String? description,
+  });
+  Future<AccountEntity> updateAccount({
+    required String id,
+    required String name,
+    String? description,
+  });
   Future<void> deleteAccount({required String id});
 }
 
@@ -16,16 +23,24 @@ class AccountsSupabaseDatasource implements AccountsRemoteDatasource {
   @override
   Future<List<AccountEntity>> getAccounts() async {
     AppLogger.debug('getAccounts called');
-    final data = await _client.from('wallet_accounts_with_balance').select(
+    final data = await _client
+        .from('wallet_accounts_with_balance')
+        .select(
           // Explicit columns: omit legacy balanceWeighted if present on older deployments.
           'id, userId, name, description, createdAt, updatedAt, deletedAt, balance',
-        ).isFilter('deletedAt', null)
+        )
+        .isFilter('deletedAt', null)
         .order('createdAt');
-    return (data as List).map((e) => AccountEntity.fromJson(e as Map<String, dynamic>)).toList();
+    return (data as List)
+        .map((e) => AccountEntity.fromJson(e as Map<String, dynamic>))
+        .toList();
   }
 
   @override
-  Future<AccountEntity> createAccount({required String name, String? description}) async {
+  Future<AccountEntity> createAccount({
+    required String name,
+    String? description,
+  }) async {
     AppLogger.debug('createAccount called: $name');
     final data = await _client
         .from('wallet_accounts')

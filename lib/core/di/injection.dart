@@ -92,9 +92,7 @@ void setupDi() {
     () => WalletActionsDatasource(Supabase.instance.client),
   );
   getIt.registerLazySingleton<WalletActionsReporter>(
-    () => WalletActionsReporter(
-      datasource: getIt<WalletActionsDatasource>(),
-    ),
+    () => WalletActionsReporter(datasource: getIt<WalletActionsDatasource>()),
   );
 
   getIt.registerLazySingleton<WalletOfflineUserContext>(
@@ -134,9 +132,15 @@ void setupDi() {
     ),
   );
   getIt.registerFactory<GetAccountsUsecase>(() => GetAccountsUsecase(getIt()));
-  getIt.registerFactory<CreateAccountUsecase>(() => CreateAccountUsecase(getIt()));
-  getIt.registerFactory<UpdateAccountUsecase>(() => UpdateAccountUsecase(getIt()));
-  getIt.registerFactory<DeleteAccountUsecase>(() => DeleteAccountUsecase(getIt()));
+  getIt.registerFactory<CreateAccountUsecase>(
+    () => CreateAccountUsecase(getIt()),
+  );
+  getIt.registerFactory<UpdateAccountUsecase>(
+    () => UpdateAccountUsecase(getIt()),
+  );
+  getIt.registerFactory<DeleteAccountUsecase>(
+    () => DeleteAccountUsecase(getIt()),
+  );
   getIt.registerFactory<AdjustAccountBalanceViaTransactionUsecase>(
     () => AdjustAccountBalanceViaTransactionUsecase(
       getCategories: getIt(),
@@ -201,10 +205,18 @@ void setupDi() {
       getIt<WalletOfflineUserContext>(),
     ),
   );
-  getIt.registerFactory<GetCategoriesUsecase>(() => GetCategoriesUsecase(getIt()));
-  getIt.registerFactory<CreateCategoryUsecase>(() => CreateCategoryUsecase(getIt()));
-  getIt.registerFactory<UpdateCategoryUsecase>(() => UpdateCategoryUsecase(getIt()));
-  getIt.registerFactory<DeleteCategoryUsecase>(() => DeleteCategoryUsecase(getIt()));
+  getIt.registerFactory<GetCategoriesUsecase>(
+    () => GetCategoriesUsecase(getIt()),
+  );
+  getIt.registerFactory<CreateCategoryUsecase>(
+    () => CreateCategoryUsecase(getIt()),
+  );
+  getIt.registerFactory<UpdateCategoryUsecase>(
+    () => UpdateCategoryUsecase(getIt()),
+  );
+  getIt.registerFactory<DeleteCategoryUsecase>(
+    () => DeleteCategoryUsecase(getIt()),
+  );
   getIt.registerFactory<CategoriesCubit>(
     () => CategoriesCubit(
       getCategories: getIt(),
@@ -276,7 +288,9 @@ void setupDi() {
   getIt.registerFactory<CreateWalletCreditUsecase>(
     () => CreateWalletCreditUsecase(getIt()),
   );
-  getIt.registerFactory<GetWalletCreditUsecase>(() => GetWalletCreditUsecase(getIt()));
+  getIt.registerFactory<GetWalletCreditUsecase>(
+    () => GetWalletCreditUsecase(getIt()),
+  );
   getIt.registerFactory<UpdateWalletCreditUsecase>(
     () => UpdateWalletCreditUsecase(getIt()),
   );
@@ -291,15 +305,27 @@ void setupDi() {
       getIt<WalletOfflineUserContext>(),
     ),
   );
-  getIt.registerFactory<GetTransactionsUsecase>(() => GetTransactionsUsecase(getIt()));
-  getIt.registerFactory<GetTransactionsForYearUsecase>(() => GetTransactionsForYearUsecase(getIt()));
+  getIt.registerFactory<GetTransactionsUsecase>(
+    () => GetTransactionsUsecase(getIt()),
+  );
+  getIt.registerFactory<GetTransactionsForYearUsecase>(
+    () => GetTransactionsForYearUsecase(getIt()),
+  );
   getIt.registerFactory<SearchTransactionsByDescriptionUsecase>(
     () => SearchTransactionsByDescriptionUsecase(getIt()),
   );
-  getIt.registerFactory<CreateTransactionUsecase>(() => CreateTransactionUsecase(getIt()));
-  getIt.registerFactory<CreateAccountTransferUsecase>(() => CreateAccountTransferUsecase(getIt()));
-  getIt.registerFactory<UpdateTransactionUsecase>(() => UpdateTransactionUsecase(getIt()));
-  getIt.registerFactory<DeleteTransactionUsecase>(() => DeleteTransactionUsecase(getIt()));
+  getIt.registerFactory<CreateTransactionUsecase>(
+    () => CreateTransactionUsecase(getIt()),
+  );
+  getIt.registerFactory<CreateAccountTransferUsecase>(
+    () => CreateAccountTransferUsecase(getIt()),
+  );
+  getIt.registerFactory<UpdateTransactionUsecase>(
+    () => UpdateTransactionUsecase(getIt()),
+  );
+  getIt.registerFactory<DeleteTransactionUsecase>(
+    () => DeleteTransactionUsecase(getIt()),
+  );
   getIt.registerFactory<GetTransactionsByCreditGroupIdUsecase>(
     () => GetTransactionsByCreditGroupIdUsecase(getIt()),
   );
@@ -320,5 +346,7 @@ void setupDi() {
       updateWalletCredit: getIt(),
     ),
   );
-  getIt.registerFactory<YearlyDashboardCubit>(() => YearlyDashboardCubit(getIt()));
+  getIt.registerFactory<YearlyDashboardCubit>(
+    () => YearlyDashboardCubit(getIt()),
+  );
 }

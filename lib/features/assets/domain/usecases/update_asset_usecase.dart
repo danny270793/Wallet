@@ -13,14 +13,13 @@ class UpdateAssetUsecase {
     required DateTime boughtAt,
     DateTime? endedAt,
     double? soldValue,
-  }) =>
-      _repository.updateAsset(
-        id: id,
-        name: name,
-        provider: provider,
-        value: value,
-        boughtAt: boughtAt,
-        endedAt: endedAt,
-        soldValue: soldValue,
-      );
+  }) => _repository.updateAsset(
+    id: id,
+    name: name,
+    provider: provider,
+    value: value,
+    boughtAt: boughtAt,
+    endedAt: endedAt,
+    soldValue: soldValue,
+  );
 }

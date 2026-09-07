@@ -5,6 +5,10 @@ class UpdateCategoryUsecase {
   final CategoriesRepository _repository;
   const UpdateCategoryUsecase(this._repository);
 
-  Future<CategoryEntity> call({required String id, required String name, String? description}) =>
+  Future<CategoryEntity> call({
+    required String id,
+    required String name,
+    String? description,
+  }) =>
       _repository.updateCategory(id: id, name: name, description: description);
 }

@@ -54,6 +54,15 @@ class WalletCreditEntity extends Equatable {
   };
 
   @override
-  List<Object?> get props =>
-      [id, userId, transactedAt, graceMonths, termMonths, description, createdAt, updatedAt, deletedAt];
+  List<Object?> get props => [
+    id,
+    userId,
+    transactedAt,
+    graceMonths,
+    termMonths,
+    description,
+    createdAt,
+    updatedAt,
+    deletedAt,
+  ];
 }

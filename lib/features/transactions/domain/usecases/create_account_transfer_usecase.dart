@@ -24,8 +24,12 @@ class CreateAccountTransferUsecase {
     if (!sourceOk || !targetOk) {
       throw ArgumentError('each leg must have exactly one of account or card');
     }
-    final sourceKey = sourceAccountId != null ? 'a:$sourceAccountId' : 'c:${sourceCardId!}';
-    final targetKey = targetAccountId != null ? 'a:$targetAccountId' : 'c:${targetCardId!}';
+    final sourceKey = sourceAccountId != null
+        ? 'a:$sourceAccountId'
+        : 'c:${sourceCardId!}';
+    final targetKey = targetAccountId != null
+        ? 'a:$targetAccountId'
+        : 'c:${targetCardId!}';
     if (sourceKey == targetKey) {
       throw ArgumentError('source and target payment method must differ');
     }

@@ -6,5 +6,6 @@ class GetCardsUsecase {
   final CardsRepository _repository;
   const GetCardsUsecase(this._repository);
 
-  Future<OfflineServedBundle<List<CardEntity>>> call() => _repository.getCards();
+  Future<OfflineServedBundle<List<CardEntity>>> call() =>
+      _repository.getCards();
 }

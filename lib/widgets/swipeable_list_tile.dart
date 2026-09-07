@@ -18,7 +18,10 @@ class SwipeableListTile extends StatelessWidget {
     this.dense = false,
     this.minLeadingWidth,
     this.horizontalTitleGap,
-    this.contentPadding = const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
+    this.contentPadding = const EdgeInsets.symmetric(
+      horizontal: 16,
+      vertical: 2,
+    ),
     required this.onEdit,
     required this.confirmDelete,
     required this.onDelete,

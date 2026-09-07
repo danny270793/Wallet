@@ -119,9 +119,7 @@ List<GroupedTxnRow> groupedTransactionsForList(
         if (src != null &&
             tgt != null &&
             (src.value.abs() - tgt.value.abs()).abs() < 0.0001) {
-          entries.add(
-            GroupedTxnTransferPairMarker(source: src, target: tgt),
-          );
+          entries.add(GroupedTxnTransferPairMarker(source: src, target: tgt));
           usedIds.add(src.id);
           usedIds.add(tgt.id);
           continue;
@@ -207,6 +205,7 @@ class GroupedTxnEmptyDayLabel extends StatelessWidget {
 class GroupedTxnTransactionTile extends StatelessWidget {
   const GroupedTxnTransactionTile({
     super.key,
+
     /// When null, taken from [BlocProvider<TransactionsCubit>]. Pass in overlays
     /// (e.g. transaction editor sheet) that are not under page-scoped bloc.
     this.cubit,
@@ -240,8 +239,9 @@ class GroupedTxnTransactionTile extends StatelessWidget {
     final localTime = transaction.transactedAt.toLocal();
 
     final weightedValue = transaction.value * transaction.percentage / 100.0;
-    final primaryAmount =
-        useWeightedAmounts ? weightedValue : transaction.value;
+    final primaryAmount = useWeightedAmounts
+        ? weightedValue
+        : transaction.value;
 
     Color primaryColor() {
       if (primaryAmount > 0) return const Color(0xFF1B8736);
@@ -250,8 +250,7 @@ class GroupedTxnTransactionTile extends StatelessWidget {
     }
 
     final notFullPercentage = (transaction.percentage - 100.0).abs() > 0.01;
-    final strikeAmount =
-        useWeightedAmounts ? transaction.value : weightedValue;
+    final strikeAmount = useWeightedAmounts ? transaction.value : weightedValue;
 
     Widget titleSection() {
       final chunks = <Widget>[];
@@ -389,9 +388,9 @@ class GroupedTxnTransactionTile extends StatelessWidget {
       onEdit: openEdit,
       confirmDelete:
           transaction.creditLedgerGroupingKey != null &&
-                  transaction.creditLedgerGroupingKey!.isNotEmpty
-              ? () => confirmDeleteCreditGroupTransactionDialog(context, l10n)
-              : () => confirmDeleteTransactionDialog(context, l10n),
+              transaction.creditLedgerGroupingKey!.isNotEmpty
+          ? () => confirmDeleteCreditGroupTransactionDialog(context, l10n)
+          : () => confirmDeleteTransactionDialog(context, l10n),
       onDelete: () => bloc.delete(
         id: transaction.id,
         creditLedgerKey: transaction.creditLedgerGroupingKey,
@@ -409,6 +408,7 @@ class GroupedTxnTransactionTile extends StatelessWidget {
 class GroupedTxnTransferPairTile extends StatelessWidget {
   const GroupedTxnTransferPairTile({
     super.key,
+
     /// When null, taken from [BlocProvider<TransactionsCubit>]. Pass in overlays
     /// (e.g. search) that are not under page-scoped bloc.
     this.cubit,

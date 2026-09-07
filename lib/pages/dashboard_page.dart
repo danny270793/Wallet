@@ -156,7 +156,9 @@ class _MonthlyDashboardViewState extends State<_MonthlyDashboardView> {
         final monthTxs = _monthTransactions(state);
         final txs = _showCredits
             ? monthTxs
-            : monthTxs.where((t) => t.creditId == null || t.creditId!.isEmpty).toList();
+            : monthTxs
+                  .where((t) => t.creditId == null || t.creditId!.isEmpty)
+                  .toList();
         // Prune filters using the same ignored basis as pies and list.
         var categoryFilter = pruneCategoryKeysFilter(
           txs,
@@ -297,17 +299,13 @@ class _MonthlyDashboardViewState extends State<_MonthlyDashboardView> {
     List<TransactionEntity> listTransactions,
     bool offlineCached,
   ) {
-    Future<void> pullRefresh() =>
-        context.read<TransactionsCubit>().loadForMonth(
-              monthNotifier.value,
-              showLoading: false,
-            );
+    Future<void> pullRefresh() => context
+        .read<TransactionsCubit>()
+        .loadForMonth(monthNotifier.value, showLoading: false);
 
-    Future<void> reloadWithOverlay() =>
-        context.read<TransactionsCubit>().loadForMonth(
-              monthNotifier.value,
-              showLoading: true,
-            );
+    Future<void> reloadWithOverlay() => context
+        .read<TransactionsCubit>()
+        .loadForMonth(monthNotifier.value, showLoading: true);
 
     final visibleMonth = monthNotifier.value;
 

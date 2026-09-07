@@ -22,7 +22,10 @@ class CategoriesLoading extends CategoriesState {
 class CategoriesLoaded extends CategoriesState {
   final List<CategoryEntity> categories;
   final bool servedFromOfflineCache;
-  const CategoriesLoaded(this.categories, {this.servedFromOfflineCache = false});
+  const CategoriesLoaded(
+    this.categories, {
+    this.servedFromOfflineCache = false,
+  });
   @override
   List<Object?> get props => [categories, servedFromOfflineCache];
 }
@@ -38,7 +41,11 @@ class CategoriesActionError extends CategoriesState {
   final List<CategoryEntity> categories;
   final String? message;
   final bool servedFromOfflineCache;
-  const CategoriesActionError(this.categories, {this.message, this.servedFromOfflineCache = false});
+  const CategoriesActionError(
+    this.categories, {
+    this.message,
+    this.servedFromOfflineCache = false,
+  });
   @override
   List<Object?> get props => [categories, message, servedFromOfflineCache];
 }

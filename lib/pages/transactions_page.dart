@@ -947,17 +947,13 @@ class _TransactionsViewState extends State<_TransactionsView> {
     ValueNotifier<DateTime> monthNotifier,
     List<TransactionEntity> filteredList,
   ) {
-    Future<void> pullRefresh() =>
-        context.read<TransactionsCubit>().loadForMonth(
-              monthNotifier.value,
-              showLoading: false,
-            );
+    Future<void> pullRefresh() => context
+        .read<TransactionsCubit>()
+        .loadForMonth(monthNotifier.value, showLoading: false);
 
-    Future<void> reloadWithOverlay() =>
-        context.read<TransactionsCubit>().loadForMonth(
-              monthNotifier.value,
-              showLoading: true,
-            );
+    Future<void> reloadWithOverlay() => context
+        .read<TransactionsCubit>()
+        .loadForMonth(monthNotifier.value, showLoading: true);
 
     if (state is TransactionsLoading || state is TransactionsInitial) {
       return RefreshIndicator(
@@ -983,8 +979,10 @@ class _TransactionsViewState extends State<_TransactionsView> {
     }
 
     final offlineCached = switch (state) {
-      TransactionsLoaded(:final servedFromOfflineCache) => servedFromOfflineCache,
-      TransactionsActionError(:final servedFromOfflineCache) => servedFromOfflineCache,
+      TransactionsLoaded(:final servedFromOfflineCache) =>
+        servedFromOfflineCache,
+      TransactionsActionError(:final servedFromOfflineCache) =>
+        servedFromOfflineCache,
       _ => false,
     };
 
@@ -1612,7 +1610,8 @@ class _SearchableIdPickerSheet extends StatefulWidget {
   final SearchablePickerSwipeActions? swipe;
 
   @override
-  State<_SearchableIdPickerSheet> createState() => _SearchableIdPickerSheetState();
+  State<_SearchableIdPickerSheet> createState() =>
+      _SearchableIdPickerSheetState();
 }
 
 class _SearchableIdPickerSheetState extends State<_SearchableIdPickerSheet> {
@@ -1653,115 +1652,118 @@ class _SearchableIdPickerSheetState extends State<_SearchableIdPickerSheet> {
             maxHeight: MediaQuery.sizeOf(sheetContext).height * 0.55,
           ),
           child: CustomScrollView(
-          physics: const AlwaysScrollableScrollPhysics(),
-          slivers: [
-            SliverAppBar(
-              pinned: true,
-              centerTitle: true,
-              automaticallyImplyLeading: false,
-              elevation: 0,
-              scrolledUnderElevation: 4,
-              backgroundColor: modalBottomSheetSurfaceColor(sheetContext),
-              shadowColor: Theme.of(sheetContext).colorScheme.shadow,
-              leading: modalBottomSheetBackButton(sheetContext),
-              title: Text(widget.title, style: themeSheet.textTheme.titleLarge),
-              actions: [
-                IconButton(
-                  tooltip: widget.l10n.transferAccountSearch,
-                  icon: Icon(
-                    _showSearchField
-                        ? Icons.search_off_outlined
-                        : Icons.search,
-                  ),
-                  onPressed: () {
-                    setState(() {
-                      _showSearchField = !_showSearchField;
-                      if (!_showSearchField) _searchFilter = '';
-                    });
-                  },
+            physics: const AlwaysScrollableScrollPhysics(),
+            slivers: [
+              SliverAppBar(
+                pinned: true,
+                centerTitle: true,
+                automaticallyImplyLeading: false,
+                elevation: 0,
+                scrolledUnderElevation: 4,
+                backgroundColor: modalBottomSheetSurfaceColor(sheetContext),
+                shadowColor: Theme.of(sheetContext).colorScheme.shadow,
+                leading: modalBottomSheetBackButton(sheetContext),
+                title: Text(
+                  widget.title,
+                  style: themeSheet.textTheme.titleLarge,
                 ),
-                if (widget.onAddPressed != null)
+                actions: [
                   IconButton(
-                    tooltip: widget.addTooltip ?? '',
-                    icon: const Icon(Icons.add_circle_outline),
-                    onPressed: () async {
-                      await widget.onAddPressed!(sheetContext);
-                      await _refreshItems();
-                    },
-                  ),
-              ],
-            ),
-            if (widget.allowNone)
-              SliverToBoxAdapter(
-                child: ListTile(
-                  title: Text(widget.l10n.none),
-                  leading: const Icon(Icons.clear),
-                  onTap: () => Navigator.of(sheetContext).pop(''),
-                ),
-              ),
-            if (_showSearchField)
-              SliverPadding(
-                padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
-                sliver: SliverToBoxAdapter(
-                  child: TextField(
-                    decoration: InputDecoration(
-                      hintText: widget.searchHint,
-                      prefixIcon: const Icon(Icons.search, size: 22),
-                      isDense: true,
-                      border: const OutlineInputBorder(),
+                    tooltip: widget.l10n.transferAccountSearch,
+                    icon: Icon(
+                      _showSearchField
+                          ? Icons.search_off_outlined
+                          : Icons.search,
                     ),
-                    textInputAction: TextInputAction.search,
-                    onChanged: (v) => setState(() => _searchFilter = v),
-                  ),
-                ),
-              ),
-            if (allItems.isEmpty)
-              SliverFillRemaining(
-                hasScrollBody: false,
-                child: Center(child: Text(widget.emptyMessage)),
-              )
-            else if (list.isEmpty)
-              SliverFillRemaining(
-                hasScrollBody: false,
-                child: Center(child: Text(widget.noResultsMessage)),
-              )
-            else
-              SliverList(
-                delegate: SliverChildBuilderDelegate((context, index) {
-                  final e = list[index];
-                  final swipe = widget.swipe;
-                  if (swipe == null) {
-                    return ListTile(
-                      title: Text(e.name),
-                      onTap: () => Navigator.of(sheetContext).pop(e.id),
-                    );
-                  }
-                  final actions = swipe;
-                  return SwipeableListTile(
-                    itemKey: e.id,
-                    title: Text(e.name),
-                    onTap: () => Navigator.of(sheetContext).pop(e.id),
-                    onEdit: () {
-                      Future(() async {
-                        await actions.onEditItem(sheetContext, e);
-                        if (!sheetContext.mounted) return;
-                        await _refreshItems();
+                    onPressed: () {
+                      setState(() {
+                        _showSearchField = !_showSearchField;
+                        if (!_showSearchField) _searchFilter = '';
                       });
                     },
-                    confirmDelete: () =>
-                        actions.confirmDeleteItem(sheetContext, e),
-                    onDelete: () async {
-                      final ok = await actions.deleteItem(e);
-                      if (ok) await _refreshItems();
-                      return ok;
-                    },
-                  );
-                }, childCount: list.length),
+                  ),
+                  if (widget.onAddPressed != null)
+                    IconButton(
+                      tooltip: widget.addTooltip ?? '',
+                      icon: const Icon(Icons.add_circle_outline),
+                      onPressed: () async {
+                        await widget.onAddPressed!(sheetContext);
+                        await _refreshItems();
+                      },
+                    ),
+                ],
               ),
-          ],
+              if (widget.allowNone)
+                SliverToBoxAdapter(
+                  child: ListTile(
+                    title: Text(widget.l10n.none),
+                    leading: const Icon(Icons.clear),
+                    onTap: () => Navigator.of(sheetContext).pop(''),
+                  ),
+                ),
+              if (_showSearchField)
+                SliverPadding(
+                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+                  sliver: SliverToBoxAdapter(
+                    child: TextField(
+                      decoration: InputDecoration(
+                        hintText: widget.searchHint,
+                        prefixIcon: const Icon(Icons.search, size: 22),
+                        isDense: true,
+                        border: const OutlineInputBorder(),
+                      ),
+                      textInputAction: TextInputAction.search,
+                      onChanged: (v) => setState(() => _searchFilter = v),
+                    ),
+                  ),
+                ),
+              if (allItems.isEmpty)
+                SliverFillRemaining(
+                  hasScrollBody: false,
+                  child: Center(child: Text(widget.emptyMessage)),
+                )
+              else if (list.isEmpty)
+                SliverFillRemaining(
+                  hasScrollBody: false,
+                  child: Center(child: Text(widget.noResultsMessage)),
+                )
+              else
+                SliverList(
+                  delegate: SliverChildBuilderDelegate((context, index) {
+                    final e = list[index];
+                    final swipe = widget.swipe;
+                    if (swipe == null) {
+                      return ListTile(
+                        title: Text(e.name),
+                        onTap: () => Navigator.of(sheetContext).pop(e.id),
+                      );
+                    }
+                    final actions = swipe;
+                    return SwipeableListTile(
+                      itemKey: e.id,
+                      title: Text(e.name),
+                      onTap: () => Navigator.of(sheetContext).pop(e.id),
+                      onEdit: () {
+                        Future(() async {
+                          await actions.onEditItem(sheetContext, e);
+                          if (!sheetContext.mounted) return;
+                          await _refreshItems();
+                        });
+                      },
+                      confirmDelete: () =>
+                          actions.confirmDeleteItem(sheetContext, e),
+                      onDelete: () async {
+                        final ok = await actions.deleteItem(e);
+                        if (ok) await _refreshItems();
+                        return ok;
+                      },
+                    );
+                  }, childCount: list.length),
+                ),
+            ],
+          ),
         ),
       ),
-    ),
     );
   }
 }
@@ -1881,242 +1883,229 @@ class _PaymentMethodPickerSheetState extends State<_PaymentMethodPickerSheet> {
             maxHeight: MediaQuery.sizeOf(context).height * 0.55,
           ),
           child: CustomScrollView(
-          physics: const AlwaysScrollableScrollPhysics(),
-          slivers: [
-            SliverAppBar(
-              pinned: true,
-              centerTitle: true,
-              automaticallyImplyLeading: false,
-              elevation: 0,
-              scrolledUnderElevation: 4,
-              backgroundColor: modalBottomSheetSurfaceColor(context),
-              shadowColor: Theme.of(context).colorScheme.shadow,
-              leading: modalBottomSheetBackButton(context),
-              title: Text(
-                widget.sheetTitle,
-                style: sheetTheme.textTheme.titleLarge,
-              ),
-              actions: [
-                IconButton(
-                  tooltip: l10n.transferAccountSearch,
-                  icon: Icon(
-                    _showSearchField
-                        ? Icons.search_off_outlined
-                        : Icons.search,
-                  ),
-                  onPressed: _toggleSearchField,
+            physics: const AlwaysScrollableScrollPhysics(),
+            slivers: [
+              SliverAppBar(
+                pinned: true,
+                centerTitle: true,
+                automaticallyImplyLeading: false,
+                elevation: 0,
+                scrolledUnderElevation: 4,
+                backgroundColor: modalBottomSheetSurfaceColor(context),
+                shadowColor: Theme.of(context).colorScheme.shadow,
+                leading: modalBottomSheetBackButton(context),
+                title: Text(
+                  widget.sheetTitle,
+                  style: sheetTheme.textTheme.titleLarge,
                 ),
-                IconButton(
-                  tooltip: cardsOnly
-                      ? l10n.newCard
-                      : l10n.paymentMethodAddChoiceTitle,
-                  icon: const Icon(Icons.add_circle_outline),
-                  onPressed: () async {
-                    if (cardsOnly) {
-                      await showCardEditorBottomSheet(
-                        context,
-                        l10n,
-                      );
-                      await _refreshPicker();
-                      return;
-                    }
-                    final choice =
-                        await showModalBottomSheet<_PaymentMethodCreateChoice>(
-                          context: context,
-                          showDragHandle: false,
-                          isScrollControlled: true,
-                          builder: (ctx) => BottomSheetPinnedTitleScrollView(
-                            padding: EdgeInsets.fromLTRB(
-                              24,
-                              0,
-                              24,
-                              24 + MediaQuery.paddingOf(ctx).bottom,
-                            ),
-                            title: l10n.paymentMethodAddChoiceTitle,
-                            child: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              crossAxisAlignment: CrossAxisAlignment.stretch,
-                              children: [
-                                ListTile(
-                                  leading: const Icon(
-                                    Icons.account_balance_wallet_outlined,
-                                  ),
-                                  title: Text(l10n.newAccount),
-                                  onTap: () => Navigator.pop(
-                                    ctx,
-                                    _PaymentMethodCreateChoice.account,
-                                  ),
-                                ),
-                                ListTile(
-                                  leading: const Icon(
-                                    Icons.credit_card_outlined,
-                                  ),
-                                  title: Text(l10n.newCard),
-                                  onTap: () => Navigator.pop(
-                                    ctx,
-                                    _PaymentMethodCreateChoice.card,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        );
-                    if (!context.mounted) return;
-                    switch (choice) {
-                      case _PaymentMethodCreateChoice.account:
-                        await showAccountEditorBottomSheet(
-                          context,
-                          l10n,
-                        );
-                      case _PaymentMethodCreateChoice.card:
-                        await showCardEditorBottomSheet(
-                          context,
-                          l10n,
-                        );
-                      case null:
+                actions: [
+                  IconButton(
+                    tooltip: l10n.transferAccountSearch,
+                    icon: Icon(
+                      _showSearchField
+                          ? Icons.search_off_outlined
+                          : Icons.search,
+                    ),
+                    onPressed: _toggleSearchField,
+                  ),
+                  IconButton(
+                    tooltip: cardsOnly
+                        ? l10n.newCard
+                        : l10n.paymentMethodAddChoiceTitle,
+                    icon: const Icon(Icons.add_circle_outline),
+                    onPressed: () async {
+                      if (cardsOnly) {
+                        await showCardEditorBottomSheet(context, l10n);
+                        await _refreshPicker();
                         return;
-                    }
-                    await _refreshPicker();
-                  },
-                ),
-              ],
-            ),
-            if (_showSearchField)
-              SliverPadding(
-                padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
-                sliver: SliverToBoxAdapter(
-                  child: TextField(
-                    controller: _searchController,
-                    decoration: InputDecoration(
-                      hintText: l10n.transferAccountSearchHint,
-                      prefixIcon: const Icon(Icons.search, size: 22),
-                      isDense: true,
-                      border: const OutlineInputBorder(),
-                    ),
-                    textInputAction: TextInputAction.search,
+                      }
+                      final choice =
+                          await showModalBottomSheet<
+                            _PaymentMethodCreateChoice
+                          >(
+                            context: context,
+                            showDragHandle: false,
+                            isScrollControlled: true,
+                            builder: (ctx) => BottomSheetPinnedTitleScrollView(
+                              padding: EdgeInsets.fromLTRB(
+                                24,
+                                0,
+                                24,
+                                24 + MediaQuery.paddingOf(ctx).bottom,
+                              ),
+                              title: l10n.paymentMethodAddChoiceTitle,
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                crossAxisAlignment: CrossAxisAlignment.stretch,
+                                children: [
+                                  ListTile(
+                                    leading: const Icon(
+                                      Icons.account_balance_wallet_outlined,
+                                    ),
+                                    title: Text(l10n.newAccount),
+                                    onTap: () => Navigator.pop(
+                                      ctx,
+                                      _PaymentMethodCreateChoice.account,
+                                    ),
+                                  ),
+                                  ListTile(
+                                    leading: const Icon(
+                                      Icons.credit_card_outlined,
+                                    ),
+                                    title: Text(l10n.newCard),
+                                    onTap: () => Navigator.pop(
+                                      ctx,
+                                      _PaymentMethodCreateChoice.card,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          );
+                      if (!context.mounted) return;
+                      switch (choice) {
+                        case _PaymentMethodCreateChoice.account:
+                          await showAccountEditorBottomSheet(context, l10n);
+                        case _PaymentMethodCreateChoice.card:
+                          await showCardEditorBottomSheet(context, l10n);
+                        case null:
+                          return;
+                      }
+                      await _refreshPicker();
+                    },
                   ),
-                ),
+                ],
               ),
-            if (!hasAny)
-              SliverFillRemaining(
-                hasScrollBody: false,
-                child: Center(
-                  child: Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: Text(
-                      cardsOnly
-                          ? l10n.noCards
-                          : '${l10n.noAccounts}\n${l10n.noCards}',
-                      textAlign: TextAlign.center,
+              if (_showSearchField)
+                SliverPadding(
+                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+                  sliver: SliverToBoxAdapter(
+                    child: TextField(
+                      controller: _searchController,
+                      decoration: InputDecoration(
+                        hintText: l10n.transferAccountSearchHint,
+                        prefixIcon: const Icon(Icons.search, size: 22),
+                        isDense: true,
+                        border: const OutlineInputBorder(),
+                      ),
+                      textInputAction: TextInputAction.search,
                     ),
                   ),
                 ),
-              )
-            else if (filteredEmpty)
-              SliverFillRemaining(
-                hasScrollBody: false,
-                child: Center(
-                  child: Text(
-                    l10n.transactionPaymentMethodSearchNoResults,
-                  ),
-                ),
-              )
-            else
-              SliverList.list(
-                children: [
-                  if (vCards.isNotEmpty) ...[
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
-                      child: Text(l10n.cards, style: titleSmallPrimary),
+              if (!hasAny)
+                SliverFillRemaining(
+                  hasScrollBody: false,
+                  child: Center(
+                    child: Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Text(
+                        cardsOnly
+                            ? l10n.noCards
+                            : '${l10n.noAccounts}\n${l10n.noCards}',
+                        textAlign: TextAlign.center,
+                      ),
                     ),
-                    ...vCards.map((c) {
-                      final sw = paymentSwipe;
-                      if (sw == null) {
-                        return ListTile(
+                  ),
+                )
+              else if (filteredEmpty)
+                SliverFillRemaining(
+                  hasScrollBody: false,
+                  child: Center(
+                    child: Text(l10n.transactionPaymentMethodSearchNoResults),
+                  ),
+                )
+              else
+                SliverList.list(
+                  children: [
+                    if (vCards.isNotEmpty) ...[
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
+                        child: Text(l10n.cards, style: titleSmallPrimary),
+                      ),
+                      ...vCards.map((c) {
+                        final sw = paymentSwipe;
+                        if (sw == null) {
+                          return ListTile(
+                            leading: const Icon(Icons.credit_card_outlined),
+                            title: Text(c.name),
+                            onTap: () => Navigator.of(
+                              context,
+                            ).pop('$_paymentMethodPickCardPrefix${c.id}'),
+                          );
+                        }
+                        return SwipeableListTile(
+                          itemKey: c.id,
                           leading: const Icon(Icons.credit_card_outlined),
                           title: Text(c.name),
                           onTap: () => Navigator.of(
                             context,
                           ).pop('$_paymentMethodPickCardPrefix${c.id}'),
+                          onEdit: () {
+                            Future(() async {
+                              await sw.editCard(context, c);
+                              if (!context.mounted) return;
+                              await _refreshPicker();
+                            });
+                          },
+                          confirmDelete: () => sw.confirmDeleteCard(context, c),
+                          onDelete: () async {
+                            final ok = await sw.deleteCard(c);
+                            if (ok) await _refreshPicker();
+                            return ok;
+                          },
                         );
-                      }
-                      return SwipeableListTile(
-                        itemKey: c.id,
-                        leading: const Icon(Icons.credit_card_outlined),
-                        title: Text(c.name),
-                        onTap: () => Navigator.of(
-                          context,
-                        ).pop('$_paymentMethodPickCardPrefix${c.id}'),
-                        onEdit: () {
-                          Future(() async {
-                            await sw.editCard(context, c);
-                            if (!context.mounted) return;
-                            await _refreshPicker();
-                          });
-                        },
-                        confirmDelete: () =>
-                            sw.confirmDeleteCard(context, c),
-                        onDelete: () async {
-                          final ok = await sw.deleteCard(c);
-                          if (ok) await _refreshPicker();
-                          return ok;
-                        },
-                      );
-                    }),
-                  ],
-                  if (vAccounts.isNotEmpty && !cardsOnly) ...[
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
-                      child: Text(
-                        l10n.accounts,
-                        style: titleSmallPrimary,
+                      }),
+                    ],
+                    if (vAccounts.isNotEmpty && !cardsOnly) ...[
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
+                        child: Text(l10n.accounts, style: titleSmallPrimary),
                       ),
-                    ),
-                    ...vAccounts.map((a) {
-                      final sw = paymentSwipe;
-                      if (sw == null) {
-                        return ListTile(
+                      ...vAccounts.map((a) {
+                        final sw = paymentSwipe;
+                        if (sw == null) {
+                          return ListTile(
+                            leading: const Icon(
+                              Icons.account_balance_wallet_outlined,
+                            ),
+                            title: Text(a.name),
+                            onTap: () => Navigator.of(
+                              context,
+                            ).pop('$_paymentMethodPickAccountPrefix${a.id}'),
+                          );
+                        }
+                        return SwipeableListTile(
+                          itemKey: a.id,
                           leading: const Icon(
                             Icons.account_balance_wallet_outlined,
                           ),
                           title: Text(a.name),
-                          onTap: () => Navigator.of(context).pop(
-                            '$_paymentMethodPickAccountPrefix${a.id}',
-                          ),
+                          onTap: () => Navigator.of(
+                            context,
+                          ).pop('$_paymentMethodPickAccountPrefix${a.id}'),
+                          onEdit: () {
+                            Future(() async {
+                              await sw.editAccount(context, a);
+                              if (!context.mounted) return;
+                              await _refreshPicker();
+                            });
+                          },
+                          confirmDelete: () =>
+                              sw.confirmDeleteAccount(context, a),
+                          onDelete: () async {
+                            final ok = await sw.deleteAccount(a);
+                            if (ok) await _refreshPicker();
+                            return ok;
+                          },
                         );
-                      }
-                      return SwipeableListTile(
-                        itemKey: a.id,
-                        leading: const Icon(
-                          Icons.account_balance_wallet_outlined,
-                        ),
-                        title: Text(a.name),
-                        onTap: () => Navigator.of(
-                          context,
-                        ).pop('$_paymentMethodPickAccountPrefix${a.id}'),
-                        onEdit: () {
-                          Future(() async {
-                            await sw.editAccount(context, a);
-                            if (!context.mounted) return;
-                            await _refreshPicker();
-                          });
-                        },
-                        confirmDelete: () =>
-                            sw.confirmDeleteAccount(context, a),
-                        onDelete: () async {
-                          final ok = await sw.deleteAccount(a);
-                          if (ok) await _refreshPicker();
-                          return ok;
-                        },
-                      );
-                    }),
+                      }),
+                    ],
                   ],
-                ],
-              ),
-          ],
+                ),
+            ],
+          ),
         ),
       ),
-    ),
     );
   }
 }
@@ -2202,8 +2191,7 @@ class _TransactionDialogState extends State<_TransactionDialog> {
 
   /// Linked [wallet_credits] row: grace/term can be edited and reschedule installments.
   bool get _canEditWalletCreditTerms =>
-      _isCreditGroupEdit &&
-      (widget.transaction?.creditId?.isNotEmpty ?? false);
+      _isCreditGroupEdit && (widget.transaction?.creditId?.isNotEmpty ?? false);
 
   List<AccountEntity> _accounts = [];
   List<CardEntity> _cards = [];
@@ -2264,9 +2252,7 @@ class _TransactionDialogState extends State<_TransactionDialog> {
     _transactedAt = () {
       if (t == null) return DateTime.now();
       final creditAt = t.creditTransactedAt;
-      if (t.creditId != null &&
-          t.creditId!.isNotEmpty &&
-          creditAt != null) {
+      if (t.creditId != null && t.creditId!.isNotEmpty && creditAt != null) {
         return creditAt.toLocal();
       }
       return t.transactedAt.toLocal();
@@ -2283,8 +2269,7 @@ class _TransactionDialogState extends State<_TransactionDialog> {
       _percentageController = TextEditingController(text: '100');
     }
     _descriptionController = TextEditingController(
-      text: (t != null &&
-              (t.creditLedgerGroupingKey?.isNotEmpty ?? false))
+      text: (t != null && (t.creditLedgerGroupingKey?.isNotEmpty ?? false))
           ? stripLeadingCreditInstallmentDescription(t.description)
           : (t?.description ?? ''),
     );
@@ -2295,19 +2280,21 @@ class _TransactionDialogState extends State<_TransactionDialog> {
     _tagDisplayController = TextEditingController();
     _graceMonthsController = TextEditingController();
     _termMonthsController = TextEditingController();
-    _deferred = (t != null &&
-            (t.creditLedgerGroupingKey?.isNotEmpty ?? false)) ||
+    _deferred =
+        (t != null && (t.creditLedgerGroupingKey?.isNotEmpty ?? false)) ||
         (t == null && widget.forceDeferredCredit);
     _ignore = t?.ignore ?? false;
     if (t == null && widget.forceDeferredCredit) {
       _ignore = true;
     }
-    _accountId = t?.accountId ??
+    _accountId =
+        t?.accountId ??
         (widget.paymentMethodCardsOnly ? null : widget.preferredAccountId);
     _cardId = t?.cardId ?? widget.preferredCardId;
     _categoryId = t?.categoryId ?? widget.preferredCategoryId;
     _tagId = t?.tagId ?? widget.preferredTagId;
-    _loadingCreditGroupTotal = t?.creditLedgerGroupingKey != null &&
+    _loadingCreditGroupTotal =
+        t?.creditLedgerGroupingKey != null &&
         t!.creditLedgerGroupingKey!.isNotEmpty;
 
     _loadLookups();
@@ -2382,7 +2369,9 @@ class _TransactionDialogState extends State<_TransactionDialog> {
     final gid = widget.transaction?.creditLedgerGroupingKey;
     if (gid == null || gid.isEmpty || !mounted) return;
     try {
-      final list = (await getIt<GetTransactionsByCreditGroupIdUsecase>()(gid)).value;
+      final list = (await getIt<GetTransactionsByCreditGroupIdUsecase>()(
+        gid,
+      )).value;
       if (!mounted) return;
       list.sort((a, b) => a.transactedAt.compareTo(b.transactedAt));
       final sum = list.fold<double>(0, (a, e) => a + e.value);
@@ -2399,8 +2388,7 @@ class _TransactionDialogState extends State<_TransactionDialog> {
             _termMonthsController.text = '${wc.termMonths}';
             _graceMonthsController.text = '${wc.graceMonths}';
           } else {
-            _termMonthsController.text =
-                list.isEmpty ? '' : '${list.length}';
+            _termMonthsController.text = list.isEmpty ? '' : '${list.length}';
             _graceMonthsController.text = '\u2014';
           }
         }
@@ -2773,7 +2761,7 @@ class _TransactionDialogState extends State<_TransactionDialog> {
     );
     if (!mounted || raw == null || raw.isEmpty) return;
     setState(() {
-        if (raw.startsWith(_paymentMethodPickAccountPrefix)) {
+      if (raw.startsWith(_paymentMethodPickAccountPrefix)) {
         _accountId = raw.substring(_paymentMethodPickAccountPrefix.length);
         _cardId = null;
         if (widget.transaction == null && !widget.forceDeferredCredit) {
@@ -2946,8 +2934,7 @@ class _TransactionDialogState extends State<_TransactionDialog> {
     try {
       if (widget.transaction == null) {
         if (_deferred && _cardId != null) {
-          final grace =
-              int.tryParse(_graceMonthsController.text.trim()) ?? 0;
+          final grace = int.tryParse(_graceMonthsController.text.trim()) ?? 0;
           final term = int.parse(_termMonthsController.text.trim());
           await widget.cubit.create(
             accountId: _accountId,
@@ -2982,8 +2969,7 @@ class _TransactionDialogState extends State<_TransactionDialog> {
         if (_canEditWalletCreditTerms) {
           creditGraceMonths =
               int.tryParse(_graceMonthsController.text.trim()) ?? 0;
-          creditTermMonths =
-              int.tryParse(_termMonthsController.text.trim());
+          creditTermMonths = int.tryParse(_termMonthsController.text.trim());
         }
         await widget.cubit.update(
           id: widget.transaction!.id,
@@ -3085,7 +3071,8 @@ class _TransactionDialogState extends State<_TransactionDialog> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Expanded(
-                      child: (_loadingCreditGroupTotal &&
+                      child:
+                          (_loadingCreditGroupTotal &&
                               isEdit &&
                               _isCreditGroupEdit)
                           ? InputDecorator(
@@ -3115,24 +3102,22 @@ class _TransactionDialogState extends State<_TransactionDialog> {
                               autofillHints: isEdit ? null : const <String>[],
                               decoration: InputDecoration(
                                 labelText: l10n.transactionAmount,
-                                helperText:
-                                    (isEdit && _isCreditGroupEdit)
-                                        ? l10n.transactionAmountCreditGroupHint
-                                        : null,
+                                helperText: (isEdit && _isCreditGroupEdit)
+                                    ? l10n.transactionAmountCreditGroupHint
+                                    : null,
                               ),
                               keyboardType:
                                   const TextInputType.numberWithOptions(
-                                decimal: true,
-                                signed: true,
-                              ),
+                                    decimal: true,
+                                    signed: true,
+                                  ),
                               inputFormatters:
                                   _transactionAmountInputFormatters,
                               validator: (v) {
                                 if (v == null || v.trim().isEmpty) {
                                   return l10n.fieldRequired;
                                 }
-                                final amt =
-                                    _parseTransactionAmountInput(v);
+                                final amt = _parseTransactionAmountInput(v);
                                 if (amt == null) {
                                   return l10n.transactionAmountInvalidNumber;
                                 }
@@ -3193,7 +3178,8 @@ class _TransactionDialogState extends State<_TransactionDialog> {
                   const SizedBox(height: 10),
                   SwitchListTile(
                     value: _deferred,
-                    onChanged: widget.transaction != null ||
+                    onChanged:
+                        widget.transaction != null ||
                             _loadingLookups ||
                             widget.forceDeferredCredit
                         ? null
@@ -3266,9 +3252,12 @@ class _TransactionDialogState extends State<_TransactionDialog> {
                           Expanded(
                             child: TextFormField(
                               controller: _graceMonthsController,
-                              readOnly: _isCreditGroupEdit && !_canEditWalletCreditTerms,
+                              readOnly:
+                                  _isCreditGroupEdit &&
+                                  !_canEditWalletCreditTerms,
                               keyboardType: TextInputType.number,
-                              inputFormatters: (_isCreditGroupEdit &&
+                              inputFormatters:
+                                  (_isCreditGroupEdit &&
                                       !_canEditWalletCreditTerms)
                                   ? const <TextInputFormatter>[]
                                   : <TextInputFormatter>[
@@ -3278,9 +3267,10 @@ class _TransactionDialogState extends State<_TransactionDialog> {
                               decoration: InputDecoration(
                                 labelText: l10n.transactionGraceMonths,
                                 helperText:
-                                    _isCreditGroupEdit && !_canEditWalletCreditTerms
-                                        ? l10n.creditEditGraceNotApplicable
-                                        : null,
+                                    _isCreditGroupEdit &&
+                                        !_canEditWalletCreditTerms
+                                    ? l10n.creditEditGraceNotApplicable
+                                    : null,
                               ),
                               validator: (v) {
                                 if (!_deferred || _loadingLookups) {
@@ -3309,9 +3299,12 @@ class _TransactionDialogState extends State<_TransactionDialog> {
                           Expanded(
                             child: TextFormField(
                               controller: _termMonthsController,
-                              readOnly: _isCreditGroupEdit && !_canEditWalletCreditTerms,
+                              readOnly:
+                                  _isCreditGroupEdit &&
+                                  !_canEditWalletCreditTerms,
                               keyboardType: TextInputType.number,
-                              inputFormatters: (_isCreditGroupEdit &&
+                              inputFormatters:
+                                  (_isCreditGroupEdit &&
                                       !_canEditWalletCreditTerms)
                                   ? const <TextInputFormatter>[]
                                   : <TextInputFormatter>[
@@ -3478,8 +3471,8 @@ class _TransactionDialogState extends State<_TransactionDialog> {
                           Switch(
                             value: _ignoreSwitchShowsOn,
                             onChanged: _ignoreSwitchLocked
-                                    ? null
-                                    : (v) => setState(() => _ignore = v),
+                                ? null
+                                : (v) => setState(() => _ignore = v),
                           ),
                         ],
                       ),

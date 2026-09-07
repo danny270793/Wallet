@@ -402,6 +402,21 @@ class AppLocalizationsEs extends AppLocalizations {
       'Lo que guardas se almacena en el backend que configures (por ejemplo Supabase) y queda asociado a tu sesión. Esta versión está pensada para uso personal.';
 
   @override
+  String get settingsAboutDeveloperHeading => 'Desarrollador';
+
+  @override
+  String get settingsAboutDeveloperGithub => 'GitHub';
+
+  @override
+  String get settingsAboutDeveloperWebsite => 'Sitio web';
+
+  @override
+  String get settingsAboutDeveloperYoutube => 'YouTube';
+
+  @override
+  String get settingsAboutDeveloperLinkedin => 'LinkedIn';
+
+  @override
   String get accounts => 'Cuentas';
 
   @override

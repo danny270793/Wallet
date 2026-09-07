@@ -7,10 +7,13 @@ class CardEntity extends Equatable {
   final String? description;
   final DateTime createdAt;
   final DateTime updatedAt;
+
   /// Day of month (1–30) for the billing statement cut.
   final int cutDay;
+
   /// Day of month (1–30) for payment due.
   final int payDay;
+
   /// Sum of transaction `value` for rows on this card with no [creditId]
   /// (deferred installments are excluded; see /credits).
   /// From [wallet_cards_with_balance].
@@ -54,14 +57,14 @@ class CardEntity extends Equatable {
 
   @override
   List<Object?> get props => [
-        id,
-        userId,
-        name,
-        description,
-        createdAt,
-        updatedAt,
-        cutDay,
-        payDay,
-        balance,
-      ];
+    id,
+    userId,
+    name,
+    description,
+    createdAt,
+    updatedAt,
+    cutDay,
+    payDay,
+    balance,
+  ];
 }

@@ -194,15 +194,14 @@ class _CategoryLegendRow extends StatelessWidget {
                     label,
                     overflow: TextOverflow.ellipsis,
                     style: theme.textTheme.bodyMedium?.copyWith(
-                      fontWeight:
-                          selected ? FontWeight.w600 : FontWeight.normal,
+                      fontWeight: selected
+                          ? FontWeight.w600
+                          : FontWeight.normal,
                     ),
                   ),
                 ),
                 Text(
-                  l10n.transactionAmountValue(
-                    expenseTotal.toStringAsFixed(2),
-                  ),
+                  l10n.transactionAmountValue(expenseTotal.toStringAsFixed(2)),
                   style: theme.textTheme.bodyMedium?.copyWith(
                     fontWeight: FontWeight.w600,
                     fontFeatures: const [FontFeature.tabularFigures()],
@@ -469,11 +468,13 @@ class MonthlyCategoryExpensePieChart extends StatelessWidget {
               color: s.color,
               l10n: l10n,
               theme: theme,
-              selected: categoryKeysFilter != null &&
+              selected:
+                  categoryKeysFilter != null &&
                   categoryKeysFilter!.length == 1 &&
                   categoryKeysFilter!.contains(s.keyId),
               onTap: () {
-                final onlyThis = categoryKeysFilter?.length == 1 &&
+                final onlyThis =
+                    categoryKeysFilter?.length == 1 &&
                     categoryKeysFilter!.contains(s.keyId);
                 onCategoryKeysFilterChanged(onlyThis ? null : {s.keyId});
               },

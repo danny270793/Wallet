@@ -18,7 +18,8 @@ class AccountsRepositoryImpl implements AccountsRepository {
   );
 
   @override
-  Future<OfflineServedBundle<List<AccountEntity>>> getAccounts() => fetchListWithOfflineCache(
+  Future<OfflineServedBundle<List<AccountEntity>>> getAccounts() =>
+      fetchListWithOfflineCache(
         session: _offlineSession,
         cache: _offlineCache,
         cacheKey: WalletOfflineCacheKeys.accounts,
@@ -28,13 +29,19 @@ class AccountsRepositoryImpl implements AccountsRepository {
       );
 
   @override
-  Future<AccountEntity> createAccount({required String name, String? description}) =>
-      _datasource.createAccount(name: name, description: description);
+  Future<AccountEntity> createAccount({
+    required String name,
+    String? description,
+  }) => _datasource.createAccount(name: name, description: description);
 
   @override
-  Future<AccountEntity> updateAccount({required String id, required String name, String? description}) =>
-      _datasource.updateAccount(id: id, name: name, description: description);
+  Future<AccountEntity> updateAccount({
+    required String id,
+    required String name,
+    String? description,
+  }) => _datasource.updateAccount(id: id, name: name, description: description);
 
   @override
-  Future<void> deleteAccount({required String id}) => _datasource.deleteAccount(id: id);
+  Future<void> deleteAccount({required String id}) =>
+      _datasource.deleteAccount(id: id);
 }

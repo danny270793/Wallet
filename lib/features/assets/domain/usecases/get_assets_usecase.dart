@@ -6,5 +6,6 @@ class GetAssetsUsecase {
   final AssetsRepository _repository;
   const GetAssetsUsecase(this._repository);
 
-  Future<OfflineServedBundle<List<AssetEntity>>> call() => _repository.getAssets();
+  Future<OfflineServedBundle<List<AssetEntity>>> call() =>
+      _repository.getAssets();
 }

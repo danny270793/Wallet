@@ -399,6 +399,21 @@ class AppLocalizationsEn extends AppLocalizations {
       'What you save is stored in the backend you configure (for example Supabase) and is tied to your sign-in. This build is intended for personal use.';
 
   @override
+  String get settingsAboutDeveloperHeading => 'Developer';
+
+  @override
+  String get settingsAboutDeveloperGithub => 'GitHub';
+
+  @override
+  String get settingsAboutDeveloperWebsite => 'Website';
+
+  @override
+  String get settingsAboutDeveloperYoutube => 'YouTube';
+
+  @override
+  String get settingsAboutDeveloperLinkedin => 'LinkedIn';
+
+  @override
   String get accounts => 'Accounts';
 
   @override

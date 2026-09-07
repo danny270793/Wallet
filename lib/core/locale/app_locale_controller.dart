@@ -19,17 +19,17 @@ enum AppLanguagePreference {
   }
 
   String get storageValue => switch (this) {
-        AppLanguagePreference.system => 'system',
-        AppLanguagePreference.en => 'en',
-        AppLanguagePreference.es => 'es',
-      };
+    AppLanguagePreference.system => 'system',
+    AppLanguagePreference.en => 'en',
+    AppLanguagePreference.es => 'es',
+  };
 
   /// `null` means use the device locale (resolved via [localeResolutionCallback]).
   Locale? get materialLocale => switch (this) {
-        AppLanguagePreference.system => null,
-        AppLanguagePreference.en => const Locale('en'),
-        AppLanguagePreference.es => const Locale('es'),
-      };
+    AppLanguagePreference.system => null,
+    AppLanguagePreference.en => const Locale('en'),
+    AppLanguagePreference.es => const Locale('es'),
+  };
 }
 
 class AppLocaleController extends ChangeNotifier {

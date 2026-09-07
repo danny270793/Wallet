@@ -11,12 +11,11 @@ class UpdateCardUsecase {
     String? description,
     required int cutDay,
     required int payDay,
-  }) =>
-      _repository.updateCard(
-        id: id,
-        name: name,
-        description: description,
-        cutDay: cutDay,
-        payDay: payDay,
-      );
+  }) => _repository.updateCard(
+    id: id,
+    name: name,
+    description: description,
+    cutDay: cutDay,
+    payDay: payDay,
+  );
 }

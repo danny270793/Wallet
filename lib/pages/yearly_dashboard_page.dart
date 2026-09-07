@@ -91,23 +91,23 @@ class _YearlyDashboardViewState extends State<_YearlyDashboardView> {
               appBarBottom: YearlyDashboardAppBarBottom(notifier: yearNotifier),
               appBarActionsBeforeSettings: switch (state) {
                 YearlyDashboardLoaded() => <Widget>[
-                    IconButton(
-                      icon: const Icon(AppIcons.filter),
-                      tooltip: l10n.monthlyDashboardConfigureTooltip,
-                      onPressed: () => showDashboardViewOptionsBottomSheet(
-                        context: context,
-                        l10n: l10n,
-                        includeIgnored: _includeIgnored,
-                        useWeightedAmounts: _useWeightedAmounts,
-                        showCredits: _showCredits,
-                        onApply: (inc, wt, credits) => setState(() {
-                          _includeIgnored = inc;
-                          _useWeightedAmounts = wt;
-                          _showCredits = credits;
-                        }),
-                      ),
+                  IconButton(
+                    icon: const Icon(AppIcons.filter),
+                    tooltip: l10n.monthlyDashboardConfigureTooltip,
+                    onPressed: () => showDashboardViewOptionsBottomSheet(
+                      context: context,
+                      l10n: l10n,
+                      includeIgnored: _includeIgnored,
+                      useWeightedAmounts: _useWeightedAmounts,
+                      showCredits: _showCredits,
+                      onApply: (inc, wt, credits) => setState(() {
+                        _includeIgnored = inc;
+                        _useWeightedAmounts = wt;
+                        _showCredits = credits;
+                      }),
                     ),
-                  ],
+                  ),
+                ],
                 _ => null,
               },
               body: switch (state) {
@@ -116,51 +116,57 @@ class _YearlyDashboardViewState extends State<_YearlyDashboardView> {
                 YearlyDashboardError(:final failure) => RemoteLoadFailurePanel(
                   l10n: l10n,
                   failure: failure,
-                  onRetry: () => context
-                      .read<YearlyDashboardCubit>()
-                      .loadYear(visibleYear),
-                ),
-                YearlyDashboardLoaded(:final transactions, :final servedFromOfflineCache) => RefreshIndicator(
-                  onRefresh: () => context
-                      .read<YearlyDashboardCubit>()
-                      .loadYear(visibleYear),
-                  child: ListView(
-                    physics: const AlwaysScrollableScrollPhysics(),
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 8,
-                    ),
-                    children: [
-                      OfflineCachedDataBanner(visible: servedFromOfflineCache),
-                      YearlyCumulativeNetBarChart(
-                        l10n: l10n,
-                        year: y,
-                        transactions: _filterCredits(transactions),
-                      ),
-                      YearlyWeightedNetBarChart(
-                        l10n: l10n,
-                        year: y,
-                        transactions: _filterCredits(transactions),
-                        includeIgnored: _includeIgnored,
-                        useWeightedAmounts: _useWeightedAmounts,
-                      ),
-                      YearlyWeightedIncomeBarChart(
-                        l10n: l10n,
-                        year: y,
-                        transactions: _filterCredits(transactions),
-                        includeIgnored: _includeIgnored,
-                        useWeightedAmounts: _useWeightedAmounts,
-                      ),
-                      YearlyWeightedOutcomeBarChart(
-                        l10n: l10n,
-                        year: y,
-                        transactions: _filterCredits(transactions),
-                        includeIgnored: _includeIgnored,
-                        useWeightedAmounts: _useWeightedAmounts,
-                      ),
-                    ],
+                  onRetry: () => context.read<YearlyDashboardCubit>().loadYear(
+                    visibleYear,
                   ),
                 ),
+                YearlyDashboardLoaded(
+                  :final transactions,
+                  :final servedFromOfflineCache,
+                ) =>
+                  RefreshIndicator(
+                    onRefresh: () => context
+                        .read<YearlyDashboardCubit>()
+                        .loadYear(visibleYear),
+                    child: ListView(
+                      physics: const AlwaysScrollableScrollPhysics(),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 8,
+                      ),
+                      children: [
+                        OfflineCachedDataBanner(
+                          visible: servedFromOfflineCache,
+                        ),
+                        YearlyCumulativeNetBarChart(
+                          l10n: l10n,
+                          year: y,
+                          transactions: _filterCredits(transactions),
+                        ),
+                        YearlyWeightedNetBarChart(
+                          l10n: l10n,
+                          year: y,
+                          transactions: _filterCredits(transactions),
+                          includeIgnored: _includeIgnored,
+                          useWeightedAmounts: _useWeightedAmounts,
+                        ),
+                        YearlyWeightedIncomeBarChart(
+                          l10n: l10n,
+                          year: y,
+                          transactions: _filterCredits(transactions),
+                          includeIgnored: _includeIgnored,
+                          useWeightedAmounts: _useWeightedAmounts,
+                        ),
+                        YearlyWeightedOutcomeBarChart(
+                          l10n: l10n,
+                          year: y,
+                          transactions: _filterCredits(transactions),
+                          includeIgnored: _includeIgnored,
+                          useWeightedAmounts: _useWeightedAmounts,
+                        ),
+                      ],
+                    ),
+                  ),
               },
             );
           },

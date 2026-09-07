@@ -23,18 +23,18 @@ class CardsCubit extends Cubit<CardsState> {
     required UpdateCardUsecase updateCard,
     required DeleteCardUsecase deleteCard,
     required AdjustCardBalanceViaTransactionUsecase adjustBalanceViaTransaction,
-  })  : _getCards = getCards,
-        _createCard = createCard,
-        _updateCard = updateCard,
-        _deleteCard = deleteCard,
-        _adjustBalanceViaTransaction = adjustBalanceViaTransaction,
-        super(const CardsInitial());
+  }) : _getCards = getCards,
+       _createCard = createCard,
+       _updateCard = updateCard,
+       _deleteCard = deleteCard,
+       _adjustBalanceViaTransaction = adjustBalanceViaTransaction,
+       super(const CardsInitial());
 
   bool _preserveOfflineCacheFlag() => switch (state) {
-        CardsLoaded(:final servedFromOfflineCache) => servedFromOfflineCache,
-        CardsActionError(:final servedFromOfflineCache) => servedFromOfflineCache,
-        _ => false,
-      };
+    CardsLoaded(:final servedFromOfflineCache) => servedFromOfflineCache,
+    CardsActionError(:final servedFromOfflineCache) => servedFromOfflineCache,
+    _ => false,
+  };
 
   Future<void> load({bool showLoading = true}) async {
     AppLogger.debug('loading cards');
@@ -43,7 +43,12 @@ class CardsCubit extends Cubit<CardsState> {
       final bundle = await _getCards();
       final cards = sortedByName(bundle.value, (c) => c.name);
       AppLogger.info('cards loaded: ${cards.length}');
-      emit(CardsLoaded(cards, servedFromOfflineCache: bundle.servedFromOfflineCache));
+      emit(
+        CardsLoaded(
+          cards,
+          servedFromOfflineCache: bundle.servedFromOfflineCache,
+        ),
+      );
     } catch (e, s) {
       AppLogger.error('failed to load cards', e, s);
       emit(CardsError(failure: classifyRemoteLoadError(e)));
@@ -68,10 +73,20 @@ class CardsCubit extends Cubit<CardsState> {
       AppLogger.info('card created');
       final bundle = await _getCards();
       final cards = sortedByName(bundle.value, (c) => c.name);
-      emit(CardsLoaded(cards, servedFromOfflineCache: bundle.servedFromOfflineCache));
+      emit(
+        CardsLoaded(
+          cards,
+          servedFromOfflineCache: bundle.servedFromOfflineCache,
+        ),
+      );
     } catch (e, s) {
       AppLogger.error('failed to create card', e, s);
-      emit(CardsActionError(current, servedFromOfflineCache: _preserveOfflineCacheFlag()));
+      emit(
+        CardsActionError(
+          current,
+          servedFromOfflineCache: _preserveOfflineCacheFlag(),
+        ),
+      );
     }
   }
 
@@ -101,18 +116,30 @@ class CardsCubit extends Cubit<CardsState> {
       AppLogger.info('card updated: $id');
       final bundle = await _getCards();
       final cards = sortedByName(bundle.value, (c) => c.name);
-      emit(CardsLoaded(cards, servedFromOfflineCache: bundle.servedFromOfflineCache));
+      emit(
+        CardsLoaded(
+          cards,
+          servedFromOfflineCache: bundle.servedFromOfflineCache,
+        ),
+      );
     } catch (e, s) {
       AppLogger.error('failed to update card', e, s);
       try {
         final bundle = await _getCards();
         final reloaded = sortedByName(bundle.value, (c) => c.name);
-        emit(CardsActionError(
-          reloaded,
-          servedFromOfflineCache: bundle.servedFromOfflineCache,
-        ));
+        emit(
+          CardsActionError(
+            reloaded,
+            servedFromOfflineCache: bundle.servedFromOfflineCache,
+          ),
+        );
       } catch (_) {
-        emit(CardsActionError(current, servedFromOfflineCache: _preserveOfflineCacheFlag()));
+        emit(
+          CardsActionError(
+            current,
+            servedFromOfflineCache: _preserveOfflineCacheFlag(),
+          ),
+        );
       }
     }
   }
@@ -123,14 +150,24 @@ class CardsCubit extends Cubit<CardsState> {
     try {
       await _deleteCard(id: id);
       AppLogger.info('card deleted: $id');
-      emit(CardsLoaded(
-        sortedByName(current.where((a) => a.id != id).toList(), (c) => c.name),
-        servedFromOfflineCache: _preserveOfflineCacheFlag(),
-      ));
+      emit(
+        CardsLoaded(
+          sortedByName(
+            current.where((a) => a.id != id).toList(),
+            (c) => c.name,
+          ),
+          servedFromOfflineCache: _preserveOfflineCacheFlag(),
+        ),
+      );
       return true;
     } catch (e, s) {
       AppLogger.error('failed to delete card', e, s);
-      emit(CardsActionError(current, servedFromOfflineCache: _preserveOfflineCacheFlag()));
+      emit(
+        CardsActionError(
+          current,
+          servedFromOfflineCache: _preserveOfflineCacheFlag(),
+        ),
+      );
       return false;
     }
   }

@@ -38,7 +38,11 @@ class CardsActionError extends CardsState {
   final List<CardEntity> cards;
   final String? message;
   final bool servedFromOfflineCache;
-  const CardsActionError(this.cards, {this.message, this.servedFromOfflineCache = false});
+  const CardsActionError(
+    this.cards, {
+    this.message,
+    this.servedFromOfflineCache = false,
+  });
   @override
   List<Object?> get props => [cards, message, servedFromOfflineCache];
 }

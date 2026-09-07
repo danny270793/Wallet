@@ -18,7 +18,10 @@ final class YearlyDashboardLoading extends YearlyDashboardState {
 }
 
 final class YearlyDashboardLoaded extends YearlyDashboardState {
-  const YearlyDashboardLoaded(this.transactions, {this.servedFromOfflineCache = false});
+  const YearlyDashboardLoaded(
+    this.transactions, {
+    this.servedFromOfflineCache = false,
+  });
   final List<TransactionEntity> transactions;
   final bool servedFromOfflineCache;
 }
@@ -44,10 +47,12 @@ class YearlyDashboardCubit extends Cubit<YearlyDashboardState> {
       if (isClosed) return;
       final list = bundle.value;
       AppLogger.info('yearly dashboard loaded ${year.year}: ${list.length}');
-      emit(YearlyDashboardLoaded(
-        list,
-        servedFromOfflineCache: bundle.servedFromOfflineCache,
-      ));
+      emit(
+        YearlyDashboardLoaded(
+          list,
+          servedFromOfflineCache: bundle.servedFromOfflineCache,
+        ),
+      );
     } catch (e, s) {
       if (gen != _generation) return;
       if (isClosed) return;

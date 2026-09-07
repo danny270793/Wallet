@@ -30,15 +30,21 @@ class _LoginPageState extends State<LoginPage> {
 
   void _submit(BuildContext context) {
     if (_formKey.currentState!.validate()) {
-      context.read<LoginBloc>().add(LoginSubmitted(
-            email: _emailController.text.trim(),
-            password: _passwordController.text,
-          ));
+      context.read<LoginBloc>().add(
+        LoginSubmitted(
+          email: _emailController.text.trim(),
+          password: _passwordController.text,
+        ),
+      );
     }
   }
 
   InputDecoration _fieldDecoration(
-      BuildContext context, {required String label, required IconData icon, Widget? suffixIcon}) {
+    BuildContext context, {
+    required String label,
+    required IconData icon,
+    Widget? suffixIcon,
+  }) {
     final colorScheme = Theme.of(context).colorScheme;
     return InputDecoration(
       labelText: label,
@@ -91,8 +97,9 @@ class _LoginPageState extends State<LoginPage> {
           textAlign: crossAxisAlignment == CrossAxisAlignment.start
               ? TextAlign.start
               : TextAlign.center,
-          style: theme.textTheme.headlineMedium
-              ?.copyWith(fontWeight: FontWeight.bold),
+          style: theme.textTheme.headlineMedium?.copyWith(
+            fontWeight: FontWeight.bold,
+          ),
         ),
         const SizedBox(height: 8),
         Text(
@@ -119,8 +126,11 @@ class _LoginPageState extends State<LoginPage> {
           children: [
             TextFormField(
               controller: _emailController,
-              decoration: _fieldDecoration(context,
-                  label: l10n.email, icon: Icons.mail_outline_rounded),
+              decoration: _fieldDecoration(
+                context,
+                label: l10n.email,
+                icon: Icons.mail_outline_rounded,
+              ),
               keyboardType: TextInputType.emailAddress,
               textInputAction: TextInputAction.next,
               autofillHints: const [
@@ -138,9 +148,11 @@ class _LoginPageState extends State<LoginPage> {
                 label: l10n.password,
                 icon: Icons.lock_outline_rounded,
                 suffixIcon: IconButton(
-                  icon: Icon(_obscurePassword
-                      ? Icons.visibility_off_outlined
-                      : Icons.visibility_outlined),
+                  icon: Icon(
+                    _obscurePassword
+                        ? Icons.visibility_off_outlined
+                        : Icons.visibility_outlined,
+                  ),
                   onPressed: () =>
                       setState(() => _obscurePassword = !_obscurePassword),
                 ),
@@ -164,7 +176,9 @@ class _LoginPageState extends State<LoginPage> {
                     borderRadius: BorderRadius.circular(12),
                   ),
                 ),
-                onPressed: state is LoginLoading ? null : () => _submit(context),
+                onPressed: state is LoginLoading
+                    ? null
+                    : () => _submit(context),
                 child: state is LoginLoading
                     ? SizedBox(
                         height: 20,
@@ -212,8 +226,10 @@ class _LoginPageState extends State<LoginPage> {
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     Expanded(
-                      child: _branding(context,
-                          crossAxisAlignment: CrossAxisAlignment.center),
+                      child: _branding(
+                        context,
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                      ),
                     ),
                     const SizedBox(width: 40),
                     Expanded(child: _formFields(context, state)),
@@ -222,8 +238,10 @@ class _LoginPageState extends State<LoginPage> {
               : Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    _branding(context,
-                        crossAxisAlignment: CrossAxisAlignment.center),
+                    _branding(
+                      context,
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                    ),
                     const SizedBox(height: 36),
                     _formFields(context, state),
                   ],

@@ -21,11 +21,11 @@ class AdjustCardBalanceViaTransactionUsecase {
     required GetTagsUsecase getTags,
     required CreateTagUsecase createTag,
     required CreateTransactionUsecase createTransaction,
-  })  : _getCategories = getCategories,
-        _createCategory = createCategory,
-        _getTags = getTags,
-        _createTag = createTag,
-        _createTransaction = createTransaction;
+  }) : _getCategories = getCategories,
+       _createCategory = createCategory,
+       _getTags = getTags,
+       _createTag = createTag,
+       _createTransaction = createTransaction;
 
   Future<void> call({required String cardId, required double delta}) async {
     if (delta.abs() < 1e-9) return;

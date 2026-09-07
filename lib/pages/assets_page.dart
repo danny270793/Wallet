@@ -36,9 +36,9 @@ class _AssetsView extends StatelessWidget {
     return BlocConsumer<AssetsCubit, AssetsState>(
       listener: (context, state) {
         if (state is AssetsActionError) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(l10n.unexpectedError)),
-          );
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text(l10n.unexpectedError)));
         }
       },
       builder: (context, state) {
@@ -58,11 +58,7 @@ class _AssetsView extends StatelessWidget {
     );
   }
 
-  Widget _body(
-    BuildContext context,
-    AssetsState state,
-    AppLocalizations l10n,
-  ) {
+  Widget _body(BuildContext context, AssetsState state, AppLocalizations l10n) {
     Future<void> pullRefresh() =>
         context.read<AssetsCubit>().load(showLoading: false);
 
@@ -96,7 +92,8 @@ class _AssetsView extends StatelessWidget {
 
     final offlineCached = switch (state) {
       AssetsLoaded(:final servedFromOfflineCache) => servedFromOfflineCache,
-      AssetsActionError(:final servedFromOfflineCache) => servedFromOfflineCache,
+      AssetsActionError(:final servedFromOfflineCache) =>
+        servedFromOfflineCache,
       _ => false,
     };
 
@@ -154,15 +151,15 @@ class _AssetTile extends StatelessWidget {
     final ended = asset.endedAt != null || asset.soldValue != null;
     final tabular = const [FontFeature.tabularFigures()];
 
-    TextStyle? muted([double? alpha]) =>
-        theme.textTheme.bodySmall?.copyWith(
-          color: scheme.onSurfaceVariant.withValues(alpha: alpha ?? 1),
-          height: 1.28,
-          fontFeatures: tabular,
-        );
+    TextStyle? muted([double? alpha]) => theme.textTheme.bodySmall?.copyWith(
+      color: scheme.onSurfaceVariant.withValues(alpha: alpha ?? 1),
+      height: 1.28,
+      fontFeatures: tabular,
+    );
 
-    final valueStr =
-        l10n.transactionAmountValue(asset.value.toStringAsFixed(2));
+    final valueStr = l10n.transactionAmountValue(
+      asset.value.toStringAsFixed(2),
+    );
     final ymd = assetHoldingCalendarYmd(asset.boughtAt, asset.endedAt);
     final heldLessThanOneFullCalendarMonth =
         ymd != null && ymd.years == 0 && ymd.months == 0;
@@ -199,9 +196,7 @@ class _AssetTile extends StatelessWidget {
       fontFeatures: tabular,
     );
     final trailingTotalAsSubtitle = theme.textTheme.bodySmall?.copyWith(
-      color: scheme.onSurfaceVariant.withValues(
-        alpha: ended ? 0.75 : 0.95,
-      ),
+      color: scheme.onSurfaceVariant.withValues(alpha: ended ? 0.75 : 0.95),
       fontWeight: FontWeight.w400,
       height: 1.35,
       fontFeatures: tabular,
@@ -224,9 +219,7 @@ class _AssetTile extends StatelessWidget {
         children: [
           if (perApproxMo != null) ...[
             Text(
-              l10n.transactionAmountValue(
-                perApproxMo.toStringAsFixed(2),
-              ),
+              l10n.transactionAmountValue(perApproxMo.toStringAsFixed(2)),
               style: trailingMoAsTitle,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
@@ -276,12 +269,7 @@ class _AssetTile extends StatelessWidget {
     );
 
     void openEdit() {
-      showAssetEditorBottomSheet(
-        context,
-        l10n,
-        cubit: cubit,
-        asset: asset,
-      );
+      showAssetEditorBottomSheet(context, l10n, cubit: cubit, asset: asset);
     }
 
     final provider = asset.provider.trim();
@@ -300,9 +288,7 @@ class _AssetTile extends StatelessWidget {
           const SizedBox(height: 6),
           Text(
             '${l10n.assetSold}: '
-            '${l10n.transactionAmountValue(
-              asset.soldValue!.toStringAsFixed(2),
-            )}',
+            '${l10n.transactionAmountValue(asset.soldValue!.toStringAsFixed(2))}',
             style: muted(ended ? 0.75 : 0.92),
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
@@ -346,8 +332,7 @@ class _AssetTile extends StatelessWidget {
                 child: Text(l10n.cancel),
               ),
               ElevatedButton(
-                style:
-                    ElevatedButton.styleFrom(backgroundColor: Colors.red),
+                style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
                 onPressed: () => Navigator.of(dialogContext).pop(true),
                 child: Text(
                   l10n.delete,

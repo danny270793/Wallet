@@ -10,6 +10,10 @@ class UpdateTagUsecase {
     required String name,
     String? description,
     bool hidden = false,
-  }) =>
-      _repository.updateTag(id: id, name: name, description: description, hidden: hidden);
+  }) => _repository.updateTag(
+    id: id,
+    name: name,
+    description: description,
+    hidden: hidden,
+  );
 }

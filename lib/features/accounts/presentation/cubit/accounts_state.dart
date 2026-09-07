@@ -39,7 +39,11 @@ class AccountsActionError extends AccountsState {
   final List<AccountEntity> accounts;
   final String? message;
   final bool servedFromOfflineCache;
-  const AccountsActionError(this.accounts, {this.message, this.servedFromOfflineCache = false});
+  const AccountsActionError(
+    this.accounts, {
+    this.message,
+    this.servedFromOfflineCache = false,
+  });
   @override
   List<Object?> get props => [accounts, message, servedFromOfflineCache];
 }

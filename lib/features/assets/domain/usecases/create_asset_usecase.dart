@@ -12,13 +12,12 @@ class CreateAssetUsecase {
     required DateTime boughtAt,
     DateTime? endedAt,
     double? soldValue,
-  }) =>
-      _repository.createAsset(
-        name: name,
-        provider: provider,
-        value: value,
-        boughtAt: boughtAt,
-        endedAt: endedAt,
-        soldValue: soldValue,
-      );
+  }) => _repository.createAsset(
+    name: name,
+    provider: provider,
+    value: value,
+    boughtAt: boughtAt,
+    endedAt: endedAt,
+    soldValue: soldValue,
+  );
 }

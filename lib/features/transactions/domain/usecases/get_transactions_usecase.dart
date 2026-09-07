@@ -6,6 +6,7 @@ class GetTransactionsUsecase {
   final TransactionsRepository _repository;
   const GetTransactionsUsecase(this._repository);
 
-  Future<OfflineServedBundle<List<TransactionEntity>>> call(DateTime monthStartLocal) =>
-      _repository.getTransactionsForMonth(monthStartLocal);
+  Future<OfflineServedBundle<List<TransactionEntity>>> call(
+    DateTime monthStartLocal,
+  ) => _repository.getTransactionsForMonth(monthStartLocal);
 }

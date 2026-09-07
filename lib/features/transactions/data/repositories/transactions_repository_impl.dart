@@ -18,51 +18,56 @@ class TransactionsRepositoryImpl implements TransactionsRepository {
   );
 
   @override
-  Future<OfflineServedBundle<List<TransactionEntity>>> getTransactionsForMonth(DateTime monthStartLocal) =>
-      fetchListWithOfflineCache(
-        session: _offlineSession,
-        cache: _offlineCache,
-        cacheKey: WalletOfflineCacheKeys.transactionsMonth(monthStartLocal),
-        remote: () => _datasource.getTransactionsForMonth(monthStartLocal),
-        fromJson: TransactionEntity.fromJson,
-        toJson: (e) => e.toJson(),
-      );
+  Future<OfflineServedBundle<List<TransactionEntity>>> getTransactionsForMonth(
+    DateTime monthStartLocal,
+  ) => fetchListWithOfflineCache(
+    session: _offlineSession,
+    cache: _offlineCache,
+    cacheKey: WalletOfflineCacheKeys.transactionsMonth(monthStartLocal),
+    remote: () => _datasource.getTransactionsForMonth(monthStartLocal),
+    fromJson: TransactionEntity.fromJson,
+    toJson: (e) => e.toJson(),
+  );
 
   @override
-  Future<OfflineServedBundle<List<TransactionEntity>>> getTransactionsForYear(DateTime yearStartLocal) =>
-      fetchListWithOfflineCache(
-        session: _offlineSession,
-        cache: _offlineCache,
-        cacheKey: WalletOfflineCacheKeys.transactionsYear(yearStartLocal),
-        remote: () => _datasource.getTransactionsForYear(yearStartLocal),
-        fromJson: TransactionEntity.fromJson,
-        toJson: (e) => e.toJson(),
-      );
+  Future<OfflineServedBundle<List<TransactionEntity>>> getTransactionsForYear(
+    DateTime yearStartLocal,
+  ) => fetchListWithOfflineCache(
+    session: _offlineSession,
+    cache: _offlineCache,
+    cacheKey: WalletOfflineCacheKeys.transactionsYear(yearStartLocal),
+    remote: () => _datasource.getTransactionsForYear(yearStartLocal),
+    fromJson: TransactionEntity.fromJson,
+    toJson: (e) => e.toJson(),
+  );
 
   @override
-  Future<List<TransactionEntity>> searchTransactionsByDescription(String query, {int limit = 200}) =>
-      _datasource.searchTransactionsByDescription(query, limit: limit);
+  Future<List<TransactionEntity>> searchTransactionsByDescription(
+    String query, {
+    int limit = 200,
+  }) => _datasource.searchTransactionsByDescription(query, limit: limit);
 
   @override
-  Future<OfflineServedBundle<List<TransactionEntity>>> getTransactionsByCreditGroupId(String creditId) =>
-      fetchListWithOfflineCache(
-        session: _offlineSession,
-        cache: _offlineCache,
-        cacheKey: WalletOfflineCacheKeys.transactionsByCredit(creditId),
-        remote: () => _datasource.getTransactionsByCreditGroupId(creditId),
-        fromJson: TransactionEntity.fromJson,
-        toJson: (e) => e.toJson(),
-      );
+  Future<OfflineServedBundle<List<TransactionEntity>>>
+  getTransactionsByCreditGroupId(String creditId) => fetchListWithOfflineCache(
+    session: _offlineSession,
+    cache: _offlineCache,
+    cacheKey: WalletOfflineCacheKeys.transactionsByCredit(creditId),
+    remote: () => _datasource.getTransactionsByCreditGroupId(creditId),
+    fromJson: TransactionEntity.fromJson,
+    toJson: (e) => e.toJson(),
+  );
 
   @override
-  Future<OfflineServedBundle<List<TransactionEntity>>> listTransactionsHavingCreditGroup() => fetchListWithOfflineCache(
-        session: _offlineSession,
-        cache: _offlineCache,
-        cacheKey: WalletOfflineCacheKeys.transactionsHavingCreditGroup,
-        remote: _datasource.listTransactionsHavingCreditGroup,
-        fromJson: TransactionEntity.fromJson,
-        toJson: (e) => e.toJson(),
-      );
+  Future<OfflineServedBundle<List<TransactionEntity>>>
+  listTransactionsHavingCreditGroup() => fetchListWithOfflineCache(
+    session: _offlineSession,
+    cache: _offlineCache,
+    cacheKey: WalletOfflineCacheKeys.transactionsHavingCreditGroup,
+    remote: _datasource.listTransactionsHavingCreditGroup,
+    fromJson: TransactionEntity.fromJson,
+    toJson: (e) => e.toJson(),
+  );
 
   @override
   Future<TransactionEntity> createTransaction({
@@ -77,20 +82,19 @@ class TransactionsRepositoryImpl implements TransactionsRepository {
     required double percentage,
     String? transferGroupId,
     String? creditId,
-  }) =>
-      _datasource.createTransaction(
-        accountId: accountId,
-        cardId: cardId,
-        categoryId: categoryId,
-        tagId: tagId,
-        description: description,
-        transactedAt: transactedAt,
-        value: value,
-        ignore: ignore,
-        percentage: percentage,
-        transferGroupId: transferGroupId,
-        creditId: creditId,
-      );
+  }) => _datasource.createTransaction(
+    accountId: accountId,
+    cardId: cardId,
+    categoryId: categoryId,
+    tagId: tagId,
+    description: description,
+    transactedAt: transactedAt,
+    value: value,
+    ignore: ignore,
+    percentage: percentage,
+    transferGroupId: transferGroupId,
+    creditId: creditId,
+  );
 
   @override
   Future<TransactionEntity> updateTransaction({
@@ -106,22 +110,22 @@ class TransactionsRepositoryImpl implements TransactionsRepository {
     required double percentage,
     String? transferGroupId,
     String? creditId,
-  }) =>
-      _datasource.updateTransaction(
-        id: id,
-        accountId: accountId,
-        cardId: cardId,
-        categoryId: categoryId,
-        tagId: tagId,
-        description: description,
-        transactedAt: transactedAt,
-        value: value,
-        ignore: ignore,
-        percentage: percentage,
-        transferGroupId: transferGroupId,
-        creditId: creditId,
-      );
+  }) => _datasource.updateTransaction(
+    id: id,
+    accountId: accountId,
+    cardId: cardId,
+    categoryId: categoryId,
+    tagId: tagId,
+    description: description,
+    transactedAt: transactedAt,
+    value: value,
+    ignore: ignore,
+    percentage: percentage,
+    transferGroupId: transferGroupId,
+    creditId: creditId,
+  );
 
   @override
-  Future<void> deleteTransaction({required String id}) => _datasource.deleteTransaction(id: id);
+  Future<void> deleteTransaction({required String id}) =>
+      _datasource.deleteTransaction(id: id);
 }

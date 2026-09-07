@@ -88,7 +88,10 @@ List<double> weightedNetByMonthForYear(
 
 /// Latest month in [year] (1–12) with at least one transaction that has an [TransactionEntity.accountId]
 /// (same scope as `/accounts` balances), or 0 if none.
-int lastMonthWithAccountTransactionsForYear(List<TransactionEntity> txs, int year) {
+int lastMonthWithAccountTransactionsForYear(
+  List<TransactionEntity> txs,
+  int year,
+) {
   var last = 0;
   for (final t in txs) {
     if (t.accountId == null || t.accountId!.isEmpty) continue;
@@ -106,7 +109,10 @@ int lastMonthWithAccountTransactionsForYear(List<TransactionEntity> txs, int yea
 ///
 /// Matches `wallet_accounts_with_balance` aggregated across all accounts (footer total on `/accounts`).
 /// [txs] must list all such transactions through the end of [year] (yearly dashboard fetch).
-List<double> accountsTotalCumulativeByMonthForYear(List<TransactionEntity> txs, int year) {
+List<double> accountsTotalCumulativeByMonthForYear(
+  List<TransactionEntity> txs,
+  int year,
+) {
   final out = List<double>.filled(12, 0);
   for (var m = 0; m < 12; m++) {
     final cutoffExclusive = DateTime(year, m + 2, 1);

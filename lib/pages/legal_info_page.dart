@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:wallet/l10n/app_localizations.dart';
+import 'package:wallet/widgets/developer_info_section.dart';
 
 /// Static information screens linked from Settings → About.
 enum LegalInfoKind { about, privacy, terms }
@@ -35,8 +36,7 @@ class _LegalInfoPageState extends State<LegalInfoPage> {
   }
 
   void _onScroll() {
-    final next =
-        _scrollController.offset > _appBarTitleScrollThreshold;
+    final next = _scrollController.offset > _appBarTitleScrollThreshold;
     if (next != _showAppBarTitle) {
       setState(() => _showAppBarTitle = next);
     }
@@ -55,23 +55,21 @@ class _LegalInfoPageState extends State<LegalInfoPage> {
     final title = _legalInfoAppBarTitle(l10n, widget.kind);
 
     return Scaffold(
-      appBar: AppBar(
-        title: _showAppBarTitle ? Text(title) : null,
-      ),
+      appBar: AppBar(title: _showAppBarTitle ? Text(title) : null),
       body: SafeArea(
         child: switch (widget.kind) {
           LegalInfoKind.about => _AboutBody(
-              l10n: l10n,
-              scrollController: _scrollController,
-            ),
+            l10n: l10n,
+            scrollController: _scrollController,
+          ),
           LegalInfoKind.privacy => _PrivacyBody(
-              l10n: l10n,
-              scrollController: _scrollController,
-            ),
+            l10n: l10n,
+            scrollController: _scrollController,
+          ),
           LegalInfoKind.terms => _TermsBody(
-              l10n: l10n,
-              scrollController: _scrollController,
-            ),
+            l10n: l10n,
+            scrollController: _scrollController,
+          ),
         },
       ),
     );
@@ -79,10 +77,7 @@ class _LegalInfoPageState extends State<LegalInfoPage> {
 }
 
 class _AboutBody extends StatelessWidget {
-  const _AboutBody({
-    required this.l10n,
-    required this.scrollController,
-  });
+  const _AboutBody({required this.l10n, required this.scrollController});
 
   final AppLocalizations l10n;
   final ScrollController scrollController;
@@ -196,6 +191,14 @@ class _AboutBody extends StatelessWidget {
               color: scheme.onSurface,
             ),
           ),
+          const SizedBox(height: 28),
+          DeveloperInfoSection(
+            heading: l10n.settingsAboutDeveloperHeading,
+            githubLabel: l10n.settingsAboutDeveloperGithub,
+            websiteLabel: l10n.settingsAboutDeveloperWebsite,
+            youtubeLabel: l10n.settingsAboutDeveloperYoutube,
+            linkedinLabel: l10n.settingsAboutDeveloperLinkedin,
+          ),
         ],
       ),
     );
@@ -203,10 +206,7 @@ class _AboutBody extends StatelessWidget {
 }
 
 class _PrivacyBody extends StatelessWidget {
-  const _PrivacyBody({
-    required this.l10n,
-    required this.scrollController,
-  });
+  const _PrivacyBody({required this.l10n, required this.scrollController});
 
   final AppLocalizations l10n;
   final ScrollController scrollController;
@@ -275,10 +275,7 @@ class _PrivacyBody extends StatelessWidget {
 }
 
 class _TermsBody extends StatelessWidget {
-  const _TermsBody({
-    required this.l10n,
-    required this.scrollController,
-  });
+  const _TermsBody({required this.l10n, required this.scrollController});
 
   final AppLocalizations l10n;
   final ScrollController scrollController;

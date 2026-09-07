@@ -10,11 +10,10 @@ class CreateWalletCreditUsecase {
     required int graceMonths,
     required int termMonths,
     String? description,
-  }) =>
-      _repository.createCredit(
-        transactedAt: transactedAt,
-        graceMonths: graceMonths,
-        termMonths: termMonths,
-        description: description,
-      );
+  }) => _repository.createCredit(
+    transactedAt: transactedAt,
+    graceMonths: graceMonths,
+    termMonths: termMonths,
+    description: description,
+  );
 }

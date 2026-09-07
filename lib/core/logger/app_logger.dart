@@ -44,7 +44,9 @@ abstract class AppLogger {
     // Frame 0: _callerPath  Frame 1: _log  Frame 2: debug/info/warn/error  Frame 3: actual caller
     final frame = StackTrace.current.toString().split('\n').elementAtOrNull(3);
     if (frame == null) return '?';
-    final match = RegExp(r'\(package:[^/]+/(.+\.dart):\d+:\d+\)').firstMatch(frame);
+    final match = RegExp(
+      r'\(package:[^/]+/(.+\.dart):\d+:\d+\)',
+    ).firstMatch(frame);
     return match?.group(1) ?? '?';
   }
 }

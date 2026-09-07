@@ -18,7 +18,8 @@ class TagsRepositoryImpl implements TagsRepository {
   );
 
   @override
-  Future<OfflineServedBundle<List<TagEntity>>> getTags() => fetchListWithOfflineCache(
+  Future<OfflineServedBundle<List<TagEntity>>> getTags() =>
+      fetchListWithOfflineCache(
         session: _offlineSession,
         cache: _offlineCache,
         cacheKey: WalletOfflineCacheKeys.tags,
@@ -37,8 +38,12 @@ class TagsRepositoryImpl implements TagsRepository {
     required String name,
     String? description,
     bool hidden = false,
-  }) =>
-      _datasource.updateTag(id: id, name: name, description: description, hidden: hidden);
+  }) => _datasource.updateTag(
+    id: id,
+    name: name,
+    description: description,
+    hidden: hidden,
+  );
 
   @override
   Future<void> deleteTag({required String id}) => _datasource.deleteTag(id: id);

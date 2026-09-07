@@ -58,7 +58,10 @@ class WalletOfflineCache {
     }
   }
 
-  Future<List<Map<String, dynamic>>?> loadList(String? userId, String key) async {
+  Future<List<Map<String, dynamic>>?> loadList(
+    String? userId,
+    String key,
+  ) async {
     if (userId == null || userId.isEmpty) return null;
     try {
       final f = await _file(userId, key);
@@ -133,11 +136,13 @@ class WalletOfflineCache {
         if (!name.endsWith('.json')) continue;
         final stat = await ent.stat();
         final key = name.substring(0, name.length - 5);
-        out.add(WalletCacheEntry(
-          cacheKey: key,
-          bytes: stat.size,
-          modifiedAt: stat.modified,
-        ));
+        out.add(
+          WalletCacheEntry(
+            cacheKey: key,
+            bytes: stat.size,
+            modifiedAt: stat.modified,
+          ),
+        );
       }
       out.sort((a, b) => b.modifiedAt.compareTo(a.modifiedAt));
       return out;

@@ -18,7 +18,8 @@ class CategoriesRepositoryImpl implements CategoriesRepository {
   );
 
   @override
-  Future<OfflineServedBundle<List<CategoryEntity>>> getCategories() => fetchListWithOfflineCache(
+  Future<OfflineServedBundle<List<CategoryEntity>>> getCategories() =>
+      fetchListWithOfflineCache(
         session: _offlineSession,
         cache: _offlineCache,
         cacheKey: WalletOfflineCacheKeys.categories,
@@ -28,13 +29,20 @@ class CategoriesRepositoryImpl implements CategoriesRepository {
       );
 
   @override
-  Future<CategoryEntity> createCategory({required String name, String? description}) =>
-      _datasource.createCategory(name: name, description: description);
+  Future<CategoryEntity> createCategory({
+    required String name,
+    String? description,
+  }) => _datasource.createCategory(name: name, description: description);
 
   @override
-  Future<CategoryEntity> updateCategory({required String id, required String name, String? description}) =>
+  Future<CategoryEntity> updateCategory({
+    required String id,
+    required String name,
+    String? description,
+  }) =>
       _datasource.updateCategory(id: id, name: name, description: description);
 
   @override
-  Future<void> deleteCategory({required String id}) => _datasource.deleteCategory(id: id);
+  Future<void> deleteCategory({required String id}) =>
+      _datasource.deleteCategory(id: id);
 }

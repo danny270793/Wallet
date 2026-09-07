@@ -806,6 +806,36 @@ abstract class AppLocalizations {
   /// **'What you save is stored in the backend you configure (for example Supabase) and is tied to your sign-in. This build is intended for personal use.'**
   String get settingsAboutDataBody;
 
+  /// No description provided for @settingsAboutDeveloperHeading.
+  ///
+  /// In en, this message translates to:
+  /// **'Developer'**
+  String get settingsAboutDeveloperHeading;
+
+  /// No description provided for @settingsAboutDeveloperGithub.
+  ///
+  /// In en, this message translates to:
+  /// **'GitHub'**
+  String get settingsAboutDeveloperGithub;
+
+  /// No description provided for @settingsAboutDeveloperWebsite.
+  ///
+  /// In en, this message translates to:
+  /// **'Website'**
+  String get settingsAboutDeveloperWebsite;
+
+  /// No description provided for @settingsAboutDeveloperYoutube.
+  ///
+  /// In en, this message translates to:
+  /// **'YouTube'**
+  String get settingsAboutDeveloperYoutube;
+
+  /// No description provided for @settingsAboutDeveloperLinkedin.
+  ///
+  /// In en, this message translates to:
+  /// **'LinkedIn'**
+  String get settingsAboutDeveloperLinkedin;
+
   /// No description provided for @accounts.
   ///
   /// In en, this message translates to:

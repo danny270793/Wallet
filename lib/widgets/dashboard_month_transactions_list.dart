@@ -52,10 +52,7 @@ class DashboardMonthTransactionsList extends StatelessWidget {
     final fillRange = endExclusive.isAfter(monthStart)
         ? (start: monthStart, endExclusive: endExclusive)
         : null;
-    final rows = groupedTransactionsForList(
-      transactions,
-      fillRange: fillRange,
-    );
+    final rows = groupedTransactionsForList(transactions, fillRange: fillRange);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       mainAxisSize: MainAxisSize.min,
@@ -74,10 +71,10 @@ class DashboardMonthTransactionsList extends StatelessWidget {
             GroupedTxnDayMarker(:final day) => GroupedTxnDayHeader(day: day),
             GroupedTxnEmptyDayMarker() => GroupedTxnEmptyDayLabel(l10n: l10n),
             GroupedTxnTxMarker(:final transaction) => GroupedTxnTransactionTile(
-                transaction: transaction,
-                l10n: l10n,
-                useWeightedAmounts: useWeightedAmounts,
-              ),
+              transaction: transaction,
+              l10n: l10n,
+              useWeightedAmounts: useWeightedAmounts,
+            ),
             GroupedTxnTransferPairMarker(:final source, :final target) =>
               GroupedTxnTransferPairTile(
                 source: source,

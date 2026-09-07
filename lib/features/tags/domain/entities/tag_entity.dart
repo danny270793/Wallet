@@ -40,5 +40,13 @@ class TagEntity extends Equatable {
   };
 
   @override
-  List<Object?> get props => [id, userId, name, description, hidden, createdAt, updatedAt];
+  List<Object?> get props => [
+    id,
+    userId,
+    name,
+    description,
+    hidden,
+    createdAt,
+    updatedAt,
+  ];
 }
