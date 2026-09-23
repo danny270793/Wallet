@@ -191,6 +191,7 @@ void setupDi() {
       updateCard: getIt(),
       deleteCard: getIt(),
       adjustBalanceViaTransaction: getIt(),
+      listCreditInstallments: getIt(),
     ),
   );
 
