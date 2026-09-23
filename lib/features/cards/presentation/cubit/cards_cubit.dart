@@ -1,7 +1,9 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../../../core/credit_ledger_grouping.dart';
 import '../../../../core/logger/app_logger.dart';
 import '../../../../core/remote_load_failure.dart';
 import '../../../../core/sort_by_name.dart';
+import '../../../transactions/domain/usecases/list_transactions_having_credit_group_usecase.dart';
 import '../../domain/entities/card_entity.dart';
 import '../../domain/usecases/get_cards_usecase.dart';
 import '../../domain/usecases/create_card_usecase.dart';
@@ -16,6 +18,7 @@ class CardsCubit extends Cubit<CardsState> {
   final UpdateCardUsecase _updateCard;
   final DeleteCardUsecase _deleteCard;
   final AdjustCardBalanceViaTransactionUsecase _adjustBalanceViaTransaction;
+  final ListTransactionsHavingCreditGroupUsecase _listCreditInstallments;
 
   CardsCubit({
     required GetCardsUsecase getCards,
@@ -23,11 +26,13 @@ class CardsCubit extends Cubit<CardsState> {
     required UpdateCardUsecase updateCard,
     required DeleteCardUsecase deleteCard,
     required AdjustCardBalanceViaTransactionUsecase adjustBalanceViaTransaction,
+    required ListTransactionsHavingCreditGroupUsecase listCreditInstallments,
   }) : _getCards = getCards,
        _createCard = createCard,
        _updateCard = updateCard,
        _deleteCard = deleteCard,
        _adjustBalanceViaTransaction = adjustBalanceViaTransaction,
+       _listCreditInstallments = listCreditInstallments,
        super(const CardsInitial());
 
   bool _preserveOfflineCacheFlag() => switch (state) {
@@ -35,6 +40,24 @@ class CardsCubit extends Cubit<CardsState> {
     CardsActionError(:final servedFromOfflineCache) => servedFromOfflineCache,
     _ => false,
   };
+
+  Map<String, CardCreditTotals> _currentCreditTotals() => switch (state) {
+    CardsLoaded(:final creditTotals) => creditTotals,
+    CardsActionError(:final creditTotals) => creditTotals,
+    _ => const {},
+  };
+
+  /// Installments already posted stay on the card balance, the rest are shown apart.
+  /// A failure here only blanks the credit column; the cards themselves still render.
+  Future<Map<String, CardCreditTotals>> _creditTotals() async {
+    try {
+      final bundle = await _listCreditInstallments();
+      return creditTotalsByCard(bundle.value);
+    } catch (e, s) {
+      AppLogger.error('failed to load card credit installments', e, s);
+      return const {};
+    }
+  }
 
   Future<void> load({bool showLoading = true}) async {
     AppLogger.debug('loading cards');
@@ -46,6 +69,7 @@ class CardsCubit extends Cubit<CardsState> {
       emit(
         CardsLoaded(
           cards,
+          creditTotals: await _creditTotals(),
           servedFromOfflineCache: bundle.servedFromOfflineCache,
         ),
       );
@@ -76,6 +100,7 @@ class CardsCubit extends Cubit<CardsState> {
       emit(
         CardsLoaded(
           cards,
+          creditTotals: await _creditTotals(),
           servedFromOfflineCache: bundle.servedFromOfflineCache,
         ),
       );
@@ -84,6 +109,7 @@ class CardsCubit extends Cubit<CardsState> {
       emit(
         CardsActionError(
           current,
+          creditTotals: _currentCreditTotals(),
           servedFromOfflineCache: _preserveOfflineCacheFlag(),
         ),
       );
@@ -109,7 +135,16 @@ class CardsCubit extends Cubit<CardsState> {
         cutDay: cutDay,
         payDay: payDay,
       );
-      final delta = targetBalance - previousBalance;
+      final totals = await _creditTotals();
+      var cardsForDelta = current;
+      if (cardsForDelta.isEmpty) {
+        cardsForDelta = sortedByName((await _getCards()).value, (c) => c.name);
+      }
+      final matching = cardsForDelta.where((c) => c.id == id);
+      final previousPosted = matching.isEmpty
+          ? previousBalance
+          : cardPostedBalance(matching.first.balance, totals[id]);
+      final delta = targetBalance - previousPosted;
       if (delta.abs() >= 1e-9) {
         await _adjustBalanceViaTransaction(cardId: id, delta: delta);
       }
@@ -119,6 +154,7 @@ class CardsCubit extends Cubit<CardsState> {
       emit(
         CardsLoaded(
           cards,
+          creditTotals: await _creditTotals(),
           servedFromOfflineCache: bundle.servedFromOfflineCache,
         ),
       );
@@ -130,6 +166,7 @@ class CardsCubit extends Cubit<CardsState> {
         emit(
           CardsActionError(
             reloaded,
+            creditTotals: await _creditTotals(),
             servedFromOfflineCache: bundle.servedFromOfflineCache,
           ),
         );
@@ -137,6 +174,7 @@ class CardsCubit extends Cubit<CardsState> {
         emit(
           CardsActionError(
             current,
+            creditTotals: _currentCreditTotals(),
             servedFromOfflineCache: _preserveOfflineCacheFlag(),
           ),
         );
@@ -156,6 +194,7 @@ class CardsCubit extends Cubit<CardsState> {
             current.where((a) => a.id != id).toList(),
             (c) => c.name,
           ),
+          creditTotals: _currentCreditTotals(),
           servedFromOfflineCache: _preserveOfflineCacheFlag(),
         ),
       );
@@ -165,6 +204,7 @@ class CardsCubit extends Cubit<CardsState> {
       emit(
         CardsActionError(
           current,
+          creditTotals: _currentCreditTotals(),
           servedFromOfflineCache: _preserveOfflineCacheFlag(),
         ),
       );
