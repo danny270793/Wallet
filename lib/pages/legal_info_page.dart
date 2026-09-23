@@ -94,13 +94,13 @@ class _AboutBody extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Center(
-            child: CircleAvatar(
-              radius: 40,
-              backgroundColor: scheme.primaryContainer,
-              child: Icon(
-                Icons.account_balance_wallet_rounded,
-                size: 40,
-                color: scheme.onPrimaryContainer,
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(20),
+              child: Image.asset(
+                'assets/launcher-ios.png',
+                width: 88,
+                height: 88,
+                filterQuality: FilterQuality.medium,
               ),
             ),
           ),
