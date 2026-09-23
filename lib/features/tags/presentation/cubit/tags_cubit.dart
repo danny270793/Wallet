@@ -37,7 +37,11 @@ class TagsCubit extends Cubit<TagsState> {
     if (showLoading) emit(const TagsLoading());
     try {
       final bundle = await _getTags();
-      final tags = sortedByName(bundle.value, (t) => t.name);
+      final tags = sortedVisibleThenByName(
+        bundle.value,
+        nameOf: (t) => t.name,
+        isHidden: (t) => t.hidden,
+      );
       AppLogger.info('tags loaded: ${tags.length}');
       emit(
         TagsLoaded(tags, servedFromOfflineCache: bundle.servedFromOfflineCache),
@@ -56,7 +60,11 @@ class TagsCubit extends Cubit<TagsState> {
       AppLogger.info('tag created: ${tag.id}');
       emit(
         TagsLoaded(
-          sortedByName([...current, tag], (t) => t.name),
+          sortedVisibleThenByName(
+            [...current, tag],
+            nameOf: (t) => t.name,
+            isHidden: (t) => t.hidden,
+          ),
           servedFromOfflineCache: _preserveOfflineCacheFlag(),
         ),
       );
@@ -89,9 +97,10 @@ class TagsCubit extends Cubit<TagsState> {
       AppLogger.info('tag updated: ${updated.id}');
       emit(
         TagsLoaded(
-          sortedByName(
+          sortedVisibleThenByName(
             current.map((a) => a.id == id ? updated : a).toList(),
-            (t) => t.name,
+            nameOf: (t) => t.name,
+            isHidden: (t) => t.hidden,
           ),
           servedFromOfflineCache: _preserveOfflineCacheFlag(),
         ),
@@ -115,9 +124,10 @@ class TagsCubit extends Cubit<TagsState> {
       AppLogger.info('tag deleted: $id');
       emit(
         TagsLoaded(
-          sortedByName(
+          sortedVisibleThenByName(
             current.where((a) => a.id != id).toList(),
-            (t) => t.name,
+            nameOf: (t) => t.name,
+            isHidden: (t) => t.hidden,
           ),
           servedFromOfflineCache: _preserveOfflineCacheFlag(),
         ),
