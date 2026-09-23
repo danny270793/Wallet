@@ -192,7 +192,7 @@ const _transferAmountInputFormatters = <TextInputFormatter>[
   _DecimalAmountInputFormatter(allowNegative: false),
 ];
 
-/// Speed dial: main control plus new-transaction and account transfer.
+/// Speed dial: main control plus new-transaction, pay card, and account transfer.
 class TransactionsExpandableFab extends StatelessWidget {
   const TransactionsExpandableFab({
     super.key,
@@ -201,7 +201,9 @@ class TransactionsExpandableFab extends StatelessWidget {
     required this.onOpenChanged,
     required this.onNewTransaction,
     required this.onTransfer,
+    required this.onPay,
     this.transferHeroTag = 'transactions_fab_transfer',
+    this.payHeroTag = 'transactions_fab_pay',
     this.newTransactionHeroTag = 'transactions_fab_new',
     this.toggleHeroTag = 'transactions_fab_toggle',
   });
@@ -211,7 +213,9 @@ class TransactionsExpandableFab extends StatelessWidget {
   final ValueChanged<bool> onOpenChanged;
   final VoidCallback onNewTransaction;
   final VoidCallback onTransfer;
+  final VoidCallback onPay;
   final String transferHeroTag;
+  final String payHeroTag;
   final String newTransactionHeroTag;
   final String toggleHeroTag;
 
@@ -222,6 +226,18 @@ class TransactionsExpandableFab extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.end,
       children: [
         if (isOpen) ...[
+          Tooltip(
+            message: l10n.transactionsFabPay,
+            child: FloatingActionButton.small(
+              heroTag: payHeroTag,
+              onPressed: () {
+                onOpenChanged(false);
+                onPay();
+              },
+              child: const Icon(Icons.payments_outlined),
+            ),
+          ),
+          const SizedBox(height: 12),
           Tooltip(
             message: l10n.transactionsFabTransfer,
             child: FloatingActionButton.small(
@@ -263,6 +279,7 @@ class _AccountTransferBottomSheet extends StatefulWidget {
     required this.l10n,
     this.editingSource,
     this.editingTarget,
+    this.payCard = false,
   }) : assert(
          (editingSource == null && editingTarget == null) ||
              (editingSource != null && editingTarget != null),
@@ -272,6 +289,9 @@ class _AccountTransferBottomSheet extends StatefulWidget {
   final AppLocalizations l10n;
   final TransactionEntity? editingSource;
   final TransactionEntity? editingTarget;
+
+  /// Pay a card from an account: source picker is accounts, target picker is cards.
+  final bool payCard;
 
   @override
   State<_AccountTransferBottomSheet> createState() =>
@@ -299,6 +319,20 @@ class _AccountTransferBottomSheetState
       widget.editingSource != null && widget.editingTarget != null;
 
   int get _paymentMethodCount => _accounts.length + _cards.length;
+
+  /// Target is always an account; source can be an account or a card.
+  bool get _canTransfer =>
+      _accounts.length >= 2 || (_accounts.isNotEmpty && _cards.isNotEmpty);
+
+  bool get _canPayCard => _accounts.isNotEmpty && _cards.isNotEmpty;
+
+  bool get _payCard {
+    if (widget.payCard) return true;
+    final t = widget.editingTarget;
+    return t != null && t.cardId != null && t.cardId!.isNotEmpty;
+  }
+
+  bool get _canSubmitLegs => _payCard ? _canPayCard : _canTransfer;
 
   @override
   void initState() {
@@ -387,7 +421,21 @@ class _AccountTransferBottomSheetState
 
   void _pruneStalePickKeysAndDefault() {
     if (!_pickKeyStillValid(_sourcePickKey)) _sourcePickKey = null;
-    if (!_pickKeyStillValid(_targetPickKey)) _targetPickKey = null;
+    if (_payCard) {
+      if (_sourcePickKey?.startsWith(_paymentMethodPickCardPrefix) ?? false) {
+        _sourcePickKey = null;
+      }
+      if (!_pickKeyStillValid(_targetPickKey) ||
+          !(_targetPickKey?.startsWith(_paymentMethodPickCardPrefix) ??
+              false)) {
+        _targetPickKey = null;
+      }
+      return;
+    }
+    if (!_pickKeyStillValid(_targetPickKey) ||
+        (_targetPickKey?.startsWith(_paymentMethodPickCardPrefix) ?? false)) {
+      _targetPickKey = null;
+    }
   }
 
   Future<void> _loadPaymentMethods() async {
@@ -461,10 +509,16 @@ class _AccountTransferBottomSheetState
       context,
       l10n: l10n,
       sheetTitle: source
-          ? l10n.transferSourceAccount
-          : l10n.transferTargetAccount,
+          ? (_payCard
+                ? l10n.transactionAccount
+                : l10n.transferSourceAccount)
+          : (_payCard
+                ? l10n.transactionCard
+                : l10n.transferTargetAccount),
       getAccounts: () => _accounts,
       getCards: () => _cards,
+      accountsOnly: _payCard ? source : !source,
+      cardsOnly: _payCard && !source,
       onListsUpdated: (a, c) {
         if (!mounted) return;
         setState(() {
@@ -487,7 +541,7 @@ class _AccountTransferBottomSheetState
   }
 
   Future<void> _submit() async {
-    if (_loadingPaymentMethods || _paymentMethodCount < 2) return;
+    if (_loadingPaymentMethods || !_canSubmitLegs) return;
     if (!_formKey.currentState!.validate()) return;
     if (_sourcePickKey == null || _targetPickKey == null) return;
     if (_sourcePickKey == _targetPickKey) {
@@ -501,6 +555,11 @@ class _AccountTransferBottomSheetState
 
     final s = _parseTransferPickKey(_sourcePickKey!);
     final t = _parseTransferPickKey(_targetPickKey!);
+    if (_payCard) {
+      if (s.accountId == null || t.cardId == null) return;
+    } else {
+      if (t.accountId == null || t.cardId != null) return;
+    }
 
     setState(() => _submitting = true);
     final ok = _isEditingPair
@@ -531,10 +590,18 @@ class _AccountTransferBottomSheetState
   @override
   Widget build(BuildContext context) {
     final l10n = widget.l10n;
+    final sourceLabel = _payCard
+        ? l10n.transactionAccount
+        : l10n.transferSourceAccount;
+    final targetLabel = _payCard
+        ? l10n.transactionCard
+        : l10n.transferTargetAccount;
 
     return BottomSheetPinnedTitleScrollView(
       padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
-      title: _isEditingPair ? l10n.editTransferTitle : l10n.transferSheetTitle,
+      title: _isEditingPair
+          ? (_payCard ? l10n.editPayTitle : l10n.editTransferTitle)
+          : (_payCard ? l10n.paySheetTitle : l10n.transferSheetTitle),
       child: Form(
         key: _formKey,
         child: Column(
@@ -584,7 +651,7 @@ class _AccountTransferBottomSheetState
                   Expanded(
                     child: InputDecorator(
                       decoration: InputDecoration(
-                        labelText: l10n.transferSourceAccount,
+                        labelText: sourceLabel,
                       ),
                       child: const SizedBox(
                         height: 40,
@@ -602,7 +669,7 @@ class _AccountTransferBottomSheetState
                   Expanded(
                     child: InputDecorator(
                       decoration: InputDecoration(
-                        labelText: l10n.transferTargetAccount,
+                        labelText: targetLabel,
                       ),
                       child: const SizedBox(
                         height: 40,
@@ -618,11 +685,13 @@ class _AccountTransferBottomSheetState
                   ),
                 ],
               )
-            else if (_paymentMethodCount < 2)
+            else if (!_canSubmitLegs)
               Padding(
                 padding: const EdgeInsets.symmetric(vertical: 8),
                 child: Text(
-                  l10n.transferNeedTwoAccounts,
+                  _payCard
+                      ? l10n.payNeedAccountAndCard
+                      : l10n.transferNeedTwoAccounts,
                   textAlign: TextAlign.center,
                 ),
               )
@@ -637,7 +706,7 @@ class _AccountTransferBottomSheetState
                       showCursor: false,
                       controller: _sourceDisplayController,
                       decoration: InputDecoration(
-                        labelText: l10n.transferSourceAccount,
+                        labelText: sourceLabel,
                         suffixIcon: const Icon(
                           Icons.expand_more_rounded,
                           size: 22,
@@ -656,7 +725,7 @@ class _AccountTransferBottomSheetState
                       showCursor: false,
                       controller: _targetDisplayController,
                       decoration: InputDecoration(
-                        labelText: l10n.transferTargetAccount,
+                        labelText: targetLabel,
                         suffixIcon: const Icon(
                           Icons.expand_more_rounded,
                           size: 22,
@@ -691,7 +760,7 @@ class _AccountTransferBottomSheetState
               onPressed:
                   _submitting ||
                       _loadingPaymentMethods ||
-                      _paymentMethodCount < 2
+                      !_canSubmitLegs
                   ? null
                   : _submit,
               child: _submitting
@@ -712,13 +781,18 @@ class _AccountTransferBottomSheetState
 void showAccountTransferCreateBottomSheet(
   BuildContext context, {
   required AppLocalizations l10n,
+  bool payCard = false,
 }) {
   final cubit = context.read<TransactionsCubit>();
   showModalBottomSheet<void>(
     context: context,
     isScrollControlled: true,
     showDragHandle: false,
-    builder: (_) => _AccountTransferBottomSheet(cubit: cubit, l10n: l10n),
+    builder: (_) => _AccountTransferBottomSheet(
+      cubit: cubit,
+      l10n: l10n,
+      payCard: payCard,
+    ),
   );
 }
 
@@ -837,6 +911,10 @@ class _TransactionsViewState extends State<_TransactionsView> {
           valueListenable: monthNotifier,
           builder: (context, visibleMonth, _) {
             final filtered = _filteredTransactions(state);
+            final listTransactions = _transactionsWithTransferPeers(
+              state,
+              filtered,
+            );
             final showTotalsBar =
                 state is TransactionsLoaded || state is TransactionsActionError;
 
@@ -892,6 +970,11 @@ class _TransactionsViewState extends State<_TransactionsView> {
                 ),
                 onTransfer: () =>
                     showAccountTransferCreateBottomSheet(context, l10n: l10n),
+                onPay: () => showAccountTransferCreateBottomSheet(
+                  context,
+                  l10n: l10n,
+                  payCard: true,
+                ),
               ),
               bottomNavigationBar: showTotalsBar
                   ? TransactionsTotalsBarHost(
@@ -910,7 +993,7 @@ class _TransactionsViewState extends State<_TransactionsView> {
                       l10n,
                       visibleMonth,
                       monthNotifier,
-                      filtered,
+                      listTransactions,
                     ),
                   ),
                   if (_fabMenuOpen)
@@ -938,6 +1021,42 @@ class _TransactionsViewState extends State<_TransactionsView> {
         categoryIdFilter: widget.categoryIdFilter,
         tagIdFilter: widget.tagIdFilter,
       );
+
+  /// Account/card views keep the opposite transfer leg in the list so the row
+  /// can show its direction (source → target). Totals still use the strictly
+  /// filtered list, so the selected account's balance is unchanged.
+  List<TransactionEntity> _transactionsWithTransferPeers(
+    TransactionsState state,
+    List<TransactionEntity> filtered,
+  ) {
+    final paymentMethodScoped =
+        (widget.accountIdFilter?.isNotEmpty ?? false) ||
+        (widget.cardIdFilter?.isNotEmpty ?? false);
+    if (!paymentMethodScoped) return filtered;
+
+    final transferGroupIds = filtered
+        .map((t) => t.transferGroupId)
+        .whereType<String>()
+        .where((id) => id.isNotEmpty)
+        .toSet();
+    if (transferGroupIds.isEmpty) return filtered;
+
+    final all = switch (state) {
+      TransactionsLoaded(:final transactions) => transactions,
+      TransactionsActionError(:final transactions) => transactions,
+      _ => const <TransactionEntity>[],
+    };
+    final byId = <String, TransactionEntity>{
+      for (final t in filtered) t.id: t,
+    };
+    for (final t in all) {
+      if (transferGroupIds.contains(t.transferGroupId)) {
+        byId[t.id] = t;
+      }
+    }
+    return byId.values.toList()
+      ..sort((a, b) => b.transactedAt.compareTo(a.transactedAt));
+  }
 
   Widget _body(
     BuildContext context,
@@ -1146,6 +1265,8 @@ void showAccountTransferEditorBottomSheet(
       l10n: l10n,
       editingSource: editingSource,
       editingTarget: editingTarget,
+      payCard:
+          editingTarget.cardId != null && editingTarget.cardId!.isNotEmpty,
     ),
   );
 }
@@ -1781,7 +1902,8 @@ class _PaymentMethodPickerSheet extends StatefulWidget {
     required this.onListsUpdated,
     this.paymentSwipe,
     this.cardsOnly = false,
-  });
+    this.accountsOnly = false,
+  }) : assert(!(cardsOnly && accountsOnly));
 
   final AppLocalizations l10n;
   final String sheetTitle;
@@ -1791,6 +1913,7 @@ class _PaymentMethodPickerSheet extends StatefulWidget {
   onListsUpdated;
   final PaymentMethodPickerSwipeActions? paymentSwipe;
   final bool cardsOnly;
+  final bool accountsOnly;
 
   @override
   State<_PaymentMethodPickerSheet> createState() =>
@@ -1853,17 +1976,26 @@ class _PaymentMethodPickerSheetState extends State<_PaymentMethodPickerSheet> {
   Widget build(BuildContext context) {
     final l10n = widget.l10n;
     final cardsOnly = widget.cardsOnly;
+    final accountsOnly = widget.accountsOnly;
     final paymentSwipe = widget.paymentSwipe;
 
-    final vAccounts = _visibleAccounts();
-    final vCards = _visibleCards();
+    final vAccounts = accountsOnly || !cardsOnly
+        ? _visibleAccounts()
+        : const <AccountEntity>[];
+    final vCards = cardsOnly || !accountsOnly
+        ? _visibleCards()
+        : const <CardEntity>[];
     final pickerAccountsSnapshot = widget.getAccounts();
     final pickerCardsSnapshot = widget.getCards();
     final hasAny = cardsOnly
         ? pickerCardsSnapshot.isNotEmpty
+        : accountsOnly
+        ? pickerAccountsSnapshot.isNotEmpty
         : pickerAccountsSnapshot.isNotEmpty || pickerCardsSnapshot.isNotEmpty;
     final filteredEmpty = cardsOnly
         ? vCards.isEmpty
+        : accountsOnly
+        ? vAccounts.isEmpty
         : vAccounts.isEmpty && vCards.isEmpty;
 
     final sheetTheme = Theme.of(context);
@@ -1911,11 +2043,18 @@ class _PaymentMethodPickerSheetState extends State<_PaymentMethodPickerSheet> {
                   IconButton(
                     tooltip: cardsOnly
                         ? l10n.newCard
+                        : accountsOnly
+                        ? l10n.newAccount
                         : l10n.paymentMethodAddChoiceTitle,
                     icon: const Icon(Icons.add_circle_outline),
                     onPressed: () async {
                       if (cardsOnly) {
                         await showCardEditorBottomSheet(context, l10n);
+                        await _refreshPicker();
+                        return;
+                      }
+                      if (accountsOnly) {
+                        await showAccountEditorBottomSheet(context, l10n);
                         await _refreshPicker();
                         return;
                       }
@@ -2001,6 +2140,8 @@ class _PaymentMethodPickerSheetState extends State<_PaymentMethodPickerSheet> {
                       child: Text(
                         cardsOnly
                             ? l10n.noCards
+                            : accountsOnly
+                            ? l10n.noAccounts
                             : '${l10n.noAccounts}\n${l10n.noCards}',
                         textAlign: TextAlign.center,
                       ),
@@ -2017,7 +2158,7 @@ class _PaymentMethodPickerSheetState extends State<_PaymentMethodPickerSheet> {
               else
                 SliverList.list(
                   children: [
-                    if (vCards.isNotEmpty) ...[
+                    if (vCards.isNotEmpty && !accountsOnly) ...[
                       Padding(
                         padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
                         child: Text(l10n.cards, style: titleSmallPrimary),
@@ -2120,6 +2261,7 @@ Future<String?> showPaymentMethodPickerSheet(
   onListsUpdated,
   PaymentMethodPickerSwipeActions? paymentSwipe,
   bool cardsOnly = false,
+  bool accountsOnly = false,
 }) {
   return showModalBottomSheet<String?>(
     context: context,
@@ -2133,6 +2275,7 @@ Future<String?> showPaymentMethodPickerSheet(
       onListsUpdated: onListsUpdated,
       paymentSwipe: paymentSwipe,
       cardsOnly: cardsOnly,
+      accountsOnly: accountsOnly,
     ),
   );
 }
@@ -2221,6 +2364,10 @@ class _TransactionDialogState extends State<_TransactionDialog> {
   bool get _ignoreSwitchShowsOn =>
       _creatingDeferredInstallments ? true : _ignore;
 
+  /// Deferred purchases live on cards only; hide accounts in the picker.
+  bool get _paymentMethodCardsOnly =>
+      widget.paymentMethodCardsOnly || _deferred;
+
   Timer? _descriptionSuggestDebounce;
   List<TransactionEntity> _descriptionSuggestionMatches = const [];
   bool _descriptionSuggestLoading = false;
@@ -2283,6 +2430,9 @@ class _TransactionDialogState extends State<_TransactionDialog> {
     _deferred =
         (t != null && (t.creditLedgerGroupingKey?.isNotEmpty ?? false)) ||
         (t == null && widget.forceDeferredCredit);
+    if (t == null && _deferred) {
+      _graceMonthsController.text = '0';
+    }
     _ignore = t?.ignore ?? false;
     if (t == null && widget.forceDeferredCredit) {
       _ignore = true;
@@ -2343,7 +2493,7 @@ class _TransactionDialogState extends State<_TransactionDialog> {
             _accountId = null;
           if (_cardId != null && !_cards.any((c) => c.id == _cardId))
             _cardId = null;
-          if (widget.paymentMethodCardsOnly) {
+          if (_paymentMethodCardsOnly) {
             _accountId = null;
           }
           if (_accountId != null && _cardId != null) {
@@ -2687,7 +2837,7 @@ class _TransactionDialogState extends State<_TransactionDialog> {
       sheetTitle: l10n.transactionPaymentMethod,
       getAccounts: () => _accounts,
       getCards: () => _cards,
-      cardsOnly: widget.paymentMethodCardsOnly,
+      cardsOnly: _paymentMethodCardsOnly,
       onListsUpdated: (a, c) {
         if (!mounted) return;
         setState(() {
@@ -2697,7 +2847,7 @@ class _TransactionDialogState extends State<_TransactionDialog> {
             _accountId = null;
           if (_cardId != null && !_cards.any((x) => x.id == _cardId))
             _cardId = null;
-          if (widget.paymentMethodCardsOnly) {
+          if (_paymentMethodCardsOnly) {
             _accountId = null;
           }
           if (_accountId != null && _cardId != null) {
@@ -2772,6 +2922,10 @@ class _TransactionDialogState extends State<_TransactionDialog> {
         _accountId = null;
         if (_deferred) {
           _ignore = true;
+          if (widget.transaction == null &&
+              _graceMonthsController.text.trim().isEmpty) {
+            _graceMonthsController.text = '0';
+          }
         }
       }
     });
@@ -3189,8 +3343,13 @@ class _TransactionDialogState extends State<_TransactionDialog> {
                               if (!_deferred) {
                                 _graceMonthsController.clear();
                                 _termMonthsController.clear();
-                              } else if (_cardId != null) {
-                                _ignore = true;
+                              } else {
+                                if (_graceMonthsController.text.trim().isEmpty) {
+                                  _graceMonthsController.text = '0';
+                                }
+                                if (_cardId != null) {
+                                  _ignore = true;
+                                }
                               }
                             });
                           },
