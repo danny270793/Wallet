@@ -15,9 +15,16 @@ import '../widgets/remote_load_failure_panel.dart';
 import '../widgets/shell_scaffold.dart';
 import '../widgets/transactions_month_scope.dart';
 import '../widgets/wallet_bottom_bar_insets.dart';
+import '../widgets/wallet_totals_pager_dots.dart';
 import '../widgets/swipeable_list_tile.dart';
 import '../widgets/transaction_delete_dialogs.dart';
 import 'transactions_page.dart' show showTransactionEditorBottomSheet;
+
+/// Highlight for credits whose last installment falls in the visible month.
+const Color _kCreditEndsThisMonthColor = Color(0xFF1B8736);
+
+/// Highlight for credits with a single installment left after the visible month.
+const Color _kCreditEndsNextMonthColor = Color(0xFFB45309);
 
 /// Sum of [TransactionEntity.value] for the credit group [creditLedgerKey] across [flat].
 double creditLedgerTotalValueForGroup(
@@ -95,6 +102,34 @@ double creditLedgerTotalValueAfterSelectedMonth(
   return sum;
 }
 
+/// Credit groups ordered by installments left after [monthStart]: the ones ending
+/// this month first, then 1 pending, 2 pending, and so on. Groups with the same
+/// count keep the incoming order (newest first).
+List<({String id, List<TransactionEntity> rows})> creditGroupsByPendingCount(
+  List<({String id, List<TransactionEntity> rows})> groups,
+  List<TransactionEntity> flat,
+  DateTime monthStart,
+) {
+  final pending = <String, int>{};
+  final incomingOrder = <String, int>{};
+  for (var i = 0; i < groups.length; i++) {
+    final id = groups[i].id;
+    pending[id] = creditLedgerTransactionCountAfterSelectedMonth(
+      flat,
+      id,
+      monthStart,
+    );
+    incomingOrder[id] = i;
+  }
+  final ordered = [...groups];
+  ordered.sort((a, b) {
+    final byPending = pending[a.id]!.compareTo(pending[b.id]!);
+    if (byPending != 0) return byPending;
+    return incomingOrder[a.id]!.compareTo(incomingOrder[b.id]!);
+  });
+  return ordered;
+}
+
 List<String> _relationNames(TransactionEntity t) => [
   if (t.categoryName?.isNotEmpty == true) t.categoryName!,
   if (t.accountName?.isNotEmpty == true) t.accountName!,
@@ -137,11 +172,57 @@ double creditLedgerDueInSelectedMonth(
   ).fold<double>(0, (a, t) => a + t.value);
 }
 
-class _CreditsPendingTotalsBar extends StatelessWidget {
+/// Sum of the installments due in [monthStart]'s calendar month that belong to credit
+/// groups with nothing left afterwards — the groups the list marks “ends this month”.
+double creditLedgerEndingInSelectedMonthTotal(
+  List<TransactionEntity> flat,
+  DateTime monthStart,
+) {
+  final monthGroups = groupedCreditLedger(
+    creditLedgerInstallmentsInSelectedMonth(flat, monthStart),
+  );
+  var sum = 0.0;
+  for (final g in monthGroups) {
+    final pendingAfter = creditLedgerTransactionCountAfterSelectedMonth(
+      flat,
+      g.id,
+      monthStart,
+    );
+    if (pendingAfter > 0) continue;
+    sum += g.rows.fold<double>(0, (a, t) => a + t.value);
+  }
+  return sum;
+}
+
+/// Sum of the single installment still due after [monthStart]'s calendar month for the
+/// credit groups with exactly one left — the rows the list marks “1 pending”.
+double creditLedgerEndingAfterSelectedMonthTotal(
+  List<TransactionEntity> flat,
+  DateTime monthStart,
+) {
+  final monthGroups = groupedCreditLedger(
+    creditLedgerInstallmentsInSelectedMonth(flat, monthStart),
+  );
+  var sum = 0.0;
+  for (final g in monthGroups) {
+    final pendingAfter = creditLedgerTransactionCountAfterSelectedMonth(
+      flat,
+      g.id,
+      monthStart,
+    );
+    if (pendingAfter != 1) continue;
+    sum += creditLedgerTotalValueAfterSelectedMonth(flat, g.id, monthStart);
+  }
+  return sum;
+}
+
+class _CreditsPendingTotalsBar extends StatefulWidget {
   const _CreditsPendingTotalsBar({
     required this.l10n,
     required this.pendingTotal,
     required this.dueInSelectedMonthTotal,
+    required this.endingInSelectedMonthTotal,
+    required this.endingAfterSelectedMonthTotal,
   });
 
   final AppLocalizations l10n;
@@ -152,24 +233,127 @@ class _CreditsPendingTotalsBar extends StatelessWidget {
   /// Sum for installments due in the selected month ([creditLedgerDueInSelectedMonth]).
   final double dueInSelectedMonthTotal;
 
+  /// Sum for the credits finishing in the selected month ([creditLedgerEndingInSelectedMonthTotal]).
+  final double endingInSelectedMonthTotal;
+
+  /// Sum for the credits with one installment left ([creditLedgerEndingAfterSelectedMonthTotal]).
+  final double endingAfterSelectedMonthTotal;
+
+  @override
+  State<_CreditsPendingTotalsBar> createState() =>
+      _CreditsPendingTotalsBarState();
+}
+
+/// Drag horizontally (or watch the dots) to move through the pending / due page, the
+/// “ends this month” page and the “ends next month” page.
+class _CreditsPendingTotalsBarState extends State<_CreditsPendingTotalsBar> {
+  static const _kPageCount = 3;
+
+  final _controller = PageController();
+  int _page = 0;
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  Widget _stat(
+    BuildContext context, {
+    required double amount,
+    required String label,
+    required Color amountColor,
+    required TextStyle? amountStyle,
+  }) {
+    final theme = Theme.of(context);
+    return Expanded(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            // Owed amounts: the label and color carry the meaning, so no sign.
+            widget.l10n.transactionAmountValue(amount.abs().toStringAsFixed(2)),
+            textAlign: TextAlign.center,
+            style: amountStyle?.copyWith(
+              fontWeight: FontWeight.w700,
+              height: 1.2,
+              fontFeatures: const [FontFeature.tabularFigures()],
+              color: amountColor,
+            ),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            label,
+            textAlign: TextAlign.center,
+            style: theme.textTheme.labelMedium?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final amountStr = l10n.transactionAmountValue(
-      pendingTotal.toStringAsFixed(2),
-    );
-    final hasPending = pendingTotal.abs() > 0.005;
-    final amountColor = hasPending
+    final l10n = widget.l10n;
+
+    Color owedColor(double v) => v.abs() > 0.005
         ? theme.colorScheme.error
         : theme.colorScheme.onSurfaceVariant;
 
-    final monthStr = l10n.transactionAmountValue(
-      dueInSelectedMonthTotal.toStringAsFixed(2),
-    );
-    final hasMonthDue = dueInSelectedMonthTotal.abs() > 0.005;
-    final monthColor = hasMonthDue
-        ? theme.colorScheme.error
-        : theme.colorScheme.onSurfaceVariant;
+    final pages = <Widget>[
+      Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _stat(
+            context,
+            amount: widget.pendingTotal,
+            label: l10n.creditsPendingTotalsLabel,
+            amountColor: owedColor(widget.pendingTotal),
+            amountStyle: theme.textTheme.titleMedium,
+          ),
+          const SizedBox(width: 12),
+          _stat(
+            context,
+            amount: widget.dueInSelectedMonthTotal,
+            label: l10n.creditsDueThisMonthLabel,
+            amountColor: owedColor(widget.dueInSelectedMonthTotal),
+            amountStyle: theme.textTheme.titleSmall,
+          ),
+        ],
+      ),
+      Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _stat(
+            context,
+            amount: widget.endingInSelectedMonthTotal,
+            label: l10n.creditsEndsThisMonthLabel,
+            amountColor: widget.endingInSelectedMonthTotal.abs() > 0.005
+                ? _kCreditEndsThisMonthColor
+                : theme.colorScheme.onSurfaceVariant,
+            amountStyle: theme.textTheme.titleMedium,
+          ),
+        ],
+      ),
+      Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _stat(
+            context,
+            amount: widget.endingAfterSelectedMonthTotal,
+            label: l10n.creditsEndsNextMonthLabel,
+            amountColor: widget.endingAfterSelectedMonthTotal.abs() > 0.005
+                ? _kCreditEndsNextMonthColor
+                : theme.colorScheme.onSurfaceVariant,
+            amountStyle: theme.textTheme.titleMedium,
+          ),
+        ],
+      ),
+    ];
 
     return Material(
       color: theme.colorScheme.surfaceContainerHighest,
@@ -179,61 +363,27 @@ class _CreditsPendingTotalsBar extends StatelessWidget {
         ),
         child: Padding(
           padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
             children: [
-              Expanded(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      amountStr,
-                      textAlign: TextAlign.center,
-                      style: theme.textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w700,
-                        height: 1.2,
-                        fontFeatures: const [FontFeature.tabularFigures()],
-                        color: amountColor,
-                      ),
+              Stack(
+                children: [
+                  // Invisible copies give the pager the height of its tallest page.
+                  for (final p in pages)
+                    Opacity(opacity: 0, child: IgnorePointer(child: p)),
+                  Positioned.fill(
+                    child: PageView(
+                      controller: _controller,
+                      onPageChanged: (i) => setState(() => _page = i),
+                      children: pages,
                     ),
-                    const SizedBox(height: 2),
-                    Text(
-                      l10n.creditsPendingTotalsLabel,
-                      textAlign: TextAlign.center,
-                      style: theme.textTheme.labelMedium?.copyWith(
-                        color: theme.colorScheme.onSurfaceVariant,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ],
-                ),
+                  ),
+                ],
               ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      monthStr,
-                      textAlign: TextAlign.center,
-                      style: theme.textTheme.titleSmall?.copyWith(
-                        fontWeight: FontWeight.w700,
-                        height: 1.2,
-                        fontFeatures: const [FontFeature.tabularFigures()],
-                        color: monthColor,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      l10n.creditsDueThisMonthLabel,
-                      textAlign: TextAlign.center,
-                      style: theme.textTheme.labelMedium?.copyWith(
-                        color: theme.colorScheme.onSurfaceVariant,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ],
-                ),
+              const SizedBox(height: 10),
+              WalletTotalsPagerDots(
+                count: _kPageCount,
+                selectedIndex: _page,
               ),
             ],
           ),
@@ -346,7 +496,7 @@ class _CreditGroupTile extends StatelessWidget {
       if (creditAt != null) {
         final locale = Localizations.localeOf(context);
         final when = DateFormat(
-          'yMMMd, HH:mm',
+          'yyyy/MM/dd HH:mm',
           locale.toString(),
         ).format(creditAt.toLocal());
         chunks.add(
@@ -376,9 +526,11 @@ class _CreditGroupTile extends StatelessWidget {
                   )
                 : l10n.creditsInstallmentsEndsThisMonth(totalInstallmentCount),
             style: theme.textTheme.bodySmall?.copyWith(
-              color: pendingCountAfterSelectedMonth > 0
-                  ? theme.colorScheme.onSurfaceVariant
-                  : const Color(0xFF1B8736),
+              color: switch (pendingCountAfterSelectedMonth) {
+                0 => _kCreditEndsThisMonthColor,
+                1 => _kCreditEndsNextMonthColor,
+                _ => theme.colorScheme.onSurfaceVariant,
+              },
             ),
           ),
         ),
@@ -505,6 +657,7 @@ class _CreditsPageState extends State<CreditsPage> {
       l10n: l10n,
       cubit: cubit,
       transaction: t,
+      paymentMethodCardsOnly: true,
     );
     if (mounted) await _load();
   }
@@ -555,9 +708,21 @@ class _CreditsPageState extends State<CreditsPage> {
           _flat,
           visibleMonth,
         );
-        final groups = groupedCreditLedger(monthInstallments);
+        final groups = creditGroupsByPendingCount(
+          groupedCreditLedger(monthInstallments),
+          _flat,
+          visibleMonth,
+        );
         final showPendingBar = !_loading && hasAnyCredits;
         final dueInMonth = creditLedgerDueInSelectedMonth(_flat, visibleMonth);
+        final endingInMonth = creditLedgerEndingInSelectedMonthTotal(
+          _flat,
+          visibleMonth,
+        );
+        final endingAfterMonth = creditLedgerEndingAfterSelectedMonthTotal(
+          _flat,
+          visibleMonth,
+        );
         final pendingTotal = creditLedgerPendingTotalFromSelectedMonth(
           _flat,
           visibleMonth,
@@ -578,6 +743,8 @@ class _CreditsPageState extends State<CreditsPage> {
                   l10n: l10n,
                   pendingTotal: pendingTotal,
                   dueInSelectedMonthTotal: dueInMonth,
+                  endingInSelectedMonthTotal: endingInMonth,
+                  endingAfterSelectedMonthTotal: endingAfterMonth,
                 )
               : null,
           body: RefreshIndicator(

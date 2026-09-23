@@ -73,23 +73,15 @@ class _LoginPageState extends State<LoginPage> {
   }) {
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
     return Column(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: crossAxisAlignment,
       children: [
-        Container(
+        Image.asset(
+          'assets/launcher.png',
           width: 72,
           height: 72,
-          decoration: BoxDecoration(
-            color: colorScheme.primaryContainer,
-            shape: BoxShape.circle,
-          ),
-          child: Icon(
-            Icons.account_balance_wallet_rounded,
-            size: 36,
-            color: colorScheme.onPrimaryContainer,
-          ),
+          semanticLabel: l10n.appTitle,
         ),
         const SizedBox(height: 24),
         Text(
@@ -99,16 +91,6 @@ class _LoginPageState extends State<LoginPage> {
               : TextAlign.center,
           style: theme.textTheme.headlineMedium?.copyWith(
             fontWeight: FontWeight.bold,
-          ),
-        ),
-        const SizedBox(height: 8),
-        Text(
-          l10n.signInSubtitle,
-          textAlign: crossAxisAlignment == CrossAxisAlignment.start
-              ? TextAlign.start
-              : TextAlign.center,
-          style: theme.textTheme.bodyMedium?.copyWith(
-            color: colorScheme.onSurfaceVariant,
           ),
         ),
       ],

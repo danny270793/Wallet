@@ -878,6 +878,18 @@ abstract class AppLocalizations {
   /// **'Total'**
   String get listBalanceTotalLabel;
 
+  /// No description provided for @cardsTotalNonCredits.
+  ///
+  /// In en, this message translates to:
+  /// **'Non credits'**
+  String get cardsTotalNonCredits;
+
+  /// No description provided for @cardsTotalCredits.
+  ///
+  /// In en, this message translates to:
+  /// **'Credits'**
+  String get cardsTotalCredits;
+
   /// No description provided for @editAccount.
   ///
   /// In en, this message translates to:
@@ -1226,6 +1238,18 @@ abstract class AppLocalizations {
   /// **'Due this month'**
   String get creditsDueThisMonthLabel;
 
+  /// No description provided for @creditsEndsThisMonthLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Ends this month'**
+  String get creditsEndsThisMonthLabel;
+
+  /// No description provided for @creditsEndsNextMonthLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Ends next month'**
+  String get creditsEndsNextMonthLabel;
+
   /// No description provided for @creditsNewDeferredPurchase.
   ///
   /// In en, this message translates to:
@@ -1334,11 +1358,23 @@ abstract class AppLocalizations {
   /// **'Transfer'**
   String get transactionsFabTransfer;
 
+  /// No description provided for @transactionsFabPay.
+  ///
+  /// In en, this message translates to:
+  /// **'Pay'**
+  String get transactionsFabPay;
+
   /// No description provided for @transferSheetTitle.
   ///
   /// In en, this message translates to:
   /// **'Transfer'**
   String get transferSheetTitle;
+
+  /// No description provided for @paySheetTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Pay'**
+  String get paySheetTitle;
 
   /// No description provided for @transferSourceAccount.
   ///
@@ -1376,6 +1412,12 @@ abstract class AppLocalizations {
   /// **'Add at least two accounts or cards to transfer money between them'**
   String get transferNeedTwoAccounts;
 
+  /// No description provided for @payNeedAccountAndCard.
+  ///
+  /// In en, this message translates to:
+  /// **'Add at least one account and one card to pay a card'**
+  String get payNeedAccountAndCard;
+
   /// No description provided for @transferAccountSearch.
   ///
   /// In en, this message translates to:
@@ -1399,6 +1441,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Edit transfer'**
   String get editTransferTitle;
+
+  /// No description provided for @editPayTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit pay'**
+  String get editPayTitle;
 
   /// No description provided for @editTransaction.
   ///

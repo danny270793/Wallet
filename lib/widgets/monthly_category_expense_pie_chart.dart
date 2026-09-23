@@ -457,6 +457,19 @@ class MonthlyCategoryExpensePieChart extends StatelessWidget {
                 sectionsSpace: 2,
                 centerSpaceRadius: 48,
                 sections: sections,
+                pieTouchData: PieTouchData(
+                  touchCallback: (event, response) {
+                    if (event is! FlTapUpEvent) return;
+                    final idx =
+                        response?.touchedSection?.touchedSectionIndex ?? -1;
+                    if (idx < 0 || idx >= slices.length) return;
+                    final s = slices[idx];
+                    final onlyThis =
+                        categoryKeysFilter?.length == 1 &&
+                        categoryKeysFilter!.contains(s.keyId);
+                    onCategoryKeysFilterChanged(onlyThis ? null : {s.keyId});
+                  },
+                ),
               ),
             ),
           ),

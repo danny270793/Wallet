@@ -438,6 +438,12 @@ class AppLocalizationsEs extends AppLocalizations {
   String get listBalanceTotalLabel => 'Total';
 
   @override
+  String get cardsTotalNonCredits => 'Sin créditos';
+
+  @override
+  String get cardsTotalCredits => 'Créditos';
+
+  @override
   String get editAccount => 'Editar cuenta';
 
   @override
@@ -637,6 +643,12 @@ class AppLocalizationsEs extends AppLocalizations {
   String get creditsDueThisMonthLabel => 'A pagar este mes';
 
   @override
+  String get creditsEndsThisMonthLabel => 'Termina este mes';
+
+  @override
+  String get creditsEndsNextMonthLabel => 'Termina el próximo mes';
+
+  @override
   String get creditsNewDeferredPurchase => 'Nueva compra a crédito';
 
   @override
@@ -698,7 +710,13 @@ class AppLocalizationsEs extends AppLocalizations {
   String get transactionsFabTransfer => 'Transferir';
 
   @override
+  String get transactionsFabPay => 'Pagar';
+
+  @override
   String get transferSheetTitle => 'Transferir';
+
+  @override
+  String get paySheetTitle => 'Pagar';
 
   @override
   String get transferSourceAccount => 'Origen';
@@ -721,6 +739,10 @@ class AppLocalizationsEs extends AppLocalizations {
       'Añade al menos dos cuentas o tarjetas para transferir entre ellas';
 
   @override
+  String get payNeedAccountAndCard =>
+      'Añade al menos una cuenta y una tarjeta para pagar una tarjeta';
+
+  @override
   String get transferAccountSearch => 'Buscar por nombre';
 
   @override
@@ -732,6 +754,9 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get editTransferTitle => 'Editar transferencia';
+
+  @override
+  String get editPayTitle => 'Editar pago';
 
   @override
   String get editTransaction => 'Editar transacción';

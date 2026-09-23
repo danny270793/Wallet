@@ -141,7 +141,7 @@ class _YearlyDashboardViewState extends State<_YearlyDashboardView> {
                         YearlyCumulativeNetBarChart(
                           l10n: l10n,
                           year: y,
-                          transactions: _filterCredits(transactions),
+                          transactions: transactions,
                         ),
                         YearlyWeightedNetBarChart(
                           l10n: l10n,

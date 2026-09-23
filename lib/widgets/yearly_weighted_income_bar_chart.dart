@@ -103,12 +103,13 @@ int lastMonthWithAccountTransactionsForYear(
   return last;
 }
 
-/// Cumulative **accounts total** (sum of raw [TransactionEntity.value]) at end of each month in
-/// [year] using **local** dates: for month *m*, sums every non-deleted row in [txs] with a non-null
-/// [TransactionEntity.accountId] and `transactedAt` strictly before the first day of month *m*+1.
+/// Cumulative **accounts total** at end of each month in [year]: for month *m*,
+/// sums every non-deleted row in [txs] with a non-null [TransactionEntity.accountId]
+/// and `transactedAt` strictly before the first day of month *m*+1, **including
+/// years before [year]**.
 ///
-/// Matches `wallet_accounts_with_balance` aggregated across all accounts (footer total on `/accounts`).
-/// [txs] must list all such transactions through the end of [year] (yearly dashboard fetch).
+/// Matches `wallet_accounts_with_balance` aggregated across all accounts (footer
+/// total on `/accounts`) when [txs] includes full history through the end of [year].
 List<double> accountsTotalCumulativeByMonthForYear(
   List<TransactionEntity> txs,
   int year,
@@ -128,16 +129,23 @@ List<double> accountsTotalCumulativeByMonthForYear(
   return out;
 }
 
-/// Cumulative accounts-total values for Jan through [lastMonthWithAccountTransactionsForYear], then zeros
-/// so the chart keeps 12 month slots but shows no bar after the last month with account-linked data.
+/// Lifetime accounts-total at month-end for Jan through the last month that should
+/// be visible: all 12 months for past years, through the current month for this year.
+/// Later months stay 0 so the chart keeps 12 slots with no future bars.
 List<double> _cumulativeAccountsBalanceMonthlyBarsWithTrailingZeros(
   List<TransactionEntity> txs,
   int year,
 ) {
   final full = accountsTotalCumulativeByMonthForYear(txs, year);
-  final last = lastMonthWithAccountTransactionsForYear(txs, year);
-  if (last == 0) return full;
-  return List<double>.generate(12, (i) => i < last ? full[i] : 0.0);
+  final now = DateTime.now();
+  final lastVisible = year < now.year
+      ? 12
+      : year > now.year
+      ? 0
+      : now.month;
+  if (lastVisible <= 0) return List<double>.filled(12, 0);
+  if (lastVisible >= 12) return full;
+  return List<double>.generate(12, (i) => i < lastVisible ? full[i] : 0.0);
 }
 
 /// Bar chart: monthly weighted income for [year] from [transactions].

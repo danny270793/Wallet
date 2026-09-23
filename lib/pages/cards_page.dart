@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:wallet/l10n/app_localizations.dart';
+import '../core/credit_ledger_grouping.dart';
 import '../core/di/injection.dart';
 import '../features/cards/domain/entities/card_entity.dart';
 import '../features/cards/presentation/cubit/cards_cubit.dart';
@@ -17,11 +18,15 @@ void _showCardBottomSheet(
   BuildContext context,
   AppLocalizations l10n, {
   CardEntity? card,
+  CardCreditTotals? credits,
 }) {
   showCardEditorBottomSheet(
     context,
     l10n,
     card: card,
+    postedBalance: card == null
+        ? null
+        : cardPostedBalance(card.balance, credits),
     cubit: context.read<CardsCubit>(),
   );
 }
@@ -59,9 +64,23 @@ class _CardsView extends StatelessWidget {
           CardsActionError(:final cards) => cards,
           _ => <CardEntity>[],
         };
+        final creditTotals = switch (state) {
+          CardsLoaded(:final creditTotals) => creditTotals,
+          CardsActionError(:final creditTotals) => creditTotals,
+          _ => const <String, CardCreditTotals>{},
+        };
         final showTotalBar = cards.isNotEmpty;
-        final totalBalance = showTotalBar
-            ? cards.fold<double>(0, (s, c) => s + c.balance)
+        final totalNonCredits = showTotalBar
+            ? cards.fold<double>(
+                0,
+                (s, c) => s + cardPostedBalance(c.balance, creditTotals[c.id]),
+              )
+            : 0.0;
+        final totalCredits = showTotalBar
+            ? cards.fold<double>(
+                0,
+                (s, c) => s + (creditTotals[c.id]?.pending ?? 0),
+              )
             : 0.0;
 
         return ShellScaffold(
@@ -71,7 +90,11 @@ class _CardsView extends StatelessWidget {
             child: const Icon(Icons.add),
           ),
           bottomNavigationBar: showTotalBar
-              ? WalletListBalanceTotalBar(l10n: l10n, total: totalBalance)
+              ? WalletCardTotalsBar(
+                  l10n: l10n,
+                  nonCredits: totalNonCredits,
+                  credits: totalCredits,
+                )
               : null,
           body: _body(context, state, l10n),
         );
@@ -121,6 +144,12 @@ class _CardsView extends StatelessWidget {
       _ => <CardEntity>[],
     };
 
+    final creditTotals = switch (state) {
+      CardsLoaded(:final creditTotals) => creditTotals,
+      CardsActionError(:final creditTotals) => creditTotals,
+      _ => const <String, CardCreditTotals>{},
+    };
+
     if (cards.isEmpty) {
       return RefreshIndicator(
         onRefresh: pullRefresh,
@@ -149,7 +178,10 @@ class _CardsView extends StatelessWidget {
             return const OfflineCachedDataBanner(visible: true);
           }
           final i = index - (offlineCached ? 1 : 0);
-          return _CardTile(card: cards[i]);
+          return _CardTile(
+            card: cards[i],
+            credits: creditTotals[cards[i].id],
+          );
         },
       ),
     );
@@ -158,7 +190,8 @@ class _CardsView extends StatelessWidget {
 
 class _CardTile extends StatelessWidget {
   final CardEntity card;
-  const _CardTile({required this.card});
+  final CardCreditTotals? credits;
+  const _CardTile({required this.card, this.credits});
 
   @override
   Widget build(BuildContext context) {
@@ -166,7 +199,7 @@ class _CardTile extends StatelessWidget {
     final cubit = context.read<CardsCubit>();
 
     void openEdit() {
-      _showCardBottomSheet(context, l10n, card: card);
+      _showCardBottomSheet(context, l10n, card: card, credits: credits);
     }
 
     Future<void> openTransactions() async {
@@ -200,7 +233,11 @@ class _CardTile extends StatelessWidget {
           ),
         ],
       ),
-      trailing: WalletListBalanceAmount(l10n: l10n, balance: card.balance),
+      trailing: WalletCardBalanceAmounts(
+        l10n: l10n,
+        balance: cardPostedBalance(card.balance, credits),
+        creditBalance: credits?.pending ?? 0,
+      ),
       onTap: openTransactions,
       onEdit: openEdit,
       confirmDelete: () async {

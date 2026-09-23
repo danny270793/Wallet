@@ -492,7 +492,9 @@ class GroupedTxnTransferPairTile extends StatelessWidget {
           ? 'pair_$gid'
           : '${source.id}|${target.id}',
       leading: Icon(
-        Icons.swap_vert_rounded,
+        (target.cardId != null && target.cardId!.isNotEmpty)
+            ? Icons.payments_outlined
+            : Icons.swap_vert_rounded,
         size: 26,
         color: theme.colorScheme.onSurfaceVariant,
       ),

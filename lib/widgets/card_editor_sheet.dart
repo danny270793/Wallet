@@ -2,16 +2,19 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:wallet/l10n/app_localizations.dart';
 
+import '../core/credit_ledger_grouping.dart';
 import '../core/di/injection.dart';
 import 'bottom_sheet_pinned_title.dart';
 import '../features/cards/domain/entities/card_entity.dart';
 import '../features/cards/presentation/cubit/cards_cubit.dart';
+import '../features/transactions/domain/usecases/list_transactions_having_credit_group_usecase.dart';
 
 /// Same card create/edit form as the Cards screen FAB / row edit.
 Future<void> showCardEditorBottomSheet(
   BuildContext context,
   AppLocalizations l10n, {
   CardEntity? card,
+  double? postedBalance,
   CardsCubit? cubit,
 }) {
   return showModalBottomSheet<void>(
@@ -20,7 +23,11 @@ Future<void> showCardEditorBottomSheet(
     useSafeArea: true,
     showDragHandle: false,
     builder: (_) {
-      final child = CardEditorSheet(l10n: l10n, card: card);
+      final child = CardEditorSheet(
+        l10n: l10n,
+        card: card,
+        postedBalance: postedBalance,
+      );
       return cubit != null
           ? BlocProvider.value(value: cubit, child: child)
           : BlocProvider(create: (_) => getIt<CardsCubit>(), child: child);
@@ -29,10 +36,19 @@ Future<void> showCardEditorBottomSheet(
 }
 
 class CardEditorSheet extends StatefulWidget {
-  const CardEditorSheet({super.key, required this.l10n, this.card});
+  const CardEditorSheet({
+    super.key,
+    required this.l10n,
+    this.card,
+    this.postedBalance,
+  });
 
   final AppLocalizations l10n;
   final CardEntity? card;
+
+  /// Regular purchases plus installments already posted (first amount on /cards).
+  /// Used as the Balance field and as the baseline for an Adjustment movement.
+  final double? postedBalance;
 
   @override
   State<CardEditorSheet> createState() => _CardEditorSheetState();
@@ -45,6 +61,7 @@ class _CardEditorSheetState extends State<CardEditorSheet> {
   late final TextEditingController _payDayController;
   late final TextEditingController _descriptionController;
   TextEditingController? _balanceController;
+  double? _postedBalance;
   bool _loading = false;
 
   static String _dayText(int day) => day.toString();
@@ -64,10 +81,35 @@ class _CardEditorSheetState extends State<CardEditorSheet> {
       text: card?.description ?? '',
     );
     if (card != null) {
+      _postedBalance = widget.postedBalance ?? card.balance;
       _balanceController = TextEditingController(
-        text: card.balance.toStringAsFixed(2),
+        text: _postedBalance!.toStringAsFixed(2),
       );
+      if (widget.postedBalance == null) {
+        _resolvePostedBalance(card);
+      }
     }
+  }
+
+  Future<void> _resolvePostedBalance(CardEntity card) async {
+    try {
+      final bundle = await getIt<ListTransactionsHavingCreditGroupUsecase>()();
+      final posted = cardPostedBalance(
+        card.balance,
+        creditTotalsByCard(bundle.value)[card.id],
+      );
+      if (!mounted || _balanceController == null) return;
+      final typed = _balanceController!.text.trim();
+      final stillInitial =
+          typed == card.balance.toStringAsFixed(2) ||
+          typed == (_postedBalance?.toStringAsFixed(2) ?? '');
+      setState(() {
+        _postedBalance = posted;
+        if (stillInitial) {
+          _balanceController!.text = posted.toStringAsFixed(2);
+        }
+      });
+    } catch (_) {}
   }
 
   @override
@@ -114,7 +156,7 @@ class _CardEditorSheetState extends State<CardEditorSheet> {
           description: description,
           cutDay: cutDay,
           payDay: payDay,
-          previousBalance: widget.card!.balance,
+          previousBalance: _postedBalance ?? widget.card!.balance,
           targetBalance: targetBalance,
         );
       }

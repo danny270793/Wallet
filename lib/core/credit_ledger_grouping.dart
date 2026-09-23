@@ -40,6 +40,31 @@ bool installmentIsPaidThroughToday(TransactionEntity t) {
   return !d.isAfter(today);
 }
 
+/// Deferred installment sums for one card: [billed] for the ones already posted
+/// (see [installmentIsPaidThroughToday]), [pending] for the ones still to come.
+typedef CardCreditTotals = ({double billed, double pending});
+
+/// Splits credit installments per card id, using the same posted/pending cutoff
+/// as /credits so both screens agree. Rows with no [TransactionEntity.cardId] are skipped.
+Map<String, CardCreditTotals> creditTotalsByCard(List<TransactionEntity> flat) {
+  final out = <String, CardCreditTotals>{};
+  for (final t in flat) {
+    final g = t.creditLedgerGroupingKey;
+    if (g == null || g.isEmpty) continue;
+    final cardId = t.cardId;
+    if (cardId == null || cardId.isEmpty) continue;
+    final current = out[cardId] ?? (billed: 0.0, pending: 0.0);
+    out[cardId] = installmentIsPaidThroughToday(t)
+        ? (billed: current.billed + t.value, pending: current.pending)
+        : (billed: current.billed, pending: current.pending + t.value);
+  }
+  return out;
+}
+
+/// Regular card ledger plus installments already posted (the first amount on /cards).
+double cardPostedBalance(double ledgerBalance, CardCreditTotals? credits) =>
+    ledgerBalance + (credits?.billed ?? 0);
+
 /// Installments due in [monthStart]'s calendar month (credit rows only), by local
 /// [transactedAt] date — includes all days in the month (nothing is omitted for
 /// “today” when the selected month is the current month).

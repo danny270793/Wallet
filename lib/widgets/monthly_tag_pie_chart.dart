@@ -452,6 +452,19 @@ class MonthlyTagPieChart extends StatelessWidget {
                 sectionsSpace: 2,
                 centerSpaceRadius: 48,
                 sections: sections,
+                pieTouchData: PieTouchData(
+                  touchCallback: (event, response) {
+                    if (event is! FlTapUpEvent) return;
+                    final idx =
+                        response?.touchedSection?.touchedSectionIndex ?? -1;
+                    if (idx < 0 || idx >= slices.length) return;
+                    final s = slices[idx];
+                    final onlyThis =
+                        tagKeysFilter?.length == 1 &&
+                        tagKeysFilter!.contains(s.keyId);
+                    onTagKeysFilterChanged(onlyThis ? null : {s.keyId});
+                  },
+                ),
               ),
             ),
           ),
