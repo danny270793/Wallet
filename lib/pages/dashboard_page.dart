@@ -159,27 +159,17 @@ class _MonthlyDashboardViewState extends State<_MonthlyDashboardView> {
             : monthTxs
                   .where((t) => t.creditId == null || t.creditId!.isEmpty)
                   .toList();
-        // Prune filters using the same ignored basis as pies and list.
-        var categoryFilter = pruneCategoryKeysFilter(
+        // Prune stale ids against the full month only. Do not drop a tag
+        // because the selected category happens to have just that tag (or
+        // vice versa) — both filters stay marked together.
+        final categoryFilter = pruneCategoryKeysFilter(
           txs,
           _includeIgnored,
           _categoryKeysFilter,
           _useWeightedAmounts,
         );
-        var tagFilter = pruneTagKeysFilter(
-          _filterByCategory(txs, categoryFilter),
-          _includeIgnored,
-          _tagKeysFilter,
-          _useWeightedAmounts,
-        );
-        categoryFilter = pruneCategoryKeysFilter(
-          _filterByTag(txs, tagFilter),
-          _includeIgnored,
-          _categoryKeysFilter,
-          _useWeightedAmounts,
-        );
-        tagFilter = pruneTagKeysFilter(
-          _filterByCategory(txs, categoryFilter),
+        final tagFilter = pruneTagKeysFilter(
+          txs,
           _includeIgnored,
           _tagKeysFilter,
           _useWeightedAmounts,
@@ -257,6 +247,7 @@ class _MonthlyDashboardViewState extends State<_MonthlyDashboardView> {
                   isOpen: _fabMenuOpen,
                   onOpenChanged: (v) => setState(() => _fabMenuOpen = v),
                   transferHeroTag: 'dashboard_fab_transfer',
+                  payHeroTag: 'dashboard_fab_pay',
                   newTransactionHeroTag: 'dashboard_fab_new',
                   toggleHeroTag: 'dashboard_fab_toggle',
                   onNewTransaction: () => showTransactionEditorBottomSheet(
@@ -268,6 +259,11 @@ class _MonthlyDashboardViewState extends State<_MonthlyDashboardView> {
                   ),
                   onTransfer: () =>
                       showAccountTransferCreateBottomSheet(context, l10n: l10n),
+                  onPay: () => showAccountTransferCreateBottomSheet(
+                    context,
+                    l10n: l10n,
+                    payCard: true,
+                  ),
                 )
               : null,
           body: _body(
@@ -350,8 +346,10 @@ class _MonthlyDashboardViewState extends State<_MonthlyDashboardView> {
                   includeIgnored: _includeIgnored,
                   useWeightedAmounts: _useWeightedAmounts,
                   tagKeysFilter: tagKeysFilter,
-                  onTagKeysFilterChanged: (v) =>
-                      setState(() => _tagKeysFilter = v),
+                  onTagKeysFilterChanged: (v) => setState(() {
+                    _tagKeysFilter = v;
+                    if (v == null) _categoryKeysFilter = null;
+                  }),
                 ),
                 MonthlyCategoryExpensePieChart(
                   l10n: l10n,
