@@ -1,5 +1,6 @@
 import 'package:equatable/equatable.dart';
 
+import '../../../../core/credit_ledger_grouping.dart';
 import '../../../../core/remote_load_failure.dart';
 import '../../domain/entities/card_entity.dart';
 
@@ -21,10 +22,17 @@ class CardsLoading extends CardsState {
 
 class CardsLoaded extends CardsState {
   final List<CardEntity> cards;
+
+  /// Deferred installment sums keyed by card id; missing ids have no installments.
+  final Map<String, CardCreditTotals> creditTotals;
   final bool servedFromOfflineCache;
-  const CardsLoaded(this.cards, {this.servedFromOfflineCache = false});
+  const CardsLoaded(
+    this.cards, {
+    this.creditTotals = const {},
+    this.servedFromOfflineCache = false,
+  });
   @override
-  List<Object?> get props => [cards, servedFromOfflineCache];
+  List<Object?> get props => [cards, creditTotals, servedFromOfflineCache];
 }
 
 class CardsError extends CardsState {
@@ -36,13 +44,20 @@ class CardsError extends CardsState {
 
 class CardsActionError extends CardsState {
   final List<CardEntity> cards;
+  final Map<String, CardCreditTotals> creditTotals;
   final String? message;
   final bool servedFromOfflineCache;
   const CardsActionError(
     this.cards, {
+    this.creditTotals = const {},
     this.message,
     this.servedFromOfflineCache = false,
   });
   @override
-  List<Object?> get props => [cards, message, servedFromOfflineCache];
+  List<Object?> get props => [
+    cards,
+    creditTotals,
+    message,
+    servedFromOfflineCache,
+  ];
 }
