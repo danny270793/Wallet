@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -292,6 +294,53 @@ class YearlyCumulativeNetBarChart extends StatelessWidget {
 
 enum _YearlyBarKind { income, outcome, net }
 
+/// Plot area of the bar charts (the [SizedBox] height minus the month axis),
+/// used to turn a label size in pixels into headroom in chart units.
+const double _plotHeight = 212;
+
+/// Vertical gap between a bar tip and its value label.
+const double _rodLabelGap = 6;
+
+/// Step of `1 / 2 / 2.5 / 5 × 10^k` that splits [span] into at most [maxTicks]
+/// lines, so axis labels land on round numbers instead of raw data values.
+double _niceAxisInterval(double span, {int maxTicks = 5}) {
+  if (!span.isFinite || span <= 0) return 0.25;
+  final rough = span / maxTicks;
+  final magnitude = math.pow(10, (math.log(rough) / math.ln10).floor())
+      .toDouble();
+  for (final m in const [1.0, 2.0, 2.5, 5.0]) {
+    if (m * magnitude >= rough) return m * magnitude;
+  }
+  return 10 * magnitude;
+}
+
+/// Axis bounds snapped to whole [interval] steps, with [padFraction] of extra
+/// room on the side(s) the bars grow towards so the value labels stay inside.
+({double minY, double maxY, double interval}) _axisBounds({
+  required double rawMin,
+  required double rawMax,
+  required double padFraction,
+}) {
+  final paddedMin = rawMin < 0 ? rawMin * (1 + padFraction) : 0.0;
+  final paddedMax = rawMax > 0 ? rawMax * (1 + padFraction) : 0.0;
+  final interval = _niceAxisInterval(paddedMax - paddedMin);
+  return (
+    minY: (paddedMin / interval).floorToDouble() * interval,
+    maxY: (paddedMax / interval).ceilToDouble() * interval,
+    interval: interval,
+  );
+}
+
+/// Size of [text] in logical pixels, honoring the ambient text scaler.
+Size _textSize(BuildContext context, String text, TextStyle? style) {
+  final painter = TextPainter(
+    text: TextSpan(text: text, style: style),
+    textDirection: Directionality.of(context),
+    textScaler: MediaQuery.textScalerOf(context),
+  )..layout();
+  return painter.size;
+}
+
 class _YearlyMonthlyBarChartCore extends StatelessWidget {
   const _YearlyMonthlyBarChartCore({
     required this.l10n,
@@ -322,52 +371,58 @@ class _YearlyMonthlyBarChartCore extends StatelessWidget {
       _YearlyBarKind.net => List<double>.from(monthly),
     };
 
+    final compactFormat = NumberFormat.compact(locale: locale);
+
+    // Twelve bars never leave room for a horizontal amount, so the value labels
+    // are drawn sideways and abbreviated; the tooltip keeps the exact figure.
+    // Their text width becomes the headroom the axis needs.
+    final rodLabelStyle = theme.textTheme.labelSmall?.copyWith(
+      color: scheme.onSurface,
+      fontWeight: FontWeight.w600,
+      fontFeatures: const [FontFeature.tabularFigures()],
+    );
+    final labelSizes = <String, Size>{};
+    Size labelSize(String text) => labelSizes.putIfAbsent(
+      text,
+      () => _textSize(context, text, rodLabelStyle),
+    );
+    String labelText(double v) =>
+        l10n.transactionAmountValue(compactFormat.format(v));
+
+    var maxLabelWidth = 0.0;
+    for (final v in rodToY) {
+      if (v.abs() < 1e-9) continue;
+      final w = labelSize(labelText(v)).width;
+      if (w > maxLabelWidth) maxLabelWidth = w;
+    }
+
+    var maxPos = 0.0;
+    var minNeg = 0.0;
+    for (final v in rodToY) {
+      if (v > maxPos) maxPos = v;
+      if (v < minNeg) minNeg = v;
+    }
+
     late final double minY;
     late final double maxY;
     late final double gridInterval;
 
-    if (kind == _YearlyBarKind.income) {
-      minY = 0;
-      final maxVal = rodToY.reduce((a, b) => a > b ? a : b);
-      maxY = maxVal <= 0 ? 1.0 : maxVal * 1.15;
-      gridInterval = maxY > 0 ? (maxY / 4).clamp(0.25, double.infinity) : 0.25;
-    } else if (kind == _YearlyBarKind.outcome) {
-      final minVal = rodToY.reduce((a, b) => a < b ? a : b);
-      if (minVal == 0 && rodToY.every((v) => v == 0)) {
-        minY = -1.0;
-        maxY = 0.25;
-        gridInterval = 0.25;
-      } else {
-        maxY = 0;
-        minY = minVal * 1.15;
-        final span = maxY - minY;
-        gridInterval = span > 0
-            ? (span / 4).clamp(0.25, double.infinity)
-            : 0.25;
-      }
+    if (maxPos == 0 && minNeg == 0) {
+      minY = kind == _YearlyBarKind.outcome ? -1.0 : 0.0;
+      maxY = kind == _YearlyBarKind.outcome ? 0.0 : 1.0;
+      gridInterval = 0.25;
     } else {
-      var maxPos = 0.0;
-      var minNeg = 0.0;
-      for (final v in rodToY) {
-        if (v > maxPos) maxPos = v;
-        if (v < minNeg) minNeg = v;
-      }
-      if (maxPos == 0 && minNeg == 0) {
-        minY = -1.0;
-        maxY = 1.0;
-        gridInterval = 0.5;
-      } else {
-        var top = maxPos > 0 ? maxPos * 1.15 : 0.0;
-        var bottom = minNeg < 0 ? minNeg * 1.15 : 0.0;
-        if (top > 0 && bottom == 0) bottom = -top * 0.05;
-        if (bottom < 0 && top == 0) top = -bottom * 0.05;
-        maxY = top;
-        minY = bottom;
-        final span = maxY - minY;
-        gridInterval = span > 0
-            ? (span / 4).clamp(0.25, double.infinity)
-            : 0.25;
-      }
+      final bounds = _axisBounds(
+        rawMin: minNeg,
+        rawMax: maxPos,
+        padFraction: ((maxLabelWidth + _rodLabelGap * 2) / _plotHeight).clamp(
+          0.1,
+          0.45,
+        ),
+      );
+      minY = bounds.minY;
+      maxY = bounds.maxY;
+      gridInterval = bounds.interval;
     }
 
     final monthLabels = List.generate(
@@ -473,11 +528,8 @@ class _YearlyMonthlyBarChartCore extends StatelessWidget {
                             value > maxY * 1.001 + 1e-9) {
                           return const SizedBox.shrink();
                         }
-                        final label = value == value.roundToDouble()
-                            ? value.toInt().toString()
-                            : value.toStringAsFixed(1);
                         return Text(
-                          label,
+                          compactFormat.format(value),
                           style: theme.textTheme.labelSmall?.copyWith(
                             color: scheme.onSurfaceVariant,
                             fontFeatures: const [FontFeature.tabularFigures()],
@@ -497,9 +549,10 @@ class _YearlyMonthlyBarChartCore extends StatelessWidget {
                   ),
                 ),
                 borderData: FlBorderData(show: false),
-                barGroups: List.generate(
-                  monthCount,
-                  (i) => BarChartGroupData(
+                barGroups: List.generate(monthCount, (i) {
+                  final text = labelText(rodToY[i]);
+                  final size = labelSize(text);
+                  return BarChartGroupData(
                     x: i,
                     barRods: [
                       BarChartRodData(
@@ -509,19 +562,22 @@ class _YearlyMonthlyBarChartCore extends StatelessWidget {
                         borderRadius: barRadiusForIndex(i),
                         label: BarChartRodLabel(
                           show: rodToY[i].abs() >= 1e-9,
-                          text: l10n.transactionAmountValue(
-                            rodToY[i].toStringAsFixed(2),
-                          ),
-                          style: theme.textTheme.labelSmall?.copyWith(
-                            color: scheme.onSurface,
-                            fontWeight: FontWeight.w600,
-                            fontFeatures: const [FontFeature.tabularFigures()],
+                          text: text,
+                          style: rodLabelStyle,
+                          // Sideways, reading bottom to top. fl_chart rotates
+                          // around the label centre, so the offset has to cover
+                          // half the difference between the two sides plus the
+                          // gap to keep it clear of the bar tip.
+                          angle: -90,
+                          offset: Offset(
+                            0,
+                            (size.width - size.height) / 2 + _rodLabelGap,
                           ),
                         ),
                       ),
                     ],
-                  ),
-                ),
+                  );
+                }),
               ),
             ),
           ),
