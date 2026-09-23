@@ -8,7 +8,9 @@ abstract class TransactionsRemoteDatasource {
     DateTime monthStartLocal,
   );
 
-  /// [yearStartLocal] normalized to Jan 1 local; range is \[Jan 1, Jan 1 next year).
+  /// All non-deleted transactions with [transactedAt] before Jan 1 of the year after
+  /// [yearStartLocal] (full history through that calendar year). Paginates past the
+  /// PostgREST default 1000-row cap.
   Future<List<TransactionEntity>> getTransactionsForYear(
     DateTime yearStartLocal,
   );
@@ -132,15 +134,25 @@ wallet_credits(transactedAt)
     final endExclusiveLocal = DateTime(y + 1, 1, 1);
     final endUtc = endExclusiveLocal.toUtc().toIso8601String();
     AppLogger.debug('getTransactionsForYear through year end utc: .. $endUtc');
-    final data = await _client
-        .from('wallet_transactions')
-        .select(_transactionSelectEmbedded)
-        .isFilter('deletedAt', null)
-        .lt('transactedAt', endUtc)
-        .order('transactedAt', ascending: false);
-    return (data as List)
-        .map((e) => TransactionEntity.fromJson(e as Map<String, dynamic>))
-        .toList();
+    const pageSize = 1000;
+    final out = <TransactionEntity>[];
+    var from = 0;
+    while (true) {
+      final data = await _client
+          .from('wallet_transactions')
+          .select(_transactionSelectEmbedded)
+          .isFilter('deletedAt', null)
+          .lt('transactedAt', endUtc)
+          .order('transactedAt', ascending: false)
+          .range(from, from + pageSize - 1);
+      final page = (data as List)
+          .map((e) => TransactionEntity.fromJson(e as Map<String, dynamic>))
+          .toList();
+      out.addAll(page);
+      if (page.length < pageSize) break;
+      from += pageSize;
+    }
+    return out;
   }
 
   @override
