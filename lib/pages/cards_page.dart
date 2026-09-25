@@ -178,10 +178,7 @@ class _CardsView extends StatelessWidget {
             return const OfflineCachedDataBanner(visible: true);
           }
           final i = index - (offlineCached ? 1 : 0);
-          return _CardTile(
-            card: cards[i],
-            credits: creditTotals[cards[i].id],
-          );
+          return _CardTile(card: cards[i], credits: creditTotals[cards[i].id]);
         },
       ),
     );
