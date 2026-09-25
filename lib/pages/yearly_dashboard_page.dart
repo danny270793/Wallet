@@ -122,6 +122,9 @@ class _YearlyDashboardViewState extends State<_YearlyDashboardView> {
                 ),
                 YearlyDashboardLoaded(
                   :final transactions,
+                  :final recurringMonthlyIncome,
+                  :final recurringMonthlyOutcome,
+                  :final recurringMonthlyNet,
                   :final servedFromOfflineCache,
                 ) =>
                   RefreshIndicator(
@@ -142,6 +145,7 @@ class _YearlyDashboardViewState extends State<_YearlyDashboardView> {
                           l10n: l10n,
                           year: y,
                           transactions: transactions,
+                          recurringMonthlyNet: recurringMonthlyNet,
                         ),
                         YearlyWeightedNetBarChart(
                           l10n: l10n,
@@ -149,6 +153,7 @@ class _YearlyDashboardViewState extends State<_YearlyDashboardView> {
                           transactions: _filterCredits(transactions),
                           includeIgnored: _includeIgnored,
                           useWeightedAmounts: _useWeightedAmounts,
+                          recurringMonthlyNet: recurringMonthlyNet,
                         ),
                         YearlyWeightedIncomeBarChart(
                           l10n: l10n,
@@ -156,6 +161,7 @@ class _YearlyDashboardViewState extends State<_YearlyDashboardView> {
                           transactions: _filterCredits(transactions),
                           includeIgnored: _includeIgnored,
                           useWeightedAmounts: _useWeightedAmounts,
+                          recurringMonthlyIncome: recurringMonthlyIncome,
                         ),
                         YearlyWeightedOutcomeBarChart(
                           l10n: l10n,
@@ -163,6 +169,7 @@ class _YearlyDashboardViewState extends State<_YearlyDashboardView> {
                           transactions: _filterCredits(transactions),
                           includeIgnored: _includeIgnored,
                           useWeightedAmounts: _useWeightedAmounts,
+                          recurringMonthlyOutcome: recurringMonthlyOutcome,
                         ),
                       ],
                     ),
