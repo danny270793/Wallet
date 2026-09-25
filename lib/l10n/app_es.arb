@@ -411,5 +411,16 @@
   "loadFailedRequestFailedTitle": "No se pudieron cargar los datos",
   "loadFailedRequestFailedBody": "La solicitud falló. Desliza hacia abajo para actualizar o inténtalo de nuevo en un momento.",
   "retry": "Reintentar",
-  "dialogClose": "Cerrar"
+  "dialogClose": "Cerrar",
+  "recurringMovements": "Movimientos recurrentes",
+  "noRecurringMovements": "No hay movimientos recurrentes aún",
+  "newRecurringMovement": "Nuevo movimiento recurrente",
+  "editRecurringMovement": "Editar movimiento recurrente",
+  "deleteRecurringMovement": "Eliminar movimiento recurrente",
+  "confirmDeleteRecurringMovement": "¿Seguro que quieres eliminar \"{name}\"?",
+  "recurringMovementValueHint": "Usa un importe negativo para los gastos",
+  "recurringMovementsSortByValue": "Valor",
+  "recurringMovementsSelectedCount": "{count} seleccionados",
+  "yearlyDashboardCumulativeProjectionHint": "Las barras atenuadas son estimaciones: saldo con las transacciones ya programadas más tus movimientos recurrentes de cada mes siguiente.",
+  "yearlyDashboardMonthlyProjectionHint": "Las barras atenuadas son estimaciones: transacciones ya programadas más tus movimientos recurrentes."
 }

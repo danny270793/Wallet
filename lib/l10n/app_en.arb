@@ -411,5 +411,30 @@
   "loadFailedRequestFailedTitle": "Could not load data",
   "loadFailedRequestFailedBody": "The request failed. Pull down to refresh or try again shortly.",
   "retry": "Retry",
-  "dialogClose": "Close"
+  "dialogClose": "Close",
+  "recurringMovements": "Recurring movements",
+  "noRecurringMovements": "No recurring movements yet",
+  "newRecurringMovement": "New recurring movement",
+  "editRecurringMovement": "Edit recurring movement",
+  "deleteRecurringMovement": "Delete recurring movement",
+  "confirmDeleteRecurringMovement": "Are you sure you want to delete \"{name}\"?",
+  "@confirmDeleteRecurringMovement": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "recurringMovementValueHint": "Use a negative amount for outcomes",
+  "recurringMovementsSortByValue": "Value",
+  "recurringMovementsSelectedCount": "{count} selected",
+  "@recurringMovementsSelectedCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "yearlyDashboardCumulativeProjectionHint": "Faded bars are estimates: balance with transactions already scheduled plus your recurring movements for each coming month.",
+  "yearlyDashboardMonthlyProjectionHint": "Faded bars are estimates: transactions already scheduled plus your recurring movements."
 }
