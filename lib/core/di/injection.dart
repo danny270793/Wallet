@@ -58,6 +58,14 @@ import '../../features/assets/domain/usecases/delete_asset_usecase.dart';
 import '../../features/assets/domain/usecases/get_assets_usecase.dart';
 import '../../features/assets/domain/usecases/update_asset_usecase.dart';
 import '../../features/assets/presentation/cubit/assets_cubit.dart';
+import '../../features/recurring_movements/data/datasources/recurring_movements_remote_datasource.dart';
+import '../../features/recurring_movements/data/repositories/recurring_movements_repository_impl.dart';
+import '../../features/recurring_movements/domain/repositories/recurring_movements_repository.dart';
+import '../../features/recurring_movements/domain/usecases/create_recurring_movement_usecase.dart';
+import '../../features/recurring_movements/domain/usecases/delete_recurring_movement_usecase.dart';
+import '../../features/recurring_movements/domain/usecases/get_recurring_movements_usecase.dart';
+import '../../features/recurring_movements/domain/usecases/update_recurring_movement_usecase.dart';
+import '../../features/recurring_movements/presentation/cubit/recurring_movements_cubit.dart';
 import '../../features/transactions/data/datasources/transactions_remote_datasource.dart';
 import '../../features/transactions/data/repositories/transactions_repository_impl.dart';
 import '../../features/transactions/domain/repositories/transactions_repository.dart';
@@ -275,6 +283,38 @@ void setupDi() {
     ),
   );
 
+  // recurring movements
+  getIt.registerLazySingleton<RecurringMovementsRemoteDatasource>(
+    () => RecurringMovementsSupabaseDatasource(Supabase.instance.client),
+  );
+  getIt.registerLazySingleton<RecurringMovementsRepository>(
+    () => RecurringMovementsRepositoryImpl(
+      getIt<RecurringMovementsRemoteDatasource>(),
+      getIt<WalletOfflineCache>(),
+      getIt<WalletOfflineUserContext>(),
+    ),
+  );
+  getIt.registerFactory<GetRecurringMovementsUsecase>(
+    () => GetRecurringMovementsUsecase(getIt()),
+  );
+  getIt.registerFactory<CreateRecurringMovementUsecase>(
+    () => CreateRecurringMovementUsecase(getIt()),
+  );
+  getIt.registerFactory<UpdateRecurringMovementUsecase>(
+    () => UpdateRecurringMovementUsecase(getIt()),
+  );
+  getIt.registerFactory<DeleteRecurringMovementUsecase>(
+    () => DeleteRecurringMovementUsecase(getIt()),
+  );
+  getIt.registerFactory<RecurringMovementsCubit>(
+    () => RecurringMovementsCubit(
+      getRecurringMovements: getIt(),
+      createRecurringMovement: getIt(),
+      updateRecurringMovement: getIt(),
+      deleteRecurringMovement: getIt(),
+    ),
+  );
+
   // transactions
   getIt.registerLazySingleton<WalletCreditsRemoteDatasource>(
     () => WalletCreditsSupabaseDatasource(Supabase.instance.client),
@@ -348,6 +388,6 @@ void setupDi() {
     ),
   );
   getIt.registerFactory<YearlyDashboardCubit>(
-    () => YearlyDashboardCubit(getIt()),
+    () => YearlyDashboardCubit(getIt(), getIt()),
   );
 }
