@@ -13,6 +13,9 @@ class SwipeableListTile extends StatelessWidget {
     this.leading,
     this.trailing,
     this.onTap,
+    this.onLongPress,
+    this.selected = false,
+    this.swipeEnabled = true,
     this.enabled = true,
     this.tileIsThreeLine = false,
     this.dense = false,
@@ -33,6 +36,13 @@ class SwipeableListTile extends StatelessWidget {
   final Widget? leading;
   final Widget? trailing;
   final VoidCallback? onTap;
+  final VoidCallback? onLongPress;
+
+  /// Passed to inner [ListTile.selected] (e.g. multi-select mode).
+  final bool selected;
+
+  /// When false, horizontal swipes do nothing (e.g. while in multi-select mode).
+  final bool swipeEnabled;
 
   /// When false, tile uses disabled colors (e.g. ignored transactions).
   final bool enabled;
@@ -71,6 +81,9 @@ class SwipeableListTile extends StatelessWidget {
       subtitle: subtitle,
       trailing: trailing,
       onTap: onTap,
+      onLongPress: onLongPress,
+      selected: selected,
+      selectedTileColor: selected ? theme.colorScheme.secondaryContainer : null,
       enabled: enabled,
       isThreeLine: tileIsThreeLine,
       dense: dense,
@@ -84,7 +97,9 @@ class SwipeableListTile extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 0, vertical: 0),
       child: Dismissible(
         key: ValueKey('swipe_$itemKey'),
-        direction: DismissDirection.horizontal,
+        direction: swipeEnabled
+            ? DismissDirection.horizontal
+            : DismissDirection.none,
         dismissThresholds: const {
           DismissDirection.startToEnd: _kDismissThreshold,
           DismissDirection.endToStart: _kDismissThreshold,
