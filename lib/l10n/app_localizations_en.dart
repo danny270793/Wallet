@@ -905,4 +905,43 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get dialogClose => 'Close';
+
+  @override
+  String get recurringMovements => 'Recurring movements';
+
+  @override
+  String get noRecurringMovements => 'No recurring movements yet';
+
+  @override
+  String get newRecurringMovement => 'New recurring movement';
+
+  @override
+  String get editRecurringMovement => 'Edit recurring movement';
+
+  @override
+  String get deleteRecurringMovement => 'Delete recurring movement';
+
+  @override
+  String confirmDeleteRecurringMovement(String name) {
+    return 'Are you sure you want to delete \"$name\"?';
+  }
+
+  @override
+  String get recurringMovementValueHint => 'Use a negative amount for outcomes';
+
+  @override
+  String get recurringMovementsSortByValue => 'Value';
+
+  @override
+  String recurringMovementsSelectedCount(int count) {
+    return '$count selected';
+  }
+
+  @override
+  String get yearlyDashboardCumulativeProjectionHint =>
+      'Faded bars are estimates: balance with transactions already scheduled plus your recurring movements for each coming month.';
+
+  @override
+  String get yearlyDashboardMonthlyProjectionHint =>
+      'Faded bars are estimates: transactions already scheduled plus your recurring movements.';
 }

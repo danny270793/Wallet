@@ -160,6 +160,7 @@ abstract final class WalletOfflineCacheKeys {
   static const categories = 'categories';
   static const tags = 'tags';
   static const assets = 'assets';
+  static const recurringMovements = 'recurring_movements';
 
   static String transactionsMonth(DateTime monthStartLocal) =>
       'tx_month_${monthStartLocal.year}_${monthStartLocal.month.toString().padLeft(2, '0')}';

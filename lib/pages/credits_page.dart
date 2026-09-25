@@ -381,10 +381,7 @@ class _CreditsPendingTotalsBarState extends State<_CreditsPendingTotalsBar> {
                 ],
               ),
               const SizedBox(height: 10),
-              WalletTotalsPagerDots(
-                count: _kPageCount,
-                selectedIndex: _page,
-              ),
+              WalletTotalsPagerDots(count: _kPageCount, selectedIndex: _page),
             ],
           ),
         ),

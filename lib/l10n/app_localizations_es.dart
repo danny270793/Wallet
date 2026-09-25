@@ -909,4 +909,44 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get dialogClose => 'Cerrar';
+
+  @override
+  String get recurringMovements => 'Movimientos recurrentes';
+
+  @override
+  String get noRecurringMovements => 'No hay movimientos recurrentes aún';
+
+  @override
+  String get newRecurringMovement => 'Nuevo movimiento recurrente';
+
+  @override
+  String get editRecurringMovement => 'Editar movimiento recurrente';
+
+  @override
+  String get deleteRecurringMovement => 'Eliminar movimiento recurrente';
+
+  @override
+  String confirmDeleteRecurringMovement(String name) {
+    return '¿Seguro que quieres eliminar \"$name\"?';
+  }
+
+  @override
+  String get recurringMovementValueHint =>
+      'Usa un importe negativo para los gastos';
+
+  @override
+  String get recurringMovementsSortByValue => 'Valor';
+
+  @override
+  String recurringMovementsSelectedCount(int count) {
+    return '$count seleccionados';
+  }
+
+  @override
+  String get yearlyDashboardCumulativeProjectionHint =>
+      'Las barras atenuadas son estimaciones: saldo con las transacciones ya programadas más tus movimientos recurrentes de cada mes siguiente.';
+
+  @override
+  String get yearlyDashboardMonthlyProjectionHint =>
+      'Las barras atenuadas son estimaciones: transacciones ya programadas más tus movimientos recurrentes.';
 }

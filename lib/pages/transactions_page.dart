@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 import 'package:wallet/l10n/app_localizations.dart';
+import '../core/decimal_amount_input.dart';
 import '../core/credit_group_description.dart';
 import '../core/di/injection.dart';
 import '../features/accounts/domain/usecases/get_accounts_usecase.dart';
@@ -41,27 +42,7 @@ import '../widgets/swipeable_list_tile.dart';
 import '../widgets/transactions_month_scope.dart';
 import '../widgets/transactions_totals_bar.dart';
 import '../widgets/bottom_sheet_pinned_title.dart';
-
-/// Swipe edit/delete for searchable id+name pickers (category, tag).
-class SearchablePickerSwipeActions {
-  const SearchablePickerSwipeActions({
-    required this.onEditItem,
-    required this.confirmDeleteItem,
-    required this.deleteItem,
-  });
-
-  final Future<void> Function(
-    BuildContext sheetContext,
-    ({String id, String name}) item,
-  )
-  onEditItem;
-  final Future<bool> Function(
-    BuildContext sheetContext,
-    ({String id, String name}) item,
-  )
-  confirmDeleteItem;
-  final Future<bool> Function(({String id, String name}) item) deleteItem;
-}
+import '../widgets/searchable_id_picker_sheet.dart';
 
 /// Swipe edit/delete for account vs card lists in payment method picker.
 class PaymentMethodPickerSwipeActions {
@@ -85,111 +66,18 @@ class PaymentMethodPickerSwipeActions {
   final Future<bool> Function(CardEntity c) deleteCard;
 }
 
-Future<bool> _confirmDeletePickerTitle(
-  BuildContext context,
-  AppLocalizations l10n, {
-  required String title,
-  required String message,
-}) async {
-  final ok = await showDialog<bool>(
-    context: context,
-    builder: (dialogContext) => AlertDialog(
-      title: Text(title),
-      content: Text(message),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.of(dialogContext).pop(false),
-          child: Text(l10n.cancel),
-        ),
-        FilledButton(
-          style: FilledButton.styleFrom(
-            backgroundColor: Theme.of(dialogContext).colorScheme.error,
-            foregroundColor: Theme.of(dialogContext).colorScheme.onError,
-          ),
-          onPressed: () => Navigator.of(dialogContext).pop(true),
-          child: Text(l10n.delete),
-        ),
-      ],
-    ),
-  );
-  return ok ?? false;
-}
-
 /// Encodes account vs card in unified payment-method picker sheet results.
 const _paymentMethodPickAccountPrefix = 'a:';
 const _paymentMethodPickCardPrefix = 'c:';
 
 enum _PaymentMethodCreateChoice { account, card }
 
-/// Parses a transaction amount: optional leading −, digits, optional fractional part.
-/// Returns null if empty, not parseable, or not finite. If the string has a comma but no dot, the first comma is treated as the decimal separator.
-double? _parseTransactionAmountInput(String? raw) {
-  if (raw == null) return null;
-  var s = raw.trim();
-  if (s.isEmpty) return null;
-  if (s.contains(',') && !s.contains('.')) {
-    s = s.replaceFirst(',', '.');
-  }
-  final x = double.tryParse(s);
-  if (x == null || !x.isFinite) return null;
-  return x;
-}
-
-/// Allows optional leading minus, digits, and at most one `.` or `,` as decimal separator.
-final class _DecimalAmountInputFormatter extends TextInputFormatter {
-  const _DecimalAmountInputFormatter({this.allowNegative = true});
-
-  final bool allowNegative;
-
-  static String _filter(String input, {required bool allowNegative}) {
-    if (input.isEmpty) return input;
-    final buf = StringBuffer();
-    var hasSep = false;
-    for (var i = 0; i < input.length; i++) {
-      final c = input[i];
-      if (allowNegative && c == '-' && i == 0) {
-        buf.write(c);
-        continue;
-      }
-      final u = c.codeUnitAt(0);
-      if (u >= 0x30 && u <= 0x39) {
-        buf.write(c);
-        continue;
-      }
-      if ((c == '.' || c == ',') && !hasSep) {
-        buf.write(c);
-        hasSep = true;
-      }
-    }
-    return buf.toString();
-  }
-
-  @override
-  TextEditingValue formatEditUpdate(
-    TextEditingValue oldValue,
-    TextEditingValue newValue,
-  ) {
-    final filtered = _filter(newValue.text, allowNegative: allowNegative);
-    if (filtered == newValue.text) return newValue;
-    final end = newValue.selection.end.clamp(0, newValue.text.length);
-    final mapped = _filter(
-      newValue.text.substring(0, end),
-      allowNegative: allowNegative,
-    ).length;
-    final off = mapped.clamp(0, filtered.length);
-    return TextEditingValue(
-      text: filtered,
-      selection: TextSelection.collapsed(offset: off),
-    );
-  }
-}
-
 const _transactionAmountInputFormatters = <TextInputFormatter>[
-  _DecimalAmountInputFormatter(allowNegative: true),
+  DecimalAmountInputFormatter(allowNegative: true),
 ];
 
 const _transferAmountInputFormatters = <TextInputFormatter>[
-  _DecimalAmountInputFormatter(allowNegative: false),
+  DecimalAmountInputFormatter(allowNegative: false),
 ];
 
 /// Speed dial: main control plus new-transaction, pay card, and account transfer.
@@ -509,12 +397,8 @@ class _AccountTransferBottomSheetState
       context,
       l10n: l10n,
       sheetTitle: source
-          ? (_payCard
-                ? l10n.transactionAccount
-                : l10n.transferSourceAccount)
-          : (_payCard
-                ? l10n.transactionCard
-                : l10n.transferTargetAccount),
+          ? (_payCard ? l10n.transactionAccount : l10n.transferSourceAccount)
+          : (_payCard ? l10n.transactionCard : l10n.transferTargetAccount),
       getAccounts: () => _accounts,
       getCards: () => _cards,
       accountsOnly: _payCard ? source : !source,
@@ -550,7 +434,7 @@ class _AccountTransferBottomSheetState
       );
       return;
     }
-    final amount = _parseTransactionAmountInput(_valueController.text);
+    final amount = parseDecimalAmountInput(_valueController.text);
     if (amount == null || amount <= 0) return;
 
     final s = _parseTransferPickKey(_sourcePickKey!);
@@ -650,9 +534,7 @@ class _AccountTransferBottomSheetState
                 children: [
                   Expanded(
                     child: InputDecorator(
-                      decoration: InputDecoration(
-                        labelText: sourceLabel,
-                      ),
+                      decoration: InputDecoration(labelText: sourceLabel),
                       child: const SizedBox(
                         height: 40,
                         child: Center(
@@ -668,9 +550,7 @@ class _AccountTransferBottomSheetState
                   const SizedBox(width: 12),
                   Expanded(
                     child: InputDecorator(
-                      decoration: InputDecoration(
-                        labelText: targetLabel,
-                      ),
+                      decoration: InputDecoration(labelText: targetLabel),
                       child: const SizedBox(
                         height: 40,
                         child: Center(
@@ -749,7 +629,7 @@ class _AccountTransferBottomSheetState
               inputFormatters: _transferAmountInputFormatters,
               validator: (v) {
                 if (v == null || v.trim().isEmpty) return l10n.fieldRequired;
-                final amt = _parseTransactionAmountInput(v);
+                final amt = parseDecimalAmountInput(v);
                 if (amt == null) return l10n.transactionAmountInvalidNumber;
                 if (amt <= 0) return l10n.transferAmountMustBePositive;
                 return null;
@@ -758,9 +638,7 @@ class _AccountTransferBottomSheetState
             const SizedBox(height: 24),
             FilledButton(
               onPressed:
-                  _submitting ||
-                      _loadingPaymentMethods ||
-                      !_canSubmitLegs
+                  _submitting || _loadingPaymentMethods || !_canSubmitLegs
                   ? null
                   : _submit,
               child: _submitting
@@ -788,11 +666,8 @@ void showAccountTransferCreateBottomSheet(
     context: context,
     isScrollControlled: true,
     showDragHandle: false,
-    builder: (_) => _AccountTransferBottomSheet(
-      cubit: cubit,
-      l10n: l10n,
-      payCard: payCard,
-    ),
+    builder: (_) =>
+        _AccountTransferBottomSheet(cubit: cubit, l10n: l10n, payCard: payCard),
   );
 }
 
@@ -1046,9 +921,7 @@ class _TransactionsViewState extends State<_TransactionsView> {
       TransactionsActionError(:final transactions) => transactions,
       _ => const <TransactionEntity>[],
     };
-    final byId = <String, TransactionEntity>{
-      for (final t in filtered) t.id: t,
-    };
+    final byId = <String, TransactionEntity>{for (final t in filtered) t.id: t};
     for (final t in all) {
       if (transferGroupIds.contains(t.transferGroupId)) {
         byId[t.id] = t;
@@ -1265,8 +1138,7 @@ void showAccountTransferEditorBottomSheet(
       l10n: l10n,
       editingSource: editingSource,
       editingTarget: editingTarget,
-      payCard:
-          editingTarget.cardId != null && editingTarget.cardId!.isNotEmpty,
+      payCard: editingTarget.cardId != null && editingTarget.cardId!.isNotEmpty,
     ),
   );
 }
@@ -1657,236 +1529,6 @@ Widget _transactionSearchResultsList(
       ),
     ],
   );
-}
-
-/// Picks an id from a searchable list. Items are shown in alphabetical order by [name].
-/// Returns `null` if dismissed, `''` if [allowNone] and user cleared.
-///
-/// Use [getItems] so each build reads the parent's current lists. The modal sheet [builder] can rerun
-/// when the parent rebuilds after [reloadItems]; snapshots in the outer closure would stay stale.
-Future<String?> _showSearchableIdPickerSheet(
-  BuildContext context, {
-  required AppLocalizations l10n,
-  required String title,
-  required String searchHint,
-  required String noResultsMessage,
-  required String emptyMessage,
-  required bool allowNone,
-  required List<({String id, String name})> Function() getItems,
-  Future<void> Function(BuildContext sheetContext)? onAddPressed,
-  String? addTooltip,
-  Future<void> Function()? reloadItems,
-  SearchablePickerSwipeActions? swipe,
-}) {
-  return showModalBottomSheet<String?>(
-    context: context,
-    showDragHandle: false,
-    isScrollControlled: true,
-    builder: (sheetContext) => _SearchableIdPickerSheet(
-      l10n: l10n,
-      sheetContext: sheetContext,
-      title: title,
-      searchHint: searchHint,
-      noResultsMessage: noResultsMessage,
-      emptyMessage: emptyMessage,
-      allowNone: allowNone,
-      getItems: getItems,
-      onAddPressed: onAddPressed,
-      addTooltip: addTooltip,
-      reloadItems: reloadItems,
-      swipe: swipe,
-    ),
-  );
-}
-
-/// Search/filter state lives here—not in [showModalBottomSheet]'s [builder], which can rebuild when
-/// the keyboard opens ([MediaQuery] view inset changes) and would reset stray locals otherwise.
-class _SearchableIdPickerSheet extends StatefulWidget {
-  const _SearchableIdPickerSheet({
-    required this.l10n,
-    required this.sheetContext,
-    required this.title,
-    required this.searchHint,
-    required this.noResultsMessage,
-    required this.emptyMessage,
-    required this.allowNone,
-    required this.getItems,
-    this.onAddPressed,
-    this.addTooltip,
-    this.reloadItems,
-    this.swipe,
-  });
-
-  final AppLocalizations l10n;
-  final BuildContext sheetContext;
-  final String title;
-  final String searchHint;
-  final String noResultsMessage;
-  final String emptyMessage;
-  final bool allowNone;
-  final List<({String id, String name})> Function() getItems;
-  final Future<void> Function(BuildContext sheetContext)? onAddPressed;
-  final String? addTooltip;
-  final Future<void> Function()? reloadItems;
-  final SearchablePickerSwipeActions? swipe;
-
-  @override
-  State<_SearchableIdPickerSheet> createState() =>
-      _SearchableIdPickerSheetState();
-}
-
-class _SearchableIdPickerSheetState extends State<_SearchableIdPickerSheet> {
-  bool _showSearchField = false;
-  String _searchFilter = '';
-
-  List<({String id, String name})> _visible() {
-    final items = [...widget.getItems()]
-      ..sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
-    final q = _searchFilter.trim().toLowerCase();
-    if (q.isEmpty) return items;
-    return items.where((e) => e.name.toLowerCase().contains(q)).toList();
-  }
-
-  Future<void> _refreshItems() async {
-    final r = widget.reloadItems;
-    if (r == null) return;
-    await r();
-    if (mounted) setState(() {});
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final sheetContext = widget.sheetContext;
-    final allItems = widget.getItems();
-    final list = _visible();
-
-    final themeSheet = Theme.of(sheetContext);
-    final keyboardInset = MediaQuery.viewInsetsOf(context).bottom;
-
-    return AnimatedPadding(
-      duration: const Duration(milliseconds: 120),
-      curve: Curves.easeOut,
-      padding: EdgeInsets.only(bottom: keyboardInset),
-      child: SafeArea(
-        child: ConstrainedBox(
-          constraints: BoxConstraints(
-            maxHeight: MediaQuery.sizeOf(sheetContext).height * 0.55,
-          ),
-          child: CustomScrollView(
-            physics: const AlwaysScrollableScrollPhysics(),
-            slivers: [
-              SliverAppBar(
-                pinned: true,
-                centerTitle: true,
-                automaticallyImplyLeading: false,
-                elevation: 0,
-                scrolledUnderElevation: 4,
-                backgroundColor: modalBottomSheetSurfaceColor(sheetContext),
-                shadowColor: Theme.of(sheetContext).colorScheme.shadow,
-                leading: modalBottomSheetBackButton(sheetContext),
-                title: Text(
-                  widget.title,
-                  style: themeSheet.textTheme.titleLarge,
-                ),
-                actions: [
-                  IconButton(
-                    tooltip: widget.l10n.transferAccountSearch,
-                    icon: Icon(
-                      _showSearchField
-                          ? Icons.search_off_outlined
-                          : Icons.search,
-                    ),
-                    onPressed: () {
-                      setState(() {
-                        _showSearchField = !_showSearchField;
-                        if (!_showSearchField) _searchFilter = '';
-                      });
-                    },
-                  ),
-                  if (widget.onAddPressed != null)
-                    IconButton(
-                      tooltip: widget.addTooltip ?? '',
-                      icon: const Icon(Icons.add_circle_outline),
-                      onPressed: () async {
-                        await widget.onAddPressed!(sheetContext);
-                        await _refreshItems();
-                      },
-                    ),
-                ],
-              ),
-              if (widget.allowNone)
-                SliverToBoxAdapter(
-                  child: ListTile(
-                    title: Text(widget.l10n.none),
-                    leading: const Icon(Icons.clear),
-                    onTap: () => Navigator.of(sheetContext).pop(''),
-                  ),
-                ),
-              if (_showSearchField)
-                SliverPadding(
-                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
-                  sliver: SliverToBoxAdapter(
-                    child: TextField(
-                      decoration: InputDecoration(
-                        hintText: widget.searchHint,
-                        prefixIcon: const Icon(Icons.search, size: 22),
-                        isDense: true,
-                        border: const OutlineInputBorder(),
-                      ),
-                      textInputAction: TextInputAction.search,
-                      onChanged: (v) => setState(() => _searchFilter = v),
-                    ),
-                  ),
-                ),
-              if (allItems.isEmpty)
-                SliverFillRemaining(
-                  hasScrollBody: false,
-                  child: Center(child: Text(widget.emptyMessage)),
-                )
-              else if (list.isEmpty)
-                SliverFillRemaining(
-                  hasScrollBody: false,
-                  child: Center(child: Text(widget.noResultsMessage)),
-                )
-              else
-                SliverList(
-                  delegate: SliverChildBuilderDelegate((context, index) {
-                    final e = list[index];
-                    final swipe = widget.swipe;
-                    if (swipe == null) {
-                      return ListTile(
-                        title: Text(e.name),
-                        onTap: () => Navigator.of(sheetContext).pop(e.id),
-                      );
-                    }
-                    final actions = swipe;
-                    return SwipeableListTile(
-                      itemKey: e.id,
-                      title: Text(e.name),
-                      onTap: () => Navigator.of(sheetContext).pop(e.id),
-                      onEdit: () {
-                        Future(() async {
-                          await actions.onEditItem(sheetContext, e);
-                          if (!sheetContext.mounted) return;
-                          await _refreshItems();
-                        });
-                      },
-                      confirmDelete: () =>
-                          actions.confirmDeleteItem(sheetContext, e),
-                      onDelete: () async {
-                        final ok = await actions.deleteItem(e);
-                        if (ok) await _refreshItems();
-                        return ok;
-                      },
-                    );
-                  }, childCount: list.length),
-                ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
 }
 
 /// Returns `a:id` or `c:id`. [onListsUpdated] should update parent state (e.g. [setState]).
@@ -2680,7 +2322,7 @@ class _TransactionDialogState extends State<_TransactionDialog> {
       _tagId ??= t.tagId;
       _ignore = t.ignore;
       final valueRaw = _valueController.text.trim();
-      final valueParsed = _parseTransactionAmountInput(valueRaw);
+      final valueParsed = parseDecimalAmountInput(valueRaw);
       if (valueRaw.isEmpty || valueParsed == null || valueParsed == 0) {
         _valueController.text = t.value.toStringAsFixed(2);
       }
@@ -2863,7 +2505,7 @@ class _TransactionDialogState extends State<_TransactionDialog> {
           account: a,
           cubit: getIt<AccountsCubit>(),
         ),
-        confirmDeleteAccount: (sheetCtx, a) => _confirmDeletePickerTitle(
+        confirmDeleteAccount: (sheetCtx, a) => confirmDeletePickerTitle(
           sheetCtx,
           l10n,
           title: l10n.deleteAccount,
@@ -2888,7 +2530,7 @@ class _TransactionDialogState extends State<_TransactionDialog> {
           card: c,
           cubit: getIt<CardsCubit>(),
         ),
-        confirmDeleteCard: (sheetCtx, c) => _confirmDeletePickerTitle(
+        confirmDeleteCard: (sheetCtx, c) => confirmDeletePickerTitle(
           sheetCtx,
           l10n,
           title: l10n.deleteCard,
@@ -2938,7 +2580,7 @@ class _TransactionDialogState extends State<_TransactionDialog> {
   Future<void> _pickCategory() async {
     if (_loadingLookups) return;
     final l10n = widget.l10n;
-    final selectedId = await _showSearchableIdPickerSheet(
+    final selectedId = await showSearchableIdPickerSheet(
       context,
       l10n: l10n,
       title: l10n.transactionCategory,
@@ -2972,7 +2614,7 @@ class _TransactionDialogState extends State<_TransactionDialog> {
             cubit: getIt<CategoriesCubit>(),
           );
         },
-        confirmDeleteItem: (sheetCtx, item) => _confirmDeletePickerTitle(
+        confirmDeleteItem: (sheetCtx, item) => confirmDeletePickerTitle(
           sheetCtx,
           l10n,
           title: l10n.deleteCategory,
@@ -3006,7 +2648,7 @@ class _TransactionDialogState extends State<_TransactionDialog> {
   Future<void> _pickTag() async {
     if (_loadingLookups) return;
     final l10n = widget.l10n;
-    final selectedId = await _showSearchableIdPickerSheet(
+    final selectedId = await showSearchableIdPickerSheet(
       context,
       l10n: l10n,
       title: l10n.transactionTag,
@@ -3043,7 +2685,7 @@ class _TransactionDialogState extends State<_TransactionDialog> {
             cubit: getIt<TagsCubit>(),
           );
         },
-        confirmDeleteItem: (sheetCtx, item) => _confirmDeletePickerTitle(
+        confirmDeleteItem: (sheetCtx, item) => confirmDeletePickerTitle(
           sheetCtx,
           l10n,
           title: l10n.deleteTag,
@@ -3077,7 +2719,7 @@ class _TransactionDialogState extends State<_TransactionDialog> {
   Future<void> _submit() async {
     if (_loadingLookups) return;
     if (!_formKey.currentState!.validate()) return;
-    final value = _parseTransactionAmountInput(_valueController.text);
+    final value = parseDecimalAmountInput(_valueController.text);
     final pct = double.tryParse(_percentageController.text.trim());
     if (value == null || value == 0 || pct == null || pct < 0 || pct > 100)
       return;
@@ -3271,7 +2913,7 @@ class _TransactionDialogState extends State<_TransactionDialog> {
                                 if (v == null || v.trim().isEmpty) {
                                   return l10n.fieldRequired;
                                 }
-                                final amt = _parseTransactionAmountInput(v);
+                                final amt = parseDecimalAmountInput(v);
                                 if (amt == null) {
                                   return l10n.transactionAmountInvalidNumber;
                                 }
@@ -3344,7 +2986,9 @@ class _TransactionDialogState extends State<_TransactionDialog> {
                                 _graceMonthsController.clear();
                                 _termMonthsController.clear();
                               } else {
-                                if (_graceMonthsController.text.trim().isEmpty) {
+                                if (_graceMonthsController.text
+                                    .trim()
+                                    .isEmpty) {
                                   _graceMonthsController.text = '0';
                                 }
                                 if (_cardId != null) {

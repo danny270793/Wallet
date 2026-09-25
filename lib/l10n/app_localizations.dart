@@ -1717,6 +1717,72 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Close'**
   String get dialogClose;
+
+  /// No description provided for @recurringMovements.
+  ///
+  /// In en, this message translates to:
+  /// **'Recurring movements'**
+  String get recurringMovements;
+
+  /// No description provided for @noRecurringMovements.
+  ///
+  /// In en, this message translates to:
+  /// **'No recurring movements yet'**
+  String get noRecurringMovements;
+
+  /// No description provided for @newRecurringMovement.
+  ///
+  /// In en, this message translates to:
+  /// **'New recurring movement'**
+  String get newRecurringMovement;
+
+  /// No description provided for @editRecurringMovement.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit recurring movement'**
+  String get editRecurringMovement;
+
+  /// No description provided for @deleteRecurringMovement.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete recurring movement'**
+  String get deleteRecurringMovement;
+
+  /// No description provided for @confirmDeleteRecurringMovement.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to delete \"{name}\"?'**
+  String confirmDeleteRecurringMovement(String name);
+
+  /// No description provided for @recurringMovementValueHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Use a negative amount for outcomes'**
+  String get recurringMovementValueHint;
+
+  /// No description provided for @recurringMovementsSortByValue.
+  ///
+  /// In en, this message translates to:
+  /// **'Value'**
+  String get recurringMovementsSortByValue;
+
+  /// No description provided for @recurringMovementsSelectedCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} selected'**
+  String recurringMovementsSelectedCount(int count);
+
+  /// No description provided for @yearlyDashboardCumulativeProjectionHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Faded bars are estimates: balance with transactions already scheduled plus your recurring movements for each coming month.'**
+  String get yearlyDashboardCumulativeProjectionHint;
+
+  /// No description provided for @yearlyDashboardMonthlyProjectionHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Faded bars are estimates: transactions already scheduled plus your recurring movements.'**
+  String get yearlyDashboardMonthlyProjectionHint;
 }
 
 class _AppLocalizationsDelegate

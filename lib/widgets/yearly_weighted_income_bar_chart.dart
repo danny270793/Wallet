@@ -131,23 +131,67 @@ List<double> accountsTotalCumulativeByMonthForYear(
   return out;
 }
 
-/// Lifetime accounts-total at month-end for Jan through the last month that should
-/// be visible: all 12 months for past years, through the current month for this year.
-/// Later months stay 0 so the chart keeps 12 slots with no future bars.
-List<double> _cumulativeAccountsBalanceMonthlyBarsWithTrailingZeros(
+/// First month index (0–11) of [year] that is estimated: months after the current
+/// one. 12 for past years (nothing estimated), 0 for future years.
+int _firstEstimatedMonthIndex(int year, DateTime today) {
+  if (year < today.year) return 12;
+  if (year > today.year) return 0;
+  return today.month;
+}
+
+/// Month-end accounts totals for [year], with a flag for where estimates begin.
+///
+/// Every month uses the real running balance from
+/// [accountsTotalCumulativeByMonthForYear], which already includes transactions
+/// scheduled in the future (e.g. credit installments). Months after the current one
+/// additionally add [recurringMonthlyNet] once per month elapsed since the current
+/// month, as an estimate of the regular money flow.
+///
+/// [projectedFromIndex] is the first estimated month index (0–11), or 12 when none.
+({List<double> monthly, int projectedFromIndex})
+cumulativeAccountsBalanceWithProjection(
   List<TransactionEntity> txs,
-  int year,
-) {
-  final full = accountsTotalCumulativeByMonthForYear(txs, year);
-  final now = DateTime.now();
-  final lastVisible = year < now.year
-      ? 12
-      : year > now.year
-      ? 0
-      : now.month;
-  if (lastVisible <= 0) return List<double>.filled(12, 0);
-  if (lastVisible >= 12) return full;
-  return List<double>.generate(12, (i) => i < lastVisible ? full[i] : 0.0);
+  int year, {
+  required double recurringMonthlyNet,
+  DateTime? now,
+}) {
+  final today = now ?? DateTime.now();
+  final from = _firstEstimatedMonthIndex(year, today);
+  final real = accountsTotalCumulativeByMonthForYear(txs, year);
+  // Recurring months already elapsed before Jan of [year] (future years only).
+  final monthsBeforeYear = year > today.year
+      ? (year - today.year) * 12 - today.month
+      : 0;
+  return (
+    monthly: List<double>.generate(
+      12,
+      (i) => i < from
+          ? real[i]
+          : real[i] + recurringMonthlyNet * (monthsBeforeYear + i - from + 1),
+    ),
+    projectedFromIndex: from,
+  );
+}
+
+/// Adds [estimate] (a recurring-movements total) to each month after the current
+/// one, on top of the transactions already scheduled in that month. The current
+/// month and earlier stay as the real [monthly] values.
+///
+/// [projectedFromIndex] is the first estimated month index (0–11), or 12 when none.
+({List<double> monthly, int projectedFromIndex}) monthlyWithRecurringEstimate(
+  List<double> monthly,
+  int year, {
+  required double estimate,
+  DateTime? now,
+}) {
+  final from = _firstEstimatedMonthIndex(year, now ?? DateTime.now());
+  return (
+    monthly: List<double>.generate(
+      12,
+      (i) => i < from ? monthly[i] : monthly[i] + estimate,
+    ),
+    projectedFromIndex: from,
+  );
 }
 
 /// Bar chart: monthly weighted income for [year] from [transactions].
@@ -159,6 +203,7 @@ class YearlyWeightedIncomeBarChart extends StatelessWidget {
     required this.transactions,
     required this.includeIgnored,
     required this.useWeightedAmounts,
+    required this.recurringMonthlyIncome,
   });
 
   final AppLocalizations l10n;
@@ -167,19 +212,31 @@ class YearlyWeightedIncomeBarChart extends StatelessWidget {
   final bool includeIgnored;
   final bool useWeightedAmounts;
 
+  /// Estimated income for each month after the current one (sum of positive recurring movements).
+  final double recurringMonthlyIncome;
+
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    final monthly = weightedIncomeByMonthForYear(
+    final real = weightedIncomeByMonthForYear(
       transactions,
       year,
       includeIgnored: includeIgnored,
       useWeightedAmounts: useWeightedAmounts,
     );
+    final result = monthlyWithRecurringEstimate(
+      real,
+      year,
+      estimate: recurringMonthlyIncome,
+    );
     return _YearlyMonthlyBarChartCore(
       l10n: l10n,
       year: year,
-      monthly: monthly,
+      monthly: result.monthly,
+      projectedFromIndex: result.projectedFromIndex,
+      footnote: result.projectedFromIndex < 12
+          ? l10n.yearlyDashboardMonthlyProjectionHint
+          : null,
       title: l10n.yearlyDashboardIncomeByMonthTitle,
       barColor: scheme.primary,
       kind: _YearlyBarKind.income,
@@ -196,6 +253,7 @@ class YearlyWeightedOutcomeBarChart extends StatelessWidget {
     required this.transactions,
     required this.includeIgnored,
     required this.useWeightedAmounts,
+    required this.recurringMonthlyOutcome,
   });
 
   final AppLocalizations l10n;
@@ -204,19 +262,31 @@ class YearlyWeightedOutcomeBarChart extends StatelessWidget {
   final bool includeIgnored;
   final bool useWeightedAmounts;
 
+  /// Estimated outcome (positive) for each month after the current one.
+  final double recurringMonthlyOutcome;
+
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    final monthly = weightedOutcomeByMonthForYear(
+    final real = weightedOutcomeByMonthForYear(
       transactions,
       year,
       includeIgnored: includeIgnored,
       useWeightedAmounts: useWeightedAmounts,
     );
+    final result = monthlyWithRecurringEstimate(
+      real,
+      year,
+      estimate: recurringMonthlyOutcome,
+    );
     return _YearlyMonthlyBarChartCore(
       l10n: l10n,
       year: year,
-      monthly: monthly,
+      monthly: result.monthly,
+      projectedFromIndex: result.projectedFromIndex,
+      footnote: result.projectedFromIndex < 12
+          ? l10n.yearlyDashboardMonthlyProjectionHint
+          : null,
       title: l10n.yearlyDashboardOutcomeByMonthTitle,
       barColor: scheme.error,
       kind: _YearlyBarKind.outcome,
@@ -233,6 +303,7 @@ class YearlyWeightedNetBarChart extends StatelessWidget {
     required this.transactions,
     required this.includeIgnored,
     required this.useWeightedAmounts,
+    required this.recurringMonthlyNet,
   });
 
   final AppLocalizations l10n;
@@ -241,19 +312,31 @@ class YearlyWeightedNetBarChart extends StatelessWidget {
   final bool includeIgnored;
   final bool useWeightedAmounts;
 
+  /// Estimated net (income − outcome) for each month after the current one.
+  final double recurringMonthlyNet;
+
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    final monthly = weightedNetByMonthForYear(
+    final real = weightedNetByMonthForYear(
       transactions,
       year,
       includeIgnored: includeIgnored,
       useWeightedAmounts: useWeightedAmounts,
     );
+    final result = monthlyWithRecurringEstimate(
+      real,
+      year,
+      estimate: recurringMonthlyNet,
+    );
     return _YearlyMonthlyBarChartCore(
       l10n: l10n,
       year: year,
-      monthly: monthly,
+      monthly: result.monthly,
+      projectedFromIndex: result.projectedFromIndex,
+      footnote: result.projectedFromIndex < 12
+          ? l10n.yearlyDashboardMonthlyProjectionHint
+          : null,
       title: l10n.yearlyDashboardNetByMonthTitle,
       barColor: scheme.primary,
       kind: _YearlyBarKind.net,
@@ -268,26 +351,35 @@ class YearlyCumulativeNetBarChart extends StatelessWidget {
     required this.l10n,
     required this.year,
     required this.transactions,
+    required this.recurringMonthlyNet,
   });
 
   final AppLocalizations l10n;
   final int year;
   final List<TransactionEntity> transactions;
 
+  /// Net of all recurring movements, added once per month after the current one.
+  final double recurringMonthlyNet;
+
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    final monthly = _cumulativeAccountsBalanceMonthlyBarsWithTrailingZeros(
+    final result = cumulativeAccountsBalanceWithProjection(
       transactions,
       year,
+      recurringMonthlyNet: recurringMonthlyNet,
     );
     return _YearlyMonthlyBarChartCore(
       l10n: l10n,
       year: year,
-      monthly: monthly,
+      monthly: result.monthly,
       title: l10n.yearlyDashboardCumulativeByMonthTitle,
       barColor: scheme.primary,
       kind: _YearlyBarKind.net,
+      projectedFromIndex: result.projectedFromIndex,
+      footnote: result.projectedFromIndex < 12
+          ? l10n.yearlyDashboardCumulativeProjectionHint
+          : null,
     );
   }
 }
@@ -306,7 +398,8 @@ const double _rodLabelGap = 6;
 double _niceAxisInterval(double span, {int maxTicks = 5}) {
   if (!span.isFinite || span <= 0) return 0.25;
   final rough = span / maxTicks;
-  final magnitude = math.pow(10, (math.log(rough) / math.ln10).floor())
+  final magnitude = math
+      .pow(10, (math.log(rough) / math.ln10).floor())
       .toDouble();
   for (final m in const [1.0, 2.0, 2.5, 5.0]) {
     if (m * magnitude >= rough) return m * magnitude;
@@ -349,6 +442,8 @@ class _YearlyMonthlyBarChartCore extends StatelessWidget {
     required this.title,
     required this.barColor,
     required this.kind,
+    this.projectedFromIndex = 12,
+    this.footnote,
   });
 
   final AppLocalizations l10n;
@@ -357,6 +452,12 @@ class _YearlyMonthlyBarChartCore extends StatelessWidget {
   final String title;
   final Color barColor;
   final _YearlyBarKind kind;
+
+  /// Bars at this month index and later are estimates and drawn faded.
+  final int projectedFromIndex;
+
+  /// Optional note shown under the chart (e.g. what the faded bars mean).
+  final String? footnote;
 
   @override
   Widget build(BuildContext context) {
@@ -444,12 +545,11 @@ class _YearlyMonthlyBarChartCore extends StatelessWidget {
     }
 
     Color barColorForIndex(int i) {
-      if (kind == _YearlyBarKind.net) {
-        final v = rodToY[i];
-        if (v < 0) return scheme.error;
-        return scheme.primary;
-      }
-      return barColor;
+      final base = switch (kind) {
+        _YearlyBarKind.net => rodToY[i] < 0 ? scheme.error : scheme.primary,
+        _ => barColor,
+      };
+      return i >= projectedFromIndex ? base.withValues(alpha: 0.4) : base;
     }
 
     return Padding(
@@ -581,6 +681,15 @@ class _YearlyMonthlyBarChartCore extends StatelessWidget {
               ),
             ),
           ),
+          if (footnote != null) ...[
+            const SizedBox(height: 8),
+            Text(
+              footnote!,
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: scheme.onSurfaceVariant,
+              ),
+            ),
+          ],
         ],
       ),
     );
