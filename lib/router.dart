@@ -9,6 +9,7 @@ import 'pages/yearly_dashboard_page.dart';
 import 'pages/accounts_page.dart';
 import 'pages/cards_page.dart';
 import 'pages/categories_page.dart';
+import 'pages/recurring_movements_page.dart';
 import 'pages/tags_page.dart';
 import 'pages/assets_page.dart';
 import 'core/di/injection.dart';
@@ -89,6 +90,10 @@ final router = GoRouter(
           builder: (context, state) => const AccountsPage(),
         ),
         GoRoute(path: '/cards', builder: (context, state) => const CardsPage()),
+        GoRoute(
+          path: '/recurring-movements',
+          builder: (context, state) => const RecurringMovementsPage(),
+        ),
         GoRoute(
           path: '/categories',
           builder: (context, state) => const CategoriesPage(),

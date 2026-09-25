@@ -31,6 +31,8 @@ String _cacheEntryTitle(String key, AppLocalizations l10n) {
       return l10n.tags;
     case WalletOfflineCacheKeys.assets:
       return l10n.assets;
+    case WalletOfflineCacheKeys.recurringMovements:
+      return l10n.recurringMovements;
     case WalletOfflineCacheKeys.transactionsHavingCreditGroup:
       return l10n.settingsCacheKeyTxCreditGroups;
   }
