@@ -10,6 +10,7 @@ abstract class RecurringMovementsRepository {
     required double value,
     required String categoryId,
     required String tagId,
+    required bool yearlyPayment,
   });
   Future<RecurringMovementEntity> updateRecurringMovement({
     required String id,
@@ -18,6 +19,7 @@ abstract class RecurringMovementsRepository {
     required double value,
     required String categoryId,
     required String tagId,
+    required bool yearlyPayment,
   });
   Future<void> deleteRecurringMovement({required String id});
 }
