@@ -69,6 +69,7 @@ class _RecurringMovementEditorSheetState
   String? _tagId;
   bool _loadingLookups = true;
   bool _loading = false;
+  bool _yearlyPayment = false;
 
   @override
   void initState() {
@@ -81,6 +82,7 @@ class _RecurringMovementEditorSheetState
     );
     _categoryId = m?.categoryId;
     _tagId = m?.tagId;
+    _yearlyPayment = m?.yearlyPayment ?? false;
     _categoryDisplayController.text = m?.categoryName ?? '';
     _tagDisplayController.text = m?.tagName ?? '';
     _loadLookups();
@@ -304,6 +306,7 @@ class _RecurringMovementEditorSheetState
           value: value,
           categoryId: _categoryId!,
           tagId: _tagId!,
+          yearlyPayment: _yearlyPayment,
         );
       } else {
         await cubit.update(
@@ -313,6 +316,7 @@ class _RecurringMovementEditorSheetState
           value: value,
           categoryId: _categoryId!,
           tagId: _tagId!,
+          yearlyPayment: _yearlyPayment,
         );
       }
     } finally {
@@ -424,6 +428,32 @@ class _RecurringMovementEditorSheetState
             controller: _descriptionController,
             decoration: InputDecoration(labelText: l10n.accountDescription),
             maxLines: 3,
+          ),
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      l10n.transactionYearlyPayment,
+                      style: Theme.of(context).textTheme.bodyLarge,
+                    ),
+                    Text(
+                      l10n.transactionYearlyPaymentHint,
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Switch(
+                value: _yearlyPayment,
+                onChanged: (v) => setState(() => _yearlyPayment = v),
+              ),
+            ],
           ),
         ],
       ),
