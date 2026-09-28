@@ -90,10 +90,11 @@ class YearlyDashboardCubit extends Cubit<YearlyDashboardState> {
       var income = 0.0;
       var outcome = 0.0;
       for (final m in bundle.value) {
-        if (m.value > 0) {
-          income += m.value;
+        final monthly = m.monthlyAmount;
+        if (monthly > 0) {
+          income += monthly;
         } else {
-          outcome += -m.value;
+          outcome += -monthly;
         }
       }
       return (income: income, outcome: outcome);
