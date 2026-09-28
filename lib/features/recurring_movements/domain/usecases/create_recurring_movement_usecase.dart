@@ -11,11 +11,13 @@ class CreateRecurringMovementUsecase {
     required double value,
     required String categoryId,
     required String tagId,
+    required bool yearlyPayment,
   }) => _repository.createRecurringMovement(
     name: name,
     description: description,
     value: value,
     categoryId: categoryId,
     tagId: tagId,
+    yearlyPayment: yearlyPayment,
   );
 }
