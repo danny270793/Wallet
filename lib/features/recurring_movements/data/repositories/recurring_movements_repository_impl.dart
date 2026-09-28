@@ -35,12 +35,14 @@ class RecurringMovementsRepositoryImpl implements RecurringMovementsRepository {
     required double value,
     required String categoryId,
     required String tagId,
+    required bool yearlyPayment,
   }) => _datasource.createRecurringMovement(
     name: name,
     description: description,
     value: value,
     categoryId: categoryId,
     tagId: tagId,
+    yearlyPayment: yearlyPayment,
   );
 
   @override
@@ -51,6 +53,7 @@ class RecurringMovementsRepositoryImpl implements RecurringMovementsRepository {
     required double value,
     required String categoryId,
     required String tagId,
+    required bool yearlyPayment,
   }) => _datasource.updateRecurringMovement(
     id: id,
     name: name,
@@ -58,6 +61,7 @@ class RecurringMovementsRepositoryImpl implements RecurringMovementsRepository {
     value: value,
     categoryId: categoryId,
     tagId: tagId,
+    yearlyPayment: yearlyPayment,
   );
 
   @override
