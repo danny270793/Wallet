@@ -15,6 +15,9 @@ class RecurringMovementEntity extends Equatable {
 
   /// From PostgREST embed `wallet_tags(name)` when selected.
   final String? tagName;
+
+  /// Stored [value] is the full annual amount. Lists and monthly estimates use one twelfth.
+  final bool yearlyPayment;
   final DateTime createdAt;
   final DateTime updatedAt;
 
@@ -28,6 +31,7 @@ class RecurringMovementEntity extends Equatable {
     this.tagId,
     this.categoryName,
     this.tagName,
+    this.yearlyPayment = false,
     required this.createdAt,
     required this.updatedAt,
   });
@@ -43,6 +47,7 @@ class RecurringMovementEntity extends Equatable {
         tagId: json['tagId'] as String?,
         categoryName: _embeddedRelationName(json, 'wallet_categories'),
         tagName: _embeddedRelationName(json, 'wallet_tags'),
+        yearlyPayment: json['yearlyPayment'] as bool? ?? false,
         createdAt: DateTime.parse(json['createdAt'] as String),
         updatedAt: DateTime.parse(json['updatedAt'] as String),
       );
@@ -56,6 +61,7 @@ class RecurringMovementEntity extends Equatable {
       'value': value,
       'categoryId': categoryId,
       'tagId': tagId,
+      'yearlyPayment': yearlyPayment,
       'createdAt': createdAt.toUtc().toIso8601String(),
       'updatedAt': updatedAt.toUtc().toIso8601String(),
     };
@@ -78,6 +84,9 @@ class RecurringMovementEntity extends Equatable {
     return null;
   }
 
+  /// Amount counted each month. A yearly payment is stored in full and counts as one twelfth.
+  double get monthlyAmount => yearlyPayment ? value / 12.0 : value;
+
   @override
   List<Object?> get props => [
     id,
@@ -89,6 +98,7 @@ class RecurringMovementEntity extends Equatable {
     tagId,
     categoryName,
     tagName,
+    yearlyPayment,
     createdAt,
     updatedAt,
   ];
