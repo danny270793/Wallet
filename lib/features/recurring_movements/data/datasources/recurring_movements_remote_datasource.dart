@@ -10,6 +10,7 @@ abstract class RecurringMovementsRemoteDatasource {
     required double value,
     required String categoryId,
     required String tagId,
+    required bool yearlyPayment,
   });
   Future<RecurringMovementEntity> updateRecurringMovement({
     required String id,
@@ -18,6 +19,7 @@ abstract class RecurringMovementsRemoteDatasource {
     required double value,
     required String categoryId,
     required String tagId,
+    required bool yearlyPayment,
   });
   Future<void> deleteRecurringMovement({required String id});
 }
@@ -51,6 +53,7 @@ class RecurringMovementsSupabaseDatasource
     required double value,
     required String categoryId,
     required String tagId,
+    required bool yearlyPayment,
   }) async {
     AppLogger.debug('createRecurringMovement called: $name');
     final data = await _client
@@ -62,6 +65,7 @@ class RecurringMovementsSupabaseDatasource
           'value': value,
           'categoryId': categoryId,
           'tagId': tagId,
+          'yearlyPayment': yearlyPayment,
         })
         .select(_selectEmbedded)
         .single();
@@ -76,6 +80,7 @@ class RecurringMovementsSupabaseDatasource
     required double value,
     required String categoryId,
     required String tagId,
+    required bool yearlyPayment,
   }) async {
     AppLogger.debug('updateRecurringMovement called: $id');
     final data = await _client
@@ -86,6 +91,7 @@ class RecurringMovementsSupabaseDatasource
           'value': value,
           'categoryId': categoryId,
           'tagId': tagId,
+          'yearlyPayment': yearlyPayment,
         })
         .eq('id', id)
         .select(_selectEmbedded)
