@@ -217,17 +217,20 @@ class _SettingsPageState extends State<SettingsPage> {
           appBar: AppBar(title: Text(l10n.settings)),
           body: SafeArea(
             child: ListView(
-              padding: const EdgeInsets.all(24),
+              padding: const EdgeInsets.fromLTRB(0, 16, 0, 24),
               children: [
-                Text(
-                  l10n.settingsProfileSection,
-                  style: theme.textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w600,
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 24),
+                  child: Text(
+                    l10n.settingsProfileSection,
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                 ),
                 const SizedBox(height: 12),
                 ListTile(
-                  contentPadding: EdgeInsets.zero,
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 24),
                   leading: Icon(
                     Icons.person_outline_rounded,
                     color: theme.colorScheme.onSurfaceVariant,
@@ -246,7 +249,7 @@ class _SettingsPageState extends State<SettingsPage> {
                   ),
                 ),
                 ListTile(
-                  contentPadding: EdgeInsets.zero,
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 24),
                   leading: Icon(
                     Icons.lock_outline_rounded,
                     color: theme.colorScheme.onSurfaceVariant,
@@ -267,10 +270,13 @@ class _SettingsPageState extends State<SettingsPage> {
                   padding: EdgeInsets.symmetric(vertical: 16),
                   child: Divider(height: 1),
                 ),
-                Text(
-                  l10n.settingsSecuritySection,
-                  style: theme.textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w600,
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 24),
+                  child: Text(
+                    l10n.settingsSecuritySection,
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                 ),
                 const SizedBox(height: 12),
@@ -279,7 +285,7 @@ class _SettingsPageState extends State<SettingsPage> {
                   builder: (context, _) {
                     final bio = getIt<AppBiometricUnlockController>();
                     return SwitchListTile(
-                      contentPadding: EdgeInsets.zero,
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 24),
                       secondary: Icon(
                         Icons.fingerprint_rounded,
                         color: theme.colorScheme.onSurfaceVariant,
@@ -310,10 +316,13 @@ class _SettingsPageState extends State<SettingsPage> {
                   padding: EdgeInsets.symmetric(vertical: 16),
                   child: Divider(height: 1),
                 ),
-                Text(
-                  l10n.settingsAppearance,
-                  style: theme.textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w600,
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 24),
+                  child: Text(
+                    l10n.settingsAppearance,
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                 ),
                 const SizedBox(height: 12),
@@ -322,7 +331,7 @@ class _SettingsPageState extends State<SettingsPage> {
                   builder: (context, _) {
                     final ctrl = getIt<AppLocaleController>();
                     return ListTile(
-                      contentPadding: EdgeInsets.zero,
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 24),
                       leading: Icon(
                         Icons.language_outlined,
                         color: theme.colorScheme.onSurfaceVariant,
@@ -342,7 +351,7 @@ class _SettingsPageState extends State<SettingsPage> {
                   builder: (context, _) {
                     final ctrl = getIt<AppThemeController>();
                     return ListTile(
-                      contentPadding: EdgeInsets.zero,
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 24),
                       leading: Icon(
                         Icons.palette_outlined,
                         color: theme.colorScheme.onSurfaceVariant,
@@ -358,15 +367,18 @@ class _SettingsPageState extends State<SettingsPage> {
                   padding: EdgeInsets.symmetric(vertical: 16),
                   child: Divider(height: 1),
                 ),
-                Text(
-                  l10n.settingsDataSection,
-                  style: theme.textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w600,
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 24),
+                  child: Text(
+                    l10n.settingsDataSection,
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                 ),
                 const SizedBox(height: 12),
                 ListTile(
-                  contentPadding: EdgeInsets.zero,
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 24),
                   leading: Icon(
                     Icons.storage_outlined,
                     color: theme.colorScheme.onSurfaceVariant,
@@ -380,15 +392,18 @@ class _SettingsPageState extends State<SettingsPage> {
                   padding: EdgeInsets.symmetric(vertical: 16),
                   child: Divider(height: 1),
                 ),
-                Text(
-                  l10n.settingsAboutSection,
-                  style: theme.textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w600,
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 24),
+                  child: Text(
+                    l10n.settingsAboutSection,
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                 ),
                 const SizedBox(height: 12),
                 ListTile(
-                  contentPadding: EdgeInsets.zero,
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 24),
                   leading: Icon(
                     Icons.info_outline_rounded,
                     color: theme.colorScheme.onSurfaceVariant,
@@ -398,7 +413,7 @@ class _SettingsPageState extends State<SettingsPage> {
                   onTap: () => context.push('/settings/about'),
                 ),
                 ListTile(
-                  contentPadding: EdgeInsets.zero,
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 24),
                   leading: Icon(
                     Icons.privacy_tip_outlined,
                     color: theme.colorScheme.onSurfaceVariant,
@@ -408,7 +423,7 @@ class _SettingsPageState extends State<SettingsPage> {
                   onTap: () => context.push('/settings/privacy'),
                 ),
                 ListTile(
-                  contentPadding: EdgeInsets.zero,
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 24),
                   leading: Icon(
                     Icons.description_outlined,
                     color: theme.colorScheme.onSurfaceVariant,
@@ -428,7 +443,9 @@ class _SettingsPageState extends State<SettingsPage> {
                       foregroundColor: theme.colorScheme.onError,
                       padding: const EdgeInsets.symmetric(vertical: 14),
                     );
-                    return SizedBox(
+                    return Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 24),
+                      child: SizedBox(
                       width: double.infinity,
                       child: state is SettingsLoading
                           ? FilledButton(
@@ -450,6 +467,7 @@ class _SettingsPageState extends State<SettingsPage> {
                               icon: const Icon(Icons.logout_rounded),
                               label: Text(l10n.signOut),
                             ),
+                      ),
                     );
                   },
                 ),
