@@ -1622,6 +1622,18 @@ abstract class AppLocalizations {
   /// **'Ignored'**
   String get transactionIgnoredBadge;
 
+  /// No description provided for @transactionYearlyPayment.
+  ///
+  /// In en, this message translates to:
+  /// **'Yearly payment'**
+  String get transactionYearlyPayment;
+
+  /// No description provided for @transactionYearlyPaymentHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Shown as one twelfth each month'**
+  String get transactionYearlyPaymentHint;
+
   /// No description provided for @transactionAmountValue.
   ///
   /// In en, this message translates to:

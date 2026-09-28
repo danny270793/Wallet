@@ -79,7 +79,7 @@ class _RecurringMovementsViewState extends State<_RecurringMovementsView> {
   List<RecurringMovementEntity> _sorted(List<RecurringMovementEntity> items) {
     if (_sortBy == _RecurringMovementsSortBy.name) return items;
     return List<RecurringMovementEntity>.from(items)..sort((a, b) {
-      final byValue = b.value.compareTo(a.value);
+      final byValue = b.monthlyAmount.compareTo(a.monthlyAmount);
       if (byValue != 0) return byValue;
       return a.name.toLowerCase().compareTo(b.name.toLowerCase());
     });
@@ -293,6 +293,7 @@ class _RecurringMovementTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final theme = Theme.of(context);
     final cubit = context.read<RecurringMovementsCubit>();
 
     final relationNames = [
@@ -321,7 +322,26 @@ class _RecurringMovementTile extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               children: subtitleLines,
             ),
-      trailing: WalletListBalanceAmount(l10n: l10n, balance: movement.value),
+      trailing: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: [
+          WalletListBalanceAmount(
+            l10n: l10n,
+            balance: movement.monthlyAmount,
+          ),
+          if (movement.yearlyPayment) ...[
+            const SizedBox(height: 2),
+            Text(
+              l10n.transactionAmountValue(movement.value.toStringAsFixed(2)),
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.tertiary,
+                fontFeatures: const [FontFeature.tabularFigures()],
+              ),
+            ),
+          ],
+        ],
+      ),
       selected: selected,
       swipeEnabled: !selecting,
       onTap: selecting ? onToggleSelected : null,
@@ -374,10 +394,11 @@ class _RecurringMovementsTotalsBar extends StatelessWidget {
     var income = 0.0;
     var outcome = 0.0;
     for (final m in movements) {
-      if (m.value > 0) {
-        income += m.value;
+      final monthly = m.monthlyAmount;
+      if (monthly > 0) {
+        income += monthly;
       } else {
-        outcome += m.value;
+        outcome += monthly;
       }
     }
 

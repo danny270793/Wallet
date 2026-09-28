@@ -213,6 +213,7 @@ class GroupedTxnTransactionTile extends StatelessWidget {
     required this.l10n,
     this.useWeightedAmounts = true,
     this.onTap,
+    this.onLedgerChanged,
   });
 
   final TransactionsCubit? cubit;
@@ -222,6 +223,10 @@ class GroupedTxnTransactionTile extends StatelessWidget {
   /// When true, primary amount is weighted; dashboard follows app toggle. [/transactions] uses true.
   final bool useWeightedAmounts;
   final VoidCallback? onTap;
+
+  /// Called after an edit sheet closes or a delete finishes, so a parent that
+  /// does not own [TransactionsCubit]'s month can reload its own data.
+  final VoidCallback? onLedgerChanged;
 
   List<String> _relationNames(TransactionEntity t) => [
     if (t.categoryName?.isNotEmpty == true) t.categoryName!,
@@ -377,7 +382,7 @@ class GroupedTxnTransactionTile extends StatelessWidget {
         l10n: l10n,
         cubit: bloc,
         transaction: transaction,
-      );
+      ).then((_) => onLedgerChanged?.call());
     }
 
     Widget tile = SwipeableListTile(
@@ -391,10 +396,14 @@ class GroupedTxnTransactionTile extends StatelessWidget {
               transaction.creditLedgerGroupingKey!.isNotEmpty
           ? () => confirmDeleteCreditGroupTransactionDialog(context, l10n)
           : () => confirmDeleteTransactionDialog(context, l10n),
-      onDelete: () => bloc.delete(
-        id: transaction.id,
-        creditLedgerKey: transaction.creditLedgerGroupingKey,
-      ),
+      onDelete: () async {
+        final ok = await bloc.delete(
+          id: transaction.id,
+          creditLedgerKey: transaction.creditLedgerGroupingKey,
+        );
+        onLedgerChanged?.call();
+        return ok;
+      },
     );
 
     if (transaction.ignore) {
@@ -416,6 +425,7 @@ class GroupedTxnTransferPairTile extends StatelessWidget {
     required this.target,
     required this.l10n,
     this.onTap,
+    this.onLedgerChanged,
   });
 
   final TransactionsCubit? cubit;
@@ -423,6 +433,9 @@ class GroupedTxnTransferPairTile extends StatelessWidget {
   final TransactionEntity target;
   final AppLocalizations l10n;
   final VoidCallback? onTap;
+
+  /// Called after an edit sheet closes or a delete finishes.
+  final VoidCallback? onLedgerChanged;
 
   @override
   Widget build(BuildContext context) {
@@ -484,7 +497,7 @@ class GroupedTxnTransferPairTile extends StatelessWidget {
         editingSource: source,
         editingTarget: target,
         cubit: cubit,
-      );
+      ).then((_) => onLedgerChanged?.call());
     }
 
     Widget tile = SwipeableListTile(
@@ -504,7 +517,11 @@ class GroupedTxnTransferPairTile extends StatelessWidget {
       onTap: onTap,
       onEdit: openEdit,
       confirmDelete: () => confirmDeleteTransferPairDialog(context, l10n),
-      onDelete: () => bloc.deleteMany([source.id, target.id]),
+      onDelete: () async {
+        final ok = await bloc.deleteMany([source.id, target.id]);
+        onLedgerChanged?.call();
+        return ok;
+      },
     );
 
     if (source.ignore || target.ignore) {

@@ -62,6 +62,7 @@ class RecurringMovementsCubit extends Cubit<RecurringMovementsState> {
     required double value,
     required String categoryId,
     required String tagId,
+    required bool yearlyPayment,
   }) async {
     final current = _currentMovements();
     AppLogger.debug('creating recurring movement: $name');
@@ -72,6 +73,7 @@ class RecurringMovementsCubit extends Cubit<RecurringMovementsState> {
         value: value,
         categoryId: categoryId,
         tagId: tagId,
+        yearlyPayment: yearlyPayment,
       );
       AppLogger.info('recurring movement created: ${movement.id}');
       emit(
@@ -98,6 +100,7 @@ class RecurringMovementsCubit extends Cubit<RecurringMovementsState> {
     required double value,
     required String categoryId,
     required String tagId,
+    required bool yearlyPayment,
   }) async {
     final current = _currentMovements();
     AppLogger.debug('updating recurring movement: $id');
@@ -109,6 +112,7 @@ class RecurringMovementsCubit extends Cubit<RecurringMovementsState> {
         value: value,
         categoryId: categoryId,
         tagId: tagId,
+        yearlyPayment: yearlyPayment,
       );
       AppLogger.info('recurring movement updated: ${updated.id}');
       emit(

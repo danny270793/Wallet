@@ -12,6 +12,7 @@ class UpdateRecurringMovementUsecase {
     required double value,
     required String categoryId,
     required String tagId,
+    required bool yearlyPayment,
   }) => _repository.updateRecurringMovement(
     id: id,
     name: name,
@@ -19,5 +20,6 @@ class UpdateRecurringMovementUsecase {
     value: value,
     categoryId: categoryId,
     tagId: tagId,
+    yearlyPayment: yearlyPayment,
   );
 }

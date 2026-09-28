@@ -33,36 +33,39 @@ Future<void> showDashboardViewOptionsBottomSheet({
             final bottomPad = MediaQuery.paddingOf(ctx).bottom;
             return BottomSheetPinnedTitleScrollView(
               title: l10n.monthlyDashboardOptionsSheetTitle,
-              padding: EdgeInsets.fromLTRB(20, 8, 20, 16 + bottomPad),
+              padding: EdgeInsets.fromLTRB(0, 8, 0, 16 + bottomPad),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   SwitchListTile(
-                    contentPadding: EdgeInsets.zero,
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 20),
                     title: Text(l10n.dashboardIncludeIgnoredInTotals),
                     value: draft[0],
                     onChanged: (v) => setModal(() => draft[0] = v),
                   ),
                   SwitchListTile(
-                    contentPadding: EdgeInsets.zero,
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 20),
                     title: Text(l10n.dashboardUseWeightedAmounts),
                     value: draft[1],
                     onChanged: (v) => setModal(() => draft[1] = v),
                   ),
                   SwitchListTile(
-                    contentPadding: EdgeInsets.zero,
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 20),
                     title: Text(l10n.dashboardShowCredits),
                     value: draft[2],
                     onChanged: (v) => setModal(() => draft[2] = v),
                   ),
                   const SizedBox(height: 12),
-                  FilledButton(
-                    onPressed: () {
-                      Navigator.of(sheetContext).pop();
-                      onApply(draft[0], draft[1], draft[2]);
-                    },
-                    child: Text(l10n.save),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    child: FilledButton(
+                      onPressed: () {
+                        Navigator.of(sheetContext).pop();
+                        onApply(draft[0], draft[1], draft[2]);
+                      },
+                      child: Text(l10n.save),
+                    ),
                   ),
                 ],
               ),

@@ -1120,7 +1120,7 @@ Future<void> showTransactionEditorBottomSheet(
   );
 }
 
-void showAccountTransferEditorBottomSheet(
+Future<void> showAccountTransferEditorBottomSheet(
   BuildContext context, {
   required AppLocalizations l10n,
   required TransactionEntity editingSource,
@@ -1128,7 +1128,7 @@ void showAccountTransferEditorBottomSheet(
   TransactionsCubit? cubit,
 }) {
   final bloc = cubit ?? context.read<TransactionsCubit>();
-  showModalBottomSheet<void>(
+  return showModalBottomSheet<void>(
     context: context,
     isScrollControlled: true,
     showDragHandle: false,
