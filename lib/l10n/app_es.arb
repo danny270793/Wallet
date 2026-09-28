@@ -389,6 +389,8 @@
   "transactionPercentageInvalidRange": "Introduce un número entre 0 y 100",
   "transactionIgnore": "Ignorar",
   "transactionIgnoredBadge": "Ignorado",
+  "transactionYearlyPayment": "Pago anual",
+  "transactionYearlyPaymentHint": "Se muestra como la doceava parte cada mes",
   "transactionAmountValue": "{amount}",
   "@transactionAmountValue": {
     "placeholders": {

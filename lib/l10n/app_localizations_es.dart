@@ -855,6 +855,13 @@ class AppLocalizationsEs extends AppLocalizations {
   String get transactionIgnoredBadge => 'Ignorado';
 
   @override
+  String get transactionYearlyPayment => 'Pago anual';
+
+  @override
+  String get transactionYearlyPaymentHint =>
+      'Se muestra como la doceava parte cada mes';
+
+  @override
   String transactionAmountValue(String amount) {
     return '$amount';
   }
