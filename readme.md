@@ -2,7 +2,7 @@
 
 Personal finance app (accounts, cards, transactions) with Supabase auth and data.
 
-Flutter **3.44.6** (see [`.tool-versions`](.tool-versions)). Android/iOS package: `io.github.danny270793.wallet`.
+Flutter **3.47.2** (see [`.tool-versions`](.tool-versions)). Android/iOS package: `io.github.danny270793.wallet`.
 
 ## Quick start
 
@@ -20,6 +20,8 @@ asdf exec flutter run --dart-define-from-file=.env.json
 - [Bump app version and Flutter SDK](docs/versioning.md)
 
 ## Database (Supabase)
+
+Wallet shares one Supabase project with Family Games, Habit Tracker, and Hangman. Migrations live in [danny270793/supabase](https://github.com/danny270793/supabase). Create and apply them there, not in this repo.
 
 ```mermaid
 erDiagram
