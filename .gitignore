@@ -44,7 +44,6 @@ app.*.map.json
 /android/app/profile
 /android/app/release
 
-.env.json
 
 # Personal corporate-proxy dev cert - environment-specific, not a secret but
 # not portable to other machines either. See main.dart's
@@ -52,3 +51,11 @@ app.*.map.json
 # The directory itself (and .gitkeep) stays tracked so pubspec.yaml's
 # "assets/certs/" entry doesn't break a fresh checkout's build.
 assets/certs/*.pem
+
+# Supabase credentials. Never commit them; copy .env.example.json instead.
+.env
+.env.json
+.env.local
+.env.*.local
+# Migrations live in danny270793/supabase, the source of truth for the schema.
+/supabase/
