@@ -21,7 +21,14 @@ asdf exec flutter run --dart-define-from-file=.env.json
 
 ## Database (Supabase)
 
-Wallet shares one Supabase project with Family Games, Habit Tracker, and Hangman. Migrations live in [danny270793/supabase](https://github.com/danny270793/supabase). Create and apply them there, not in this repo.
+This repo has the app only. The `wallet_*` schema lives in [danny270793/supabase](https://github.com/danny270793/supabase), the source of truth for migrations. Wallet shares that Supabase project with the other apps. To change the database you need both repos:
+
+```sh
+git clone git@github.com:danny270793/Wallet.git
+git clone git@github.com:danny270793/supabase.git
+```
+
+Create, test, and push migrations from the `supabase` repo. This repo ignores any `supabase/` folder, and `.env.json` holds the project credentials, so never commit it.
 
 ```mermaid
 erDiagram
