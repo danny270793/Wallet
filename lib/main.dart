@@ -8,6 +8,7 @@ import 'package:flutter/services.dart';
 import 'package:local_auth/local_auth.dart';
 import 'package:wallet/l10n/app_localizations.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+
 import 'core/di/injection.dart';
 import 'core/locale/app_locale_controller.dart';
 import 'core/security/app_biometric_unlock_controller.dart';
@@ -225,13 +226,16 @@ class _BiometricLockScreenState extends State<_BiometricLockScreen> {
       final l10n = AppLocalizations.of(context);
       if (l10n == null) return;
 
-      final ok = await bio.localAuth.authenticate(
-        localizedReason: l10n.settingsBiometricResumeReason,
-        options: const AuthenticationOptions(
-          biometricOnly: true,
-          stickyAuth: true,
-        ),
-      );
+      final ok = await bio.localAuth
+          .authenticate(
+            localizedReason: l10n.settingsBiometricResumeReason,
+            biometricOnly: true,
+            persistAcrossBackgrounding: true,
+          )
+          .catchError(
+            (Object _) => false,
+            test: (e) => e is LocalAuthException,
+          );
       if (!mounted) return;
 
       if (ok) {

@@ -626,6 +626,12 @@ abstract class AppLocalizations {
   /// **'About'**
   String get settingsAboutApp;
 
+  /// No description provided for @settingsRateApp.
+  ///
+  /// In en, this message translates to:
+  /// **'Rate on Google Play'**
+  String get settingsRateApp;
+
   /// No description provided for @settingsPrivacyPolicy.
   ///
   /// In en, this message translates to:
