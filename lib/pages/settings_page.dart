@@ -5,7 +5,9 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:local_auth/local_auth.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:wallet/l10n/app_localizations.dart';
+
 import '../core/di/injection.dart';
 import '../core/locale/app_locale_controller.dart';
 import '../core/security/app_biometric_unlock_controller.dart';
@@ -15,6 +17,9 @@ import '../features/auth/domain/usecases/update_password_usecase.dart';
 import '../features/auth/presentation/cubit/settings_cubit.dart';
 import '../features/auth/presentation/cubit/settings_state.dart';
 import '../widgets/bottom_sheet_pinned_title.dart';
+
+const _playStoreUrl =
+    'https://play.google.com/store/apps/details?id=io.github.danny270793.wallet';
 
 String _languageOptionLabel(AppLocalizations l10n, AppLanguagePreference p) =>
     switch (p) {
@@ -121,10 +126,13 @@ Future<void> _setBiometricUnlockEnabled(
     }
     return;
   }
-  final ok = await ctrl.localAuth.authenticate(
-    localizedReason: l10n.settingsBiometricAuthReason,
-    options: const AuthenticationOptions(biometricOnly: true, stickyAuth: true),
-  );
+  final ok = await ctrl.localAuth
+      .authenticate(
+        localizedReason: l10n.settingsBiometricAuthReason,
+        biometricOnly: true,
+        persistAcrossBackgrounding: true,
+      )
+      .catchError((Object _) => false, test: (e) => e is LocalAuthException);
   if (!context.mounted) {
     return;
   }
@@ -154,9 +162,8 @@ Future<void> _showChangeEmailSheet(
   );
   if (ok == true && context.mounted) {
     onChanged?.call();
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text(l10n.settingsChangeEmailSuccess)));
+    ScaffoldMessenger.of(context)
+        .showSnackBar(SnackBar(content: Text(l10n.settingsChangeEmailSuccess)));
   }
 }
 
@@ -285,7 +292,9 @@ class _SettingsPageState extends State<SettingsPage> {
                   builder: (context, _) {
                     final bio = getIt<AppBiometricUnlockController>();
                     return SwitchListTile(
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 24),
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 24,
+                      ),
                       secondary: Icon(
                         Icons.fingerprint_rounded,
                         color: theme.colorScheme.onSurfaceVariant,
@@ -331,7 +340,9 @@ class _SettingsPageState extends State<SettingsPage> {
                   builder: (context, _) {
                     final ctrl = getIt<AppLocaleController>();
                     return ListTile(
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 24),
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 24,
+                      ),
                       leading: Icon(
                         Icons.language_outlined,
                         color: theme.colorScheme.onSurfaceVariant,
@@ -351,7 +362,9 @@ class _SettingsPageState extends State<SettingsPage> {
                   builder: (context, _) {
                     final ctrl = getIt<AppThemeController>();
                     return ListTile(
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 24),
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 24,
+                      ),
                       leading: Icon(
                         Icons.palette_outlined,
                         color: theme.colorScheme.onSurfaceVariant,
@@ -415,6 +428,19 @@ class _SettingsPageState extends State<SettingsPage> {
                 ListTile(
                   contentPadding: const EdgeInsets.symmetric(horizontal: 24),
                   leading: Icon(
+                    Icons.star_outline_rounded,
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                  title: Text(l10n.settingsRateApp),
+                  trailing: const Icon(Icons.open_in_new_rounded),
+                  onTap: () => launchUrl(
+                    Uri.parse(_playStoreUrl),
+                    mode: LaunchMode.externalApplication,
+                  ),
+                ),
+                ListTile(
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 24),
+                  leading: Icon(
                     Icons.privacy_tip_outlined,
                     color: theme.colorScheme.onSurfaceVariant,
                   ),
@@ -446,27 +472,27 @@ class _SettingsPageState extends State<SettingsPage> {
                     return Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 24),
                       child: SizedBox(
-                      width: double.infinity,
-                      child: state is SettingsLoading
-                          ? FilledButton(
-                              style: signOutStyle,
-                              onPressed: null,
-                              child: SizedBox(
-                                height: 20,
-                                width: 20,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                  color: theme.colorScheme.onError,
+                        width: double.infinity,
+                        child: state is SettingsLoading
+                            ? FilledButton(
+                                style: signOutStyle,
+                                onPressed: null,
+                                child: SizedBox(
+                                  height: 20,
+                                  width: 20,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    color: theme.colorScheme.onError,
+                                  ),
                                 ),
+                              )
+                            : FilledButton.icon(
+                                style: signOutStyle,
+                                onPressed: () =>
+                                    context.read<SettingsCubit>().signOut(),
+                                icon: const Icon(Icons.logout_rounded),
+                                label: Text(l10n.signOut),
                               ),
-                            )
-                          : FilledButton.icon(
-                              style: signOutStyle,
-                              onPressed: () =>
-                                  context.read<SettingsCubit>().signOut(),
-                              icon: const Icon(Icons.logout_rounded),
-                              label: Text(l10n.signOut),
-                            ),
                       ),
                     );
                   },
@@ -513,9 +539,8 @@ class _ChangeEmailSheetBodyState extends State<_ChangeEmailSheetBody> {
   }
 
   void _snack(String message) {
-    ScaffoldMessenger.of(
-      widget.hostContext,
-    ).showSnackBar(SnackBar(content: Text(message)));
+    ScaffoldMessenger.of(widget.hostContext)
+        .showSnackBar(SnackBar(content: Text(message)));
   }
 
   Future<void> _submit() async {
@@ -622,9 +647,8 @@ class _ChangePasswordSheetBodyState extends State<_ChangePasswordSheetBody> {
   }
 
   void _snack(String message) {
-    ScaffoldMessenger.of(
-      widget.hostContext,
-    ).showSnackBar(SnackBar(content: Text(message)));
+    ScaffoldMessenger.of(widget.hostContext)
+        .showSnackBar(SnackBar(content: Text(message)));
   }
 
   Future<void> _submit() async {

@@ -126,6 +126,7 @@
   "signOut": "Cerrar sesión",
   "settingsAboutSection": "Acerca de",
   "settingsAboutApp": "Acerca de",
+  "settingsRateApp": "Calificar en Google Play",
   "settingsPrivacyPolicy": "Política de privacidad",
   "settingsPrivacyTagline": "El inicio de sesión usa Supabase y es opcional hasta que quieras tus datos en la nube.",
   "settingsPrivacyDataTitle": "Cuenta (opcional)",

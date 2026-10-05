@@ -126,6 +126,7 @@
   "signOut": "Sign out",
   "settingsAboutSection": "About",
   "settingsAboutApp": "About",
+  "settingsRateApp": "Rate on Google Play",
   "settingsPrivacyPolicy": "Privacy policy",
   "settingsPrivacyTagline": "Sign-in uses Supabase and is optional until you want your data in the cloud.",
   "settingsPrivacyDataTitle": "Account (optional)",
