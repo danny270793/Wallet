@@ -38,6 +38,7 @@ import '../widgets/grouped_transactions_list.dart';
 import '../widgets/offline_cached_data_banner.dart';
 import '../widgets/remote_load_failure_panel.dart';
 import '../widgets/shell_scaffold.dart';
+import '../widgets/card_type_icon.dart';
 import '../widgets/swipeable_list_tile.dart';
 import '../widgets/transactions_month_scope.dart';
 import '../widgets/transactions_totals_bar.dart';
@@ -1809,7 +1810,7 @@ class _PaymentMethodPickerSheetState extends State<_PaymentMethodPickerSheet> {
                         final sw = paymentSwipe;
                         if (sw == null) {
                           return ListTile(
-                            leading: const Icon(Icons.credit_card_outlined),
+                            leading: CardTypeIcon(type: c.type),
                             title: Text(c.name),
                             onTap: () => Navigator.of(
                               context,
@@ -1818,7 +1819,7 @@ class _PaymentMethodPickerSheetState extends State<_PaymentMethodPickerSheet> {
                         }
                         return SwipeableListTile(
                           itemKey: c.id,
-                          leading: const Icon(Icons.credit_card_outlined),
+                          leading: CardTypeIcon(type: c.type),
                           title: Text(c.name),
                           onTap: () => Navigator.of(
                             context,
@@ -2236,6 +2237,21 @@ class _TransactionDialogState extends State<_TransactionDialog> {
     _paymentMethodDisplayController.text = payName ?? '';
     _categoryDisplayController.text = categoryName(_categoryId) ?? '';
     _tagDisplayController.text = tagName(_tagId) ?? '';
+  }
+
+  /// Brand icon for the picked card; null when paying from an account.
+  Widget? _selectedCardIcon() {
+    final id = _cardId;
+    if (id == null) return null;
+    for (final c in _cards) {
+      if (c.id == id) {
+        return Padding(
+          padding: const EdgeInsetsDirectional.only(end: 8),
+          child: CardTypeIcon(type: c.type, size: 18),
+        );
+      }
+    }
+    return null;
   }
 
   void _onDescriptionTextChangedForSuggestions() {
@@ -2952,6 +2968,7 @@ class _TransactionDialogState extends State<_TransactionDialog> {
                               controller: _paymentMethodDisplayController,
                               decoration: InputDecoration(
                                 labelText: l10n.transactionPaymentMethod,
+                                prefix: _selectedCardIcon(),
                                 suffixIcon: const Icon(
                                   Icons.expand_more_rounded,
                                   size: 22,
