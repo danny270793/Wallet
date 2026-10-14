@@ -5,7 +5,6 @@ import '../core/di/injection.dart';
 import '../features/recurring_movements/domain/entities/recurring_movement_entity.dart';
 import '../features/recurring_movements/presentation/cubit/recurring_movements_cubit.dart';
 import '../features/recurring_movements/presentation/cubit/recurring_movements_state.dart';
-import '../widgets/bottom_sheet_pinned_title.dart';
 import '../widgets/offline_cached_data_banner.dart';
 import '../widgets/recurring_movement_editor_sheet.dart';
 import '../widgets/remote_load_failure_panel.dart';
@@ -39,14 +38,6 @@ class RecurringMovementsPage extends StatelessWidget {
   }
 }
 
-enum _RecurringMovementsSortBy { name, value }
-
-String _sortLabel(AppLocalizations l10n, _RecurringMovementsSortBy by) =>
-    switch (by) {
-      _RecurringMovementsSortBy.name => l10n.settingsCacheSortByName,
-      _RecurringMovementsSortBy.value => l10n.recurringMovementsSortByValue,
-    };
-
 class _RecurringMovementsView extends StatefulWidget {
   const _RecurringMovementsView();
 
@@ -56,8 +47,6 @@ class _RecurringMovementsView extends StatefulWidget {
 }
 
 class _RecurringMovementsViewState extends State<_RecurringMovementsView> {
-  _RecurringMovementsSortBy _sortBy = _RecurringMovementsSortBy.name;
-
   /// Ids picked in multi-select mode (entered by long-pressing a row).
   final Set<String> _selectedIds = {};
 
@@ -74,50 +63,15 @@ class _RecurringMovementsViewState extends State<_RecurringMovementsView> {
 
   void _clearSelection() => setState(_selectedIds.clear);
 
-  /// The cubit already sorts by name; value sort is highest to lowest,
-  /// with name as the tie-breaker.
-  List<RecurringMovementEntity> _sorted(List<RecurringMovementEntity> items) {
-    if (_sortBy == _RecurringMovementsSortBy.name) return items;
+  /// Highest to lowest monthly amount, with name as the tie-breaker.
+  static List<RecurringMovementEntity> _sorted(
+    List<RecurringMovementEntity> items,
+  ) {
     return List<RecurringMovementEntity>.from(items)..sort((a, b) {
       final byValue = b.monthlyAmount.compareTo(a.monthlyAmount);
       if (byValue != 0) return byValue;
       return a.name.toLowerCase().compareTo(b.name.toLowerCase());
     });
-  }
-
-  Future<void> _showSortSheet(
-    BuildContext context,
-    AppLocalizations l10n,
-  ) async {
-    await showModalBottomSheet<void>(
-      context: context,
-      showDragHandle: false,
-      isScrollControlled: true,
-      builder: (sheetContext) => BottomSheetPinnedTitleScrollView(
-        padding: EdgeInsets.zero,
-        title: l10n.settingsCacheSortSheetTitle,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            for (final option in _RecurringMovementsSortBy.values)
-              ListTile(
-                title: Text(_sortLabel(l10n, option)),
-                trailing: _sortBy == option
-                    ? Icon(
-                        Icons.check,
-                        color: Theme.of(sheetContext).colorScheme.primary,
-                      )
-                    : null,
-                onTap: () {
-                  setState(() => _sortBy = option);
-                  Navigator.of(sheetContext).pop();
-                },
-              ),
-          ],
-        ),
-      ),
-    );
   }
 
   @override
@@ -156,12 +110,6 @@ class _RecurringMovementsViewState extends State<_RecurringMovementsView> {
                   tooltip: MaterialLocalizations.of(context).closeButtonTooltip,
                   onPressed: _clearSelection,
                 )
-              else
-                IconButton(
-                  icon: const Icon(Icons.swap_vert_rounded),
-                  tooltip: l10n.settingsCacheSortTooltip,
-                  onPressed: () => _showSortSheet(context, l10n),
-                ),
             ],
             floatingActionButton: FloatingActionButton(
               onPressed: () => _showRecurringMovementBottomSheet(context, l10n),
