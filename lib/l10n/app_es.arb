@@ -168,6 +168,14 @@
   "accountName": "Nombre",
   "accountDescription": "Descripción",
   "accountBalance": "Saldo",
+  "listSelectedCount": "{count} seleccionados",
+  "@listSelectedCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "listBalanceTotalLabel": "Total",
   "cardsTotalNonCredits": "Sin créditos",
   "cardsTotalCredits": "Créditos",
@@ -198,6 +206,13 @@
   "cardCutDay": "Día de corte",
   "cardPayDay": "Día de pago",
   "cardDayInvalidRange": "Introduce un día del 1 al 30",
+  "cardType": "Tipo de tarjeta",
+  "cardTypeOther": "Otra",
+  "cardRevolvingBalance": "Saldo rotativo",
+  "cardDeferredBalance": "Saldo diferido",
+  "cardTotalBalance": "Saldo total",
+  "cardNominalInterestRate": "Tasa de interés nominal",
+  "cardNominalInterestRateInvalid": "Ingresa un número mayor o igual a 0",
   "cardBillingCycleSummary": "Corte día {cutDay} · Pago día {payDay}",
   "@cardBillingCycleSummary": {
     "placeholders": {
@@ -236,6 +251,82 @@
   "@confirmDeleteTag": {
     "placeholders": {
       "name": {
+        "type": "String"
+      }
+    }
+  },
+  "loans": "Préstamos",
+  "noLoans": "No hay préstamos aún",
+  "newLoan": "Nuevo préstamo",
+  "editLoan": "Editar préstamo",
+  "deleteLoan": "Eliminar préstamo",
+  "loanAccount": "Cuenta",
+  "loanValue": "Valor",
+  "loanTotalToPay": "Total a pagar",
+  "loanValueInvalid": "Ingresa un monto mayor a 0",
+  "loanTermInvalid": "Ingresa al menos 1 mes",
+  "loanFirstPaymentDate": "Primer pago",
+  "loanPaymentDay": "Día de pago",
+  "loanMonthlyPayment": "Cuota mensual",
+  "loanSchedule": "Tabla de pagos",
+  "loanCapitalPayment": "Abono a capital",
+  "loanCapitalPaymentDate": "Pagado el",
+  "loanDeleteCapitalPayment": "Eliminar abono a capital",
+  "loanConfirmDeleteCapitalPayment": "Las cuotas posteriores se recalcularán sin él.",
+  "loanPaidInstallments": "Pagado en cuotas",
+  "loanPaidToCapital": "Abonado a capital",
+  "loanPending": "Pendiente",
+  "loanCapitalPaymentLeft": "Saldo {remaining}",
+  "@loanCapitalPaymentLeft": {
+    "placeholders": {
+      "remaining": {
+        "type": "String"
+      }
+    }
+  },
+  "loanCapitalPaymentMax": "Máximo {max}",
+  "@loanCapitalPaymentMax": {
+    "placeholders": {
+      "max": {
+        "type": "String"
+      }
+    }
+  },
+  "errorSeeMore": "Ver más",
+  "errorDetailsTitle": "Detalles del error",
+  "errorCopy": "Copiar",
+  "loanInterestToPay": "Intereses a pagar",
+  "loanTotalInterest": "Interés",
+  "loanNotFound": "Este préstamo ya no existe",
+  "confirmDeleteLoan": "¿Seguro que quieres eliminar «{name}»?",
+  "@confirmDeleteLoan": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "loanTermSummary": "{months} meses · {payment} / mes",
+  "@loanTermSummary": {
+    "placeholders": {
+      "months": {
+        "type": "int"
+      },
+      "payment": {
+        "type": "String"
+      }
+    }
+  },
+  "loanInstallmentBreakdown": "Capital {principal} · Interés {interest} · Saldo {remaining}",
+  "@loanInstallmentBreakdown": {
+    "placeholders": {
+      "principal": {
+        "type": "String"
+      },
+      "interest": {
+        "type": "String"
+      },
+      "remaining": {
         "type": "String"
       }
     }
@@ -287,6 +378,8 @@
   },
   "transactions": "Transacciones",
   "creditsNav": "Créditos",
+  "creditsFilterByCard": "Filtrar por tarjeta",
+  "creditsAllCards": "Todas las tarjetas",
   "creditsTitle": "Créditos",
   "creditsEmpty": "Aún no tienes cuotas diferidas.",
   "creditsEmptyForSelectedMonth": "No hay cuotas de crédito en este mes.",
