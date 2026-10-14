@@ -7,9 +7,14 @@ import '../core/credit_group_description.dart';
 import '../core/credit_ledger_grouping.dart';
 import '../core/di/injection.dart';
 import '../core/remote_load_failure.dart';
+import '../core/sort_by_name.dart';
+import '../core/ui/app_icons.dart';
+import '../features/cards/domain/entities/card_entity.dart';
+import '../features/cards/domain/usecases/get_cards_usecase.dart';
 import '../features/transactions/domain/entities/transaction_entity.dart';
 import '../features/transactions/domain/usecases/list_transactions_having_credit_group_usecase.dart';
 import '../features/transactions/presentation/cubit/transactions_cubit.dart';
+import '../widgets/card_type_icon.dart';
 import '../widgets/offline_cached_data_banner.dart';
 import '../widgets/remote_load_failure_panel.dart';
 import '../widgets/shell_scaffold.dart';
@@ -607,7 +612,11 @@ class _CreditsPageState extends State<CreditsPage> {
   late final ValueNotifier<DateTime> _dueMonthNotifier;
   bool _loading = true;
   Object? _error;
-  List<TransactionEntity> _flat = const [];
+  List<TransactionEntity> _allFlat = const [];
+  List<CardEntity> _cards = const [];
+
+  /// Card whose credits are shown; null shows every card.
+  String? _cardFilterId;
   bool _servedFromOfflineCache = false;
 
   @override
@@ -631,9 +640,21 @@ class _CreditsPageState extends State<CreditsPage> {
     });
     try {
       final bundle = await getIt<ListTransactionsHavingCreditGroupUsecase>()();
+      // Cards only feed the icons and the filter; the list still loads without them.
+      var cards = _cards;
+      try {
+        cards = sortedByName(
+          (await getIt<GetCardsUsecase>()()).value,
+          (c) => c.name,
+        );
+      } catch (_) {}
       if (!mounted) return;
       setState(() {
-        _flat = bundle.value;
+        _allFlat = bundle.value;
+        _cards = cards;
+        if (_cardFilterId != null && !cards.any((c) => c.id == _cardFilterId)) {
+          _cardFilterId = null;
+        }
         _servedFromOfflineCache = bundle.servedFromOfflineCache;
         _loading = false;
       });
@@ -671,6 +692,37 @@ class _CreditsPageState extends State<CreditsPage> {
     if (mounted) await _load();
   }
 
+  Widget _cardFilterButton(AppLocalizations l10n) {
+    final active = _cardFilterId != null;
+    return PopupMenuButton<String?>(
+      tooltip: l10n.creditsFilterByCard,
+      icon: Badge(isLabelVisible: active, child: const Icon(AppIcons.filter)),
+      initialValue: _cardFilterId,
+      onSelected: (id) => setState(() => _cardFilterId = id),
+      itemBuilder: (_) => [
+        PopupMenuItem<String?>(
+          value: null,
+          child: ListTile(
+            leading: const Icon(Icons.credit_card_outlined),
+            title: Text(l10n.creditsAllCards),
+            selected: !active,
+            contentPadding: EdgeInsets.zero,
+          ),
+        ),
+        for (final c in _cards)
+          PopupMenuItem<String?>(
+            value: c.id,
+            child: ListTile(
+              leading: CardTypeIcon(type: c.type),
+              title: Text(c.name),
+              selected: c.id == _cardFilterId,
+              contentPadding: EdgeInsets.zero,
+            ),
+          ),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
@@ -699,29 +751,32 @@ class _CreditsPageState extends State<CreditsPage> {
     return ValueListenableBuilder<DateTime>(
       valueListenable: _dueMonthNotifier,
       builder: (context, visibleMonth, _) {
-        final allCreditGroups = groupedCreditLedger(_flat);
+        final flat = _cardFilterId == null
+            ? _allFlat
+            : _allFlat.where((t) => t.cardId == _cardFilterId).toList();
+        final allCreditGroups = groupedCreditLedger(flat);
         final hasAnyCredits = allCreditGroups.isNotEmpty;
         final monthInstallments = creditLedgerInstallmentsInSelectedMonth(
-          _flat,
+          flat,
           visibleMonth,
         );
         final groups = creditGroupsByPendingCount(
           groupedCreditLedger(monthInstallments),
-          _flat,
+          flat,
           visibleMonth,
         );
         final showPendingBar = !_loading && hasAnyCredits;
-        final dueInMonth = creditLedgerDueInSelectedMonth(_flat, visibleMonth);
+        final dueInMonth = creditLedgerDueInSelectedMonth(flat, visibleMonth);
         final endingInMonth = creditLedgerEndingInSelectedMonthTotal(
-          _flat,
+          flat,
           visibleMonth,
         );
         final endingAfterMonth = creditLedgerEndingAfterSelectedMonthTotal(
-          _flat,
+          flat,
           visibleMonth,
         );
         final pendingTotal = creditLedgerPendingTotalFromSelectedMonth(
-          _flat,
+          flat,
           visibleMonth,
         );
         final fullGroupsById = {for (final fg in allCreditGroups) fg.id: fg};
@@ -731,6 +786,9 @@ class _CreditsPageState extends State<CreditsPage> {
           appBarBottom: TransactionsMonthAppBarBottom(
             notifier: _dueMonthNotifier,
           ),
+          appBarActionsBeforeSettings: _cards.isEmpty
+              ? null
+              : [_cardFilterButton(l10n)],
           floatingActionButton: FloatingActionButton(
             onPressed: () => _openNewCreditPurchase(l10n),
             child: const Icon(Icons.add),
@@ -817,22 +875,22 @@ class _CreditsPageState extends State<CreditsPage> {
                             creditLedgerKey: g.id,
                             totalInstallmentCount:
                                 creditLedgerTotalInstallmentCountForGroup(
-                                  _flat,
+                                  flat,
                                   g.id,
                                 ),
                             pendingCountAfterSelectedMonth:
                                 creditLedgerTransactionCountAfterSelectedMonth(
-                                  _flat,
+                                  flat,
                                   g.id,
                                   visibleMonth,
                                 ),
                             totalCreditValue: creditLedgerTotalValueForGroup(
-                              _flat,
+                              flat,
                               g.id,
                             ),
                             futureMonthsPendingTotal:
                                 creditLedgerTotalValueAfterSelectedMonth(
-                                  _flat,
+                                  flat,
                                   g.id,
                                   visibleMonth,
                                 ),
