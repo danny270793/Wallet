@@ -3,9 +3,13 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:wallet/l10n/app_localizations.dart';
 
 import '../core/credit_ledger_grouping.dart';
+import '../core/decimal_amount_input.dart';
 import '../core/di/injection.dart';
 import 'bottom_sheet_pinned_title.dart';
+import 'card_type_icon.dart';
+import 'day_of_month_picker_dialog.dart';
 import '../features/cards/domain/entities/card_entity.dart';
+import '../features/cards/domain/entities/card_type.dart';
 import '../features/cards/presentation/cubit/cards_cubit.dart';
 import '../features/transactions/domain/usecases/list_transactions_having_credit_group_usecase.dart';
 
@@ -15,6 +19,7 @@ Future<void> showCardEditorBottomSheet(
   AppLocalizations l10n, {
   CardEntity? card,
   double? postedBalance,
+  double? deferredBalance,
   CardsCubit? cubit,
 }) {
   return showModalBottomSheet<void>(
@@ -27,6 +32,7 @@ Future<void> showCardEditorBottomSheet(
         l10n: l10n,
         card: card,
         postedBalance: postedBalance,
+        deferredBalance: deferredBalance,
       );
       return cubit != null
           ? BlocProvider.value(value: cubit, child: child)
@@ -41,6 +47,7 @@ class CardEditorSheet extends StatefulWidget {
     required this.l10n,
     this.card,
     this.postedBalance,
+    this.deferredBalance,
   });
 
   final AppLocalizations l10n;
@@ -49,6 +56,9 @@ class CardEditorSheet extends StatefulWidget {
   /// Regular purchases plus installments already posted (first amount on /cards).
   /// Used as the Balance field and as the baseline for an Adjustment movement.
   final double? postedBalance;
+
+  /// Installments still to come (second amount on /cards). Shown read-only.
+  final double? deferredBalance;
 
   @override
   State<CardEditorSheet> createState() => _CardEditorSheetState();
@@ -59,9 +69,13 @@ class _CardEditorSheetState extends State<CardEditorSheet> {
   late final TextEditingController _nameController;
   late final TextEditingController _cutDayController;
   late final TextEditingController _payDayController;
-  late final TextEditingController _descriptionController;
+  late final TextEditingController _interestRateController;
   TextEditingController? _balanceController;
+  TextEditingController? _deferredBalanceController;
+  TextEditingController? _totalBalanceController;
+  CardType? _type;
   double? _postedBalance;
+  double _deferredBalance = 0;
   bool _loading = false;
 
   static String _dayText(int day) => day.toString();
@@ -71,21 +85,28 @@ class _CardEditorSheetState extends State<CardEditorSheet> {
     super.initState();
     final card = widget.card;
     _nameController = TextEditingController(text: card?.name ?? '');
+    _type = card?.type;
     _cutDayController = TextEditingController(
       text: _dayText(card?.cutDay ?? 24),
     );
     _payDayController = TextEditingController(
       text: _dayText(card?.payDay ?? 24),
     );
-    _descriptionController = TextEditingController(
-      text: card?.description ?? '',
+    _interestRateController = TextEditingController(
+      text: card?.nominalInterestRate?.toString() ?? '',
     );
     if (card != null) {
       _postedBalance = widget.postedBalance ?? card.balance;
+      _deferredBalance = widget.deferredBalance ?? 0;
       _balanceController = TextEditingController(
         text: _postedBalance!.toStringAsFixed(2),
+      )..addListener(_updateTotalBalance);
+      _deferredBalanceController = TextEditingController(
+        text: _deferredBalance.toStringAsFixed(2),
       );
-      if (widget.postedBalance == null) {
+      _totalBalanceController = TextEditingController();
+      _updateTotalBalance();
+      if (widget.postedBalance == null || widget.deferredBalance == null) {
         _resolvePostedBalance(card);
       }
     }
@@ -94,10 +115,8 @@ class _CardEditorSheetState extends State<CardEditorSheet> {
   Future<void> _resolvePostedBalance(CardEntity card) async {
     try {
       final bundle = await getIt<ListTransactionsHavingCreditGroupUsecase>()();
-      final posted = cardPostedBalance(
-        card.balance,
-        creditTotalsByCard(bundle.value)[card.id],
-      );
+      final credits = creditTotalsByCard(bundle.value)[card.id];
+      final posted = cardPostedBalance(card.balance, credits);
       if (!mounted || _balanceController == null) return;
       final typed = _balanceController!.text.trim();
       final stillInitial =
@@ -105,11 +124,26 @@ class _CardEditorSheetState extends State<CardEditorSheet> {
           typed == (_postedBalance?.toStringAsFixed(2) ?? '');
       setState(() {
         _postedBalance = posted;
+        _deferredBalance = credits?.pending ?? 0;
+        _deferredBalanceController!.text = _deferredBalance.toStringAsFixed(2);
         if (stillInitial) {
           _balanceController!.text = posted.toStringAsFixed(2);
         }
+        _updateTotalBalance();
       });
     } catch (_) {}
+  }
+
+  /// Total = revolving (as typed) + deferred; falls back to the stored revolving
+  /// balance while the field does not parse.
+  void _updateTotalBalance() {
+    final total = _totalBalanceController;
+    if (total == null) return;
+    final revolving =
+        parseDecimalAmountInput(_balanceController?.text) ??
+        _postedBalance ??
+        0;
+    total.text = (revolving + _deferredBalance).toStringAsFixed(2);
   }
 
   @override
@@ -117,9 +151,21 @@ class _CardEditorSheetState extends State<CardEditorSheet> {
     _nameController.dispose();
     _cutDayController.dispose();
     _payDayController.dispose();
-    _descriptionController.dispose();
+    _interestRateController.dispose();
     _balanceController?.dispose();
+    _deferredBalanceController?.dispose();
+    _totalBalanceController?.dispose();
     super.dispose();
+  }
+
+  Future<void> _pickDay(TextEditingController controller, String title) async {
+    final day = await showDayOfMonthPicker(
+      context,
+      title: title,
+      selected: int.tryParse(controller.text.trim()),
+    );
+    if (day == null || !mounted) return;
+    setState(() => controller.text = '$day');
   }
 
   String? _validateBillingDay(String? v, AppLocalizations l10n) {
@@ -129,21 +175,30 @@ class _CardEditorSheetState extends State<CardEditorSheet> {
     return null;
   }
 
+  String? _validateInterestRate(String? v, AppLocalizations l10n) {
+    if (v == null || v.trim().isEmpty) return null;
+    final n = parseDecimalAmountInput(v);
+    if (n == null || n < 0) return l10n.cardNominalInterestRateInvalid;
+    return null;
+  }
+
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
     setState(() => _loading = true);
     final cubit = context.read<CardsCubit>();
     final name = _nameController.text.trim();
+    final type = _type!;
     final cutDay = int.parse(_cutDayController.text.trim());
     final payDay = int.parse(_payDayController.text.trim());
-    final description = _descriptionController.text.trim().isEmpty
-        ? null
-        : _descriptionController.text.trim();
+    final nominalInterestRate = parseDecimalAmountInput(
+      _interestRateController.text,
+    );
     try {
       if (widget.card == null) {
         await cubit.create(
           name: name,
-          description: description,
+          type: type,
+          nominalInterestRate: nominalInterestRate,
           cutDay: cutDay,
           payDay: payDay,
         );
@@ -153,7 +208,8 @@ class _CardEditorSheetState extends State<CardEditorSheet> {
         await cubit.update(
           id: widget.card!.id,
           name: name,
-          description: description,
+          type: type,
+          nominalInterestRate: nominalInterestRate,
           cutDay: cutDay,
           payDay: payDay,
           previousBalance: _postedBalance ?? widget.card!.balance,
@@ -180,26 +236,56 @@ class _CardEditorSheetState extends State<CardEditorSheet> {
             textInputAction: TextInputAction.next,
           ),
           const SizedBox(height: 8),
+          DropdownButtonFormField<CardType>(
+            initialValue: _type,
+            decoration: InputDecoration(labelText: l10n.cardType),
+            items: [
+              for (final t in CardType.values)
+                DropdownMenuItem(
+                  value: t,
+                  child: Row(
+                    children: [
+                      CardTypeIcon(type: t),
+                      const SizedBox(width: 12),
+                      Text(cardTypeLabel(t, l10n)),
+                    ],
+                  ),
+                ),
+            ],
+            onChanged: (t) => setState(() => _type = t),
+            validator: (t) => t == null ? l10n.fieldRequired : null,
+          ),
+          const SizedBox(height: 8),
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Expanded(
                 child: TextFormField(
                   controller: _cutDayController,
-                  decoration: InputDecoration(labelText: l10n.cardCutDay),
-                  keyboardType: TextInputType.number,
+                  readOnly: true,
+                  enableInteractiveSelection: false,
+                  showCursor: false,
+                  decoration: InputDecoration(
+                    labelText: l10n.cardCutDay,
+                    suffixIcon: const Icon(Icons.calendar_today_outlined),
+                  ),
                   validator: (v) => _validateBillingDay(v, l10n),
-                  textInputAction: TextInputAction.next,
+                  onTap: () => _pickDay(_cutDayController, l10n.cardCutDay),
                 ),
               ),
               const SizedBox(width: 12),
               Expanded(
                 child: TextFormField(
                   controller: _payDayController,
-                  decoration: InputDecoration(labelText: l10n.cardPayDay),
-                  keyboardType: TextInputType.number,
+                  readOnly: true,
+                  enableInteractiveSelection: false,
+                  showCursor: false,
+                  decoration: InputDecoration(
+                    labelText: l10n.cardPayDay,
+                    suffixIcon: const Icon(Icons.calendar_today_outlined),
+                  ),
                   validator: (v) => _validateBillingDay(v, l10n),
-                  textInputAction: TextInputAction.next,
+                  onTap: () => _pickDay(_payDayController, l10n.cardPayDay),
                 ),
               ),
             ],
@@ -208,7 +294,7 @@ class _CardEditorSheetState extends State<CardEditorSheet> {
           if (_balanceController != null) ...[
             TextFormField(
               controller: _balanceController,
-              decoration: InputDecoration(labelText: l10n.accountBalance),
+              decoration: InputDecoration(labelText: l10n.cardRevolvingBalance),
               keyboardType: const TextInputType.numberWithOptions(
                 decimal: true,
                 signed: true,
@@ -223,11 +309,30 @@ class _CardEditorSheetState extends State<CardEditorSheet> {
               textInputAction: TextInputAction.next,
             ),
             const SizedBox(height: 8),
+            TextFormField(
+              controller: _deferredBalanceController,
+              decoration: InputDecoration(labelText: l10n.cardDeferredBalance),
+              enabled: false,
+            ),
+            const SizedBox(height: 8),
+            TextFormField(
+              controller: _totalBalanceController,
+              decoration: InputDecoration(labelText: l10n.cardTotalBalance),
+              enabled: false,
+            ),
+            const SizedBox(height: 8),
           ],
           TextFormField(
-            controller: _descriptionController,
-            decoration: InputDecoration(labelText: l10n.accountDescription),
-            maxLines: 3,
+            controller: _interestRateController,
+            decoration: InputDecoration(
+              labelText: l10n.cardNominalInterestRate,
+              suffixText: '%',
+            ),
+            keyboardType: const TextInputType.numberWithOptions(decimal: true),
+            inputFormatters: const [
+              DecimalAmountInputFormatter(allowNegative: false),
+            ],
+            validator: (v) => _validateInterestRate(v, l10n),
           ),
         ],
       ),
