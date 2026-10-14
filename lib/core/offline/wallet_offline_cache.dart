@@ -157,6 +157,8 @@ class WalletOfflineCache {
 abstract final class WalletOfflineCacheKeys {
   static const accounts = 'accounts';
   static const cards = 'cards';
+  static const loans = 'loans';
+  static const loanCapitalPayments = 'loan_capital_payments';
   static const categories = 'categories';
   static const tags = 'tags';
   static const assets = 'assets';
