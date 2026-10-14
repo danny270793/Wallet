@@ -436,6 +436,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get accountBalance => 'Balance';
 
   @override
+  String listSelectedCount(int count) {
+    return '$count selected';
+  }
+
+  @override
   String get listBalanceTotalLabel => 'Total';
 
   @override
@@ -486,6 +491,27 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get cardDayInvalidRange => 'Enter a day from 1 to 30';
+
+  @override
+  String get cardType => 'Card type';
+
+  @override
+  String get cardTypeOther => 'Other';
+
+  @override
+  String get cardRevolvingBalance => 'Revolving balance';
+
+  @override
+  String get cardDeferredBalance => 'Deferred balance';
+
+  @override
+  String get cardTotalBalance => 'Total balance';
+
+  @override
+  String get cardNominalInterestRate => 'Nominal interest rate';
+
+  @override
+  String get cardNominalInterestRateInvalid => 'Enter a number of 0 or more';
 
   @override
   String cardBillingCycleSummary(int cutDay, int payDay) {
@@ -547,6 +573,117 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get tagHiddenHint =>
       'Hidden tags won\'t appear when picking a tag for a transaction';
+
+  @override
+  String get loans => 'Loans';
+
+  @override
+  String get noLoans => 'No loans yet';
+
+  @override
+  String get newLoan => 'New loan';
+
+  @override
+  String get editLoan => 'Edit loan';
+
+  @override
+  String get deleteLoan => 'Delete loan';
+
+  @override
+  String get loanAccount => 'Account';
+
+  @override
+  String get loanValue => 'Value';
+
+  @override
+  String get loanTotalToPay => 'Total to pay';
+
+  @override
+  String get loanValueInvalid => 'Enter an amount greater than 0';
+
+  @override
+  String get loanTermInvalid => 'Enter at least 1 month';
+
+  @override
+  String get loanFirstPaymentDate => 'First payment';
+
+  @override
+  String get loanPaymentDay => 'Payment day';
+
+  @override
+  String get loanMonthlyPayment => 'Monthly payment';
+
+  @override
+  String get loanSchedule => 'Payment schedule';
+
+  @override
+  String get loanCapitalPayment => 'Payment to capital';
+
+  @override
+  String get loanCapitalPaymentDate => 'Paid on';
+
+  @override
+  String get loanDeleteCapitalPayment => 'Delete payment to capital';
+
+  @override
+  String get loanConfirmDeleteCapitalPayment =>
+      'The installments after it will be recomputed without it.';
+
+  @override
+  String get loanPaidInstallments => 'Paid monthly';
+
+  @override
+  String get loanPaidToCapital => 'Paid to capital';
+
+  @override
+  String get loanPending => 'Pending';
+
+  @override
+  String loanCapitalPaymentLeft(String remaining) {
+    return 'Left $remaining';
+  }
+
+  @override
+  String loanCapitalPaymentMax(String max) {
+    return 'At most $max';
+  }
+
+  @override
+  String get errorSeeMore => 'See more';
+
+  @override
+  String get errorDetailsTitle => 'Error details';
+
+  @override
+  String get errorCopy => 'Copy';
+
+  @override
+  String get loanInterestToPay => 'Interest to pay';
+
+  @override
+  String get loanTotalInterest => 'Interest';
+
+  @override
+  String get loanNotFound => 'This loan no longer exists';
+
+  @override
+  String confirmDeleteLoan(String name) {
+    return 'Are you sure you want to delete \"$name\"?';
+  }
+
+  @override
+  String loanTermSummary(int months, String payment) {
+    return '$months months · $payment / month';
+  }
+
+  @override
+  String loanInstallmentBreakdown(
+    String principal,
+    String interest,
+    String remaining,
+  ) {
+    return 'Principal $principal · Interest $interest · Left $remaining';
+  }
 
   @override
   String get assets => 'Assets';
@@ -613,6 +750,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get creditsNav => 'Credits';
+
+  @override
+  String get creditsFilterByCard => 'Filter by card';
+
+  @override
+  String get creditsAllCards => 'All cards';
 
   @override
   String get creditsTitle => 'Credits';
