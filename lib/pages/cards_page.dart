@@ -2,12 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:wallet/l10n/app_localizations.dart';
+
 import '../core/credit_ledger_grouping.dart';
 import '../core/di/injection.dart';
 import '../features/cards/domain/entities/card_entity.dart';
 import '../features/cards/presentation/cubit/cards_cubit.dart';
 import '../features/cards/presentation/cubit/cards_state.dart';
 import '../widgets/card_editor_sheet.dart';
+import '../widgets/card_type_icon.dart';
 import '../widgets/offline_cached_data_banner.dart';
 import '../widgets/remote_load_failure_panel.dart';
 import '../widgets/shell_scaffold.dart';
@@ -27,6 +29,7 @@ void _showCardBottomSheet(
     postedBalance: card == null
         ? null
         : cardPostedBalance(card.balance, credits),
+    deferredBalance: card == null ? null : (credits?.pending ?? 0),
     cubit: context.read<CardsCubit>(),
   );
 }
@@ -43,8 +46,30 @@ class CardsPage extends StatelessWidget {
   }
 }
 
-class _CardsView extends StatelessWidget {
+class _CardsView extends StatefulWidget {
   const _CardsView();
+
+  @override
+  State<_CardsView> createState() => _CardsViewState();
+}
+
+class _CardsViewState extends State<_CardsView> {
+  /// Ids picked in multi-select mode (entered by long-pressing a row).
+  final Set<String> _selectedIds = {};
+
+  /// Selected rows that still exist; select mode is on while this is non-empty.
+  List<CardEntity> _selectedAmong(List<CardEntity> items) =>
+      items.where((e) => _selectedIds.contains(e.id)).toList();
+
+  void _toggleSelected(String id, List<CardEntity> items) {
+    setState(() {
+      // Drop ids of rows that no longer exist before toggling.
+      _selectedIds.retainAll(items.map((e) => e.id));
+      if (!_selectedIds.remove(id)) _selectedIds.add(id);
+    });
+  }
+
+  void _clearSelection() => setState(_selectedIds.clear);
 
   @override
   Widget build(BuildContext context) {
@@ -69,34 +94,55 @@ class _CardsView extends StatelessWidget {
           CardsActionError(:final creditTotals) => creditTotals,
           _ => const <String, CardCreditTotals>{},
         };
+        final selected = _selectedAmong(cards);
+        final selecting = selected.isNotEmpty;
+        final totalsCards = selecting ? selected : cards;
         final showTotalBar = cards.isNotEmpty;
         final totalNonCredits = showTotalBar
-            ? cards.fold<double>(
+            ? totalsCards.fold<double>(
                 0,
                 (s, c) => s + cardPostedBalance(c.balance, creditTotals[c.id]),
               )
             : 0.0;
         final totalCredits = showTotalBar
-            ? cards.fold<double>(
+            ? totalsCards.fold<double>(
                 0,
                 (s, c) => s + (creditTotals[c.id]?.pending ?? 0),
               )
             : 0.0;
 
-        return ShellScaffold(
-          title: l10n.cards,
-          floatingActionButton: FloatingActionButton(
-            onPressed: () => _showCardBottomSheet(context, l10n),
-            child: const Icon(Icons.add),
+        return PopScope(
+          canPop: !selecting,
+          onPopInvokedWithResult: (didPop, _) {
+            if (!didPop) _clearSelection();
+          },
+          child: ShellScaffold(
+            title: selecting
+                ? l10n.listSelectedCount(selected.length)
+                : l10n.cards,
+            appBarActionsBeforeSettings: selecting
+                ? [
+                    IconButton(
+                      icon: const Icon(Icons.close),
+                      tooltip: MaterialLocalizations.of(context)
+                          .closeButtonTooltip,
+                      onPressed: _clearSelection,
+                    ),
+                  ]
+                : null,
+            floatingActionButton: FloatingActionButton(
+              onPressed: () => _showCardBottomSheet(context, l10n),
+              child: const Icon(Icons.add),
+            ),
+            bottomNavigationBar: showTotalBar
+                ? WalletCardTotalsBar(
+                    l10n: l10n,
+                    nonCredits: totalNonCredits,
+                    credits: totalCredits,
+                  )
+                : null,
+            body: _body(context, state, l10n),
           ),
-          bottomNavigationBar: showTotalBar
-              ? WalletCardTotalsBar(
-                  l10n: l10n,
-                  nonCredits: totalNonCredits,
-                  credits: totalCredits,
-                )
-              : null,
-          body: _body(context, state, l10n),
         );
       },
     );
@@ -178,7 +224,14 @@ class _CardsView extends StatelessWidget {
             return const OfflineCachedDataBanner(visible: true);
           }
           final i = index - (offlineCached ? 1 : 0);
-          return _CardTile(card: cards[i], credits: creditTotals[cards[i].id]);
+          final card = cards[i];
+          return _CardTile(
+            card: card,
+            credits: creditTotals[card.id],
+            selecting: _selectedAmong(cards).isNotEmpty,
+            selected: _selectedIds.contains(card.id),
+            onToggleSelected: () => _toggleSelected(card.id, cards),
+          );
         },
       ),
     );
@@ -188,7 +241,19 @@ class _CardsView extends StatelessWidget {
 class _CardTile extends StatelessWidget {
   final CardEntity card;
   final CardCreditTotals? credits;
-  const _CardTile({required this.card, this.credits});
+
+  /// In select mode a tap toggles selection and swipe actions are disabled.
+  final bool selecting;
+  final bool selected;
+  final VoidCallback onToggleSelected;
+
+  const _CardTile({
+    required this.card,
+    this.credits,
+    required this.selecting,
+    required this.selected,
+    required this.onToggleSelected,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -212,17 +277,16 @@ class _CardTile extends StatelessWidget {
 
     return SwipeableListTile(
       itemKey: card.id,
-      title: Text(card.name),
+      leading: CardTypeIcon(type: card.type, size: 28),
+      title: Text(
+        card.nominalInterestRate == null
+            ? card.name
+            : '${card.name} (${card.nominalInterestRate!.toStringAsFixed(2)} %)',
+      ),
       subtitle: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
         children: [
-          if (card.description != null && card.description!.isNotEmpty)
-            Text(
-              card.description!,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-            ),
           Text(
             l10n.cardBillingCycleSummary(card.cutDay, card.payDay),
             maxLines: 1,
@@ -235,7 +299,10 @@ class _CardTile extends StatelessWidget {
         balance: cardPostedBalance(card.balance, credits),
         creditBalance: credits?.pending ?? 0,
       ),
-      onTap: openTransactions,
+      selected: selected,
+      swipeEnabled: !selecting,
+      onTap: selecting ? onToggleSelected : openTransactions,
+      onLongPress: onToggleSelected,
       onEdit: openEdit,
       confirmDelete: () async {
         final ok = await showDialog<bool>(
