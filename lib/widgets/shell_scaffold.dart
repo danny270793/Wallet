@@ -3,18 +3,19 @@ import 'package:go_router/go_router.dart';
 import 'package:wallet/l10n/app_localizations.dart';
 
 /// Drawer destination index aligned with [WalletNavigationDrawer] destinations.
-/// Indices `8` and `9` are monthly and yearly dashboard when the dashboards section is expanded.
+/// Indices `9` and `10` are monthly and yearly dashboard when the dashboards section is expanded.
 int walletDrawerSelectedIndex(String matchedLocation) {
   if (matchedLocation.startsWith('/transactions')) return 0;
   if (matchedLocation.startsWith('/credits')) return 1;
   if (matchedLocation.startsWith('/accounts')) return 2;
   if (matchedLocation.startsWith('/cards')) return 3;
-  if (matchedLocation.startsWith('/recurring-movements')) return 4;
-  if (matchedLocation.startsWith('/categories')) return 5;
-  if (matchedLocation.startsWith('/tags')) return 6;
-  if (matchedLocation.startsWith('/assets')) return 7;
-  if (matchedLocation.startsWith('/dashboard/yearly')) return 9;
-  if (matchedLocation.startsWith('/dashboard/monthly')) return 8;
+  if (matchedLocation.startsWith('/loans')) return 4;
+  if (matchedLocation.startsWith('/recurring-movements')) return 5;
+  if (matchedLocation.startsWith('/categories')) return 6;
+  if (matchedLocation.startsWith('/tags')) return 7;
+  if (matchedLocation.startsWith('/assets')) return 8;
+  if (matchedLocation.startsWith('/dashboard/yearly')) return 10;
+  if (matchedLocation.startsWith('/dashboard/monthly')) return 9;
   return 0;
 }
 
@@ -52,7 +53,7 @@ class _WalletNavigationDrawerState extends State<WalletNavigationDrawer> {
     final selected = walletDrawerSelectedIndex(widget.matchedLocation);
 
     int? drawerSelectedIndex = selected;
-    if (!_showDashboardSubs && selected >= 8) {
+    if (!_showDashboardSubs && selected >= 9) {
       drawerSelectedIndex = -1;
     }
 
@@ -74,21 +75,24 @@ class _WalletNavigationDrawerState extends State<WalletNavigationDrawer> {
             router.go('/cards');
             break;
           case 4:
-            router.go('/recurring-movements');
+            router.go('/loans');
             break;
           case 5:
-            router.go('/categories');
+            router.go('/recurring-movements');
             break;
           case 6:
-            router.go('/tags');
+            router.go('/categories');
             break;
           case 7:
-            router.go('/assets');
+            router.go('/tags');
             break;
           case 8:
-            router.go('/dashboard/monthly');
+            router.go('/assets');
             break;
           case 9:
+            router.go('/dashboard/monthly');
+            break;
+          case 10:
             router.go('/dashboard/yearly');
             break;
         }
@@ -113,6 +117,11 @@ class _WalletNavigationDrawerState extends State<WalletNavigationDrawer> {
           icon: const Icon(Icons.credit_card_outlined),
           selectedIcon: const Icon(Icons.credit_card),
           label: Text(l10n.cards),
+        ),
+        NavigationDrawerDestination(
+          icon: const Icon(Icons.request_quote_outlined),
+          selectedIcon: const Icon(Icons.request_quote),
+          label: Text(l10n.loans),
         ),
         NavigationDrawerDestination(
           icon: const Icon(Icons.event_repeat_outlined),
