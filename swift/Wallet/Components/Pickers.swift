@@ -63,14 +63,6 @@ struct SearchablePicker: View {
                     Button(L("edit"), systemImage: "pencil") { onEdit(item) }.tint(.blue)
                   }
                 }
-                .confirmationDialog(
-                  L("delete"), isPresented: Binding(get: { pendingDelete?.id == item.id }, set: { if !$0 { pendingDelete = nil } }),
-                  titleVisibility: .visible
-                ) {
-                  Button(L("delete"), role: .destructive) { Task { await onDelete?(item) } }
-                } message: {
-                  Text(deleteMessage(item))
-                }
               }
             }
           }
@@ -79,6 +71,15 @@ struct SearchablePicker: View {
       .searchable(text: $query, placement: .navigationBarDrawer(displayMode: .always), prompt: L("transferAccountSearch"))
       .navigationTitle(title)
       .navigationBarTitleDisplayMode(.inline)
+      .alert(
+        L("delete"), isPresented: Binding(get: { pendingDelete != nil }, set: { if !$0 { pendingDelete = nil } }),
+        presenting: pendingDelete
+      ) { item in
+        Button(L("delete"), role: .destructive) { Task { await onDelete?(item) } }
+        Button(L("cancel"), role: .cancel) {}
+      } message: { item in
+        Text(deleteMessage(item))
+      }
       .toolbar {
         ToolbarItem(placement: .cancellationAction) { Button(role: .close) { dismiss() } }
         if let onAdd {
