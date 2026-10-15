@@ -115,6 +115,7 @@ public enum CacheKey {
   }
 
   public static func year(_ y: Date) -> String { "tx_year_\(WalletCalendar.year(y))" }
+  public static func yearOnly(_ y: Int) -> String { "tx_in_year_\(y)" }
   public static func credit(_ id: String) -> String { "tx_credit_\(id)" }
   public static func walletCredit(_ id: String) -> String { "wallet_credit_\(id)" }
 }
