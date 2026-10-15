@@ -1,0 +1,12 @@
+# Supabase credentials. Never commit them; copy WalletConfig.example.plist instead.
+Wallet/Resources/WalletConfig.plist
+
+.DS_Store
+.build/
+.swiftpm/
+DerivedData/
+xcuserdata/
+*.xcuserstate
+
+# Corporate network root certificates. Never commit them.
+*.pem
