@@ -95,6 +95,8 @@ struct TransactionRowView: View {
       }
     }
     .opacity(t.ignore ? 0.5 : 1)
+    // Whole row is the hit area, including the empty space between the columns.
+    .contentShape(.rect)
     .accessibilityElement(children: .combine)
     .accessibilityValue(t.ignore ? L("transactionIgnoredBadge") : "")
   }
@@ -121,6 +123,8 @@ struct TransferRowView: View {
       }
     }
     .opacity(source.ignore || target.ignore ? 0.5 : 1)
+    // Whole row is the hit area, including the empty space between the columns.
+    .contentShape(.rect)
     .accessibilityElement(children: .combine)
   }
 }
