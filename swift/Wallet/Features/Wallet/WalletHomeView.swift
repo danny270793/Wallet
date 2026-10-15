@@ -201,6 +201,8 @@ struct AccountsView: View {
         }
       }
     }
+    // On the list itself, so the floating summary's pager doesn't inherit it.
+    .refreshable { await load() }
     .offlineBanner(state.fromCache)
     .selectionToolbar($selection, title: L("accounts"))
     .toolbar { ToolbarItem(placement: .primaryAction) { Button(L("newAccount"), systemImage: "plus") { editor = .account(nil) } } }
@@ -210,7 +212,6 @@ struct AccountsView: View {
         SummaryCard(pages: [SummaryCard.total(picked.reduce(0) { $0 + $1.balance })])
       }
     }
-    .refreshable { await load() }
     .task(id: model.dataVersion) { await load() }
     .sheet(item: $editor) { $0.view }
   }
@@ -272,6 +273,8 @@ struct CardsView: View {
         }
       }
     }
+    // On the list itself, so the floating summary's pager doesn't inherit it.
+    .refreshable { await load() }
     .offlineBanner(state.fromCache)
     .selectionToolbar($selection, title: L("cards"))
     .toolbar { ToolbarItem(placement: .primaryAction) { Button(L("newCard"), systemImage: "plus") { editor = .card(nil) } } }
@@ -289,7 +292,6 @@ struct CardsView: View {
         ])
       }
     }
-    .refreshable { await load() }
     .task(id: model.dataVersion) { await load() }
     .sheet(item: $editor) { $0.view }
   }
@@ -367,6 +369,8 @@ struct NamedItemsView: View {
         .confirmDelete($deleting, id: item.id)
       }
     }
+    // On the list itself, so the floating summary's pager doesn't inherit it.
+    .refreshable { await load() }
     .offlineBanner(isTags ? tags.fromCache : categories.fromCache)
     .navigationTitle(L(isTags ? "tags" : "categories"))
     .toolbar {
@@ -374,7 +378,6 @@ struct NamedItemsView: View {
         Button(L(isTags ? "newTag" : "newCategory"), systemImage: "plus") { editor = isTags ? .tag(nil) : .category(nil) }
       }
     }
-    .refreshable { await load() }
     .task(id: model.dataVersion) { await load() }
     .sheet(item: $editor) { $0.view }
   }
