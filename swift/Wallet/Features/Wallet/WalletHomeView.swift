@@ -104,30 +104,31 @@ struct PendingDelete {
   var action: () async -> Void
 }
 
-/// Confirms a destructive delete, then runs it. Attach to each row (not the
-/// list) so the dialog is anchored to the row being deleted.
+/// Confirms a destructive delete with a centered alert, then runs it.
+///
+/// An alert (not a confirmation dialog) because a dialog is a popover
+/// anchored to the row, and the row redraws as its swipe actions close,
+/// which dismissed the dialog before it could be confirmed.
 struct DeleteConfirmation: ViewModifier {
   @Binding var item: PendingDelete?
-  let id: String
 
   func body(content: Content) -> some View {
-    content.confirmationDialog(
-      item?.title ?? "", isPresented: Binding(get: { item?.id == id }, set: { if !$0 { item = nil } }),
-      titleVisibility: .visible
-    ) {
-      Button(L("delete"), role: .destructive) {
-        let a = item?.action
-        Task { await a?() }
-      }
-    } message: {
-      Text(item?.message ?? L("confirmDeleteAccount", item?.name ?? ""))
+    content.alert(
+      item?.title ?? "", isPresented: Binding(get: { item != nil }, set: { if !$0 { item = nil } }),
+      presenting: item
+    ) { pending in
+      Button(L("delete"), role: .destructive) { Task { await pending.action() } }
+      Button(L("cancel"), role: .cancel) {}
+    } message: { pending in
+      Text(pending.message ?? L("confirmDeleteAccount", pending.name))
     }
   }
 }
 
 extension View {
-  func confirmDelete(_ item: Binding<PendingDelete?>, id: String) -> some View {
-    modifier(DeleteConfirmation(item: item, id: id))
+  /// Attach once to the list; rows set the binding from their swipe action.
+  func confirmDelete(_ item: Binding<PendingDelete?>) -> some View {
+    modifier(DeleteConfirmation(item: item))
   }
 
   /// Leading "selected" check shown while selecting.
@@ -197,13 +198,13 @@ struct AccountsView: View {
             }
             Button(L("edit"), systemImage: "pencil") { editor = .account(a) }.tint(.blue)
           }
-          .confirmDelete($deleting, id: a.id)
         }
       }
     }
     // On the list itself, so the floating summary's pager doesn't inherit it.
     .refreshable { await load() }
     .offlineBanner(state.fromCache)
+    .confirmDelete($deleting)
     .selectionToolbar($selection, title: L("accounts"))
     .toolbar { ToolbarItem(placement: .primaryAction) { Button(L("newAccount"), systemImage: "plus") { editor = .account(nil) } } }
     .safeAreaInset(edge: .bottom) {
@@ -269,13 +270,13 @@ struct CardsView: View {
             }
             Button(L("edit"), systemImage: "pencil") { editor = .card(c) }.tint(.blue)
           }
-          .confirmDelete($deleting, id: c.id)
         }
       }
     }
     // On the list itself, so the floating summary's pager doesn't inherit it.
     .refreshable { await load() }
     .offlineBanner(state.fromCache)
+    .confirmDelete($deleting)
     .selectionToolbar($selection, title: L("cards"))
     .toolbar { ToolbarItem(placement: .primaryAction) { Button(L("newCard"), systemImage: "plus") { editor = .card(nil) } } }
     .safeAreaInset(edge: .bottom) {
@@ -366,12 +367,12 @@ struct NamedItemsView: View {
           }
           .tint(.blue)
         }
-        .confirmDelete($deleting, id: item.id)
       }
     }
     // On the list itself, so the floating summary's pager doesn't inherit it.
     .refreshable { await load() }
     .offlineBanner(isTags ? tags.fromCache : categories.fromCache)
+    .confirmDelete($deleting)
     .navigationTitle(L(isTags ? "tags" : "categories"))
     .toolbar {
       ToolbarItem(placement: .primaryAction) {
