@@ -23,8 +23,45 @@ String loanTitle(LoanEntity loan) => loan.nominalInterestRate == null
     ? loan.name
     : '${loan.name} (${loan.nominalInterestRate!.toStringAsFixed(2)} %)';
 
-/// Loans are amounts owed, so totals and rows show them as negatives.
-double loanSignedValue(LoanEntity loan) => -loan.value;
+/// Amounts on the right of a loan row, like the credits list: the current
+/// installment, what is still pending, and the whole debt (every installment
+/// plus payments to capital). All positive; rows show them as outflows.
+({double monthly, double pending, double total}) loanListAmounts(
+  LoanEntity loan, {
+  required List<LoanCapitalPaymentEntity> capitalPayments,
+}) {
+  final schedule = loanSchedule(loan, capitalPayments: capitalPayments);
+  final total = schedule.fold<double>(0, (s, e) => s + e.payment);
+  final paid = schedule
+      .where(loanEntryIsPaid)
+      .fold<double>(0, (s, e) => s + e.payment);
+  return (
+    monthly: loanCurrentPayment(loan, capitalPayments: capitalPayments),
+    pending: total - paid,
+    total: total,
+  );
+}
+
+Widget _amountText(
+  AppLocalizations l10n,
+  ThemeData theme,
+  double amount, {
+  bool emphasized = false,
+}) {
+  final base = emphasized
+      ? theme.textTheme.titleSmall
+      : theme.textTheme.bodySmall;
+  return Text(
+    l10n.transactionAmountValue(amount.toStringAsFixed(2)),
+    textAlign: TextAlign.end,
+    style: base?.copyWith(
+      fontWeight: emphasized ? FontWeight.w700 : FontWeight.w600,
+      color: emphasized ? theme.colorScheme.error : theme.colorScheme.onSurface,
+      height: 1.15,
+      fontFeatures: const [FontFeature.tabularFigures()],
+    ),
+  );
+}
 
 class LoansPage extends StatelessWidget {
   const LoansPage({super.key});
@@ -120,7 +157,12 @@ class _LoansViewState extends State<_LoansView> {
         final showTotalBar = loans.isNotEmpty;
         final total = (selecting ? selected : loans).fold<double>(
           0,
-          (s, l) => s + loanSignedValue(l),
+          (s, l) =>
+              s -
+              loanListAmounts(
+                l,
+                capitalPayments: _capitalPayments[l.id] ?? const [],
+              ).pending,
         );
 
         return PopScope(
@@ -278,11 +320,9 @@ class _LoanTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final cubit = context.read<LoansCubit>();
-    final monthly = loanCurrentPayment(
-      loan,
-      capitalPayments: capitalPayments,
-    ).toStringAsFixed(2);
-    final summary = l10n.loanTermSummary(loan.termMonths, monthly);
+    final theme = Theme.of(context);
+    final amounts = loanListAmounts(loan, capitalPayments: capitalPayments);
+    final summary = l10n.loanTermMonths(loan.termMonths);
 
     Future<void> openDetail() async {
       await context.push('/loans/${loan.id}', extra: loan);
@@ -298,9 +338,16 @@ class _LoanTile extends StatelessWidget {
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
       ),
-      trailing: WalletListBalanceAmount(
-        l10n: l10n,
-        balance: loanSignedValue(loan),
+      trailing: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: [
+          _amountText(l10n, theme, -amounts.monthly, emphasized: true),
+          const SizedBox(height: 2),
+          _amountText(l10n, theme, -amounts.pending),
+          const SizedBox(height: 2),
+          _amountText(l10n, theme, -amounts.total),
+        ],
       ),
       selected: selected,
       swipeEnabled: !selecting,
