@@ -354,7 +354,8 @@ struct TransactionEditor: View {
           if await model.perform("failed to delete", { item.isCard ? try await $0.deleteCard(id: id) : try await $0.deleteAccount(id: id) }) {
             await loadLookups()
           }
-        }
+        },
+        deleteMessage: { L($0.isCard ? "confirmDeleteCard" : "confirmDeleteAccount", $0.name) }
       ) { item in
         let id = String(item.id.dropFirst(2))
         if item.isCard {
@@ -380,7 +381,8 @@ struct TransactionEditor: View {
           if await model.perform("failed to delete category", { try await $0.deleteCategory(id: item.id) }) {
             await loadLookups()
           }
-        }
+        },
+        deleteMessage: { L("confirmDeleteCategory", $0.name) }
       ) { categoryId = $0.id }
     case .tag:
       SearchablePicker(
@@ -391,7 +393,8 @@ struct TransactionEditor: View {
         onEdit: { item in subEditor = .tag(tags.first { $0.id == item.id }) },
         onDelete: { item in
           if await model.perform("failed to delete tag", { try await $0.deleteTag(id: item.id) }) { await loadLookups() }
-        }
+        },
+        deleteMessage: { L("confirmDeleteTag", $0.name) }
       ) { tagId = $0.id }
     }
   }
