@@ -83,6 +83,7 @@ struct SummaryRow: View {
       Spacer()
       if let value { AmountText(value: value, font: .callout.weight(.semibold)) }
     }
+    .contentShape(.rect)
   }
 }
 
@@ -131,7 +132,8 @@ extension View {
     modifier(DeleteConfirmation(item: item))
   }
 
-  /// Leading "selected" check shown while selecting.
+  /// Leading "selected" check shown while selecting. The row fills the
+  /// width with a full hit area, so taps anywhere on it register.
   func selectable(_ selecting: Bool, selected: Bool) -> some View {
     HStack(spacing: 12) {
       if selecting {
@@ -141,6 +143,20 @@ extension View {
           .transition(.move(edge: .leading).combined(with: .opacity))
       }
       self
+    }
+    .frame(maxWidth: .infinity, alignment: .leading)
+    .contentShape(.rect)
+  }
+
+  /// "Select" in the row's long-press menu enters multi-select.
+  ///
+  /// A context menu instead of `onLongPressGesture`: a long-press gesture
+  /// on a list row competes with the row's tap and swallows some taps.
+  func selectMenu(_ selection: Binding<SelectionState>, id: String) -> some View {
+    contextMenu {
+      Button(selection.wrappedValue.ids.contains(id) ? L("done") : L("select"), systemImage: "checkmark.circle") {
+        withAnimation { selection.wrappedValue.toggle(id) }
+      }
     }
   }
 
@@ -189,7 +205,7 @@ struct AccountsView: View {
               } label: { row }
             }
           }
-          .onLongPressGesture { withAnimation { selection.toggle(a.id) } }
+          .selectMenu($selection, id: a.id)
           .swipeActions(edge: .trailing) {
             Button(L("delete"), systemImage: "trash", role: .destructive) {
               deleting = PendingDelete(
@@ -261,7 +277,7 @@ struct CardsView: View {
               NavigationLink { TransactionsView(scope: Ledger.Scope(cardId: c.id, title: c.name)) } label: { row }
             }
           }
-          .onLongPressGesture { withAnimation { selection.toggle(c.id) } }
+          .selectMenu($selection, id: c.id)
           .swipeActions(edge: .trailing) {
             Button(L("delete"), systemImage: "trash", role: .destructive) {
               deleting = PendingDelete(
