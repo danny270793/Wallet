@@ -8,7 +8,15 @@ import WalletData
 struct InsightsView: View {
   enum Period: String, CaseIterable { case month, year }
 
-  @State private var period: Period = .month
+  @State private var period: Period = InsightsView.initialPeriod
+
+  /// Debug builds accept `-insightsPeriod year` (handy for simulator screenshots).
+  private static var initialPeriod: Period {
+    #if DEBUG
+      if let raw = UserDefaults.standard.string(forKey: "insightsPeriod"), let p = Period(rawValue: raw) { return p }
+    #endif
+    return .month
+  }
   @State private var options = DashboardOptions()
   @State private var showingOptions = false
 
