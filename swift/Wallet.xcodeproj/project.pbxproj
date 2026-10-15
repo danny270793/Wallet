@@ -9,16 +9,28 @@
 /* Begin PBXBuildFile section */
 		A1B2C3D4E5F6000000000014 /* WalletCore in Frameworks */ = {isa = PBXBuildFile; productRef = A1B2C3D4E5F6000000000012 /* WalletCore */; };
 		A1B2C3D4E5F6000000000015 /* WalletData in Frameworks */ = {isa = PBXBuildFile; productRef = A1B2C3D4E5F6000000000013 /* WalletData */; };
+		B1B2C3D4E5F600000000000D /* WalletCore in Frameworks */ = {isa = PBXBuildFile; productRef = B1B2C3D4E5F600000000000B /* WalletCore */; };
+		B1B2C3D4E5F600000000000E /* WalletData in Frameworks */ = {isa = PBXBuildFile; productRef = B1B2C3D4E5F600000000000C /* WalletData */; };
+		B1B2C3D4E5F6000000000010 /* WalletWatch.app in Embed Watch Content */ = {isa = PBXBuildFile; fileRef = B1B2C3D4E5F6000000000001 /* WalletWatch.app */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
 		A1B2C3D4E5F6000000000005 /* Wallet.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Wallet.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		B1B2C3D4E5F6000000000001 /* WalletWatch.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = WalletWatch.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		A1B2C3D4E5F6000000000006 /* Wallet */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				B1B2C3D4E5F6000000000003 /* Exceptions for "Wallet" folder in "WalletWatch" target */,
+			);
 			path = Wallet;
+			sourceTree = "<group>";
+		};
+		B1B2C3D4E5F6000000000002 /* WalletWatch */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = WalletWatch;
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
@@ -33,6 +45,15 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		B1B2C3D4E5F6000000000009 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				B1B2C3D4E5F600000000000D /* WalletCore in Frameworks */,
+				B1B2C3D4E5F600000000000E /* WalletData in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
@@ -40,6 +61,7 @@
 			isa = PBXGroup;
 			children = (
 				A1B2C3D4E5F6000000000006 /* Wallet */,
+				B1B2C3D4E5F6000000000002 /* WalletWatch */,
 				A1B2C3D4E5F6000000000003 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -62,10 +84,12 @@
 				A1B2C3D4E5F600000000000F /* Sources */,
 				A1B2C3D4E5F6000000000010 /* Frameworks */,
 				A1B2C3D4E5F6000000000011 /* Resources */,
+				B1B2C3D4E5F600000000000F /* Embed Watch Content */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				B1B2C3D4E5F6000000000011 /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
 				A1B2C3D4E5F6000000000006 /* Wallet */,
@@ -77,6 +101,30 @@
 			);
 			productName = Wallet;
 			productReference = A1B2C3D4E5F6000000000005 /* Wallet.app */;
+			productType = "com.apple.product-type.application";
+		};
+		B1B2C3D4E5F6000000000004 /* WalletWatch */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = B1B2C3D4E5F6000000000005 /* Build configuration list for PBXNativeTarget "WalletWatch" */;
+			buildPhases = (
+				B1B2C3D4E5F6000000000008 /* Sources */,
+				B1B2C3D4E5F6000000000009 /* Frameworks */,
+				B1B2C3D4E5F600000000000A /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				B1B2C3D4E5F6000000000002 /* WalletWatch */,
+			);
+			name = WalletWatch;
+			packageProductDependencies = (
+				B1B2C3D4E5F600000000000B /* WalletCore */,
+				B1B2C3D4E5F600000000000C /* WalletData */,
+			);
+			productName = WalletWatch;
+			productReference = B1B2C3D4E5F6000000000001 /* WalletWatch.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
@@ -108,12 +156,20 @@
 			projectRoot = "";
 			targets = (
 				A1B2C3D4E5F6000000000008 /* Wallet */,
+				B1B2C3D4E5F6000000000004 /* WalletWatch */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
 		A1B2C3D4E5F6000000000011 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		B1B2C3D4E5F600000000000A /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -130,7 +186,57 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		B1B2C3D4E5F6000000000008 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXContainerItemProxy section */
+		B1B2C3D4E5F6000000000012 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = A1B2C3D4E5F6000000000001 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = B1B2C3D4E5F6000000000004;
+			remoteInfo = WalletWatch;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		B1B2C3D4E5F600000000000F /* Embed Watch Content */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "$(CONTENTS_FOLDER_PATH)/Watch";
+			dstSubfolderSpec = 16;
+			files = (
+				B1B2C3D4E5F6000000000010 /* WalletWatch.app in Embed Watch Content */,
+			);
+			name = "Embed Watch Content";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		B1B2C3D4E5F6000000000003 /* Exceptions for "Wallet" folder in "WalletWatch" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Resources/Localizable.xcstrings,
+				Resources/WalletConfig.plist,
+			);
+			target = B1B2C3D4E5F6000000000004 /* WalletWatch */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
+/* Begin PBXTargetDependency section */
+		B1B2C3D4E5F6000000000011 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = B1B2C3D4E5F6000000000004 /* WalletWatch */;
+			targetProxy = B1B2C3D4E5F6000000000012 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
 		A1B2C3D4E5F600000000000A /* Debug */ = {
@@ -234,6 +340,70 @@
 			};
 			name = Release;
 		};
+		B1B2C3D4E5F6000000000006 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 17;
+				DEVELOPMENT_TEAM = 8TGP3K3MLX;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = Wallet;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
+				INFOPLIST_KEY_WKCompanionAppBundleIdentifier = io.github.danny270793.wallet;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0.16;
+				PRODUCT_BUNDLE_IDENTIFIER = io.github.danny270793.wallet.watchkitapp;
+				PRODUCT_NAME = WalletWatch;
+				SDKROOT = watchos;
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = 4;
+				WATCHOS_DEPLOYMENT_TARGET = 26.0;
+			};
+			name = Debug;
+		};
+		B1B2C3D4E5F6000000000007 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 17;
+				DEVELOPMENT_TEAM = 8TGP3K3MLX;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = Wallet;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
+				INFOPLIST_KEY_WKCompanionAppBundleIdentifier = io.github.danny270793.wallet;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0.16;
+				PRODUCT_BUNDLE_IDENTIFIER = io.github.danny270793.wallet.watchkitapp;
+				PRODUCT_NAME = WalletWatch;
+				SDKROOT = watchos;
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = 4;
+				WATCHOS_DEPLOYMENT_TARGET = 26.0;
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -255,6 +425,15 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
+		B1B2C3D4E5F6000000000005 /* Build configuration list for PBXNativeTarget "WalletWatch" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				B1B2C3D4E5F6000000000006 /* Debug */,
+				B1B2C3D4E5F6000000000007 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 /* End XCConfigurationList section */
 
 /* Begin XCLocalSwiftPackageReference section */
@@ -270,6 +449,14 @@
 			productName = WalletCore;
 		};
 		A1B2C3D4E5F6000000000013 /* WalletData */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = WalletData;
+		};
+		B1B2C3D4E5F600000000000B /* WalletCore */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = WalletCore;
+		};
+		B1B2C3D4E5F600000000000C /* WalletData */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = WalletData;
 		};
