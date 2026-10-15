@@ -186,13 +186,14 @@ class _YearlyDashboardViewState extends State<_YearlyDashboardView> {
                     visibleYear,
                   ),
                 ),
-                YearlyDashboardLoaded(
-                  :final transactions,
-                  :final recurringMonthlyIncome,
-                  :final recurringMonthlyOutcome,
-                  :final recurringMonthlyNet,
-                  :final servedFromOfflineCache,
-                ) =>
+                final YearlyDashboardLoaded loaded &&
+                    YearlyDashboardLoaded(
+                      :final transactions,
+                      :final recurringMonthlyIncome,
+                      :final recurringMonthlyOutcome,
+                      :final recurringMonthlyNet,
+                      :final servedFromOfflineCache,
+                    ) =>
                   _yearlyBody(
                     context,
                     l10n,
@@ -202,6 +203,8 @@ class _YearlyDashboardViewState extends State<_YearlyDashboardView> {
                     recurringMonthlyIncome: recurringMonthlyIncome,
                     recurringMonthlyOutcome: recurringMonthlyOutcome,
                     recurringMonthlyNet: recurringMonthlyNet,
+                    outcomeForMonth: loaded.outcomeFor,
+                    netForMonth: loaded.netFor,
                     servedFromOfflineCache: servedFromOfflineCache,
                   ),
               },
@@ -221,6 +224,8 @@ class _YearlyDashboardViewState extends State<_YearlyDashboardView> {
     required double recurringMonthlyIncome,
     required double recurringMonthlyOutcome,
     required double recurringMonthlyNet,
+    required double Function(DateTime month) outcomeForMonth,
+    required double Function(DateTime month) netForMonth,
     required bool servedFromOfflineCache,
   }) {
     final yearTxs = _filterCredits(_transactionsInYear(transactions, y));
@@ -260,6 +265,7 @@ class _YearlyDashboardViewState extends State<_YearlyDashboardView> {
             year: y,
             transactions: transactions,
             recurringMonthlyNet: recurringMonthlyNet,
+            netForMonth: netForMonth,
           ),
           YearlyWeightedNetBarChart(
             l10n: l10n,
@@ -268,6 +274,7 @@ class _YearlyDashboardViewState extends State<_YearlyDashboardView> {
             includeIgnored: _includeIgnored,
             useWeightedAmounts: _useWeightedAmounts,
             recurringMonthlyNet: recurringMonthlyNet,
+            estimateForMonth: netForMonth,
           ),
           YearlyWeightedIncomeBarChart(
             l10n: l10n,
@@ -284,6 +291,7 @@ class _YearlyDashboardViewState extends State<_YearlyDashboardView> {
             includeIgnored: _includeIgnored,
             useWeightedAmounts: _useWeightedAmounts,
             recurringMonthlyOutcome: recurringMonthlyOutcome,
+            estimateForMonth: outcomeForMonth,
           ),
           MonthlyTagPieChart(
             l10n: l10n,
