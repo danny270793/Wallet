@@ -306,14 +306,11 @@
       }
     }
   },
-  "loanTermSummary": "{months} meses · {payment} / mes",
-  "@loanTermSummary": {
+  "loanTermMonths": "{months} meses",
+  "@loanTermMonths": {
     "placeholders": {
       "months": {
         "type": "int"
-      },
-      "payment": {
-        "type": "String"
       }
     }
   },
@@ -516,6 +513,9 @@
   "confirmDeleteRecurringMovement": "¿Seguro que quieres eliminar \"{name}\"?",
   "recurringMovementValueHint": "Usa un importe negativo para los gastos",
   "recurringMovementsSortByValue": "Valor",
+  "recurringAutomaticLoan": "Cuota de préstamo · automático",
+  "recurringAutomaticCardInterest": "Interés de tarjeta · automático",
+  "recurringAutomaticCardDeferred": "Diferido del mes · automático",
   "recurringMovementsSelectedCount": "{count} seleccionados",
   "yearlyDashboardCumulativeProjectionHint": "Las barras atenuadas son estimaciones: saldo con las transacciones ya programadas más tus movimientos recurrentes de cada mes siguiente.",
   "yearlyDashboardMonthlyProjectionHint": "Las barras atenuadas son estimaciones: transacciones ya programadas más tus movimientos recurrentes."
