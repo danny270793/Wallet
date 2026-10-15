@@ -95,13 +95,24 @@ struct SelectionState {
   mutating func toggle(_ id: String) { if ids.remove(id) == nil { ids.insert(id) } }
 }
 
-/// Confirms a destructive delete, then runs it.
+/// A delete waiting for confirmation, tied to the row it was started from.
+struct PendingDelete {
+  var id: String
+  var name: String
+  var title: String
+  var message: String?
+  var action: () async -> Void
+}
+
+/// Confirms a destructive delete, then runs it. Attach to each row (not the
+/// list) so the dialog is anchored to the row being deleted.
 struct DeleteConfirmation: ViewModifier {
-  @Binding var item: (name: String, title: String, action: () async -> Void)?
+  @Binding var item: PendingDelete?
+  let id: String
 
   func body(content: Content) -> some View {
     content.confirmationDialog(
-      item?.title ?? "", isPresented: Binding(get: { item != nil }, set: { if !$0 { item = nil } }),
+      item?.title ?? "", isPresented: Binding(get: { item?.id == id }, set: { if !$0 { item = nil } }),
       titleVisibility: .visible
     ) {
       Button(L("delete"), role: .destructive) {
@@ -109,14 +120,14 @@ struct DeleteConfirmation: ViewModifier {
         Task { await a?() }
       }
     } message: {
-      Text(L("confirmDeleteAccount", item?.name ?? ""))
+      Text(item?.message ?? L("confirmDeleteAccount", item?.name ?? ""))
     }
   }
 }
 
 extension View {
-  func confirmDelete(_ item: Binding<(name: String, title: String, action: () async -> Void)?>) -> some View {
-    modifier(DeleteConfirmation(item: item))
+  func confirmDelete(_ item: Binding<PendingDelete?>, id: String) -> some View {
+    modifier(DeleteConfirmation(item: item, id: id))
   }
 
   /// Leading "selected" check shown while selecting.
@@ -152,7 +163,7 @@ struct AccountsView: View {
   @State private var state = Loadable<[Account]>()
   @State private var selection = SelectionState()
   @State private var editor: SubEditor?
-  @State private var deleting: (name: String, title: String, action: () async -> Void)?
+  @State private var deleting: PendingDelete?
 
   var body: some View {
     let items = Sorting.byName(state.value ?? [], \.name)
@@ -180,10 +191,13 @@ struct AccountsView: View {
           .onLongPressGesture { withAnimation { selection.toggle(a.id) } }
           .swipeActions(edge: .trailing) {
             Button(L("delete"), systemImage: "trash", role: .destructive) {
-              deleting = (a.name, L("deleteAccount"), { await model.perform("failed to delete account") { try await $0.deleteAccount(id: a.id) } })
+              deleting = PendingDelete(
+                id: a.id, name: a.name, title: L("deleteAccount"), message: L("confirmDeleteAccount", a.name)
+              ) { await model.perform("failed to delete account") { try await $0.deleteAccount(id: a.id) } }
             }
             Button(L("edit"), systemImage: "pencil") { editor = .account(a) }.tint(.blue)
           }
+          .confirmDelete($deleting, id: a.id)
         }
       }
     }
@@ -199,7 +213,6 @@ struct AccountsView: View {
     .refreshable { await load() }
     .task(id: model.dataVersion) { await load() }
     .sheet(item: $editor) { $0.view }
-    .confirmDelete($deleting)
   }
 
   private func load() async {
@@ -216,7 +229,7 @@ struct CardsView: View {
   @State private var credits: [String: CardCreditTotals] = [:]
   @State private var selection = SelectionState()
   @State private var editor: SubEditor?
-  @State private var deleting: (name: String, title: String, action: () async -> Void)?
+  @State private var deleting: PendingDelete?
 
   var body: some View {
     let items = Sorting.byName(state.value ?? [], \.name)
@@ -249,10 +262,13 @@ struct CardsView: View {
           .onLongPressGesture { withAnimation { selection.toggle(c.id) } }
           .swipeActions(edge: .trailing) {
             Button(L("delete"), systemImage: "trash", role: .destructive) {
-              deleting = (c.name, L("deleteCard"), { await model.perform("failed to delete card") { try await $0.deleteCard(id: c.id) } })
+              deleting = PendingDelete(
+                id: c.id, name: c.name, title: L("deleteCard"), message: L("confirmDeleteCard", c.name)
+              ) { await model.perform("failed to delete card") { try await $0.deleteCard(id: c.id) } }
             }
             Button(L("edit"), systemImage: "pencil") { editor = .card(c) }.tint(.blue)
           }
+          .confirmDelete($deleting, id: c.id)
         }
       }
     }
@@ -276,7 +292,6 @@ struct CardsView: View {
     .refreshable { await load() }
     .task(id: model.dataVersion) { await load() }
     .sheet(item: $editor) { $0.view }
-    .confirmDelete($deleting)
   }
 
   private func load() async {
@@ -294,7 +309,7 @@ struct NamedItemsView: View {
   @State private var categories = Loadable<[WalletCore.Category]>()
   @State private var tags = Loadable<[Tag]>()
   @State private var editor: SubEditor?
-  @State private var deleting: (name: String, title: String, action: () async -> Void)?
+  @State private var deleting: PendingDelete?
 
   private struct Item: Identifiable {
     var id: String, name: String, description: String?, hidden: Bool
@@ -335,20 +350,21 @@ struct NamedItemsView: View {
         }
         .swipeActions(edge: .trailing) {
           Button(L("delete"), systemImage: "trash", role: .destructive) {
-            deleting = (
-              item.name, L(isTags ? "deleteTag" : "deleteCategory"),
-              {
-                await model.perform("failed to delete") {
-                  isTags ? try await $0.deleteTag(id: item.id) : try await $0.deleteCategory(id: item.id)
-                }
+            deleting = PendingDelete(
+              id: item.id, name: item.name, title: L(isTags ? "deleteTag" : "deleteCategory"),
+              message: L(isTags ? "confirmDeleteTag" : "confirmDeleteCategory", item.name)
+            ) {
+              await model.perform("failed to delete") {
+                isTags ? try await $0.deleteTag(id: item.id) : try await $0.deleteCategory(id: item.id)
               }
-            )
+            }
           }
           Button(L("edit"), systemImage: "pencil") {
             editor = isTags ? .tag(tags.value?.first { $0.id == item.id }) : .category(categories.value?.first { $0.id == item.id })
           }
           .tint(.blue)
         }
+        .confirmDelete($deleting, id: item.id)
       }
     }
     .offlineBanner(isTags ? tags.fromCache : categories.fromCache)
@@ -361,7 +377,6 @@ struct NamedItemsView: View {
     .refreshable { await load() }
     .task(id: model.dataVersion) { await load() }
     .sheet(item: $editor) { $0.view }
-    .confirmDelete($deleting)
   }
 
   private func load() async {
