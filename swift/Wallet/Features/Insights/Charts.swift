@@ -74,6 +74,9 @@ struct ExpenseDonut: View {
               .padding(.vertical, 6).padding(.horizontal, 10)
               .background(only ? AnyShapeStyle(.tint.opacity(0.15)) : AnyShapeStyle(.clear), in: .rect(cornerRadius: 10))
             }
+            // Borderless: the card is one List row, and plain buttons in a row
+            // all fire together (the last one wins), so every tap hit "Bank".
+            .buttonStyle(.borderless)
             .tint(.primary)
           }
         }
