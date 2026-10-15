@@ -8,9 +8,17 @@ import SwiftUI
 /// - Wallet: accounts, cards, loans, recurring, assets, categories, tags, settings;
 /// - Search: all-time description search, at the bottom like Apple's apps.
 struct MainTabView: View {
-  @State private var tab = Tabs.activity
+  @State private var tab = MainTabView.initialTab
 
-  enum Tabs: Hashable { case activity, credits, insights, wallet, search }
+  enum Tabs: String, Hashable { case activity, credits, insights, wallet, search }
+
+  /// Debug builds accept `-initialTab insights` (handy for simulator screenshots).
+  private static var initialTab: Tabs {
+    #if DEBUG
+      if let raw = UserDefaults.standard.string(forKey: "initialTab"), let t = Tabs(rawValue: raw) { return t }
+    #endif
+    return .activity
+  }
 
   var body: some View {
     TabView(selection: $tab) {
