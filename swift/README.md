@@ -16,6 +16,22 @@ open swift/Wallet.xcodeproj
 The values are the same as the Flutter `.env.json` (`SUPABASE_URL`,
 `SUPABASE_ANON_KEY`). Without the file the app shows a "not configured" screen.
 
+## Behind a corporate network
+
+If sign-in fails with `NSURLErrorDomain -1200` / `-9802`, a corporate network
+service is inspecting TLS and the simulator doesn't trust its root CA. Each
+simulator has its own trust store, separate from the Mac's. Trust the CA in
+the booted simulator (or pass `all`):
+
+```sh
+swift/scripts/trust_dev_proxy_cert.sh path/to/corporate_root_ca.pem
+swift/scripts/trust_dev_proxy_cert.sh path/to/corporate_root_ca.pem all
+```
+
+Keep the certificate out of git (`*.pem` is ignored). The app needs no code
+change. On a real device, install and fully trust the profile (Settings →
+General → About → Certificate Trust Settings).
+
 ## Layout
 
 | Path | What |
