@@ -7,3 +7,6 @@ Wallet/Resources/WalletConfig.plist
 DerivedData/
 xcuserdata/
 *.xcuserstate
+
+# Corporate network root certificates. Never commit them.
+*.pem
