@@ -35,5 +35,8 @@
   "watchIncome": {"en": "Income", "es": "Ingreso"},
   "watchSaved": {"en": "Saved", "es": "Guardado"},
   "watchYearToDate": {"en": "Year to date", "es": "En lo que va del año"},
-  "watchInAccounts": {"en": "In accounts", "es": "En cuentas"}
+  "watchInAccounts": {"en": "In accounts", "es": "En cuentas"},
+  "tabOverview": {"en": "Overview", "es": "Resumen"},
+  "tvSpentOfIncome": {"en": "Spent of income", "es": "Gastado del ingreso"},
+  "tvBrowseOnly": {"en": "Add and edit transactions on iPhone or Apple Watch.", "es": "Agrega y edita transacciones en el iPhone o el Apple Watch."}
 }
