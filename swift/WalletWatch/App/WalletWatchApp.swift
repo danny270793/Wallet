@@ -20,7 +20,7 @@ typealias Transaction = WalletCore.Transaction
 struct WatchRootView: View {
   @Environment(WatchModel.self) private var model
   @Environment(\.scenePhase) private var scenePhase
-  /// Debug builds accept `-watchPage 0…3` (handy for simulator screenshots).
+  /// Debug builds accept `-watchPage 0…4` (handy for simulator screenshots).
   @State private var page: Int = {
     #if DEBUG
       UserDefaults.standard.integer(forKey: "watchPage")
@@ -42,10 +42,12 @@ struct WatchRootView: View {
     } else if model.isSignedIn {
       // Vertical pages, the watchOS 26 layout for an app's main screens.
       TabView(selection: $page) {
+        // Glanceable first (month, year, credits), then the list and the form.
         NavigationStack { SummaryScreen() }.tag(0)
-        NavigationStack { RecentScreen() }.tag(1)
-        NavigationStack { QuickAddScreen() }.tag(2)
-        NavigationStack { CreditsScreen() }.tag(3)
+        NavigationStack { YearScreen() }.tag(1)
+        NavigationStack { CreditsScreen() }.tag(2)
+        NavigationStack { RecentScreen() }.tag(3)
+        NavigationStack { QuickAddScreen() }.tag(4)
       }
       .tabViewStyle(.verticalPage)
       .task { await model.load() }
