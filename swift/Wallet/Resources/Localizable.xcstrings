@@ -52,23 +52,6 @@
         }
       }
     },
-    "accountOrCard": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Accounts and cards"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Cuentas y tarjetas"
-          }
-        }
-      }
-    },
     "accountSubmitCreate": {
       "extractionState": "manual",
       "localizations": {
