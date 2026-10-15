@@ -151,7 +151,8 @@ struct PieFilterSheet: View {
   }
 }
 
-/// Twelve monthly bars; estimated months are faded and striped.
+/// Twelve monthly bars, each labeled with its compact value (e.g. 5,84K);
+/// estimated months are faded.
 struct MonthlyBarChart: View {
   let title: String
   let series: YearSeries
@@ -165,6 +166,22 @@ struct MonthlyBarChart: View {
     return c.veryShortStandaloneMonthSymbols
   }
 
+  /// 5843.2 → "5,84K", 52 → "52", in the app's locale.
+  static func compact(_ v: Double) -> String {
+    v.formatted(.number.notation(.compactName).precision(.significantDigits(1...3)).locale(L10n.locale))
+  }
+
+  /// Zero to the extremes, plus room past the longest bars for their labels.
+  private var yDomain: ClosedRange<Double> {
+    let hi = max(0, series.monthly.max() ?? 0)
+    let lo = min(0, series.monthly.min() ?? 0)
+    let span = max(hi - lo, 1)
+    return (lo < 0 ? lo - span * 0.35 : 0)...(hi > 0 ? hi + span * 0.35 : 0)
+  }
+
+  /// Rotated text's on-screen height, so the annotation reserves the right space.
+  static func labelLength(_ v: Double) -> CGFloat { CGFloat(compact(v).count) * 6 + 4 }
+
   var body: some View {
     VStack(alignment: .leading, spacing: 10) {
       Text(title).font(.headline)
@@ -176,6 +193,18 @@ struct MonthlyBarChart: View {
           .opacity(estimated ? 0.35 : 1)
           .accessibilityLabel(symbols[i])
           .accessibilityValue("\(Money.text(v))\(estimated ? " · \(L("estimated"))" : "")")
+          .annotation(position: v < 0 ? .bottom : .top, spacing: 4) {
+            if abs(v) >= 0.005 {
+              Text(Self.compact(v))
+                .font(.system(size: 9, weight: .semibold))
+                .monospacedDigit()
+                .foregroundStyle(.secondary)
+                .fixedSize()
+                .rotationEffect(.degrees(-90))
+                .frame(width: 14, height: Self.labelLength(v))
+                .accessibilityHidden(true)
+            }
+          }
       }
       .chartXAxis {
         AxisMarks { value in
@@ -188,7 +217,8 @@ struct MonthlyBarChart: View {
           AxisValueLabel { if let d = value.as(Double.self) { Text(d.formatted(.number.notation(.compactName))) } }
         }
       }
-      .frame(height: 180)
+      .chartYScale(domain: yDomain)
+      .frame(height: 220)
       if let footnote { Text(footnote).font(.caption).foregroundStyle(.secondary) }
     }
   }
