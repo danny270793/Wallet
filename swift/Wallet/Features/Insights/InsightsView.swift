@@ -104,6 +104,8 @@ struct MonthlyInsights: View {
         }
       }
     }
+    // On the list itself, so the floating summary's pager doesn't inherit it.
+    .refreshable { await load() }
     .offlineBanner(state.fromCache)
     .toolbar {
       ToolbarItem(placement: .principal) { MonthSwitcher(month: $month) }
@@ -125,7 +127,6 @@ struct MonthlyInsights: View {
     }
     .onChange(of: slice.tagFilter) { _, v in if v != tagFilter { tagFilter = v } }
     .onChange(of: slice.categoryFilter) { _, v in if v != categoryFilter { categoryFilter = v } }
-    .refreshable { await load() }
     .task(id: "\(month.timeIntervalSince1970)-\(model.dataVersion)") { await load() }
     .ledgerEditors($editor)
   }
@@ -208,11 +209,12 @@ struct YearlyInsights: View {
         }
       }
     }
+    // On the list itself, so the floating summary's pager doesn't inherit it.
+    .refreshable { await load() }
     .offlineBanner(state.fromCache)
     .toolbar { ToolbarItem(placement: .principal) { YearSwitcher(year: $year) } }
     .onChange(of: slice.tagFilter) { _, v in if v != tagFilter { tagFilter = v } }
     .onChange(of: slice.categoryFilter) { _, v in if v != categoryFilter { categoryFilter = v } }
-    .refreshable { await load() }
     .task(id: "\(year)-\(model.dataVersion)") { await load() }
     .ledgerEditors($editor)
   }
