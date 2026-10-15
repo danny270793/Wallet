@@ -33,5 +33,7 @@
   "watchRecent": {"en": "Recent", "es": "Recientes"},
   "watchQuickAdd": {"en": "New expense", "es": "Nuevo gasto"},
   "watchIncome": {"en": "Income", "es": "Ingreso"},
-  "watchSaved": {"en": "Saved", "es": "Guardado"}
+  "watchSaved": {"en": "Saved", "es": "Guardado"},
+  "watchYearToDate": {"en": "Year to date", "es": "En lo que va del año"},
+  "watchInAccounts": {"en": "In accounts", "es": "En cuentas"}
 }
