@@ -69,6 +69,7 @@ struct SearchablePicker: View {
                     Spacer()
                     if item.id == selected { Image(systemName: "checkmark").foregroundStyle(.tint) }
                   }
+                  .contentShape(.rect)
                 }
                 .swipeActions(edge: .trailing) {
                   if onDelete != nil {
@@ -134,6 +135,7 @@ struct PickerField: View {
           Image(systemName: "chevron.up.chevron.down").font(.caption).foregroundStyle(.tertiary)
         }
       }
+      .contentShape(.rect)
     }
     .disabled(loading)
   }
