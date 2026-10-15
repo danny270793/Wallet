@@ -1310,11 +1310,11 @@ abstract class AppLocalizations {
   /// **'Are you sure you want to delete \"{name}\"?'**
   String confirmDeleteLoan(String name);
 
-  /// No description provided for @loanTermSummary.
+  /// No description provided for @loanTermMonths.
   ///
   /// In en, this message translates to:
-  /// **'{months} months · {payment} / month'**
-  String loanTermSummary(int months, String payment);
+  /// **'{months} months'**
+  String loanTermMonths(int months);
 
   /// No description provided for @loanInstallmentBreakdown.
   ///
@@ -2039,6 +2039,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Value'**
   String get recurringMovementsSortByValue;
+
+  /// No description provided for @recurringAutomaticLoan.
+  ///
+  /// In en, this message translates to:
+  /// **'Loan installment · automatic'**
+  String get recurringAutomaticLoan;
+
+  /// No description provided for @recurringAutomaticCardInterest.
+  ///
+  /// In en, this message translates to:
+  /// **'Card interest · automatic'**
+  String get recurringAutomaticCardInterest;
+
+  /// No description provided for @recurringAutomaticCardDeferred.
+  ///
+  /// In en, this message translates to:
+  /// **'Deferred this month · automatic'**
+  String get recurringAutomaticCardDeferred;
 
   /// No description provided for @recurringMovementsSelectedCount.
   ///
