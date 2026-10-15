@@ -56,6 +56,8 @@ struct CreditsView: View {
           }
         }
       }
+      // On the list itself, so the floating summary's pager doesn't inherit it.
+      .refreshable { await load() }
       .offlineBanner(state.fromCache)
       .navigationTitle(L("creditsTitle"))
       .navigationBarTitleDisplayMode(.inline)
@@ -73,7 +75,6 @@ struct CreditsView: View {
       .safeAreaInset(edge: .bottom) {
         if state.value != nil && !allGroups.isEmpty { summary(flat) }
       }
-      .refreshable { await load() }
       .task(id: model.dataVersion) { await load() }
       .ledgerEditors($editor)
     }
