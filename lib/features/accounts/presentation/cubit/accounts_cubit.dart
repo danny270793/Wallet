@@ -57,11 +57,11 @@ class AccountsCubit extends Cubit<AccountsState> {
     }
   }
 
-  Future<void> create({required String name, String? description}) async {
+  Future<void> create({required String name}) async {
     final current = _currentAccounts();
     AppLogger.debug('creating account: $name');
     try {
-      await _createAccount(name: name, description: description);
+      await _createAccount(name: name);
       AppLogger.info('account created');
       final bundle = await _getAccounts();
       final accounts = sortedByName(bundle.value, (a) => a.name);
@@ -85,14 +85,13 @@ class AccountsCubit extends Cubit<AccountsState> {
   Future<void> update({
     required String id,
     required String name,
-    String? description,
     required double previousBalance,
     required double targetBalance,
   }) async {
     final current = _currentAccounts();
     AppLogger.debug('updating account: $id');
     try {
-      await _updateAccount(id: id, name: name, description: description);
+      await _updateAccount(id: id, name: name);
       final delta = targetBalance - previousBalance;
       if (delta.abs() >= 1e-9) {
         await _adjustBalanceViaTransaction(accountId: id, delta: delta);

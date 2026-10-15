@@ -6,12 +6,10 @@ abstract class AccountsRemoteDatasource {
   Future<List<AccountEntity>> getAccounts();
   Future<AccountEntity> createAccount({
     required String name,
-    String? description,
   });
   Future<AccountEntity> updateAccount({
     required String id,
     required String name,
-    String? description,
   });
   Future<void> deleteAccount({required String id});
 }
@@ -27,7 +25,7 @@ class AccountsSupabaseDatasource implements AccountsRemoteDatasource {
         .from('wallet_accounts_with_balance')
         .select(
           // Explicit columns: omit legacy balanceWeighted if present on older deployments.
-          'id, userId, name, description, createdAt, updatedAt, deletedAt, balance',
+          'id, userId, name, createdAt, updatedAt, deletedAt, balance',
         )
         .isFilter('deletedAt', null)
         .order('createdAt');
@@ -39,7 +37,6 @@ class AccountsSupabaseDatasource implements AccountsRemoteDatasource {
   @override
   Future<AccountEntity> createAccount({
     required String name,
-    String? description,
   }) async {
     AppLogger.debug('createAccount called: $name');
     final data = await _client
@@ -47,7 +44,6 @@ class AccountsSupabaseDatasource implements AccountsRemoteDatasource {
         .insert({
           'userId': _client.auth.currentUser!.id,
           'name': name,
-          if (description != null) 'description': description,
         })
         .select()
         .single();
@@ -58,12 +54,11 @@ class AccountsSupabaseDatasource implements AccountsRemoteDatasource {
   Future<AccountEntity> updateAccount({
     required String id,
     required String name,
-    String? description,
   }) async {
     AppLogger.debug('updateAccount called: $id');
     final data = await _client
         .from('wallet_accounts')
-        .update({'name': name, 'description': description})
+        .update({'name': name})
         .eq('id', id)
         .select()
         .single();

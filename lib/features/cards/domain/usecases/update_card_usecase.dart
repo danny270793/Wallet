@@ -1,5 +1,6 @@
 import '../entities/card_entity.dart';
 import '../repositories/cards_repository.dart';
+import '../entities/card_type.dart';
 
 class UpdateCardUsecase {
   final CardsRepository _repository;
@@ -8,13 +9,15 @@ class UpdateCardUsecase {
   Future<CardEntity> call({
     required String id,
     required String name,
-    String? description,
+    required CardType type,
+    double? nominalInterestRate,
     required int cutDay,
     required int payDay,
   }) => _repository.updateCard(
     id: id,
     name: name,
-    description: description,
+    type: type,
+    nominalInterestRate: nominalInterestRate,
     cutDay: cutDay,
     payDay: payDay,
   );

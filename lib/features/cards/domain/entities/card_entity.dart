@@ -1,10 +1,15 @@
 import 'package:equatable/equatable.dart';
 
+import 'card_type.dart';
+
 class CardEntity extends Equatable {
   final String id;
   final String userId;
   final String name;
-  final String? description;
+
+  /// Card network; null only for cards created before types existed.
+  final CardType? type;
+
   final DateTime createdAt;
   final DateTime updatedAt;
 
@@ -13,6 +18,9 @@ class CardEntity extends Equatable {
 
   /// Day of month (1–30) for payment due.
   final int payDay;
+
+  /// Nominal annual interest rate as a percentage (16.5 = 16.5%); null when unknown.
+  final double? nominalInterestRate;
 
   /// Sum of transaction `value` for rows on this card with no [creditId]
   /// (deferred installments are excluded; see /credits).
@@ -23,11 +31,12 @@ class CardEntity extends Equatable {
     required this.id,
     required this.userId,
     required this.name,
-    this.description,
+    this.type,
     required this.createdAt,
     required this.updatedAt,
     this.cutDay = 24,
     this.payDay = 24,
+    this.nominalInterestRate,
     this.balance = 0,
   });
 
@@ -35,11 +44,12 @@ class CardEntity extends Equatable {
     id: json['id'] as String,
     userId: json['userId'] as String,
     name: json['name'] as String,
-    description: json['description'] as String?,
+    type: CardType.fromWire(json['type'] as String?),
     createdAt: DateTime.parse(json['createdAt'] as String),
     updatedAt: DateTime.parse(json['updatedAt'] as String),
     cutDay: (json['cutDay'] as num?)?.toInt() ?? 24,
     payDay: (json['payDay'] as num?)?.toInt() ?? 24,
+    nominalInterestRate: (json['nominalInterestRate'] as num?)?.toDouble(),
     balance: (json['balance'] as num?)?.toDouble() ?? 0,
   );
 
@@ -47,11 +57,12 @@ class CardEntity extends Equatable {
     'id': id,
     'userId': userId,
     'name': name,
-    'description': description,
+    'type': type?.wireValue,
     'createdAt': createdAt.toUtc().toIso8601String(),
     'updatedAt': updatedAt.toUtc().toIso8601String(),
     'cutDay': cutDay,
     'payDay': payDay,
+    'nominalInterestRate': nominalInterestRate,
     'balance': balance,
   };
 
@@ -60,11 +71,12 @@ class CardEntity extends Equatable {
     id,
     userId,
     name,
-    description,
+    type,
     createdAt,
     updatedAt,
     cutDay,
     payDay,
+    nominalInterestRate,
     balance,
   ];
 }

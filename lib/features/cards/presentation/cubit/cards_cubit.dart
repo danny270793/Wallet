@@ -1,4 +1,5 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
+
 import '../../../../core/credit_ledger_grouping.dart';
 import '../../../../core/logger/app_logger.dart';
 import '../../../../core/remote_load_failure.dart';
@@ -11,6 +12,7 @@ import '../../domain/usecases/update_card_usecase.dart';
 import '../../domain/usecases/delete_card_usecase.dart';
 import '../../domain/usecases/adjust_card_balance_via_transaction_usecase.dart';
 import 'cards_state.dart';
+import '../../domain/entities/card_type.dart';
 
 class CardsCubit extends Cubit<CardsState> {
   final GetCardsUsecase _getCards;
@@ -81,7 +83,8 @@ class CardsCubit extends Cubit<CardsState> {
 
   Future<void> create({
     required String name,
-    String? description,
+    required CardType type,
+    double? nominalInterestRate,
     int cutDay = 24,
     int payDay = 24,
   }) async {
@@ -90,7 +93,8 @@ class CardsCubit extends Cubit<CardsState> {
     try {
       await _createCard(
         name: name,
-        description: description,
+        type: type,
+        nominalInterestRate: nominalInterestRate,
         cutDay: cutDay,
         payDay: payDay,
       );
@@ -119,7 +123,8 @@ class CardsCubit extends Cubit<CardsState> {
   Future<void> update({
     required String id,
     required String name,
-    String? description,
+    required CardType type,
+    double? nominalInterestRate,
     required int cutDay,
     required int payDay,
     required double previousBalance,
@@ -131,7 +136,8 @@ class CardsCubit extends Cubit<CardsState> {
       await _updateCard(
         id: id,
         name: name,
-        description: description,
+        type: type,
+        nominalInterestRate: nominalInterestRate,
         cutDay: cutDay,
         payDay: payDay,
       );

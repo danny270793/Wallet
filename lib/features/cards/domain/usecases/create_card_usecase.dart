@@ -1,5 +1,6 @@
 import '../entities/card_entity.dart';
 import '../repositories/cards_repository.dart';
+import '../entities/card_type.dart';
 
 class CreateCardUsecase {
   final CardsRepository _repository;
@@ -7,12 +8,14 @@ class CreateCardUsecase {
 
   Future<CardEntity> call({
     required String name,
-    String? description,
+    required CardType type,
+    double? nominalInterestRate,
     int cutDay = 24,
     int payDay = 24,
   }) => _repository.createCard(
     name: name,
-    description: description,
+    type: type,
+    nominalInterestRate: nominalInterestRate,
     cutDay: cutDay,
     payDay: payDay,
   );

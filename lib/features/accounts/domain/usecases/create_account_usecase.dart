@@ -5,6 +5,6 @@ class CreateAccountUsecase {
   final AccountsRepository _repository;
   const CreateAccountUsecase(this._repository);
 
-  Future<AccountEntity> call({required String name, String? description}) =>
-      _repository.createAccount(name: name, description: description);
+  Future<AccountEntity> call({required String name}) =>
+      _repository.createAccount(name: name);
 }

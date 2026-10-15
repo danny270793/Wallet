@@ -58,6 +58,20 @@ import '../../features/assets/domain/usecases/delete_asset_usecase.dart';
 import '../../features/assets/domain/usecases/get_assets_usecase.dart';
 import '../../features/assets/domain/usecases/update_asset_usecase.dart';
 import '../../features/assets/presentation/cubit/assets_cubit.dart';
+import '../../features/loans/data/datasources/loans_remote_datasource.dart';
+import '../../features/loans/data/repositories/loans_repository_impl.dart';
+import '../../features/loans/domain/repositories/loans_repository.dart';
+import '../../features/loans/domain/usecases/create_loan_usecase.dart';
+import '../../features/loans/domain/usecases/delete_loan_usecase.dart';
+import '../../features/loans/domain/usecases/get_loans_usecase.dart';
+import '../../features/loans/domain/usecases/update_loan_usecase.dart';
+import '../../features/loans/presentation/cubit/loans_cubit.dart';
+import '../../features/loans/data/datasources/loan_capital_payments_remote_datasource.dart';
+import '../../features/loans/data/repositories/loan_capital_payments_repository_impl.dart';
+import '../../features/loans/domain/repositories/loan_capital_payments_repository.dart';
+import '../../features/loans/domain/usecases/create_loan_capital_payment_usecase.dart';
+import '../../features/loans/domain/usecases/delete_loan_capital_payment_usecase.dart';
+import '../../features/loans/domain/usecases/get_loan_capital_payments_usecase.dart';
 import '../../features/recurring_movements/data/datasources/recurring_movements_remote_datasource.dart';
 import '../../features/recurring_movements/data/repositories/recurring_movements_repository_impl.dart';
 import '../../features/recurring_movements/domain/repositories/recurring_movements_repository.dart';
@@ -257,6 +271,50 @@ void setupDi() {
       updateTag: getIt(),
       deleteTag: getIt(),
     ),
+  );
+
+  // loans
+  getIt.registerLazySingleton<LoansRemoteDatasource>(
+    () => LoansSupabaseDatasource(Supabase.instance.client),
+  );
+  getIt.registerLazySingleton<LoansRepository>(
+    () => LoansRepositoryImpl(
+      getIt<LoansRemoteDatasource>(),
+      getIt<WalletOfflineCache>(),
+      getIt<WalletOfflineUserContext>(),
+    ),
+  );
+  getIt.registerFactory<GetLoansUsecase>(() => GetLoansUsecase(getIt()));
+  getIt.registerFactory<CreateLoanUsecase>(() => CreateLoanUsecase(getIt()));
+  getIt.registerFactory<UpdateLoanUsecase>(() => UpdateLoanUsecase(getIt()));
+  getIt.registerFactory<DeleteLoanUsecase>(() => DeleteLoanUsecase(getIt()));
+  getIt.registerFactory<LoansCubit>(
+    () => LoansCubit(
+      getLoans: getIt(),
+      createLoan: getIt(),
+      updateLoan: getIt(),
+      deleteLoan: getIt(),
+    ),
+  );
+
+  getIt.registerLazySingleton<LoanCapitalPaymentsRemoteDatasource>(
+    () => LoanCapitalPaymentsSupabaseDatasource(Supabase.instance.client),
+  );
+  getIt.registerLazySingleton<LoanCapitalPaymentsRepository>(
+    () => LoanCapitalPaymentsRepositoryImpl(
+      getIt<LoanCapitalPaymentsRemoteDatasource>(),
+      getIt<WalletOfflineCache>(),
+      getIt<WalletOfflineUserContext>(),
+    ),
+  );
+  getIt.registerFactory<GetLoanCapitalPaymentsUsecase>(
+    () => GetLoanCapitalPaymentsUsecase(getIt()),
+  );
+  getIt.registerFactory<CreateLoanCapitalPaymentUsecase>(
+    () => CreateLoanCapitalPaymentUsecase(getIt()),
+  );
+  getIt.registerFactory<DeleteLoanCapitalPaymentUsecase>(
+    () => DeleteLoanCapitalPaymentUsecase(getIt()),
   );
 
   // assets

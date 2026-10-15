@@ -1,19 +1,23 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
+
 import '../../../../core/logger/app_logger.dart';
 import '../../domain/entities/card_entity.dart';
+import '../../domain/entities/card_type.dart';
 
 abstract class CardsRemoteDatasource {
   Future<List<CardEntity>> getCards();
   Future<CardEntity> createCard({
     required String name,
-    String? description,
+    required CardType type,
+    double? nominalInterestRate,
     int cutDay = 24,
     int payDay = 24,
   });
   Future<CardEntity> updateCard({
     required String id,
     required String name,
-    String? description,
+    required CardType type,
+    double? nominalInterestRate,
     required int cutDay,
     required int payDay,
   });
@@ -31,7 +35,7 @@ class CardsSupabaseDatasource implements CardsRemoteDatasource {
         .from('wallet_cards_with_balance')
         .select(
           // Explicit columns: omit legacy balanceWeighted if present on older deployments.
-          'id, userId, name, description, cutDay, payDay, createdAt, updatedAt, deletedAt, balance',
+          'id, userId, name, type, cutDay, payDay, nominalInterestRate, createdAt, updatedAt, deletedAt, balance',
         )
         .isFilter('deletedAt', null)
         .order('createdAt');
@@ -43,7 +47,8 @@ class CardsSupabaseDatasource implements CardsRemoteDatasource {
   @override
   Future<CardEntity> createCard({
     required String name,
-    String? description,
+    required CardType type,
+    double? nominalInterestRate,
     int cutDay = 24,
     int payDay = 24,
   }) async {
@@ -53,9 +58,10 @@ class CardsSupabaseDatasource implements CardsRemoteDatasource {
         .insert({
           'userId': _client.auth.currentUser!.id,
           'name': name,
+          'type': type.wireValue,
           'cutDay': cutDay,
           'payDay': payDay,
-          'description': description,
+          'nominalInterestRate': nominalInterestRate,
         })
         .select()
         .single();
@@ -66,7 +72,8 @@ class CardsSupabaseDatasource implements CardsRemoteDatasource {
   Future<CardEntity> updateCard({
     required String id,
     required String name,
-    String? description,
+    required CardType type,
+    double? nominalInterestRate,
     required int cutDay,
     required int payDay,
   }) async {
@@ -75,7 +82,8 @@ class CardsSupabaseDatasource implements CardsRemoteDatasource {
         .from('wallet_cards')
         .update({
           'name': name,
-          'description': description,
+          'type': type.wireValue,
+          'nominalInterestRate': nominalInterestRate,
           'cutDay': cutDay,
           'payDay': payDay,
         })

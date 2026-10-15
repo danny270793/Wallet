@@ -1,5 +1,6 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../../core/automatic_recurring_movements.dart';
 import '../../../../core/logger/app_logger.dart';
 import '../../../../core/remote_load_failure.dart';
 import '../../domain/entities/transaction_entity.dart';
@@ -23,6 +24,7 @@ final class YearlyDashboardLoaded extends YearlyDashboardState {
     this.transactions, {
     this.recurringMonthlyIncome = 0,
     this.recurringMonthlyOutcome = 0,
+    this.automaticSource = const AutomaticMovementsSource(),
     this.servedFromOfflineCache = false,
   });
   final List<TransactionEntity> transactions;
@@ -31,10 +33,29 @@ final class YearlyDashboardLoaded extends YearlyDashboardState {
   /// for months after the current one.
   final double recurringMonthlyIncome;
 
-  /// Sum of absolute negative recurring movement values (estimated outcome).
+  /// Sum of absolute negative recurring movement values (estimated outcome of
+  /// the user's own movements).
   final double recurringMonthlyOutcome;
 
-  /// Estimated monthly net used to project the cumulative balance.
+  /// Loans and cards, for the estimates that change month to month.
+  final AutomaticMovementsSource automaticSource;
+
+  /// Loan installments and card interest due in [month] (positive). Card
+  /// deferred installments are left out: they are already transactions dated
+  /// in their months.
+  double automaticOutcomeFor(DateTime month) => automaticSource
+      .forMonth(month)
+      .where((a) => a is! CardDeferredRecurringMovement)
+      .fold(0, (s, a) => s - a.monthlyAmount);
+
+  /// Estimated outcome of [month]: recurring movements plus loans and cards.
+  double outcomeFor(DateTime month) =>
+      recurringMonthlyOutcome + automaticOutcomeFor(month);
+
+  /// Estimated net of [month].
+  double netFor(DateTime month) => recurringMonthlyIncome - outcomeFor(month);
+
+  /// Net of the user's own recurring movements only (see [netFor]).
   double get recurringMonthlyNet =>
       recurringMonthlyIncome - recurringMonthlyOutcome;
   final bool servedFromOfflineCache;
@@ -46,8 +67,15 @@ final class YearlyDashboardError extends YearlyDashboardState {
 }
 
 class YearlyDashboardCubit extends Cubit<YearlyDashboardState> {
-  YearlyDashboardCubit(this._getYear, this._getRecurringMovements)
-    : super(const YearlyDashboardInitial());
+  YearlyDashboardCubit(
+    this._getYear,
+    this._getRecurringMovements, {
+    Future<AutomaticMovementsSource> Function()? loadAutomaticSource,
+  }) : _loadAutomaticSource =
+           loadAutomaticSource ?? loadAutomaticMovementsSource,
+       super(const YearlyDashboardInitial());
+
+  final Future<AutomaticMovementsSource> Function() _loadAutomaticSource;
 
   final GetTransactionsForYearUsecase _getYear;
   final GetRecurringMovementsUsecase _getRecurringMovements;
@@ -71,6 +99,7 @@ class YearlyDashboardCubit extends Cubit<YearlyDashboardState> {
           list,
           recurringMonthlyIncome: recurring.income,
           recurringMonthlyOutcome: recurring.outcome,
+          automaticSource: recurring.automatic,
           servedFromOfflineCache: bundle.servedFromOfflineCache,
         ),
       );
@@ -83,12 +112,12 @@ class YearlyDashboardCubit extends Cubit<YearlyDashboardState> {
   }
 
   /// Projection is optional: a failure here should not block the dashboard.
-  Future<({double income, double outcome})>
+  Future<({double income, double outcome, AutomaticMovementsSource automatic})>
   _loadRecurringMonthlyTotals() async {
+    var income = 0.0;
+    var outcome = 0.0;
     try {
       final bundle = await _getRecurringMovements();
-      var income = 0.0;
-      var outcome = 0.0;
       for (final m in bundle.value) {
         final monthly = m.monthlyAmount;
         if (monthly > 0) {
@@ -97,10 +126,13 @@ class YearlyDashboardCubit extends Cubit<YearlyDashboardState> {
           outcome += -monthly;
         }
       }
-      return (income: income, outcome: outcome);
     } catch (e, s) {
       AppLogger.error('yearly dashboard recurring movements load failed', e, s);
-      return (income: 0.0, outcome: 0.0);
     }
+    return (
+      income: income,
+      outcome: outcome,
+      automatic: await _loadAutomaticSource(),
+    );
   }
 }

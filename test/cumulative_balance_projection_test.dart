@@ -99,4 +99,31 @@ void main() {
     expect(future.monthly[0], 1 + 50);
     expect(future.monthly[11], 12 + 50);
   });
+
+  test('per-month net accumulates month by month', () {
+    // Sep 2026 is current; Oct nets 100, Nov 40, then 0 (a loan ends).
+    double net(DateTime m) => switch (m.month) {
+      10 => 100,
+      11 => 40,
+      _ => 0,
+    };
+    final r = cumulativeAccountsBalanceWithProjection(
+      txs,
+      2026,
+      recurringMonthlyNet: 999,
+      netForMonth: net,
+      now: now,
+    );
+    expect(r.monthly[9], 850 + 100); // Oct
+    expect(r.monthly[10], 850 - 300 + 140); // Nov, with the installment
+    expect(r.monthly[11], 850 - 300 + 140); // Dec adds nothing
+    final perMonth = monthlyWithRecurringEstimate(
+      List<double>.filled(12, 0),
+      2026,
+      estimate: 999,
+      estimateForMonth: net,
+      now: now,
+    );
+    expect(perMonth.monthly.sublist(9), [100, 40, 0]);
+  });
 }

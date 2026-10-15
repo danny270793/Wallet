@@ -878,6 +878,12 @@ abstract class AppLocalizations {
   /// **'Balance'**
   String get accountBalance;
 
+  /// No description provided for @listSelectedCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} selected'**
+  String listSelectedCount(int count);
+
   /// No description provided for @listBalanceTotalLabel.
   ///
   /// In en, this message translates to:
@@ -973,6 +979,48 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Enter a day from 1 to 30'**
   String get cardDayInvalidRange;
+
+  /// No description provided for @cardType.
+  ///
+  /// In en, this message translates to:
+  /// **'Card type'**
+  String get cardType;
+
+  /// No description provided for @cardTypeOther.
+  ///
+  /// In en, this message translates to:
+  /// **'Other'**
+  String get cardTypeOther;
+
+  /// No description provided for @cardRevolvingBalance.
+  ///
+  /// In en, this message translates to:
+  /// **'Revolving balance'**
+  String get cardRevolvingBalance;
+
+  /// No description provided for @cardDeferredBalance.
+  ///
+  /// In en, this message translates to:
+  /// **'Deferred balance'**
+  String get cardDeferredBalance;
+
+  /// No description provided for @cardTotalBalance.
+  ///
+  /// In en, this message translates to:
+  /// **'Total balance'**
+  String get cardTotalBalance;
+
+  /// No description provided for @cardNominalInterestRate.
+  ///
+  /// In en, this message translates to:
+  /// **'Nominal interest rate'**
+  String get cardNominalInterestRate;
+
+  /// No description provided for @cardNominalInterestRateInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a number of 0 or more'**
+  String get cardNominalInterestRateInvalid;
 
   /// No description provided for @cardBillingCycleSummary.
   ///
@@ -1081,6 +1129,202 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Hidden tags won\'t appear when picking a tag for a transaction'**
   String get tagHiddenHint;
+
+  /// No description provided for @loans.
+  ///
+  /// In en, this message translates to:
+  /// **'Loans'**
+  String get loans;
+
+  /// No description provided for @noLoans.
+  ///
+  /// In en, this message translates to:
+  /// **'No loans yet'**
+  String get noLoans;
+
+  /// No description provided for @newLoan.
+  ///
+  /// In en, this message translates to:
+  /// **'New loan'**
+  String get newLoan;
+
+  /// No description provided for @editLoan.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit loan'**
+  String get editLoan;
+
+  /// No description provided for @deleteLoan.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete loan'**
+  String get deleteLoan;
+
+  /// No description provided for @loanAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Account'**
+  String get loanAccount;
+
+  /// No description provided for @loanValue.
+  ///
+  /// In en, this message translates to:
+  /// **'Value'**
+  String get loanValue;
+
+  /// No description provided for @loanTotalToPay.
+  ///
+  /// In en, this message translates to:
+  /// **'Total to pay'**
+  String get loanTotalToPay;
+
+  /// No description provided for @loanValueInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter an amount greater than 0'**
+  String get loanValueInvalid;
+
+  /// No description provided for @loanTermInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter at least 1 month'**
+  String get loanTermInvalid;
+
+  /// No description provided for @loanFirstPaymentDate.
+  ///
+  /// In en, this message translates to:
+  /// **'First payment'**
+  String get loanFirstPaymentDate;
+
+  /// No description provided for @loanPaymentDay.
+  ///
+  /// In en, this message translates to:
+  /// **'Payment day'**
+  String get loanPaymentDay;
+
+  /// No description provided for @loanMonthlyPayment.
+  ///
+  /// In en, this message translates to:
+  /// **'Monthly payment'**
+  String get loanMonthlyPayment;
+
+  /// No description provided for @loanSchedule.
+  ///
+  /// In en, this message translates to:
+  /// **'Payment schedule'**
+  String get loanSchedule;
+
+  /// No description provided for @loanCapitalPayment.
+  ///
+  /// In en, this message translates to:
+  /// **'Payment to capital'**
+  String get loanCapitalPayment;
+
+  /// No description provided for @loanCapitalPaymentDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Paid on'**
+  String get loanCapitalPaymentDate;
+
+  /// No description provided for @loanDeleteCapitalPayment.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete payment to capital'**
+  String get loanDeleteCapitalPayment;
+
+  /// No description provided for @loanConfirmDeleteCapitalPayment.
+  ///
+  /// In en, this message translates to:
+  /// **'The installments after it will be recomputed without it.'**
+  String get loanConfirmDeleteCapitalPayment;
+
+  /// No description provided for @loanPaidInstallments.
+  ///
+  /// In en, this message translates to:
+  /// **'Paid monthly'**
+  String get loanPaidInstallments;
+
+  /// No description provided for @loanPaidToCapital.
+  ///
+  /// In en, this message translates to:
+  /// **'Paid to capital'**
+  String get loanPaidToCapital;
+
+  /// No description provided for @loanPending.
+  ///
+  /// In en, this message translates to:
+  /// **'Pending'**
+  String get loanPending;
+
+  /// No description provided for @loanCapitalPaymentLeft.
+  ///
+  /// In en, this message translates to:
+  /// **'Left {remaining}'**
+  String loanCapitalPaymentLeft(String remaining);
+
+  /// No description provided for @loanCapitalPaymentMax.
+  ///
+  /// In en, this message translates to:
+  /// **'At most {max}'**
+  String loanCapitalPaymentMax(String max);
+
+  /// No description provided for @errorSeeMore.
+  ///
+  /// In en, this message translates to:
+  /// **'See more'**
+  String get errorSeeMore;
+
+  /// No description provided for @errorDetailsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Error details'**
+  String get errorDetailsTitle;
+
+  /// No description provided for @errorCopy.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy'**
+  String get errorCopy;
+
+  /// No description provided for @loanInterestToPay.
+  ///
+  /// In en, this message translates to:
+  /// **'Interest to pay'**
+  String get loanInterestToPay;
+
+  /// No description provided for @loanTotalInterest.
+  ///
+  /// In en, this message translates to:
+  /// **'Interest'**
+  String get loanTotalInterest;
+
+  /// No description provided for @loanNotFound.
+  ///
+  /// In en, this message translates to:
+  /// **'This loan no longer exists'**
+  String get loanNotFound;
+
+  /// No description provided for @confirmDeleteLoan.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to delete \"{name}\"?'**
+  String confirmDeleteLoan(String name);
+
+  /// No description provided for @loanTermMonths.
+  ///
+  /// In en, this message translates to:
+  /// **'{months} months'**
+  String loanTermMonths(int months);
+
+  /// No description provided for @loanInstallmentBreakdown.
+  ///
+  /// In en, this message translates to:
+  /// **'Principal {principal} · Interest {interest} · Left {remaining}'**
+  String loanInstallmentBreakdown(
+    String principal,
+    String interest,
+    String remaining,
+  );
 
   /// No description provided for @assets.
   ///
@@ -1195,6 +1439,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Credits'**
   String get creditsNav;
+
+  /// No description provided for @creditsFilterByCard.
+  ///
+  /// In en, this message translates to:
+  /// **'Filter by card'**
+  String get creditsFilterByCard;
+
+  /// No description provided for @creditsAllCards.
+  ///
+  /// In en, this message translates to:
+  /// **'All cards'**
+  String get creditsAllCards;
 
   /// No description provided for @creditsTitle.
   ///
@@ -1783,6 +2039,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Value'**
   String get recurringMovementsSortByValue;
+
+  /// No description provided for @recurringAutomaticLoan.
+  ///
+  /// In en, this message translates to:
+  /// **'Loan installment · automatic'**
+  String get recurringAutomaticLoan;
+
+  /// No description provided for @recurringAutomaticCardInterest.
+  ///
+  /// In en, this message translates to:
+  /// **'Card interest · automatic'**
+  String get recurringAutomaticCardInterest;
+
+  /// No description provided for @recurringAutomaticCardDeferred.
+  ///
+  /// In en, this message translates to:
+  /// **'Deferred this month · automatic'**
+  String get recurringAutomaticCardDeferred;
 
   /// No description provided for @recurringMovementsSelectedCount.
   ///

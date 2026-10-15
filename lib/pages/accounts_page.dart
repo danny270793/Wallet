@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:wallet/l10n/app_localizations.dart';
+
 import '../core/di/injection.dart';
 import '../features/accounts/domain/entities/account_entity.dart';
 import '../features/accounts/presentation/cubit/accounts_cubit.dart';
@@ -25,8 +26,30 @@ class AccountsPage extends StatelessWidget {
   }
 }
 
-class _AccountsView extends StatelessWidget {
+class _AccountsView extends StatefulWidget {
   const _AccountsView();
+
+  @override
+  State<_AccountsView> createState() => _AccountsViewState();
+}
+
+class _AccountsViewState extends State<_AccountsView> {
+  /// Ids picked in multi-select mode (entered by long-pressing a row).
+  final Set<String> _selectedIds = {};
+
+  /// Selected rows that still exist; select mode is on while this is non-empty.
+  List<AccountEntity> _selectedAmong(List<AccountEntity> items) =>
+      items.where((e) => _selectedIds.contains(e.id)).toList();
+
+  void _toggleSelected(String id, List<AccountEntity> items) {
+    setState(() {
+      // Drop ids of rows that no longer exist before toggling.
+      _selectedIds.retainAll(items.map((e) => e.id));
+      if (!_selectedIds.remove(id)) _selectedIds.add(id);
+    });
+  }
+
+  void _clearSelection() => setState(_selectedIds.clear);
 
   @override
   Widget build(BuildContext context) {
@@ -46,25 +69,48 @@ class _AccountsView extends StatelessWidget {
           AccountsActionError(:final accounts) => accounts,
           _ => <AccountEntity>[],
         };
+        final selected = _selectedAmong(accounts);
+        final selecting = selected.isNotEmpty;
         final showTotalBar = accounts.isNotEmpty;
         final totalBalance = showTotalBar
-            ? accounts.fold<double>(0, (s, a) => s + a.balance)
+            ? (selecting ? selected : accounts).fold<double>(
+                0,
+                (s, a) => s + a.balance,
+              )
             : 0.0;
 
-        return ShellScaffold(
-          title: l10n.accounts,
-          floatingActionButton: FloatingActionButton(
-            onPressed: () => showAccountEditorBottomSheet(
-              context,
-              l10n,
-              cubit: context.read<AccountsCubit>(),
+        return PopScope(
+          canPop: !selecting,
+          onPopInvokedWithResult: (didPop, _) {
+            if (!didPop) _clearSelection();
+          },
+          child: ShellScaffold(
+            title: selecting
+                ? l10n.listSelectedCount(selected.length)
+                : l10n.accounts,
+            appBarActionsBeforeSettings: selecting
+                ? [
+                    IconButton(
+                      icon: const Icon(Icons.close),
+                      tooltip: MaterialLocalizations.of(context)
+                          .closeButtonTooltip,
+                      onPressed: _clearSelection,
+                    ),
+                  ]
+                : null,
+            floatingActionButton: FloatingActionButton(
+              onPressed: () => showAccountEditorBottomSheet(
+                context,
+                l10n,
+                cubit: context.read<AccountsCubit>(),
+              ),
+              child: const Icon(Icons.add),
             ),
-            child: const Icon(Icons.add),
+            bottomNavigationBar: showTotalBar
+                ? WalletListBalanceTotalBar(l10n: l10n, total: totalBalance)
+                : null,
+            body: _body(context, state, l10n),
           ),
-          bottomNavigationBar: showTotalBar
-              ? WalletListBalanceTotalBar(l10n: l10n, total: totalBalance)
-              : null,
-          body: _body(context, state, l10n),
         );
       },
     );
@@ -145,7 +191,13 @@ class _AccountsView extends StatelessWidget {
             return const OfflineCachedDataBanner(visible: true);
           }
           final i = index - (offlineCached ? 1 : 0);
-          return _AccountTile(account: accounts[i]);
+          final account = accounts[i];
+          return _AccountTile(
+            account: account,
+            selecting: _selectedAmong(accounts).isNotEmpty,
+            selected: _selectedIds.contains(account.id),
+            onToggleSelected: () => _toggleSelected(account.id, accounts),
+          );
         },
       ),
     );
@@ -154,7 +206,18 @@ class _AccountsView extends StatelessWidget {
 
 class _AccountTile extends StatelessWidget {
   final AccountEntity account;
-  const _AccountTile({required this.account});
+
+  /// In select mode a tap toggles selection and swipe actions are disabled.
+  final bool selecting;
+  final bool selected;
+  final VoidCallback onToggleSelected;
+
+  const _AccountTile({
+    required this.account,
+    required this.selecting,
+    required this.selected,
+    required this.onToggleSelected,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -187,15 +250,11 @@ class _AccountTile extends StatelessWidget {
     return SwipeableListTile(
       itemKey: account.id,
       title: Text(account.name),
-      subtitle: account.description != null
-          ? Text(
-              account.description!,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-            )
-          : null,
       trailing: WalletListBalanceAmount(l10n: l10n, balance: account.balance),
-      onTap: openTransactions,
+      selected: selected,
+      swipeEnabled: !selecting,
+      onTap: selecting ? onToggleSelected : openTransactions,
+      onLongPress: onToggleSelected,
       onEdit: openEdit,
       confirmDelete: () async {
         final ok = await showDialog<bool>(

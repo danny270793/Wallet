@@ -5,6 +5,7 @@ import '../../../../core/offline/wallet_offline_user_context.dart';
 import '../../domain/entities/card_entity.dart';
 import '../../domain/repositories/cards_repository.dart';
 import '../datasources/cards_remote_datasource.dart';
+import '../../domain/entities/card_type.dart';
 
 class CardsRepositoryImpl implements CardsRepository {
   final CardsRemoteDatasource _datasource;
@@ -31,12 +32,14 @@ class CardsRepositoryImpl implements CardsRepository {
   @override
   Future<CardEntity> createCard({
     required String name,
-    String? description,
+    required CardType type,
+    double? nominalInterestRate,
     int cutDay = 24,
     int payDay = 24,
   }) => _datasource.createCard(
     name: name,
-    description: description,
+    type: type,
+    nominalInterestRate: nominalInterestRate,
     cutDay: cutDay,
     payDay: payDay,
   );
@@ -45,13 +48,15 @@ class CardsRepositoryImpl implements CardsRepository {
   Future<CardEntity> updateCard({
     required String id,
     required String name,
-    String? description,
+    required CardType type,
+    double? nominalInterestRate,
     required int cutDay,
     required int payDay,
   }) => _datasource.updateCard(
     id: id,
     name: name,
-    description: description,
+    type: type,
+    nominalInterestRate: nominalInterestRate,
     cutDay: cutDay,
     payDay: payDay,
   );

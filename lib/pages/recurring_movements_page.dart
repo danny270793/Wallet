@@ -1,16 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:wallet/l10n/app_localizations.dart';
+
+import '../core/automatic_recurring_movements.dart';
 import '../core/di/injection.dart';
 import '../features/recurring_movements/domain/entities/recurring_movement_entity.dart';
 import '../features/recurring_movements/presentation/cubit/recurring_movements_cubit.dart';
 import '../features/recurring_movements/presentation/cubit/recurring_movements_state.dart';
-import '../widgets/bottom_sheet_pinned_title.dart';
+import '../widgets/card_type_icon.dart';
 import '../widgets/offline_cached_data_banner.dart';
 import '../widgets/recurring_movement_editor_sheet.dart';
 import '../widgets/remote_load_failure_panel.dart';
 import '../widgets/shell_scaffold.dart';
 import '../widgets/swipeable_list_tile.dart';
+import '../widgets/transactions_month_scope.dart';
 import '../widgets/wallet_bottom_bar_insets.dart';
 import '../widgets/wallet_dual_balance_trailing.dart';
 
@@ -39,14 +42,6 @@ class RecurringMovementsPage extends StatelessWidget {
   }
 }
 
-enum _RecurringMovementsSortBy { name, value }
-
-String _sortLabel(AppLocalizations l10n, _RecurringMovementsSortBy by) =>
-    switch (by) {
-      _RecurringMovementsSortBy.name => l10n.settingsCacheSortByName,
-      _RecurringMovementsSortBy.value => l10n.recurringMovementsSortByValue,
-    };
-
 class _RecurringMovementsView extends StatefulWidget {
   const _RecurringMovementsView();
 
@@ -56,15 +51,54 @@ class _RecurringMovementsView extends StatefulWidget {
 }
 
 class _RecurringMovementsViewState extends State<_RecurringMovementsView> {
-  _RecurringMovementsSortBy _sortBy = _RecurringMovementsSortBy.name;
-
   /// Ids picked in multi-select mode (entered by long-pressing a row).
   final Set<String> _selectedIds = {};
 
+  /// Month the automatic rows are computed for; starts on the current one.
+  late final ValueNotifier<DateTime> _monthNotifier;
+
+  /// Data for the read-only loan and card rows of any month.
+  AutomaticMovementsSource _automaticSource = const AutomaticMovementsSource();
+  List<AutomaticRecurringMovement> _automatic = const [];
+
+  @override
+  void initState() {
+    super.initState();
+    final now = DateTime.now();
+    _monthNotifier = ValueNotifier(DateTime(now.year, now.month))
+      ..addListener(_recomputeAutomatic);
+    _loadAutomatic();
+  }
+
+  @override
+  void dispose() {
+    _monthNotifier.dispose();
+    super.dispose();
+  }
+
+  Future<void> _loadAutomatic() async {
+    final source = await loadAutomaticMovementsSource();
+    if (!mounted) return;
+    _automaticSource = source;
+    _recomputeAutomatic();
+  }
+
+  void _recomputeAutomatic() {
+    setState(() {
+      _automatic = _automaticSource.forMonth(_monthNotifier.value);
+      // Rows of another month are different rows; keep only user movements.
+      _selectedIds.removeWhere((id) => id.contains(':'));
+    });
+  }
+
   /// Selected rows that still exist; select mode is on while this is non-empty.
-  List<RecurringMovementEntity> _selectedAmong(
-    List<RecurringMovementEntity> movements,
-  ) => movements.where((m) => _selectedIds.contains(m.id)).toList();
+  List<_Row> _selectedAmong(List<_Row> rows) =>
+      rows.where((r) => _selectedIds.contains(r.id)).toList();
+
+  List<_Row> _rows(List<RecurringMovementEntity> movements) => _sorted([
+    for (final m in movements) _MovementRow(m),
+    for (final a in _automatic) _AutomaticRow(a),
+  ]);
 
   void _toggleSelected(String id) {
     setState(() {
@@ -74,50 +108,13 @@ class _RecurringMovementsViewState extends State<_RecurringMovementsView> {
 
   void _clearSelection() => setState(_selectedIds.clear);
 
-  /// The cubit already sorts by name; value sort is highest to lowest,
-  /// with name as the tie-breaker.
-  List<RecurringMovementEntity> _sorted(List<RecurringMovementEntity> items) {
-    if (_sortBy == _RecurringMovementsSortBy.name) return items;
-    return List<RecurringMovementEntity>.from(items)..sort((a, b) {
+  /// Highest to lowest monthly amount, with name as the tie-breaker.
+  static List<_Row> _sorted(List<_Row> items) {
+    return List<_Row>.from(items)..sort((a, b) {
       final byValue = b.monthlyAmount.compareTo(a.monthlyAmount);
       if (byValue != 0) return byValue;
       return a.name.toLowerCase().compareTo(b.name.toLowerCase());
     });
-  }
-
-  Future<void> _showSortSheet(
-    BuildContext context,
-    AppLocalizations l10n,
-  ) async {
-    await showModalBottomSheet<void>(
-      context: context,
-      showDragHandle: false,
-      isScrollControlled: true,
-      builder: (sheetContext) => BottomSheetPinnedTitleScrollView(
-        padding: EdgeInsets.zero,
-        title: l10n.settingsCacheSortSheetTitle,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            for (final option in _RecurringMovementsSortBy.values)
-              ListTile(
-                title: Text(_sortLabel(l10n, option)),
-                trailing: _sortBy == option
-                    ? Icon(
-                        Icons.check,
-                        color: Theme.of(sheetContext).colorScheme.primary,
-                      )
-                    : null,
-                onTap: () {
-                  setState(() => _sortBy = option);
-                  Navigator.of(sheetContext).pop();
-                },
-              ),
-          ],
-        ),
-      ),
-    );
   }
 
   @override
@@ -138,7 +135,8 @@ class _RecurringMovementsViewState extends State<_RecurringMovementsView> {
           RecurringMovementsActionError(:final movements) => movements,
           _ => null,
         };
-        final selected = _selectedAmong(movements ?? const []);
+        final rows = movements == null ? null : _rows(movements);
+        final selected = _selectedAmong(rows ?? const []);
         final selecting = selected.isNotEmpty;
         return PopScope(
           canPop: !selecting,
@@ -149,29 +147,26 @@ class _RecurringMovementsViewState extends State<_RecurringMovementsView> {
             title: selecting
                 ? l10n.recurringMovementsSelectedCount(selected.length)
                 : l10n.recurringMovements,
+            appBarBottom: TransactionsMonthAppBarBottom(
+              notifier: _monthNotifier,
+            ),
             appBarActionsBeforeSettings: [
               if (selecting)
                 IconButton(
                   icon: const Icon(Icons.close),
                   tooltip: MaterialLocalizations.of(context).closeButtonTooltip,
                   onPressed: _clearSelection,
-                )
-              else
-                IconButton(
-                  icon: const Icon(Icons.swap_vert_rounded),
-                  tooltip: l10n.settingsCacheSortTooltip,
-                  onPressed: () => _showSortSheet(context, l10n),
                 ),
             ],
             floatingActionButton: FloatingActionButton(
               onPressed: () => _showRecurringMovementBottomSheet(context, l10n),
               child: const Icon(Icons.add),
             ),
-            bottomNavigationBar: movements == null
+            bottomNavigationBar: rows == null
                 ? null
                 : _RecurringMovementsTotalsBar(
                     l10n: l10n,
-                    movements: selecting ? selected : movements,
+                    rows: selecting ? selected : rows,
                   ),
             body: _body(context, state, l10n),
           ),
@@ -185,8 +180,10 @@ class _RecurringMovementsViewState extends State<_RecurringMovementsView> {
     RecurringMovementsState state,
     AppLocalizations l10n,
   ) {
-    Future<void> pullRefresh() =>
-        context.read<RecurringMovementsCubit>().load(showLoading: false);
+    Future<void> pullRefresh() => Future.wait([
+      context.read<RecurringMovementsCubit>().load(showLoading: false),
+      _loadAutomatic(),
+    ]);
 
     Future<void> reloadWithOverlay() =>
         context.read<RecurringMovementsCubit>().load(showLoading: true);
@@ -223,13 +220,13 @@ class _RecurringMovementsViewState extends State<_RecurringMovementsView> {
       _ => false,
     };
 
-    final movements = _sorted(switch (state) {
+    final rows = _rows(switch (state) {
       RecurringMovementsLoaded(:final movements) => movements,
       RecurringMovementsActionError(:final movements) => movements,
       _ => <RecurringMovementEntity>[],
     });
 
-    if (movements.isEmpty) {
+    if (rows.isEmpty) {
       return RefreshIndicator(
         onRefresh: pullRefresh,
         child: ListView(
@@ -251,24 +248,33 @@ class _RecurringMovementsViewState extends State<_RecurringMovementsView> {
       child: ListView.builder(
         physics: const AlwaysScrollableScrollPhysics(),
         padding: const EdgeInsets.only(bottom: 88),
-        itemCount: movements.length + (offlineCached ? 1 : 0),
+        itemCount: rows.length + (offlineCached ? 1 : 0),
         itemBuilder: (context, index) {
           if (offlineCached && index == 0) {
             return const OfflineCachedDataBanner(visible: true);
           }
-          final i = index - (offlineCached ? 1 : 0);
-          final movement = movements[i];
-          final selecting = _selectedAmong(movements).isNotEmpty;
-          return _RecurringMovementTile(
-            movement: movement,
-            selecting: selecting,
-            selected: _selectedIds.contains(movement.id),
-            onToggleSelected: () {
-              // Drop ids of rows that no longer exist before toggling.
-              _selectedIds.retainAll(movements.map((m) => m.id));
-              _toggleSelected(movement.id);
-            },
-          );
+          final row = rows[index - (offlineCached ? 1 : 0)];
+          final selecting = _selectedAmong(rows).isNotEmpty;
+          void onToggleSelected() {
+            // Drop ids of rows that no longer exist before toggling.
+            _selectedIds.retainAll(rows.map((r) => r.id));
+            _toggleSelected(row.id);
+          }
+
+          return switch (row) {
+            _MovementRow(:final movement) => _RecurringMovementTile(
+              movement: movement,
+              selecting: selecting,
+              selected: _selectedIds.contains(row.id),
+              onToggleSelected: onToggleSelected,
+            ),
+            _AutomaticRow(:final automatic) => _AutomaticMovementTile(
+              automatic: automatic,
+              selecting: selecting,
+              selected: _selectedIds.contains(row.id),
+              onToggleSelected: onToggleSelected,
+            ),
+          };
         },
       ),
     );
@@ -326,10 +332,7 @@ class _RecurringMovementTile extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
-          WalletListBalanceAmount(
-            l10n: l10n,
-            balance: movement.monthlyAmount,
-          ),
+          WalletListBalanceAmount(l10n: l10n, balance: movement.monthlyAmount),
           if (movement.yearlyPayment) ...[
             const SizedBox(height: 2),
             Text(
@@ -380,20 +383,17 @@ class _RecurringMovementTile extends StatelessWidget {
 /// Bottom summary: income (sum of positive values) and outcome (sum of negative values)
 /// over [movements] (all rows, or only the selected ones in select mode).
 class _RecurringMovementsTotalsBar extends StatelessWidget {
-  const _RecurringMovementsTotalsBar({
-    required this.l10n,
-    required this.movements,
-  });
+  const _RecurringMovementsTotalsBar({required this.l10n, required this.rows});
 
   final AppLocalizations l10n;
-  final List<RecurringMovementEntity> movements;
+  final List<_Row> rows;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     var income = 0.0;
     var outcome = 0.0;
-    for (final m in movements) {
+    for (final m in rows) {
       final monthly = m.monthlyAmount;
       if (monthly > 0) {
         income += monthly;
@@ -454,6 +454,86 @@ class _RecurringMovementsTotalsBar extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+/// One list row: a user's recurring movement or a read-only automatic one.
+sealed class _Row {
+  const _Row();
+  String get id;
+  String get name;
+  double get monthlyAmount;
+}
+
+class _MovementRow extends _Row {
+  const _MovementRow(this.movement);
+  final RecurringMovementEntity movement;
+  @override
+  String get id => movement.id;
+  @override
+  String get name => movement.name;
+  @override
+  double get monthlyAmount => movement.monthlyAmount;
+}
+
+class _AutomaticRow extends _Row {
+  const _AutomaticRow(this.automatic);
+  final AutomaticRecurringMovement automatic;
+  @override
+  String get id => automatic.id;
+  @override
+  String get name => automatic.name;
+  @override
+  double get monthlyAmount => automatic.monthlyAmount;
+}
+
+/// Loan installment or card revolving balance: selectable, not editable.
+class _AutomaticMovementTile extends StatelessWidget {
+  const _AutomaticMovementTile({
+    required this.automatic,
+    required this.selecting,
+    required this.selected,
+    required this.onToggleSelected,
+  });
+
+  final AutomaticRecurringMovement automatic;
+
+  /// In select mode a tap toggles selection, like the user's own rows.
+  final bool selecting;
+  final bool selected;
+  final VoidCallback onToggleSelected;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final theme = Theme.of(context);
+    final (leading, subtitle) = switch (automatic) {
+      LoanRecurringMovement() => (
+        Icon(Icons.request_quote_outlined, color: theme.colorScheme.primary),
+        l10n.recurringAutomaticLoan,
+      ),
+      CardInterestRecurringMovement(:final type) => (
+        CardTypeIcon(type: type),
+        l10n.recurringAutomaticCardInterest,
+      ),
+      CardDeferredRecurringMovement(:final type) => (
+        CardTypeIcon(type: type),
+        l10n.recurringAutomaticCardDeferred,
+      ),
+    };
+    return ListTile(
+      leading: leading,
+      title: Text(automatic.name),
+      subtitle: Text(subtitle),
+      trailing: WalletListBalanceAmount(
+        l10n: l10n,
+        balance: automatic.monthlyAmount,
+      ),
+      selected: selected,
+      selectedTileColor: theme.colorScheme.secondaryContainer,
+      onLongPress: onToggleSelected,
+      onTap: selecting ? onToggleSelected : null,
     );
   }
 }

@@ -41,7 +41,6 @@ class AccountEditorSheet extends StatefulWidget {
 class _AccountEditorSheetState extends State<AccountEditorSheet> {
   final _formKey = GlobalKey<FormState>();
   late final TextEditingController _nameController;
-  late final TextEditingController _descriptionController;
   TextEditingController? _balanceController;
   bool _loading = false;
 
@@ -49,9 +48,6 @@ class _AccountEditorSheetState extends State<AccountEditorSheet> {
   void initState() {
     super.initState();
     _nameController = TextEditingController(text: widget.account?.name ?? '');
-    _descriptionController = TextEditingController(
-      text: widget.account?.description ?? '',
-    );
     if (widget.account != null) {
       _balanceController = TextEditingController(
         text: widget.account!.balance.toStringAsFixed(2),
@@ -62,7 +58,6 @@ class _AccountEditorSheetState extends State<AccountEditorSheet> {
   @override
   void dispose() {
     _nameController.dispose();
-    _descriptionController.dispose();
     _balanceController?.dispose();
     super.dispose();
   }
@@ -72,19 +67,15 @@ class _AccountEditorSheetState extends State<AccountEditorSheet> {
     setState(() => _loading = true);
     final cubit = context.read<AccountsCubit>();
     final name = _nameController.text.trim();
-    final description = _descriptionController.text.trim().isEmpty
-        ? null
-        : _descriptionController.text.trim();
     try {
       if (widget.account == null) {
-        await cubit.create(name: name, description: description);
+        await cubit.create(name: name);
       } else {
         final targetBalance = double.tryParse(_balanceController!.text.trim());
         if (targetBalance == null) return;
         await cubit.update(
           id: widget.account!.id,
           name: name,
-          description: description,
           previousBalance: widget.account!.balance,
           targetBalance: targetBalance,
         );
@@ -106,10 +97,12 @@ class _AccountEditorSheetState extends State<AccountEditorSheet> {
             validator: (v) =>
                 (v == null || v.trim().isEmpty) ? l10n.fieldRequired : null,
             autofocus: true,
-            textInputAction: TextInputAction.next,
+            textInputAction: _balanceController != null
+                ? TextInputAction.next
+                : TextInputAction.done,
           ),
-          const SizedBox(height: 8),
           if (_balanceController != null) ...[
+            const SizedBox(height: 8),
             TextFormField(
               controller: _balanceController,
               decoration: InputDecoration(labelText: l10n.accountBalance),
@@ -123,15 +116,8 @@ class _AccountEditorSheetState extends State<AccountEditorSheet> {
                   return l10n.fieldRequired;
                 return null;
               },
-              textInputAction: TextInputAction.next,
             ),
-            const SizedBox(height: 8),
           ],
-          TextFormField(
-            controller: _descriptionController,
-            decoration: InputDecoration(labelText: l10n.accountDescription),
-            maxLines: 3,
-          ),
         ],
       ),
     );
