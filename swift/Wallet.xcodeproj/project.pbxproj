@@ -12,17 +12,21 @@
 		B1B2C3D4E5F600000000000D /* WalletCore in Frameworks */ = {isa = PBXBuildFile; productRef = B1B2C3D4E5F600000000000B /* WalletCore */; };
 		B1B2C3D4E5F600000000000E /* WalletData in Frameworks */ = {isa = PBXBuildFile; productRef = B1B2C3D4E5F600000000000C /* WalletData */; };
 		B1B2C3D4E5F6000000000010 /* WalletWatch.app in Embed Watch Content */ = {isa = PBXBuildFile; fileRef = B1B2C3D4E5F6000000000001 /* WalletWatch.app */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		C1B2C3D4E5F600000000000D /* WalletCore in Frameworks */ = {isa = PBXBuildFile; productRef = C1B2C3D4E5F600000000000B /* WalletCore */; };
+		C1B2C3D4E5F600000000000E /* WalletData in Frameworks */ = {isa = PBXBuildFile; productRef = C1B2C3D4E5F600000000000C /* WalletData */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
 		A1B2C3D4E5F6000000000005 /* Wallet.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Wallet.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		B1B2C3D4E5F6000000000001 /* WalletWatch.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = WalletWatch.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		C1B2C3D4E5F6000000000001 /* WalletTV.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = WalletTV.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		A1B2C3D4E5F6000000000006 /* Wallet */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
+				C1B2C3D4E5F6000000000003 /* Exceptions for "Wallet" folder in "WalletTV" target */,
 				B1B2C3D4E5F6000000000003 /* Exceptions for "Wallet" folder in "WalletWatch" target */,
 			);
 			path = Wallet;
@@ -31,6 +35,11 @@
 		B1B2C3D4E5F6000000000002 /* WalletWatch */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			path = WalletWatch;
+			sourceTree = "<group>";
+		};
+		C1B2C3D4E5F6000000000002 /* WalletTV */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = WalletTV;
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
@@ -54,6 +63,15 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		C1B2C3D4E5F6000000000009 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				C1B2C3D4E5F600000000000D /* WalletCore in Frameworks */,
+				C1B2C3D4E5F600000000000E /* WalletData in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
@@ -61,6 +79,7 @@
 			isa = PBXGroup;
 			children = (
 				A1B2C3D4E5F6000000000006 /* Wallet */,
+				C1B2C3D4E5F6000000000002 /* WalletTV */,
 				B1B2C3D4E5F6000000000002 /* WalletWatch */,
 				A1B2C3D4E5F6000000000003 /* Products */,
 			);
@@ -127,6 +146,30 @@
 			productReference = B1B2C3D4E5F6000000000001 /* WalletWatch.app */;
 			productType = "com.apple.product-type.application";
 		};
+		C1B2C3D4E5F6000000000004 /* WalletTV */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = C1B2C3D4E5F6000000000005 /* Build configuration list for PBXNativeTarget "WalletTV" */;
+			buildPhases = (
+				C1B2C3D4E5F6000000000008 /* Sources */,
+				C1B2C3D4E5F6000000000009 /* Frameworks */,
+				C1B2C3D4E5F600000000000A /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				C1B2C3D4E5F6000000000002 /* WalletTV */,
+			);
+			name = WalletTV;
+			packageProductDependencies = (
+				C1B2C3D4E5F600000000000B /* WalletCore */,
+				C1B2C3D4E5F600000000000C /* WalletData */,
+			);
+			productName = WalletTV;
+			productReference = C1B2C3D4E5F6000000000001 /* WalletTV.app */;
+			productType = "com.apple.product-type.application";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -157,6 +200,7 @@
 			targets = (
 				A1B2C3D4E5F6000000000008 /* Wallet */,
 				B1B2C3D4E5F6000000000004 /* WalletWatch */,
+				C1B2C3D4E5F6000000000004 /* WalletTV */,
 			);
 		};
 /* End PBXProject section */
@@ -176,6 +220,13 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		C1B2C3D4E5F600000000000A /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
@@ -187,6 +238,13 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 		B1B2C3D4E5F6000000000008 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		C1B2C3D4E5F6000000000008 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -227,6 +285,14 @@
 				Resources/WalletConfig.plist,
 			);
 			target = B1B2C3D4E5F6000000000004 /* WalletWatch */;
+		};
+		C1B2C3D4E5F6000000000003 /* Exceptions for "Wallet" folder in "WalletTV" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Resources/Localizable.xcstrings,
+				Resources/WalletConfig.plist,
+			);
+			target = C1B2C3D4E5F6000000000004 /* WalletTV */;
 		};
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
@@ -404,6 +470,68 @@
 			};
 			name = Release;
 		};
+		C1B2C3D4E5F6000000000006 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = "App Icon & Top Shelf Image";
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 17;
+				DEVELOPMENT_TEAM = 8TGP3K3MLX;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = Wallet;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UIUserInterfaceStyle = Automatic;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0.16;
+				PRODUCT_BUNDLE_IDENTIFIER = io.github.danny270793.wallet;
+				PRODUCT_NAME = WalletTV;
+				SDKROOT = appletvos;
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = 3;
+				TVOS_DEPLOYMENT_TARGET = 26.0;
+			};
+			name = Debug;
+		};
+		C1B2C3D4E5F6000000000007 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = "App Icon & Top Shelf Image";
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 17;
+				DEVELOPMENT_TEAM = 8TGP3K3MLX;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = Wallet;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UIUserInterfaceStyle = Automatic;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0.16;
+				PRODUCT_BUNDLE_IDENTIFIER = io.github.danny270793.wallet;
+				PRODUCT_NAME = WalletTV;
+				SDKROOT = appletvos;
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = 3;
+				TVOS_DEPLOYMENT_TARGET = 26.0;
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -434,6 +562,15 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
+		C1B2C3D4E5F6000000000005 /* Build configuration list for PBXNativeTarget "WalletTV" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				C1B2C3D4E5F6000000000006 /* Debug */,
+				C1B2C3D4E5F6000000000007 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 /* End XCConfigurationList section */
 
 /* Begin XCLocalSwiftPackageReference section */
@@ -457,6 +594,14 @@
 			productName = WalletCore;
 		};
 		B1B2C3D4E5F600000000000C /* WalletData */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = WalletData;
+		};
+		C1B2C3D4E5F600000000000B /* WalletCore */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = WalletCore;
+		};
+		C1B2C3D4E5F600000000000C /* WalletData */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = WalletData;
 		};

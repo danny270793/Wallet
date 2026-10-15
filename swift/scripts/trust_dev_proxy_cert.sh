@@ -4,7 +4,8 @@
 # their own trust store; trusting the CA on the Mac does not cover them.
 #
 # Usage: swift/scripts/trust_dev_proxy_cert.sh <cert.pem> [simulator-udid|booted|all]
-# Default target: the booted simulator. Keep the certificate out of git.
+# Default target: the booted simulator; `all` covers every simulator (shut-down
+# ones are booted briefly). Keep the certificate out of git.
 set -euo pipefail
 
 CERT="${1:-}"
@@ -22,6 +23,14 @@ else
   ids="$TARGET"
 fi
 
+# The keychain can only be changed on a booted simulator: boot the ones that
+# are shut down, trust the CA, then shut them down again.
 for id in $ids; do
+  booted_here=0
+  if [[ "$id" != "booted" ]] && ! xcrun simctl list devices | grep "$id" | grep -q Booted; then
+    xcrun simctl boot "$id" && booted_here=1
+    xcrun simctl bootstatus "$id" -b >/dev/null 2>&1 || true
+  fi
   xcrun simctl keychain "$id" add-root-cert "$CERT" && echo "trusted $(basename "$CERT") on $id"
+  if [[ $booted_here == 1 ]]; then xcrun simctl shutdown "$id"; fi
 done
