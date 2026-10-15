@@ -53,13 +53,13 @@ struct LoansView: View {
             }
             Button(L("edit"), systemImage: "pencil") { editing = loan }.tint(.blue)
           }
-          .confirmDelete($deleting, id: loan.id)
         }
       }
     }
     // On the list itself, so the floating summary's pager doesn't inherit it.
     .refreshable { await load() }
     .offlineBanner(state.fromCache)
+    .confirmDelete($deleting)
     .selectionToolbar($selection, title: L("loans"))
     .toolbar { ToolbarItem(placement: .primaryAction) { Button(L("newLoan"), systemImage: "plus") { creating = true } } }
     .safeAreaInset(edge: .bottom) {
@@ -154,7 +154,6 @@ struct LoanDetailView: View {
                 }
               }
             }
-            .confirmDelete($deleting, id: p.id)
           }
         }
       }
@@ -162,6 +161,7 @@ struct LoanDetailView: View {
     // On the list itself, so the floating summary's pager doesn't inherit it.
     .refreshable { await load() }
     .navigationTitle(loan.name)
+    .confirmDelete($deleting)
     .toolbar {
       ToolbarItem(placement: .primaryAction) { Button(L("edit")) { editing = true } }
       ToolbarSpacer(.fixed, placement: .primaryAction)
@@ -290,13 +290,13 @@ struct RecurringMovementsView: View {
                 Button(L("edit"), systemImage: "pencil") { editing = m }.tint(.blue)
               }
             }
-            .confirmDelete($deleting, id: row.id)
         }
       }
     }
     // On the list itself, so the floating summary's pager doesn't inherit it.
     .refreshable { await load() }
     .offlineBanner(state.fromCache)
+    .confirmDelete($deleting)
     .selectionToolbar($selection, title: L("recurringMovements"))
     .navigationBarTitleDisplayMode(.inline)
     .toolbar {
@@ -390,13 +390,13 @@ struct AssetsView: View {
               }
               Button(L("edit"), systemImage: "pencil") { editing = a }.tint(.blue)
             }
-            .confirmDelete($deleting, id: a.id)
         }
       }
     }
     // On the list itself, so the floating summary's pager doesn't inherit it.
     .refreshable { await load() }
     .offlineBanner(state.fromCache)
+    .confirmDelete($deleting)
     .navigationTitle(L("assets"))
     .toolbar { ToolbarItem(placement: .primaryAction) { Button(L("newAsset"), systemImage: "plus") { creating = true } } }
     .task(id: model.dataVersion) { await load() }
