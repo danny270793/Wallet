@@ -5934,6 +5934,23 @@
         }
       }
     },
+    "watchInAccounts": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "In accounts"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "En cuentas"
+          }
+        }
+      }
+    },
     "watchIncome": {
       "extractionState": "manual",
       "localizations": {
@@ -6032,6 +6049,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Abre Wallet en tu iPhone"
+          }
+        }
+      }
+    },
+    "watchYearToDate": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Year to date"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "En lo que va del año"
           }
         }
       }
