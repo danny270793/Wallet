@@ -43,7 +43,6 @@ struct TransactionEditor: View {
   @State private var saving = false
   @State private var showErrors = false
   @State private var picker: PickerKind?
-  @State private var subEditor: SubEditor?
 
   @State private var suggestions: [Transaction] = []
   @State private var suggestionsLoading = false
@@ -199,7 +198,6 @@ struct TransactionEditor: View {
         }
       }
       .sheet(item: $picker) { kind in pickerSheet(kind) }
-      .sheet(item: $subEditor) { e in e.view.onDisappear { Task { await loadLookups() } } }
       .task { await loadLookups() }
       .task { await loadCreditGroup() }
       .task(id: description) { await loadSuggestions() }
@@ -341,14 +339,13 @@ struct TransactionEditor: View {
         ],
         selected: accountId.map { "a:\($0)" } ?? cardId.map { "c:\($0)" },
         emptyMessage: L("transactionPaymentMethodSearchNoResults"),
-        onAdd: { subEditor = cardsOnly ? .card(nil) : .accountOrCard },
-        onEdit: { item in
-          if item.isCard, let c = cards.first(where: { "c:\($0.id)" == item.id }) {
-            subEditor = .card(c)
-          } else if let a = accounts.first(where: { "a:\($0.id)" == item.id }) {
-            subEditor = .account(a)
-          }
+        addOptions: (cardsOnly ? [] : [.init(title: L("newAccount"), symbol: "building.columns", editor: .account(nil))])
+          + [.init(title: L("newCard"), symbol: "creditcard", editor: .card(nil))],
+        editorFor: { item in
+          if item.isCard { return cards.first { "c:\($0.id)" == item.id }.map(SubEditor.card) }
+          return accounts.first { "a:\($0.id)" == item.id }.map(SubEditor.account)
         },
+        onEditorClosed: { await loadLookups() },
         onDelete: { item in
           let id = String(item.id.dropFirst(2))
           if await model.perform("failed to delete", { item.isCard ? try await $0.deleteCard(id: id) : try await $0.deleteAccount(id: id) }) {
@@ -375,8 +372,9 @@ struct TransactionEditor: View {
       SearchablePicker(
         title: L("transactionCategory"), sections: [(nil, categories.map { PickItem(id: $0.id, name: $0.name) })],
         selected: categoryId, emptyMessage: L("noCategories"),
-        onAdd: { subEditor = .category(nil) },
-        onEdit: { item in subEditor = .category(categories.first { $0.id == item.id }) },
+        addOptions: [.init(title: L("newCategory"), symbol: "square.grid.2x2", editor: .category(nil))],
+        editorFor: { item in categories.first { $0.id == item.id }.map(SubEditor.category) },
+        onEditorClosed: { await loadLookups() },
         onDelete: { item in
           if await model.perform("failed to delete category", { try await $0.deleteCategory(id: item.id) }) {
             await loadLookups()
@@ -389,8 +387,9 @@ struct TransactionEditor: View {
         title: L("transactionTag"),
         sections: [(nil, tags.filter { !$0.hidden }.map { PickItem(id: $0.id, name: $0.name) })],
         selected: tagId, emptyMessage: L("noTags"),
-        onAdd: { subEditor = .tag(nil) },
-        onEdit: { item in subEditor = .tag(tags.first { $0.id == item.id }) },
+        addOptions: [.init(title: L("newTag"), symbol: "tag", editor: .tag(nil))],
+        editorFor: { item in tags.first { $0.id == item.id }.map(SubEditor.tag) },
+        onEditorClosed: { await loadLookups() },
         onDelete: { item in
           if await model.perform("failed to delete tag", { try await $0.deleteTag(id: item.id) }) { await loadLookups() }
         },
@@ -406,7 +405,6 @@ enum SubEditor: Identifiable {
   case card(Card?)
   case category(WalletCore.Category?)
   case tag(Tag?)
-  case accountOrCard
 
   var id: String {
     switch self {
@@ -414,7 +412,6 @@ enum SubEditor: Identifiable {
     case .card(let c): "card-\(c?.id ?? "new")"
     case .category(let c): "category-\(c?.id ?? "new")"
     case .tag(let t): "tag-\(t?.id ?? "new")"
-    case .accountOrCard: "account-or-card"
     }
   }
 
@@ -424,27 +421,6 @@ enum SubEditor: Identifiable {
     case .card(let c): CardEditor(card: c)
     case .category(let c): NamedItemEditor(kind: .category(c))
     case .tag(let t): NamedItemEditor(kind: .tag(t))
-    case .accountOrCard: AccountOrCardChooser()
     }
-  }
-}
-
-/// "Add account or card" choice when creating from the payment picker.
-struct AccountOrCardChooser: View {
-  @State private var choice: SubEditor?
-  @Environment(\.dismiss) private var dismiss
-
-  var body: some View {
-    NavigationStack {
-      List {
-        Button { choice = .account(nil) } label: { Label(L("newAccount"), systemImage: "building.columns") }
-        Button { choice = .card(nil) } label: { Label(L("newCard"), systemImage: "creditcard") }
-      }
-      .navigationTitle(L("paymentMethodAddChoiceTitle"))
-      .navigationBarTitleDisplayMode(.inline)
-      .toolbar { ToolbarItem(placement: .cancellationAction) { Button(role: .close) { dismiss() } } }
-      .sheet(item: $choice, onDismiss: { dismiss() }) { $0.view }
-    }
-    .presentationDetents([.height(220)])
   }
 }
