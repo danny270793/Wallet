@@ -3,7 +3,7 @@ import WalletCore
 import WalletData
 
 /// Monthly and yearly dashboards in one tab, switched with a segmented
-/// control in the navigation bar. Both share the same view options
+/// control in a bar under the navigation bar. Both share the same view options
 /// (ignored / weighted / credits) and the tag ⇄ category cross filters.
 struct InsightsView: View {
   enum Period: String, CaseIterable { case month, year }
@@ -22,16 +22,20 @@ struct InsightsView: View {
       }
       .navigationTitle(L(period == .month ? "monthlyDashboard" : "yearlyDashboard"))
       .navigationBarTitleDisplayMode(.inline)
+      // The bar's center holds the month/year switcher, so the period picker
+      // goes underneath it and the options button to the leading side.
+      .safeAreaBar(edge: .top) {
+        Picker(L("tabInsights"), selection: $period.animation(.smooth)) {
+          Text(L("month")).tag(Period.month)
+          Text(L("year")).tag(Period.year)
+        }
+        .pickerStyle(.segmented)
+        .frame(maxWidth: 280)
+        .padding(.horizontal)
+        .padding(.bottom, 8)
+      }
       .toolbar {
         ToolbarItem(placement: .topBarLeading) {
-          Picker(L("tabInsights"), selection: $period.animation(.smooth)) {
-            Text(L("month")).tag(Period.month)
-            Text(L("year")).tag(Period.year)
-          }
-          .pickerStyle(.segmented)
-          .fixedSize()
-        }
-        ToolbarItem(placement: .primaryAction) {
           Button(L("monthlyDashboardConfigureTooltip"), systemImage: "slider.horizontal.3") { showingOptions = true }
         }
       }
