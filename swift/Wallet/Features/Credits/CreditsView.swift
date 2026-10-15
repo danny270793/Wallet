@@ -41,6 +41,18 @@ struct CreditsView: View {
               Button(L("edit"), systemImage: "pencil") { if let first = g.rows.first { editor = .editTransaction(first) } }
                 .tint(.blue)
             }
+            .confirmationDialog(
+              L("deleteTransaction"), isPresented: Binding(get: { deleting?.id == g.id }, set: { if !$0 { deleting = nil } }),
+              titleVisibility: .visible, presenting: deleting
+            ) { full in
+              Button(L("delete"), role: .destructive) {
+                Task {
+                  await model.perform("failed to delete credit") { try await $0.deleteTransaction(id: full.rows[0].id, creditKey: full.id) }
+                }
+              }
+            } message: { _ in
+              Text(L("confirmDeleteCreditGroupTransaction"))
+            }
           }
         }
       }
@@ -64,18 +76,6 @@ struct CreditsView: View {
       .refreshable { await load() }
       .task(id: model.dataVersion) { await load() }
       .ledgerEditors($editor)
-      .confirmationDialog(
-        L("deleteTransaction"), isPresented: Binding(get: { deleting != nil }, set: { if !$0 { deleting = nil } }),
-        titleVisibility: .visible, presenting: deleting
-      ) { g in
-        Button(L("delete"), role: .destructive) {
-          Task {
-            await model.perform("failed to delete credit") { try await $0.deleteTransaction(id: g.rows[0].id, creditKey: g.id) }
-          }
-        }
-      } message: { _ in
-        Text(L("confirmDeleteCreditGroupTransaction"))
-      }
     }
   }
 
