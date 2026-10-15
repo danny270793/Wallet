@@ -676,8 +676,8 @@ class AppLocalizationsEs extends AppLocalizations {
   }
 
   @override
-  String loanTermSummary(int months, String payment) {
-    return '$months meses · $payment / mes';
+  String loanTermMonths(int months) {
+    return '$months meses';
   }
 
   @override
@@ -1091,6 +1091,16 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get recurringMovementsSortByValue => 'Valor';
+
+  @override
+  String get recurringAutomaticLoan => 'Cuota de préstamo · automático';
+
+  @override
+  String get recurringAutomaticCardInterest =>
+      'Interés de tarjeta · automático';
+
+  @override
+  String get recurringAutomaticCardDeferred => 'Diferido del mes · automático';
 
   @override
   String recurringMovementsSelectedCount(int count) {
