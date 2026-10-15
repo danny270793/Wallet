@@ -13,13 +13,20 @@ struct PickItem: Identifiable, Hashable {
 ///
 /// Rows swipe to edit or delete, and "+" creates a new item, so the
 /// picker doubles as a quick manager (same as the Flutter pickers).
+///
+/// Add/edit editors are presented from the picker itself: a sheet set on the
+/// screen underneath would wait until the picker closed.
 struct SearchablePicker: View {
   let title: String
   let sections: [(title: String?, items: [PickItem])]
   let selected: String?
   var emptyMessage = ""
-  var onAdd: (() -> Void)?
-  var onEdit: ((PickItem) -> Void)?
+  /// Kinds of item "+" can create; with several, "+" becomes a menu.
+  var addOptions: [AddOption] = []
+  /// Editor for an existing item.
+  var editorFor: ((PickItem) -> SubEditor?)?
+  /// Called after an add/edit editor closes, to reload the items.
+  var onEditorClosed: (() async -> Void)?
   var onDelete: ((PickItem) async -> Void)?
   /// Confirmation text for deleting an item.
   var deleteMessage: (PickItem) -> String = { L("confirmDeleteCategory", $0.name) }
@@ -28,6 +35,14 @@ struct SearchablePicker: View {
   @Environment(\.dismiss) private var dismiss
   @State private var query = ""
   @State private var pendingDelete: PickItem?
+  @State private var editor: SubEditor?
+
+  struct AddOption: Identifiable {
+    let title: String
+    let symbol: String
+    let editor: SubEditor
+    var id: String { title }
+  }
 
   var body: some View {
     NavigationStack {
@@ -59,8 +74,8 @@ struct SearchablePicker: View {
                   if onDelete != nil {
                     Button(L("delete"), systemImage: "trash", role: .destructive) { pendingDelete = item }
                   }
-                  if let onEdit {
-                    Button(L("edit"), systemImage: "pencil") { onEdit(item) }.tint(.blue)
+                  if let e = editorFor?(item) {
+                    Button(L("edit"), systemImage: "pencil") { editor = e }.tint(.blue)
                   }
                 }
               }
@@ -82,10 +97,17 @@ struct SearchablePicker: View {
       }
       .toolbar {
         ToolbarItem(placement: .cancellationAction) { Button(role: .close) { dismiss() } }
-        if let onAdd {
-          ToolbarItem(placement: .primaryAction) { Button(L("addMenu"), systemImage: "plus", action: onAdd) }
+        if addOptions.count == 1, let only = addOptions.first {
+          ToolbarItem(placement: .primaryAction) { Button(only.title, systemImage: "plus") { editor = only.editor } }
+        } else if !addOptions.isEmpty {
+          ToolbarItem(placement: .primaryAction) {
+            Menu(L("addMenu"), systemImage: "plus") {
+              ForEach(addOptions) { o in Button(o.title, systemImage: o.symbol) { editor = o.editor } }
+            }
+          }
         }
       }
+      .sheet(item: $editor, onDismiss: { Task { await onEditorClosed?() } }) { $0.view }
     }
   }
 }
