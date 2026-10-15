@@ -32,6 +32,8 @@ struct TransactionsView: View {
       }
     }
     .listStyle(.insetGrouped)
+    // On the list itself, so the floating summary's pager doesn't inherit it.
+    .refreshable { await load() }
     .offlineBanner(state.fromCache)
     .navigationTitle(scope.title.map { "\($0) · \(L("transactions"))" } ?? L("transactions"))
     .navigationBarTitleDisplayMode(.inline)
@@ -42,7 +44,6 @@ struct TransactionsView: View {
     .safeAreaInset(edge: .bottom) {
       if state.value != nil { SummaryCard(pages: SummaryCard.ledgerModes(filtered)) }
     }
-    .refreshable { await load() }
     .task(id: "\(month.timeIntervalSince1970)-\(model.dataVersion)") { await load() }
     .ledgerEditors($editor)
   }
