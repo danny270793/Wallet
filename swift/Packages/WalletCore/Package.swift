@@ -4,7 +4,7 @@ import PackageDescription
 let package = Package(
   name: "WalletCore",
   defaultLocalization: "en",
-  platforms: [.iOS(.v26), .macOS(.v26)],
+  platforms: [.iOS(.v26), .macOS(.v26), .watchOS(.v26)],
   products: [
     .library(name: "WalletCore", targets: ["WalletCore"]),
     .library(name: "WalletData", targets: ["WalletData"]),
