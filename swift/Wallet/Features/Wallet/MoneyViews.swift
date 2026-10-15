@@ -57,6 +57,8 @@ struct LoansView: View {
         }
       }
     }
+    // On the list itself, so the floating summary's pager doesn't inherit it.
+    .refreshable { await load() }
     .offlineBanner(state.fromCache)
     .selectionToolbar($selection, title: L("loans"))
     .toolbar { ToolbarItem(placement: .primaryAction) { Button(L("newLoan"), systemImage: "plus") { creating = true } } }
@@ -68,7 +70,6 @@ struct LoansView: View {
         ])
       }
     }
-    .refreshable { await load() }
     .task(id: model.dataVersion) { await load() }
     .sheet(item: $editing) { LoanEditor(loan: $0) }
     .sheet(isPresented: $creating) { LoanEditor(loan: nil) }
@@ -158,6 +159,8 @@ struct LoanDetailView: View {
         }
       }
     }
+    // On the list itself, so the floating summary's pager doesn't inherit it.
+    .refreshable { await load() }
     .navigationTitle(loan.name)
     .toolbar {
       ToolbarItem(placement: .primaryAction) { Button(L("edit")) { editing = true } }
@@ -175,7 +178,6 @@ struct LoanDetailView: View {
         ])
       ])
     }
-    .refreshable { await load() }
     .task(id: model.dataVersion) { await load() }
     .sheet(isPresented: $addingCapital) {
       CapitalPaymentEditor(loan: loan, capital: capital) { await load() }
@@ -292,6 +294,8 @@ struct RecurringMovementsView: View {
         }
       }
     }
+    // On the list itself, so the floating summary's pager doesn't inherit it.
+    .refreshable { await load() }
     .offlineBanner(state.fromCache)
     .selectionToolbar($selection, title: L("recurringMovements"))
     .navigationBarTitleDisplayMode(.inline)
@@ -308,7 +312,6 @@ struct RecurringMovementsView: View {
         SummaryCard(pages: [SummaryCard.totals(Totals(income: income, outcome: outcome, balance: income - outcome))])
       }
     }
-    .refreshable { await load() }
     .task(id: model.dataVersion) { await load() }
     .sheet(item: $editing) { RecurringMovementEditor(movement: $0) }
     .sheet(isPresented: $creating) { RecurringMovementEditor(movement: nil) }
@@ -391,10 +394,11 @@ struct AssetsView: View {
         }
       }
     }
+    // On the list itself, so the floating summary's pager doesn't inherit it.
+    .refreshable { await load() }
     .offlineBanner(state.fromCache)
     .navigationTitle(L("assets"))
     .toolbar { ToolbarItem(placement: .primaryAction) { Button(L("newAsset"), systemImage: "plus") { creating = true } } }
-    .refreshable { await load() }
     .task(id: model.dataVersion) { await load() }
     .sheet(item: $editing) { AssetEditor(asset: $0) }
     .sheet(isPresented: $creating) { AssetEditor(asset: nil) }
