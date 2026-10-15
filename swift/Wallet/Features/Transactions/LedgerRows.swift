@@ -165,10 +165,9 @@ struct LedgerSections: View {
       }
     }
     .tint(.primary)
+    // Trailing, Delete outermost: the same order as every other list (Apple's Mail/Reminders pattern).
     .swipeActions(edge: .trailing) {
       Button(L("delete"), systemImage: "trash", role: .destructive) { pendingDelete = row }
-    }
-    .swipeActions(edge: .leading) {
       Button(L("edit"), systemImage: "pencil") {
         switch row {
         case .transaction(let t): editor = .editTransaction(t)
