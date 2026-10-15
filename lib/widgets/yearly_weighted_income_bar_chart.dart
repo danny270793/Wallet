@@ -148,11 +148,16 @@ int _firstEstimatedMonthIndex(int year, DateTime today) {
 /// month, as an estimate of the regular money flow.
 ///
 /// [projectedFromIndex] is the first estimated month index (0–11), or 12 when none.
+///
+/// When [netForMonth] is given it replaces [recurringMonthlyNet] for each
+/// estimated month (it receives the month's first day), so amounts that
+/// change month to month (loan installments, card interest) are followed.
 ({List<double> monthly, int projectedFromIndex})
 cumulativeAccountsBalanceWithProjection(
   List<TransactionEntity> txs,
   int year, {
   required double recurringMonthlyNet,
+  double Function(DateTime month)? netForMonth,
   DateTime? now,
 }) {
   final today = now ?? DateTime.now();
@@ -162,15 +167,26 @@ cumulativeAccountsBalanceWithProjection(
   final monthsBeforeYear = year > today.year
       ? (year - today.year) * 12 - today.month
       : 0;
-  return (
-    monthly: List<double>.generate(
-      12,
-      (i) => i < from
-          ? real[i]
-          : real[i] + recurringMonthlyNet * (monthsBeforeYear + i - from + 1),
-    ),
-    projectedFromIndex: from,
-  );
+  final net = netForMonth ?? (_) => recurringMonthlyNet;
+  // Estimated months run from the one after today's to each bar's month.
+  final firstEstimated = DateTime(today.year, today.month + 1);
+  final monthly = List<double>.filled(12, 0);
+  var carried = 0.0;
+  var cursor = firstEstimated;
+  for (var i = 0; i < 12; i++) {
+    if (i < from) {
+      monthly[i] = real[i];
+      continue;
+    }
+    final target = DateTime(year, i + 1);
+    while (!cursor.isAfter(target)) {
+      carried += net(cursor);
+      cursor = DateTime(cursor.year, cursor.month + 1);
+    }
+    monthly[i] = real[i] + carried;
+  }
+  assert(monthsBeforeYear >= 0);
+  return (monthly: monthly, projectedFromIndex: from);
 }
 
 /// Adds [estimate] (a recurring-movements total) to each month after the current
@@ -178,17 +194,23 @@ cumulativeAccountsBalanceWithProjection(
 /// month and earlier stay as the real [monthly] values.
 ///
 /// [projectedFromIndex] is the first estimated month index (0–11), or 12 when none.
+///
+/// When [estimateForMonth] is given it replaces [estimate] for each month (it
+/// receives the month's first day).
 ({List<double> monthly, int projectedFromIndex}) monthlyWithRecurringEstimate(
   List<double> monthly,
   int year, {
   required double estimate,
+  double Function(DateTime month)? estimateForMonth,
   DateTime? now,
 }) {
   final from = _firstEstimatedMonthIndex(year, now ?? DateTime.now());
+  final perMonth = estimateForMonth ?? (_) => estimate;
   return (
     monthly: List<double>.generate(
       12,
-      (i) => i < from ? monthly[i] : monthly[i] + estimate,
+      (i) =>
+          i < from ? monthly[i] : monthly[i] + perMonth(DateTime(year, i + 1)),
     ),
     projectedFromIndex: from,
   );
@@ -204,6 +226,7 @@ class YearlyWeightedIncomeBarChart extends StatelessWidget {
     required this.includeIgnored,
     required this.useWeightedAmounts,
     required this.recurringMonthlyIncome,
+    this.estimateForMonth,
   });
 
   final AppLocalizations l10n;
@@ -214,6 +237,9 @@ class YearlyWeightedIncomeBarChart extends StatelessWidget {
 
   /// Estimated income for each month after the current one (sum of positive recurring movements).
   final double recurringMonthlyIncome;
+
+  /// Estimate for each month (its first day); overrides [recurringMonthlyIncome].
+  final double Function(DateTime month)? estimateForMonth;
 
   @override
   Widget build(BuildContext context) {
@@ -228,6 +254,7 @@ class YearlyWeightedIncomeBarChart extends StatelessWidget {
       real,
       year,
       estimate: recurringMonthlyIncome,
+      estimateForMonth: estimateForMonth,
     );
     return _YearlyMonthlyBarChartCore(
       l10n: l10n,
@@ -254,6 +281,7 @@ class YearlyWeightedOutcomeBarChart extends StatelessWidget {
     required this.includeIgnored,
     required this.useWeightedAmounts,
     required this.recurringMonthlyOutcome,
+    this.estimateForMonth,
   });
 
   final AppLocalizations l10n;
@@ -264,6 +292,9 @@ class YearlyWeightedOutcomeBarChart extends StatelessWidget {
 
   /// Estimated outcome (positive) for each month after the current one.
   final double recurringMonthlyOutcome;
+
+  /// Estimate for each month (its first day); overrides [recurringMonthlyOutcome].
+  final double Function(DateTime month)? estimateForMonth;
 
   @override
   Widget build(BuildContext context) {
@@ -278,6 +309,7 @@ class YearlyWeightedOutcomeBarChart extends StatelessWidget {
       real,
       year,
       estimate: recurringMonthlyOutcome,
+      estimateForMonth: estimateForMonth,
     );
     return _YearlyMonthlyBarChartCore(
       l10n: l10n,
@@ -304,6 +336,7 @@ class YearlyWeightedNetBarChart extends StatelessWidget {
     required this.includeIgnored,
     required this.useWeightedAmounts,
     required this.recurringMonthlyNet,
+    this.estimateForMonth,
   });
 
   final AppLocalizations l10n;
@@ -314,6 +347,9 @@ class YearlyWeightedNetBarChart extends StatelessWidget {
 
   /// Estimated net (income − outcome) for each month after the current one.
   final double recurringMonthlyNet;
+
+  /// Estimate for each month (its first day); overrides [recurringMonthlyNet].
+  final double Function(DateTime month)? estimateForMonth;
 
   @override
   Widget build(BuildContext context) {
@@ -328,6 +364,7 @@ class YearlyWeightedNetBarChart extends StatelessWidget {
       real,
       year,
       estimate: recurringMonthlyNet,
+      estimateForMonth: estimateForMonth,
     );
     return _YearlyMonthlyBarChartCore(
       l10n: l10n,
@@ -352,6 +389,7 @@ class YearlyCumulativeNetBarChart extends StatelessWidget {
     required this.year,
     required this.transactions,
     required this.recurringMonthlyNet,
+    this.netForMonth,
   });
 
   final AppLocalizations l10n;
@@ -361,6 +399,9 @@ class YearlyCumulativeNetBarChart extends StatelessWidget {
   /// Net of all recurring movements, added once per month after the current one.
   final double recurringMonthlyNet;
 
+  /// Net for each estimated month (its first day); overrides [recurringMonthlyNet].
+  final double Function(DateTime month)? netForMonth;
+
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
@@ -368,6 +409,7 @@ class YearlyCumulativeNetBarChart extends StatelessWidget {
       transactions,
       year,
       recurringMonthlyNet: recurringMonthlyNet,
+      netForMonth: netForMonth,
     );
     return _YearlyMonthlyBarChartCore(
       l10n: l10n,
