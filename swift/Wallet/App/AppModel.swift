@@ -18,12 +18,20 @@ final class AppModel {
   init() {
     repo = WalletConfig.fromBundle().map { WalletRepository(config: $0) }
     isSignedIn = repo?.hasSession ?? false
-    if let repo { Task { await self.observeAuth(repo) } }
+    if let repo {
+      // The watch app has no login screen: it signs in with this session.
+      let bridge = SessionBridge.shared
+      bridge.currentTokens = { await repo.freshSessionTokens() }
+      bridge.activate()
+      Task { await self.observeAuth(repo) }
+    }
   }
 
   private func observeAuth(_ repo: WalletRepository) async {
     for await (_, session) in repo.client.auth.authStateChanges {
       isSignedIn = session != nil
+      // Sign-in, token refresh and sign-out all reach the watch.
+      SessionBridge.shared.send(session.map { SessionTokens(accessToken: $0.accessToken, refreshToken: $0.refreshToken) })
     }
   }
 

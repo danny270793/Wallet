@@ -22,6 +22,16 @@ public struct WalletConfig: Sendable {
   }
 }
 
+/// The parts of a Supabase session needed to restore it on another device.
+public struct SessionTokens: Codable, Hashable, Sendable {
+  public var accessToken: String
+  public var refreshToken: String
+  public init(accessToken: String, refreshToken: String) {
+    self.accessToken = accessToken
+    self.refreshToken = refreshToken
+  }
+}
+
 public enum WalletError: LocalizedError {
   case notSignedIn
   case softDeleteFailed(String)
@@ -44,24 +54,44 @@ public final class WalletRepository: Sendable {
   public let client: SupabaseClient
   let cache: OfflineCache
 
-  public init(config: WalletConfig, cache: OfflineCache = .shared) {
+  /// Token borrowed from the iPhone (watch only); nil on the iPhone.
+  let borrowed: BorrowedToken?
+
+  /// With [borrowsSession] (the watch) the client doesn't sign in at all: every
+  /// request carries the access token the paired iPhone handed over. Supabase
+  /// Auth on the watch would refresh with the iPhone's refresh token, which the
+  /// iPhone rotates, and the server rejects ("session not found").
+  public init(config: WalletConfig, cache: OfflineCache = .shared, borrowsSession: Bool = false) {
+    let token = borrowsSession ? BorrowedToken() : nil
+    borrowed = token
     client = SupabaseClient(
       supabaseURL: config.url, supabaseKey: config.anonKey,
       options: SupabaseClientOptions(
         db: .init(encoder: WalletJSON.encoder, decoder: WalletJSON.decoder),
-        auth: .init(
-          storage: KeychainLocalStorage(service: "io.github.danny270793.wallet.auth"),
-          emitLocalSessionAsInitialSession: true)))
+        auth: token.map { t in
+          .init(
+            storage: KeychainLocalStorage(service: "io.github.danny270793.wallet.watch"),
+            accessToken: { t.accessToken })
+        }
+          ?? .init(
+            storage: KeychainLocalStorage(service: "io.github.danny270793.wallet.auth"),
+            emitLocalSessionAsInitialSession: true)))
     self.cache = cache
-    AppLog.reporter = ActionsReporter(client: client)
+    AppLog.reporter = ActionsReporter(client: client, userId: { token?.userId })
   }
 
   // MARK: Session
 
   /// Lower-case uuid, as stored in `userId` columns.
-  public var userId: String? { client.auth.currentUser?.id.uuidString.lowercased() }
-  public var email: String? { client.auth.currentUser?.email }
-  public var hasSession: Bool { client.auth.currentSession != nil }
+  public var userId: String? {
+    if let borrowed { return borrowed.userId }
+    return client.auth.currentUser?.id.uuidString.lowercased()
+  }
+  public var email: String? { borrowed == nil ? client.auth.currentUser?.email : nil }
+  public var hasSession: Bool {
+    if let borrowed { return borrowed.isValid }
+    return client.auth.currentSession != nil
+  }
 
   private func requireUser() throws -> String {
     guard let id = userId else { throw WalletError.notSignedIn }
@@ -76,9 +106,28 @@ public final class WalletRepository: Sendable {
   /// Signs out and removes the user's offline cache.
   public func signOut() async throws {
     let uid = userId
-    try await client.auth.signOut()
+    if let borrowed {
+      borrowed.clear()
+    } else {
+      try await client.auth.signOut()
+    }
     if let uid { await cache.clear(user: uid) }
   }
+
+  /// A session that is valid right now (refreshed first if it expired), for the watch.
+  public func freshSessionTokens() async -> SessionTokens? {
+    guard let session = try? await client.auth.session else { return nil }
+    return SessionTokens(accessToken: session.accessToken, refreshToken: session.refreshToken)
+  }
+
+  /// Watch: use the access token from the paired iPhone for every request.
+  public func adopt(_ tokens: SessionTokens) throws {
+    guard let borrowed else { throw WalletError.invalidArgument("only the watch borrows a session") }
+    try borrowed.set(tokens.accessToken)
+  }
+
+  /// When the borrowed access token stops working (watch only).
+  public var accessTokenExpiry: Date? { borrowed?.expiry }
 
   public func updateEmail(_ email: String) async throws {
     try await client.auth.update(user: UserAttributes(email: email))
@@ -440,6 +489,27 @@ public final class WalletRepository: Sendable {
       while true {
         let rows: [Transaction] = try await client.from("wallet_transactions").select(Self.txSelect)
           .is("deletedAt", value: nil).lt("transactedAt", value: end)
+          .order("transactedAt", ascending: false).range(from: from, to: from + page - 1).execute().value
+        out += rows
+        if rows.count < page { break }
+        from += page
+      }
+      return out
+    }
+  }
+
+  /// Rows dated in [year] only (lighter than the full history the iPhone's
+  /// cumulative chart needs).
+  public func transactions(inYear year: Int) async throws -> Served<[Transaction]> {
+    let start = WalletJSON.formatTimestamp(WalletCalendar.date(year, 1))
+    let end = WalletJSON.formatTimestamp(WalletCalendar.date(year + 1, 1))
+    return try await cached(CacheKey.yearOnly(year)) {
+      var out: [Transaction] = []
+      let page = 1000
+      var from = 0
+      while true {
+        let rows: [Transaction] = try await client.from("wallet_transactions").select(Self.txSelect)
+          .is("deletedAt", value: nil).gte("transactedAt", value: start).lt("transactedAt", value: end)
           .order("transactedAt", ascending: false).range(from: from, to: from + page - 1).execute().value
         out += rows
         if rows.count < page { break }

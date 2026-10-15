@@ -34,7 +34,12 @@ final class ActionsReporter: Sendable {
   private static let maxStack = 24_000
   private static let maxMessage = 8_000
 
-  init(client: SupabaseClient) { self.client = client }
+  private let borrowedUserId: @Sendable () -> String?
+
+  init(client: SupabaseClient, userId: @escaping @Sendable () -> String? = { nil }) {
+    self.client = client
+    borrowedUserId = userId
+  }
 
   private struct Row: Encodable {
     var type: String
@@ -57,11 +62,28 @@ final class ActionsReporter: Sendable {
     s.count <= max ? s : String(s.prefix(max)) + "…(truncated)"
   }
 
+  private var osLabel: String {
+    #if os(watchOS)
+      "watchos"
+    #else
+      "ios"
+    #endif
+  }
+
+  /// The watch has no Supabase Auth session; reading `auth` there is not allowed.
+  private func currentAuthUser() -> String? {
+    #if os(watchOS)
+      nil
+    #else
+      client.auth.currentUser?.id.uuidString.lowercased()
+    #endif
+  }
+
   func record(message: String, stack: [String]) {
     let row = Row(
       type: "error", errorMessage: Self.trim(message, Self.maxMessage),
       errorStack: Self.trim(stack.joined(separator: "\n"), Self.maxStack), appVersion: Self.appVersion,
-      userId: client.auth.currentUser?.id.uuidString.lowercased(), os: "ios")
+      userId: borrowedUserId() ?? currentAuthUser(), os: osLabel)
     let client = client
     Task.detached {
       _ = try? await client.from("wallet_actions").insert(row).execute()
