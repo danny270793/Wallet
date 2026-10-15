@@ -150,14 +150,6 @@ struct LedgerSections: View {
         Text(Dates.dayHeader(day.day))
       }
     }
-    .confirmationDialog(
-      deleteTitle, isPresented: Binding(get: { pendingDelete != nil }, set: { if !$0 { pendingDelete = nil } }),
-      titleVisibility: .visible, presenting: pendingDelete
-    ) { row in
-      Button(L("delete"), role: .destructive) { Task { await delete(row) } }
-    } message: { _ in
-      Text(deleteMessage)
-    }
   }
 
   @ViewBuilder private func rowView(_ row: LedgerRow) -> some View {
@@ -184,6 +176,15 @@ struct LedgerSections: View {
         }
       }
       .tint(.blue)
+    }
+    // Per row, so the dialog is anchored to the row being deleted.
+    .confirmationDialog(
+      deleteTitle, isPresented: Binding(get: { pendingDelete?.id == row.id }, set: { if !$0 { pendingDelete = nil } }),
+      titleVisibility: .visible
+    ) {
+      Button(L("delete"), role: .destructive) { Task { await delete(row) } }
+    } message: {
+      Text(deleteMessage)
     }
   }
 
