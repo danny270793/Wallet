@@ -498,6 +498,27 @@ public final class WalletRepository: Sendable {
     }
   }
 
+  /// Rows dated in [year] only (lighter than the full history the iPhone's
+  /// cumulative chart needs).
+  public func transactions(inYear year: Int) async throws -> Served<[Transaction]> {
+    let start = WalletJSON.formatTimestamp(WalletCalendar.date(year, 1))
+    let end = WalletJSON.formatTimestamp(WalletCalendar.date(year + 1, 1))
+    return try await cached(CacheKey.yearOnly(year)) {
+      var out: [Transaction] = []
+      let page = 1000
+      var from = 0
+      while true {
+        let rows: [Transaction] = try await client.from("wallet_transactions").select(Self.txSelect)
+          .is("deletedAt", value: nil).gte("transactedAt", value: start).lt("transactedAt", value: end)
+          .order("transactedAt", ascending: false).range(from: from, to: from + page - 1).execute().value
+        out += rows
+        if rows.count < page { break }
+        from += page
+      }
+      return out
+    }
+  }
+
   /// All-time case-insensitive description search (not cached).
   public func searchTransactions(_ query: String, limit: Int = 200) async throws -> [Transaction] {
     let q = query.trimmingCharacters(in: .whitespacesAndNewlines)
