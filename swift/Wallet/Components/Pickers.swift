@@ -21,6 +21,8 @@ struct SearchablePicker: View {
   var onAdd: (() -> Void)?
   var onEdit: ((PickItem) -> Void)?
   var onDelete: ((PickItem) async -> Void)?
+  /// Confirmation text for deleting an item.
+  var deleteMessage: (PickItem) -> String = { L("confirmDeleteCategory", $0.name) }
   let onPick: (PickItem) -> Void
 
   @Environment(\.dismiss) private var dismiss
@@ -61,6 +63,14 @@ struct SearchablePicker: View {
                     Button(L("edit"), systemImage: "pencil") { onEdit(item) }.tint(.blue)
                   }
                 }
+                .confirmationDialog(
+                  L("delete"), isPresented: Binding(get: { pendingDelete?.id == item.id }, set: { if !$0 { pendingDelete = nil } }),
+                  titleVisibility: .visible
+                ) {
+                  Button(L("delete"), role: .destructive) { Task { await onDelete?(item) } }
+                } message: {
+                  Text(deleteMessage(item))
+                }
               }
             }
           }
@@ -74,14 +84,6 @@ struct SearchablePicker: View {
         if let onAdd {
           ToolbarItem(placement: .primaryAction) { Button(L("addMenu"), systemImage: "plus", action: onAdd) }
         }
-      }
-      .confirmationDialog(
-        L("delete"), isPresented: Binding(get: { pendingDelete != nil }, set: { if !$0 { pendingDelete = nil } }),
-        presenting: pendingDelete
-      ) { item in
-        Button(L("delete"), role: .destructive) { Task { await onDelete?(item) } }
-      } message: { item in
-        Text(L("confirmDeleteCategory", item.name))
       }
     }
   }
