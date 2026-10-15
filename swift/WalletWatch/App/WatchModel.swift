@@ -12,6 +12,9 @@ final class WatchModel {
   var month = WalletCalendar.startOfMonth(.now)
 
   private(set) var transactions: [Transaction] = []
+  /// Rows of the month's year, for the Year page.
+  private(set) var yearTransactions: [Transaction] = []
+  private var loadedYear: Int?
   private(set) var credits: [Transaction] = []
   private(set) var accounts: [Account] = []
   private(set) var cards: [Card] = []
@@ -86,6 +89,11 @@ final class WatchModel {
     } catch {
       if transactions.isEmpty { failure = LoadFailure(error) }
     }
+    let y = WalletCalendar.year(m)
+    if let rows = try? await repo.transactions(inYear: y).value, WalletCalendar.year(month) == y {
+      yearTransactions = rows
+      loadedYear = y
+    }
     credits = (try? await repo.creditInstallments().value) ?? credits
     accounts = Sorting.byName((try? await repo.accounts().value) ?? accounts, \.name)
     cards = Sorting.byName((try? await repo.cards().value) ?? cards, \.name)
@@ -98,6 +106,16 @@ final class WatchModel {
     transactions = []
     await load()
   }
+
+  var year: Int { WalletCalendar.year(month) }
+
+  /// The year's rows up to today: what has actually happened so far.
+  var yearToDate: [Transaction] {
+    loadedYear == year ? yearTransactions.filter { $0.transactedAt <= .now } : []
+  }
+
+  /// Sum of all account balances (the iPhone's Accounts total).
+  var accountsTotal: Double { accounts.reduce(0) { $0 + $1.balance } }
 
   /// Weighted totals for the month, the default page of the iPhone footer.
   var totals: Totals { TotalsMode.weighted.totals(transactions) }
