@@ -221,5 +221,5 @@ erDiagram
 
 ## Agents
 
-See [AGENTS.md](AGENTS.md) (Claude: [CLAUDE.md](CLAUDE.md)).
+See [AGENTS.md](../AGENTS.md) (Claude: [CLAUDE.md](../CLAUDE.md)).
 
