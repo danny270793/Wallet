@@ -27,6 +27,5 @@
   "totalsSwipeHint": {"en": "Swipe for other totals", "es": "Desliza para ver otros totales"},
   "chartFilterActive": {"en": "Filtered", "es": "Filtrado"},
   "clearFilter": {"en": "Show all", "es": "Mostrar todo"},
-  "loanInstallments": {"en": "Installments", "es": "Cuotas"},
-  "accountOrCard": {"en": "Accounts and cards", "es": "Cuentas y tarjetas"}
+  "loanInstallments": {"en": "Installments", "es": "Cuotas"}
 }
