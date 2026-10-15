@@ -12,7 +12,7 @@ struct LoansView: View {
   @State private var selection = SelectionState()
   @State private var editing: Loan?
   @State private var creating = false
-  @State private var deleting: (name: String, title: String, action: () async -> Void)?
+  @State private var deleting: PendingDelete?
 
   var body: some View {
     let loans = Sorting.byName(state.value ?? [], \.name)
@@ -47,10 +47,13 @@ struct LoansView: View {
           .onLongPressGesture { withAnimation { selection.toggle(loan.id) } }
           .swipeActions(edge: .trailing) {
             Button(L("delete"), systemImage: "trash", role: .destructive) {
-              deleting = (loan.name, L("deleteLoan"), { await model.perform("failed to delete loan") { try await $0.deleteLoan(id: loan.id) } })
+              deleting = PendingDelete(
+                id: loan.id, name: loan.name, title: L("deleteLoan"), message: L("confirmDeleteLoan", loan.name)
+              ) { await model.perform("failed to delete loan") { try await $0.deleteLoan(id: loan.id) } }
             }
             Button(L("edit"), systemImage: "pencil") { editing = loan }.tint(.blue)
           }
+          .confirmDelete($deleting, id: loan.id)
         }
       }
     }
@@ -69,7 +72,6 @@ struct LoansView: View {
     .task(id: model.dataVersion) { await load() }
     .sheet(item: $editing) { LoanEditor(loan: $0) }
     .sheet(isPresented: $creating) { LoanEditor(loan: nil) }
-    .confirmDelete($deleting)
   }
 
   private func load() async {
@@ -90,7 +92,7 @@ struct LoanDetailView: View {
   @State private var accountName: String?
   @State private var addingCapital = false
   @State private var editing = false
-  @State private var deleting: (name: String, title: String, action: () async -> Void)?
+  @State private var deleting: PendingDelete?
 
   var body: some View {
     let loan = loan ?? initial
@@ -142,12 +144,16 @@ struct LoanDetailView: View {
             }
             .swipeActions {
               Button(L("delete"), systemImage: "trash", role: .destructive) {
-                deleting = (
-                  "", L("loanDeleteCapitalPayment"),
-                  { if await model.perform("failed to delete loan capital payment", { try await $0.deleteCapitalPayment(id: p.id) }) { await load() } }
-                )
+                deleting = PendingDelete(
+                  id: p.id, name: "", title: L("loanDeleteCapitalPayment"), message: L("loanConfirmDeleteCapitalPayment")
+                ) {
+                  if await model.perform("failed to delete loan capital payment", { try await $0.deleteCapitalPayment(id: p.id) }) {
+                    await load()
+                  }
+                }
               }
             }
+            .confirmDelete($deleting, id: p.id)
           }
         }
       }
@@ -175,17 +181,6 @@ struct LoanDetailView: View {
       CapitalPaymentEditor(loan: loan, capital: capital) { await load() }
     }
     .sheet(isPresented: $editing) { LoanEditor(loan: loan) }
-    .confirmationDialog(
-      deleting?.title ?? "", isPresented: Binding(get: { deleting != nil }, set: { if !$0 { deleting = nil } }),
-      titleVisibility: .visible
-    ) {
-      Button(L("delete"), role: .destructive) {
-        let a = deleting?.action
-        Task { await a?() }
-      }
-    } message: {
-      Text(L("loanConfirmDeleteCapitalPayment"))
-    }
   }
 
   private func load() async {
@@ -238,7 +233,7 @@ struct RecurringMovementsView: View {
   @State private var selection = SelectionState()
   @State private var editing: RecurringMovement?
   @State private var creating = false
-  @State private var deleting: (name: String, title: String, action: () async -> Void)?
+  @State private var deleting: PendingDelete?
 
   private enum Row: Identifiable {
     case movement(RecurringMovement)
@@ -285,11 +280,15 @@ struct RecurringMovementsView: View {
             .swipeActions(edge: .trailing) {
               if case .movement(let m) = row, !selection.isActive {
                 Button(L("delete"), systemImage: "trash", role: .destructive) {
-                  deleting = (m.name, L("deleteRecurringMovement"), { await model.perform("failed to delete recurring movement") { try await $0.deleteRecurringMovement(id: m.id) } })
+                  deleting = PendingDelete(
+                    id: m.id, name: m.name, title: L("deleteRecurringMovement"),
+                    message: L("confirmDeleteRecurringMovement", m.name)
+                  ) { await model.perform("failed to delete recurring movement") { try await $0.deleteRecurringMovement(id: m.id) } }
                 }
                 Button(L("edit"), systemImage: "pencil") { editing = m }.tint(.blue)
               }
             }
+            .confirmDelete($deleting, id: row.id)
         }
       }
     }
@@ -313,7 +312,6 @@ struct RecurringMovementsView: View {
     .task(id: model.dataVersion) { await load() }
     .sheet(item: $editing) { RecurringMovementEditor(movement: $0) }
     .sheet(isPresented: $creating) { RecurringMovementEditor(movement: nil) }
-    .confirmDelete($deleting)
   }
 
   @ViewBuilder private func rowView(_ row: Row) -> some View {
@@ -368,7 +366,7 @@ struct AssetsView: View {
   @State private var state = Loadable<[Asset]>()
   @State private var editing: Asset?
   @State private var creating = false
-  @State private var deleting: (name: String, title: String, action: () async -> Void)?
+  @State private var deleting: PendingDelete?
 
   var body: some View {
     let assets = (state.value ?? []).sorted { $0.boughtAt > $1.boughtAt }
@@ -383,10 +381,13 @@ struct AssetsView: View {
             .onTapGesture { editing = a }
             .swipeActions(edge: .trailing) {
               Button(L("delete"), systemImage: "trash", role: .destructive) {
-                deleting = (a.name, L("deleteAsset"), { await model.perform("failed to delete asset") { try await $0.deleteAsset(id: a.id) } })
+                deleting = PendingDelete(
+                  id: a.id, name: a.name, title: L("deleteAsset"), message: L("confirmDeleteAsset", a.name)
+                ) { await model.perform("failed to delete asset") { try await $0.deleteAsset(id: a.id) } }
               }
               Button(L("edit"), systemImage: "pencil") { editing = a }.tint(.blue)
             }
+            .confirmDelete($deleting, id: a.id)
         }
       }
     }
@@ -397,7 +398,6 @@ struct AssetsView: View {
     .task(id: model.dataVersion) { await load() }
     .sheet(item: $editing) { AssetEditor(asset: $0) }
     .sheet(isPresented: $creating) { AssetEditor(asset: nil) }
-    .confirmDelete($deleting)
   }
 
   private func load() async {
