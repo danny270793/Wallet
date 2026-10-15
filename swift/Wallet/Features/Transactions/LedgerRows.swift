@@ -150,6 +150,17 @@ struct LedgerSections: View {
         Text(Dates.dayHeader(day.day))
       }
     }
+    // Centered alert, not a dialog anchored to the row: the row redraws as
+    // its swipe actions close, which dismissed an anchored dialog.
+    .alert(
+      deleteTitle, isPresented: Binding(get: { pendingDelete != nil }, set: { if !$0 { pendingDelete = nil } }),
+      presenting: pendingDelete
+    ) { row in
+      Button(L("delete"), role: .destructive) { Task { await delete(row) } }
+      Button(L("cancel"), role: .cancel) {}
+    } message: { _ in
+      Text(deleteMessage)
+    }
   }
 
   @ViewBuilder private func rowView(_ row: LedgerRow) -> some View {
@@ -175,15 +186,6 @@ struct LedgerSections: View {
         }
       }
       .tint(.blue)
-    }
-    // Per row, so the dialog is anchored to the row being deleted.
-    .confirmationDialog(
-      deleteTitle, isPresented: Binding(get: { pendingDelete?.id == row.id }, set: { if !$0 { pendingDelete = nil } }),
-      titleVisibility: .visible
-    ) {
-      Button(L("delete"), role: .destructive) { Task { await delete(row) } }
-    } message: {
-      Text(deleteMessage)
     }
   }
 
