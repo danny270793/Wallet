@@ -306,14 +306,11 @@
       }
     }
   },
-  "loanTermSummary": "{months} months · {payment} / month",
-  "@loanTermSummary": {
+  "loanTermMonths": "{months} months",
+  "@loanTermMonths": {
     "placeholders": {
       "months": {
         "type": "int"
-      },
-      "payment": {
-        "type": "String"
       }
     }
   },
@@ -523,6 +520,9 @@
   },
   "recurringMovementValueHint": "Use a negative amount for outcomes",
   "recurringMovementsSortByValue": "Value",
+  "recurringAutomaticLoan": "Loan installment · automatic",
+  "recurringAutomaticCardInterest": "Card interest · automatic",
+  "recurringAutomaticCardDeferred": "Deferred this month · automatic",
   "recurringMovementsSelectedCount": "{count} selected",
   "@recurringMovementsSelectedCount": {
     "placeholders": {
