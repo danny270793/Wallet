@@ -31,11 +31,16 @@ struct CreditsView: View {
             ContentUnavailableView(L("creditsEmptyForSelectedMonth"), systemImage: "calendar").listRowBackground(Color.clear)
           }
           ForEach(monthGroups) { g in
-            CreditGroupRow(
-              group: g, flat: flat, month: month, cardType: cards.first { $0.id == g.rows.first?.cardId }?.type
-            )
-            .contentShape(.rect)
-            .onTapGesture { if let first = g.rows.first { editor = .editTransaction(first) } }
+            Button {
+              if let first = g.rows.first { editor = .editTransaction(first) }
+            } label: {
+              CreditGroupRow(
+                group: g, flat: flat, month: month, cardType: cards.first { $0.id == g.rows.first?.cardId }?.type
+              )
+              .frame(maxWidth: .infinity, alignment: .leading)
+              .contentShape(.rect)
+            }
+            .tint(.primary)
             .swipeActions(edge: .trailing) {
               Button(L("delete"), systemImage: "trash", role: .destructive) { deleting = fullById[g.id] }
               Button(L("edit"), systemImage: "pencil") { if let first = g.rows.first { editor = .editTransaction(first) } }
