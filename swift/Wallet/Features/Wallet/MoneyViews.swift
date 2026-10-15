@@ -44,7 +44,7 @@ struct LoansView: View {
               NavigationLink { LoanDetailView(loanId: loan.id, initial: loan) } label: { row }
             }
           }
-          .onLongPressGesture { withAnimation { selection.toggle(loan.id) } }
+          .selectMenu($selection, id: loan.id)
           .swipeActions(edge: .trailing) {
             Button(L("delete"), systemImage: "trash", role: .destructive) {
               deleting = PendingDelete(
@@ -274,11 +274,17 @@ struct RecurringMovementsView: View {
           ContentUnavailableView(L("noRecurringMovements"), systemImage: "repeat").listRowBackground(Color.clear)
         }
         ForEach(rows) { row in
-          rowView(row)
-            .selectable(selection.isActive, selected: selection.ids.contains(row.id))
-            .contentShape(.rect)
-            .onTapGesture { if selection.isActive { withAnimation { selection.toggle(row.id) } } else if case .movement(let m) = row { editing = m } }
-            .onLongPressGesture { withAnimation { selection.toggle(row.id) } }
+          Button {
+            if selection.isActive {
+              withAnimation { selection.toggle(row.id) }
+            } else if case .movement(let m) = row {
+              editing = m
+            }
+          } label: {
+            rowView(row).selectable(selection.isActive, selected: selection.ids.contains(row.id))
+          }
+          .tint(.primary)
+          .selectMenu($selection, id: row.id)
             .swipeActions(edge: .trailing) {
               if case .movement(let m) = row, !selection.isActive {
                 Button(L("delete"), systemImage: "trash", role: .destructive) {
@@ -379,9 +385,10 @@ struct AssetsView: View {
           ContentUnavailableView(L("noAssets"), systemImage: "shippingbox").listRowBackground(Color.clear)
         }
         ForEach(assets) { a in
-          AssetRow(asset: a)
-            .contentShape(.rect)
-            .onTapGesture { editing = a }
+          Button { editing = a } label: {
+            AssetRow(asset: a).frame(maxWidth: .infinity, alignment: .leading).contentShape(.rect)
+          }
+          .tint(.primary)
             .swipeActions(edge: .trailing) {
               Button(L("delete"), systemImage: "trash", role: .destructive) {
                 deleting = PendingDelete(
