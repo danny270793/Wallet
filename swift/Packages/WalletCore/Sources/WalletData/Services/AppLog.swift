@@ -10,6 +10,10 @@ public enum AppLog {
   /// Set once the Supabase client exists, so errors can be reported.
   nonisolated(unsafe) static var reporter: ActionsReporter?
 
+  /// True while demo mode is on: errors are only logged to the console, never
+  /// sent to `wallet_actions`.
+  nonisolated(unsafe) public static var isDemo = false
+
   public static func debug(_ message: String) {
     #if DEBUG
       logger.debug("\(message, privacy: .public)")
@@ -24,7 +28,7 @@ public enum AppLog {
 
   public static func error(_ message: String, _ error: Error? = nil) {
     logger.error("\(message, privacy: .public) \(error.map { String(describing: $0) } ?? "", privacy: .public)")
-    reporter?.record(message: error.map { "\(message): \($0)" } ?? message, stack: Thread.callStackSymbols)
+    if !isDemo { reporter?.record(message: error.map { "\(message): \($0)" } ?? message, stack: Thread.callStackSymbols) }
   }
 }
 
