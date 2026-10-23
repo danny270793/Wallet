@@ -2075,6 +2075,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Faded bars are estimates: transactions already scheduled plus your recurring movements.'**
   String get yearlyDashboardMonthlyProjectionHint;
+
+  /// No description provided for @tryDemo.
+  ///
+  /// In en, this message translates to:
+  /// **'Try demo'**
+  String get tryDemo;
+
+  /// No description provided for @tryDemoHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Explore the app with sample data. Nothing is saved.'**
+  String get tryDemoHint;
+
+  /// No description provided for @demoModeBannerTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Demo mode'**
+  String get demoModeBannerTitle;
+
+  /// No description provided for @demoModeBannerBody.
+  ///
+  /// In en, this message translates to:
+  /// **'You are viewing fake data generated on this device. Changes are not saved and disappear when you exit.'**
+  String get demoModeBannerBody;
+
+  /// No description provided for @demoModeExit.
+  ///
+  /// In en, this message translates to:
+  /// **'Exit demo'**
+  String get demoModeExit;
 }
 
 class _AppLocalizationsDelegate

@@ -518,5 +518,10 @@
   "recurringAutomaticCardDeferred": "Diferido del mes · automático",
   "recurringMovementsSelectedCount": "{count} seleccionados",
   "yearlyDashboardCumulativeProjectionHint": "Las barras atenuadas son estimaciones: saldo con las transacciones ya programadas más tus movimientos recurrentes de cada mes siguiente.",
-  "yearlyDashboardMonthlyProjectionHint": "Las barras atenuadas son estimaciones: transacciones ya programadas más tus movimientos recurrentes."
+  "yearlyDashboardMonthlyProjectionHint": "Las barras atenuadas son estimaciones: transacciones ya programadas más tus movimientos recurrentes.",
+  "tryDemo": "Probar demo",
+  "tryDemoHint": "Explora la app con datos de ejemplo. No se guarda nada.",
+  "demoModeBannerTitle": "Modo demo",
+  "demoModeBannerBody": "Estás viendo datos ficticios generados en este dispositivo. Los cambios no se guardan y desaparecen al salir.",
+  "demoModeExit": "Salir de la demo"
 }

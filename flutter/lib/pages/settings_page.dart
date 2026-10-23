@@ -8,6 +8,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:wallet/l10n/app_localizations.dart';
 
+import '../core/demo/demo_mode.dart';
 import '../core/di/injection.dart';
 import '../core/locale/app_locale_controller.dart';
 import '../core/security/app_biometric_unlock_controller.dart';
@@ -211,6 +212,7 @@ class _SettingsPageState extends State<SettingsPage> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
+    final isDemo = DemoMode.instance.isActive;
 
     return BlocProvider(
       create: (_) => getIt<SettingsCubit>(),
@@ -236,7 +238,35 @@ class _SettingsPageState extends State<SettingsPage> {
                   ),
                 ),
                 const SizedBox(height: 12),
+                if (isDemo)
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(24, 0, 24, 12),
+                    child: Card(
+                      margin: EdgeInsets.zero,
+                      color: theme.colorScheme.secondaryContainer,
+                      child: ListTile(
+                        leading: Icon(
+                          Icons.science_outlined,
+                          color: theme.colorScheme.onSecondaryContainer,
+                        ),
+                        title: Text(
+                          l10n.demoModeBannerTitle,
+                          style: TextStyle(
+                            fontWeight: FontWeight.w600,
+                            color: theme.colorScheme.onSecondaryContainer,
+                          ),
+                        ),
+                        subtitle: Text(
+                          l10n.demoModeBannerBody,
+                          style: TextStyle(
+                            color: theme.colorScheme.onSecondaryContainer,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
                 ListTile(
+                  enabled: !isDemo,
                   contentPadding: const EdgeInsets.symmetric(horizontal: 24),
                   leading: Icon(
                     Icons.person_outline_rounded,
@@ -244,18 +274,24 @@ class _SettingsPageState extends State<SettingsPage> {
                   ),
                   title: Text(l10n.settingsChangeEmail),
                   subtitle: Text(
-                    Supabase.instance.client.auth.currentUser?.email ?? '',
+                    isDemo
+                        ? DemoMode.email
+                        : Supabase.instance.client.auth.currentUser?.email ??
+                              '',
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
-                  trailing: const Icon(Icons.chevron_right),
-                  onTap: () => _showChangeEmailSheet(
-                    context,
-                    l10n,
-                    onChanged: () => setState(() {}),
-                  ),
+                  trailing: isDemo ? null : const Icon(Icons.chevron_right),
+                  onTap: isDemo
+                      ? null
+                      : () => _showChangeEmailSheet(
+                          context,
+                          l10n,
+                          onChanged: () => setState(() {}),
+                        ),
                 ),
                 ListTile(
+                  enabled: !isDemo,
                   contentPadding: const EdgeInsets.symmetric(horizontal: 24),
                   leading: Icon(
                     Icons.lock_outline_rounded,
@@ -270,8 +306,10 @@ class _SettingsPageState extends State<SettingsPage> {
                     ),
                   ),
                   isThreeLine: true,
-                  trailing: const Icon(Icons.chevron_right),
-                  onTap: () => _showChangePasswordSheet(context, l10n),
+                  trailing: isDemo ? null : const Icon(Icons.chevron_right),
+                  onTap: isDemo
+                      ? null
+                      : () => _showChangePasswordSheet(context, l10n),
                 ),
                 const Padding(
                   padding: EdgeInsets.symmetric(vertical: 16),
@@ -491,7 +529,9 @@ class _SettingsPageState extends State<SettingsPage> {
                                 onPressed: () =>
                                     context.read<SettingsCubit>().signOut(),
                                 icon: const Icon(Icons.logout_rounded),
-                                label: Text(l10n.signOut),
+                                label: Text(
+                                  isDemo ? l10n.demoModeExit : l10n.signOut,
+                                ),
                               ),
                       ),
                     );

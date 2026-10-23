@@ -176,6 +176,36 @@ class _LoginPageState extends State<LoginPage> {
                       ),
               ),
             ),
+            const SizedBox(height: 12),
+            SizedBox(
+              width: double.infinity,
+              height: 48,
+              child: OutlinedButton.icon(
+                style: OutlinedButton.styleFrom(
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                onPressed: state is LoginLoading
+                    ? null
+                    : () => context.read<LoginBloc>().add(
+                        const LoginDemoRequested(),
+                      ),
+                icon: const Icon(Icons.science_outlined),
+                label: Text(
+                  l10n.tryDemo,
+                  style: const TextStyle(fontWeight: FontWeight.w600),
+                ),
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              l10n.tryDemoHint,
+              textAlign: TextAlign.center,
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
+            ),
           ],
         ),
       ),
