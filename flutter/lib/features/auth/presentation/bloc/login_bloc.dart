@@ -1,5 +1,6 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../../../core/demo/demo_mode.dart';
 import '../../../../core/logger/app_logger.dart';
 import '../../domain/usecases/sign_in_usecase.dart';
 import 'login_event.dart';
@@ -12,6 +13,13 @@ class LoginBloc extends Bloc<LoginEvent, LoginState> {
     : _signIn = signIn,
       super(const LoginInitial()) {
     on<LoginSubmitted>(_onSubmitted);
+    on<LoginDemoRequested>(_onDemoRequested);
+  }
+
+  void _onDemoRequested(LoginDemoRequested event, Emitter<LoginState> emit) {
+    AppLogger.info('demo mode requested');
+    DemoMode.instance.enter();
+    emit(const LoginSuccess());
   }
 
   Future<void> _onSubmitted(

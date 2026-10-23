@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../demo/demo_mode.dart';
 import 'wallet_actions_datasource.dart';
 
 /// Records errors and custom events to `wallet_actions` (best-effort; never throws to callers).
@@ -65,6 +66,7 @@ class WalletActionsReporter {
     String? errorMessage,
     String? errorStack,
   }) async {
+    if (DemoMode.instance.isActive) return;
     try {
       final version = await _appVersion();
       await _datasource.insert(

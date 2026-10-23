@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:wallet/l10n/app_localizations.dart';
 
+import '../core/demo/demo_mode.dart';
 import '../core/di/injection.dart';
 import '../core/offline/wallet_offline_cache.dart';
 import '../widgets/bottom_sheet_pinned_title.dart';
@@ -135,7 +136,9 @@ class _SettingsCachePageState extends State<SettingsCachePage> {
 
   Future<void> _load() async {
     setState(() => _loading = true);
-    final userId = Supabase.instance.client.auth.currentUser?.id ?? '';
+    final userId = DemoMode.instance.isActive
+        ? ''
+        : Supabase.instance.client.auth.currentUser?.id ?? '';
     final list = await getIt<WalletOfflineCache>().listUserCacheFiles(userId);
     if (!mounted) return;
     setState(() {

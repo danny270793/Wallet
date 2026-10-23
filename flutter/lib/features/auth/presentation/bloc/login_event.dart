@@ -16,3 +16,8 @@ class LoginSubmitted extends LoginEvent {
   @override
   List<Object?> get props => [email, password];
 }
+
+/// Enter demo mode: fake data generated on the device, no account needed.
+class LoginDemoRequested extends LoginEvent {
+  const LoginDemoRequested();
+}

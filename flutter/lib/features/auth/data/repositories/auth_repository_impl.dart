@@ -1,3 +1,4 @@
+import '../../../../core/demo/demo_mode.dart';
 import '../../../../core/offline/wallet_offline_cache.dart';
 import '../../../../core/offline/wallet_offline_user_context.dart';
 import '../../domain/entities/user_entity.dart';
@@ -23,6 +24,10 @@ class AuthRepositoryImpl implements AuthRepository {
 
   @override
   Future<void> signOut() async {
+    if (DemoMode.instance.isActive) {
+      DemoMode.instance.exit();
+      return;
+    }
     final uid = _offlineSession.userId;
     await _datasource.signOut();
     if (uid != null && uid.isNotEmpty) {
