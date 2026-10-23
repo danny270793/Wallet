@@ -47,6 +47,28 @@ General → About → Certificate Trust Settings).
 The project uses a synchronized folder, so new files under `Wallet/` are picked
 up by Xcode automatically.
 
+## Demo mode
+
+**Try demo** on the login screen opens the app with made-up data, no account
+and no network. The ledger is generated when you tap it, relative to today:
+14 months of income, bills and spending, transfers between accounts, deferred
+card purchases (finished, ongoing and just started), two loans with extra
+payments, recurring movements, assets, categories and tags. Amounts are random,
+so each session looks different.
+
+- It works through `WalletRepository(demo:)`, which answers every read and
+  write from an in-memory `DemoStore` (`WalletData/Demo`). Creating, editing
+  and deleting rows works; balances are recomputed like the
+  `wallet_*_with_balance` views.
+- It never touches Supabase, the offline cache on disk or `wallet_actions`
+  (`AppLog.isDemo` keeps errors on the console). Nothing is saved: relaunching
+  returns to the login screen.
+- The generator is `WalletCore/Demo/DemoDataGenerator.swift` (pass a `seed` for
+  repeatable data). Settings shows a demo banner, hides email/password and
+  offline cache, and **Exit demo** returns to login.
+- Debug builds accept `-startDemo YES` to open straight into the demo.
+- The watch and Apple TV apps have no demo; they need a real session.
+
 ## Tests
 
 ```sh

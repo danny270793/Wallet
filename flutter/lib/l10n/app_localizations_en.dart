@@ -1107,4 +1107,21 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get yearlyDashboardMonthlyProjectionHint =>
       'Faded bars are estimates: transactions already scheduled plus your recurring movements.';
+
+  @override
+  String get tryDemo => 'Try demo';
+
+  @override
+  String get tryDemoHint =>
+      'Explore the app with sample data. Nothing is saved.';
+
+  @override
+  String get demoModeBannerTitle => 'Demo mode';
+
+  @override
+  String get demoModeBannerBody =>
+      'You are viewing fake data generated on this device. Changes are not saved and disappear when you exit.';
+
+  @override
+  String get demoModeExit => 'Exit demo';
 }

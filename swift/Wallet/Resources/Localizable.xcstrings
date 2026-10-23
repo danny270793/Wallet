@@ -1599,6 +1599,57 @@
         }
       }
     },
+    "demoModeBannerBody": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You are viewing fake data generated on this device. Changes are not saved and disappear when you exit."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Estás viendo datos ficticios generados en este dispositivo. Los cambios no se guardan y desaparecen al salir."
+          }
+        }
+      }
+    },
+    "demoModeBannerTitle": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Demo mode"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Modo demo"
+          }
+        }
+      }
+    },
+    "demoModeExit": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Exit demo"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Salir de la demo"
+          }
+        }
+      }
+    },
     "details": {
       "extractionState": "manual",
       "localizations": {
@@ -4829,6 +4880,91 @@
         }
       }
     },
+    "swiftDemoBannerBody": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You are looking at sample data made up just now. Changes stay on this device and disappear when you exit."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Estás viendo datos de ejemplo generados hace un momento. Los cambios se quedan en este dispositivo y desaparecen al salir."
+          }
+        }
+      }
+    },
+    "swiftDemoBannerTitle": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Demo mode"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Modo demo"
+          }
+        }
+      }
+    },
+    "swiftDemoExit": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Exit demo"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Salir de la demo"
+          }
+        }
+      }
+    },
+    "swiftDemoTry": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Try demo"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Probar demo"
+          }
+        }
+      }
+    },
+    "swiftDemoTryHint": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Explore the app with sample data. Nothing is saved or sent."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Explora la app con datos de ejemplo. Nada se guarda ni se envía."
+          }
+        }
+      }
+    },
     "tabActivity": {
       "extractionState": "manual",
       "localizations": {
@@ -5879,6 +6015,40 @@
           "stringUnit": {
             "state": "translated",
             "value": "Hora"
+          }
+        }
+      }
+    },
+    "tryDemo": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Try demo"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Probar demo"
+          }
+        }
+      }
+    },
+    "tryDemoHint": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Explore the app with sample data. Nothing is saved."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Explora la app con datos de ejemplo. No se guarda nada."
           }
         }
       }

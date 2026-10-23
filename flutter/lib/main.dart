@@ -9,6 +9,7 @@ import 'package:local_auth/local_auth.dart';
 import 'package:wallet/l10n/app_localizations.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import 'core/demo/demo_mode.dart';
 import 'core/di/injection.dart';
 import 'core/locale/app_locale_controller.dart';
 import 'core/security/app_biometric_unlock_controller.dart';
@@ -117,6 +118,7 @@ class _AppState extends State<App> with WidgetsBindingObserver {
   }
 
   Future<void> _activateBiometricLockIfNeeded() async {
+    if (DemoMode.instance.isActive) return;
     if (Supabase.instance.client.auth.currentSession == null) return;
     final bio = getIt<AppBiometricUnlockController>();
     await bio.refreshAuthenticatorAvailability();
@@ -204,7 +206,8 @@ class _BiometricLockScreenState extends State<_BiometricLockScreen> {
   Future<void> _attemptUnlock() async {
     if (!mounted) return;
 
-    if (Supabase.instance.client.auth.currentSession == null) {
+    if (DemoMode.instance.isActive ||
+        Supabase.instance.client.auth.currentSession == null) {
       widget.onUnlocked();
       return;
     }

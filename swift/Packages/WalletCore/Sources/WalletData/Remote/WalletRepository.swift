@@ -57,6 +57,10 @@ public final class WalletRepository: Sendable {
   /// Token borrowed from the iPhone (watch only); nil on the iPhone.
   let borrowed: BorrowedToken?
 
+  /// In-memory ledger of demo mode; nil for a real repository. Every method
+  /// answers from it first, so a demo repository never reaches Supabase.
+  let demo: DemoStore?
+
   /// With [borrowsSession] (the watch) the client doesn't sign in at all: every
   /// request carries the access token the paired iPhone handed over. Supabase
   /// Auth on the watch would refresh with the iPhone's refresh token, which the
@@ -64,6 +68,7 @@ public final class WalletRepository: Sendable {
   public init(config: WalletConfig, cache: OfflineCache = .shared, borrowsSession: Bool = false) {
     let token = borrowsSession ? BorrowedToken() : nil
     borrowed = token
+    demo = nil
     client = SupabaseClient(
       supabaseURL: config.url, supabaseKey: config.anonKey,
       options: SupabaseClientOptions(
@@ -80,15 +85,35 @@ public final class WalletRepository: Sendable {
     AppLog.reporter = ActionsReporter(client: client, userId: { token?.userId })
   }
 
+  /// A demo repository: fake data in memory, no network, no disk cache and no
+  /// error reporting. Its client points at an address that never resolves and
+  /// is never used.
+  public init(demo store: DemoStore) {
+    demo = store
+    borrowed = nil
+    client = SupabaseClient(
+      supabaseURL: URL(string: "https://demo.invalid")!, supabaseKey: "demo",
+      options: SupabaseClientOptions(auth: .init(storage: InMemoryAuthStorage(), autoRefreshToken: false)))
+    cache = OfflineCache(
+      root: FileManager.default.temporaryDirectory.appendingPathComponent("wallet_demo_unused", isDirectory: true))
+  }
+
+  public var isDemo: Bool { demo != nil }
+
   // MARK: Session
 
   /// Lower-case uuid, as stored in `userId` columns.
   public var userId: String? {
+    if demo != nil { return DemoDataGenerator.userId }
     if let borrowed { return borrowed.userId }
     return client.auth.currentUser?.id.uuidString.lowercased()
   }
-  public var email: String? { borrowed == nil ? client.auth.currentUser?.email : nil }
+  public var email: String? {
+    if demo != nil { return DemoDataGenerator.email }
+    return borrowed == nil ? client.auth.currentUser?.email : nil
+  }
   public var hasSession: Bool {
+    if demo != nil { return true }
     if let borrowed { return borrowed.isValid }
     return client.auth.currentSession != nil
   }
@@ -99,12 +124,14 @@ public final class WalletRepository: Sendable {
   }
 
   public func signIn(email: String, password: String) async throws {
+    if demo != nil { throw WalletError.invalidArgument("demo mode has no account") }
     AppLog.debug("signIn called")
     try await client.auth.signIn(email: email, password: password)
   }
 
   /// Signs out and removes the user's offline cache.
   public func signOut() async throws {
+    if demo != nil { return }
     let uid = userId
     if let borrowed {
       borrowed.clear()
@@ -116,6 +143,7 @@ public final class WalletRepository: Sendable {
 
   /// A session that is valid right now (refreshed first if it expired), for the watch.
   public func freshSessionTokens() async -> SessionTokens? {
+    guard demo == nil else { return nil }
     guard let session = try? await client.auth.session else { return nil }
     return SessionTokens(accessToken: session.accessToken, refreshToken: session.refreshToken)
   }
@@ -130,14 +158,17 @@ public final class WalletRepository: Sendable {
   public var accessTokenExpiry: Date? { borrowed?.expiry }
 
   public func updateEmail(_ email: String) async throws {
+    if demo != nil { throw WalletError.invalidArgument("demo mode has no account") }
     try await client.auth.update(user: UserAttributes(email: email))
   }
 
   public func updatePassword(_ password: String) async throws {
+    if demo != nil { throw WalletError.invalidArgument("demo mode has no account") }
     try await client.auth.update(user: UserAttributes(password: password))
   }
 
   public func cacheEntries() async -> [CacheEntry] {
+    guard demo == nil else { return [] }
     guard let uid = userId else { return [] }
     return await cache.entries(user: uid)
   }
@@ -156,7 +187,8 @@ public final class WalletRepository: Sendable {
   // MARK: Accounts
 
   public func accounts() async throws -> Served<[Account]> {
-    try await cached(CacheKey.accounts) {
+    if let demo { return Served(await demo.listAccounts(), fromCache: false) }
+    return try await cached(CacheKey.accounts) {
       try await client.from("wallet_accounts_with_balance")
         .select("id, userId, name, createdAt, updatedAt, deletedAt, balance")
         .is("deletedAt", value: nil).order("createdAt").execute().value
@@ -165,21 +197,27 @@ public final class WalletRepository: Sendable {
 
   @discardableResult
   public func createAccount(name: String) async throws -> Account {
+    if let demo { return await demo.createAccount(name: name) }
     struct Row: Encodable { var userId: String, name: String }
     return try await client.from("wallet_accounts").insert(Row(userId: requireUser(), name: name))
       .select().single().execute().value
   }
 
   public func updateAccount(id: String, name: String) async throws {
+    if let demo { return await demo.updateAccount(id: id, name: name) }
     try await client.from("wallet_accounts").update(["name": name]).eq("id", value: id).execute()
   }
 
-  public func deleteAccount(id: String) async throws { try await softDelete("soft_delete_wallet_account", id: id) }
+  public func deleteAccount(id: String) async throws {
+    if let demo { return try await demo.deleteAccount(id: id) }
+    try await softDelete("soft_delete_wallet_account", id: id)
+  }
 
   // MARK: Cards
 
   public func cards() async throws -> Served<[Card]> {
-    try await cached(CacheKey.cards) {
+    if let demo { return Served(await demo.listCards(), fromCache: false) }
+    return try await cached(CacheKey.cards) {
       try await client.from("wallet_cards_with_balance")
         .select(
           "id, userId, name, type, cutDay, payDay, nominalInterestRate, createdAt, updatedAt, deletedAt, balance"
@@ -209,6 +247,7 @@ public final class WalletRepository: Sendable {
   }
 
   public func createCard(name: String, type: CardType, rate: Double?, cutDay: Int, payDay: Int) async throws {
+    if let demo { return await demo.createCard(name: name, type: type, rate: rate, cutDay: cutDay, payDay: payDay) }
     try await client.from("wallet_cards")
       .insert(
         CardRow(
@@ -220,17 +259,24 @@ public final class WalletRepository: Sendable {
   public func updateCard(id: String, name: String, type: CardType, rate: Double?, cutDay: Int, payDay: Int)
     async throws
   {
+    if let demo {
+      return await demo.updateCard(id: id, name: name, type: type, rate: rate, cutDay: cutDay, payDay: payDay)
+    }
     try await client.from("wallet_cards")
       .update(CardRow(name: name, type: type.rawValue, cutDay: cutDay, payDay: payDay, nominalInterestRate: rate))
       .eq("id", value: id).execute()
   }
 
-  public func deleteCard(id: String) async throws { try await softDelete("soft_delete_wallet_card", id: id) }
+  public func deleteCard(id: String) async throws {
+    if let demo { return try await demo.deleteCard(id: id) }
+    try await softDelete("soft_delete_wallet_card", id: id)
+  }
 
   // MARK: Categories & tags
 
   public func categories() async throws -> Served<[WalletCore.Category]> {
-    try await cached(CacheKey.categories) {
+    if let demo { return Served(await demo.listCategories(), fromCache: false) }
+    return try await cached(CacheKey.categories) {
       try await client.from("wallet_categories").select().is("deletedAt", value: nil).order("createdAt")
         .execute().value
     }
@@ -257,44 +303,56 @@ public final class WalletRepository: Sendable {
 
   @discardableResult
   public func createCategory(name: String, description: String? = nil) async throws -> WalletCore.Category {
-    try await client.from("wallet_categories")
+    if let demo { return await demo.createCategory(name: name, description: description) }
+    return try await client.from("wallet_categories")
       .insert(NamedRow(userId: requireUser(), name: name, description: description))
       .select().single().execute().value
   }
 
   public func updateCategory(id: String, name: String, description: String?) async throws {
+    if let demo { return await demo.updateCategory(id: id, name: name, description: description) }
     try await client.from("wallet_categories")
       .update(NamedRow(name: name, description: description, writeNullDescription: true))
       .eq("id", value: id).execute()
   }
 
-  public func deleteCategory(id: String) async throws { try await softDelete("soft_delete_wallet_category", id: id) }
+  public func deleteCategory(id: String) async throws {
+    if let demo { return try await demo.deleteCategory(id: id) }
+    try await softDelete("soft_delete_wallet_category", id: id)
+  }
 
   public func tags() async throws -> Served<[Tag]> {
-    try await cached(CacheKey.tags) {
+    if let demo { return Served(await demo.listTags(), fromCache: false) }
+    return try await cached(CacheKey.tags) {
       try await client.from("wallet_tags").select().is("deletedAt", value: nil).order("createdAt").execute().value
     }
   }
 
   @discardableResult
   public func createTag(name: String, description: String? = nil) async throws -> Tag {
-    try await client.from("wallet_tags")
+    if let demo { return await demo.createTag(name: name, description: description) }
+    return try await client.from("wallet_tags")
       .insert(NamedRow(userId: requireUser(), name: name, description: description))
       .select().single().execute().value
   }
 
   public func updateTag(id: String, name: String, description: String?, hidden: Bool) async throws {
+    if let demo { return await demo.updateTag(id: id, name: name, description: description, hidden: hidden) }
     try await client.from("wallet_tags")
       .update(NamedRow(name: name, description: description, hidden: hidden, writeNullDescription: true))
       .eq("id", value: id).execute()
   }
 
-  public func deleteTag(id: String) async throws { try await softDelete("soft_delete_wallet_tag", id: id) }
+  public func deleteTag(id: String) async throws {
+    if let demo { return try await demo.deleteTag(id: id) }
+    try await softDelete("soft_delete_wallet_tag", id: id)
+  }
 
   // MARK: Assets
 
   public func assets() async throws -> Served<[Asset]> {
-    try await cached(CacheKey.assets) {
+    if let demo { return Served(await demo.listAssets(), fromCache: false) }
+    return try await cached(CacheKey.assets) {
       try await client.from("wallet_assets").select().is("deletedAt", value: nil)
         .order("boughtAt", ascending: false).execute().value
     }
@@ -325,6 +383,10 @@ public final class WalletRepository: Sendable {
   public func saveAsset(
     id: String?, name: String, provider: String, value: Double, boughtAt: Date, endedAt: Date?, soldValue: Double?
   ) async throws {
+    if let demo {
+      return await demo.saveAsset(
+        id: id, name: name, provider: provider, value: value, boughtAt: boughtAt, endedAt: endedAt, soldValue: soldValue)
+    }
     if let id {
       try await client.from("wallet_assets")
         .update(
@@ -341,12 +403,16 @@ public final class WalletRepository: Sendable {
     }
   }
 
-  public func deleteAsset(id: String) async throws { try await softDelete("soft_delete_wallet_asset", id: id) }
+  public func deleteAsset(id: String) async throws {
+    if let demo { return try await demo.deleteAsset(id: id) }
+    try await softDelete("soft_delete_wallet_asset", id: id)
+  }
 
   // MARK: Loans
 
   public func loans() async throws -> Served<[Loan]> {
-    try await cached(CacheKey.loans) {
+    if let demo { return Served(await demo.listLoans(), fromCache: false) }
+    return try await cached(CacheKey.loans) {
       try await client.from("wallet_loans").select().is("deletedAt", value: nil).order("createdAt").execute().value
     }
   }
@@ -381,6 +447,11 @@ public final class WalletRepository: Sendable {
     id: String?, accountId: String, name: String, value: Double, rate: Double?, termMonths: Int, paymentDay: Int,
     firstPaymentDate: Date
   ) async throws {
+    if let demo {
+      return await demo.saveLoan(
+        id: id, accountId: accountId, name: name, value: value, rate: rate, termMonths: termMonths,
+        paymentDay: paymentDay, firstPaymentDate: firstPaymentDate)
+    }
     var row = LoanRow(
       accountId: accountId, name: name, value: value, nominalInterestRate: rate, termMonths: termMonths,
       paymentDay: paymentDay, firstPaymentDate: LocalDay.format(firstPaymentDate))
@@ -392,22 +463,28 @@ public final class WalletRepository: Sendable {
     }
   }
 
-  public func deleteLoan(id: String) async throws { try await softDelete("soft_delete_wallet_loan", id: id) }
+  public func deleteLoan(id: String) async throws {
+    if let demo { return try await demo.deleteLoan(id: id) }
+    try await softDelete("soft_delete_wallet_loan", id: id)
+  }
 
   public func capitalPayments() async throws -> Served<[LoanCapitalPayment]> {
-    try await cached(CacheKey.loanCapitalPayments) {
+    if let demo { return Served(await demo.listCapitalPayments(), fromCache: false) }
+    return try await cached(CacheKey.loanCapitalPayments) {
       try await client.from("wallet_loan_capital_payments").select().is("deletedAt", value: nil).order("paidAt")
         .execute().value
     }
   }
 
   public func createCapitalPayment(loanId: String, value: Double, paidAt: Date) async throws {
+    if let demo { return await demo.createCapitalPayment(loanId: loanId, value: value, paidAt: paidAt) }
     struct Row: Encodable { var userId: String, loanId: String, value: Double, paidAt: String }
     try await client.from("wallet_loan_capital_payments")
       .insert(Row(userId: requireUser(), loanId: loanId, value: value, paidAt: LocalDay.format(paidAt))).execute()
   }
 
   public func deleteCapitalPayment(id: String) async throws {
+    if let demo { return try await demo.deleteCapitalPayment(id: id) }
     try await softDelete("soft_delete_wallet_loan_capital_payment", id: id)
   }
 
@@ -416,7 +493,8 @@ public final class WalletRepository: Sendable {
   static let recurringSelect = "*, wallet_categories(name), wallet_tags(name)"
 
   public func recurringMovements() async throws -> Served<[RecurringMovement]> {
-    try await cached(CacheKey.recurringMovements) {
+    if let demo { return Served(await demo.listRecurring(), fromCache: false) }
+    return try await cached(CacheKey.recurringMovements) {
       try await client.from("wallet_recurring_movements").select(Self.recurringSelect).is("deletedAt", value: nil)
         .order("createdAt").execute().value
     }
@@ -447,6 +525,10 @@ public final class WalletRepository: Sendable {
   public func saveRecurringMovement(
     id: String?, name: String, description: String?, value: Double, categoryId: String, tagId: String, yearly: Bool
   ) async throws {
+    if let demo {
+      return await demo.saveRecurring(
+        id: id, name: name, description: description, value: value, categoryId: categoryId, tagId: tagId, yearly: yearly)
+    }
     var row = RecurringRow(
       name: name, description: description, value: value, categoryId: categoryId, tagId: tagId, yearlyPayment: yearly)
     if let id {
@@ -458,6 +540,7 @@ public final class WalletRepository: Sendable {
   }
 
   public func deleteRecurringMovement(id: String) async throws {
+    if let demo { return try await demo.deleteRecurring(id: id) }
     try await softDelete("soft_delete_wallet_recurring_movement", id: id)
   }
 
@@ -470,6 +553,7 @@ public final class WalletRepository: Sendable {
   public func transactions(month: Date) async throws -> Served<[Transaction]> {
     let start = WalletCalendar.startOfMonth(month)
     let end = WalletCalendar.monthStart(month, offset: 1)
+    if let demo { return Served(await demo.listTransactions(from: start, to: end), fromCache: false) }
     return try await cached(CacheKey.month(start)) {
       try await client.from("wallet_transactions").select(Self.txSelect).is("deletedAt", value: nil)
         .gte("transactedAt", value: WalletJSON.formatTimestamp(start))
@@ -481,6 +565,10 @@ public final class WalletRepository: Sendable {
   /// Full history through the end of [year] (cumulative charts need earlier
   /// years too). Pages past PostgREST's 1000-row cap.
   public func transactions(throughYear year: Date) async throws -> Served<[Transaction]> {
+    if let demo {
+      let end = WalletCalendar.date(WalletCalendar.year(year) + 1, 1)
+      return Served(await demo.listTransactions(before: end), fromCache: false)
+    }
     let end = WalletJSON.formatTimestamp(WalletCalendar.date(WalletCalendar.year(year) + 1, 1))
     return try await cached(CacheKey.year(year)) {
       var out: [Transaction] = []
@@ -501,6 +589,11 @@ public final class WalletRepository: Sendable {
   /// Rows dated in [year] only (lighter than the full history the iPhone's
   /// cumulative chart needs).
   public func transactions(inYear year: Int) async throws -> Served<[Transaction]> {
+    if let demo {
+      let rows = await demo.listTransactions(
+        from: WalletCalendar.date(year, 1), to: WalletCalendar.date(year + 1, 1))
+      return Served(rows, fromCache: false)
+    }
     let start = WalletJSON.formatTimestamp(WalletCalendar.date(year, 1))
     let end = WalletJSON.formatTimestamp(WalletCalendar.date(year + 1, 1))
     return try await cached(CacheKey.yearOnly(year)) {
@@ -523,6 +616,7 @@ public final class WalletRepository: Sendable {
   public func searchTransactions(_ query: String, limit: Int = 200) async throws -> [Transaction] {
     let q = query.trimmingCharacters(in: .whitespacesAndNewlines)
     guard !q.isEmpty else { return [] }
+    if let demo { return await demo.search(q, limit: limit) }
     let escaped = q.replacingOccurrences(of: "\\", with: "\\\\").replacingOccurrences(of: "%", with: "\\%")
       .replacingOccurrences(of: "_", with: "\\_")
     return try await client.from("wallet_transactions").select(Self.txSelect).is("deletedAt", value: nil)
@@ -532,7 +626,8 @@ public final class WalletRepository: Sendable {
 
   /// Every deferred installment (rows with a credit id).
   public func creditInstallments() async throws -> Served<[Transaction]> {
-    try await cached(CacheKey.creditGroups) {
+    if let demo { return Served(await demo.listCreditInstallments(), fromCache: false) }
+    return try await cached(CacheKey.creditGroups) {
       try await client.from("wallet_transactions").select(Self.txSelect).not("creditId", operator: .is, value: "null")
         .is("deletedAt", value: nil).order("transactedAt", ascending: false).execute().value
     }
@@ -540,6 +635,7 @@ public final class WalletRepository: Sendable {
 
   public func installments(credit: String) async throws -> [Transaction] {
     guard !credit.isEmpty else { return [] }
+    if let demo { return await demo.installments(credit: credit) }
     return try await cached(CacheKey.credit(credit)) {
       try await client.from("wallet_transactions").select(Self.txSelect).eq("creditId", value: credit)
         .is("deletedAt", value: nil).order("transactedAt", ascending: true).execute().value
@@ -609,14 +705,17 @@ public final class WalletRepository: Sendable {
   }
 
   public func createTransaction(_ d: TransactionDraft) async throws {
+    if let demo { return await demo.createTransaction(d) }
     try await client.from("wallet_transactions").insert(TxRow(draft: d, userId: requireUser())).execute()
   }
 
   public func updateTransaction(id: String, _ d: TransactionDraft) async throws {
+    if let demo { return await demo.updateTransaction(id: id, d) }
     try await client.from("wallet_transactions").update(TxRow(draft: d, userId: nil)).eq("id", value: id).execute()
   }
 
   public func deleteTransaction(id: String) async throws {
+    if let demo { return try await demo.deleteTransaction(id: id) }
     try await softDelete("soft_delete_wallet_transaction", id: id)
   }
 
@@ -627,6 +726,10 @@ public final class WalletRepository: Sendable {
   public func insertCredit(transactedAt: Date, graceMonths: Int, termMonths: Int, description: String?) async throws
     -> WalletCredit
   {
+    if let demo {
+      return await demo.insertCredit(
+        transactedAt: transactedAt, graceMonths: graceMonths, termMonths: termMonths, description: description)
+    }
     struct Row: Encodable {
       var userId: String, transactedAt: Date, graceMonths: Int, termMonths: Int, description: String?
     }
@@ -642,6 +745,7 @@ public final class WalletRepository: Sendable {
 
   public func credit(id: String) async throws -> WalletCredit? {
     guard !id.isEmpty else { return nil }
+    if let demo { return await demo.credit(id: id) }
     return try await readThroughItem(user: userId, key: CacheKey.walletCredit(id), cache: cache) {
       let rows: [WalletCredit] = try await client.from("wallet_credits").select(Self.creditSelect).eq("id", value: id)
         .limit(1).execute().value
@@ -650,6 +754,9 @@ public final class WalletRepository: Sendable {
   }
 
   public func updateCredit(id: String, graceMonths: Int, termMonths: Int, transactedAt: Date?) async throws {
+    if let demo {
+      return await demo.updateCredit(id: id, graceMonths: graceMonths, termMonths: termMonths, transactedAt: transactedAt)
+    }
     struct Row: Encodable { var graceMonths: Int, termMonths: Int, transactedAt: Date? }
     try await client.from("wallet_credits")
       .update(Row(graceMonths: graceMonths, termMonths: termMonths, transactedAt: transactedAt))

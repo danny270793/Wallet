@@ -27,11 +27,17 @@ struct RootView: View {
 
   var body: some View {
     Group {
-      if model.repo == nil {
-        ContentUnavailableView(
-          L("configMissingTitle"), systemImage: "server.rack", description: Text(L("configMissingBody")))
-      } else if model.isSignedIn {
+      if model.isSignedIn {
         MainTabView()
+      } else if model.repo == nil {
+        // No Supabase config: the demo is still available from here.
+        ContentUnavailableView {
+          Label(L("configMissingTitle"), systemImage: "server.rack")
+        } description: {
+          Text(L("configMissingBody"))
+        } actions: {
+          Button(L("swiftDemoTry")) { model.startDemo() }.buttonStyle(.glass)
+        }
       } else {
         LoginView()
       }

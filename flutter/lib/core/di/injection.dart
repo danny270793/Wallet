@@ -1,5 +1,10 @@
+import 'dart:async';
+
 import 'package:get_it/get_it.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../demo/demo_datasources.dart';
+import '../demo/demo_mode.dart';
+import '../demo/demo_offline_user_context.dart';
 import '../locale/app_locale_controller.dart';
 import '../offline/wallet_offline_cache.dart';
 import '../offline/wallet_offline_user_context.dart';
@@ -103,7 +108,41 @@ import '../../features/wallet_credits/domain/usecases/update_wallet_credit_useca
 
 final getIt = GetIt.instance;
 
+/// Demo mode swaps the datasources (and the repositories holding them) between
+/// Supabase and the in-memory store. Only the data layer is reset: the locale,
+/// theme and biometric controllers must survive because the UI listens to them.
+Future<void> _resetDataLayer() async {
+  await Future.wait<void>([
+    for (final reset in <FutureOr<dynamic> Function()>[
+      () => getIt.resetLazySingleton<WalletOfflineUserContext>(),
+      () => getIt.resetLazySingleton<AccountsRemoteDatasource>(),
+      () => getIt.resetLazySingleton<AccountsRepository>(),
+      () => getIt.resetLazySingleton<CardsRemoteDatasource>(),
+      () => getIt.resetLazySingleton<CardsRepository>(),
+      () => getIt.resetLazySingleton<CategoriesRemoteDatasource>(),
+      () => getIt.resetLazySingleton<CategoriesRepository>(),
+      () => getIt.resetLazySingleton<TagsRemoteDatasource>(),
+      () => getIt.resetLazySingleton<TagsRepository>(),
+      () => getIt.resetLazySingleton<LoansRemoteDatasource>(),
+      () => getIt.resetLazySingleton<LoansRepository>(),
+      () => getIt.resetLazySingleton<LoanCapitalPaymentsRemoteDatasource>(),
+      () => getIt.resetLazySingleton<LoanCapitalPaymentsRepository>(),
+      () => getIt.resetLazySingleton<AssetsRemoteDatasource>(),
+      () => getIt.resetLazySingleton<AssetsRepository>(),
+      () => getIt.resetLazySingleton<RecurringMovementsRemoteDatasource>(),
+      () => getIt.resetLazySingleton<RecurringMovementsRepository>(),
+      () => getIt.resetLazySingleton<WalletCreditsRemoteDatasource>(),
+      () => getIt.resetLazySingleton<WalletCreditsRepository>(),
+      () => getIt.resetLazySingleton<TransactionsRemoteDatasource>(),
+      () => getIt.resetLazySingleton<TransactionsRepository>(),
+    ])
+      Future<void>.sync(reset),
+  ]);
+}
+
 void setupDi() {
+  DemoMode.instance.addListener(() => unawaited(_resetDataLayer()));
+
   getIt.registerLazySingleton<AppLocaleController>(AppLocaleController.new);
   getIt.registerLazySingleton<AppThemeController>(AppThemeController.new);
   getIt.registerLazySingleton<AppBiometricUnlockController>(
@@ -118,7 +157,9 @@ void setupDi() {
   );
 
   getIt.registerLazySingleton<WalletOfflineUserContext>(
-    () => SupabaseWalletOfflineUserContext(Supabase.instance.client),
+    () => DemoMode.instance.isActive
+        ? const DemoOfflineUserContext()
+        : SupabaseWalletOfflineUserContext(Supabase.instance.client),
   );
   getIt.registerLazySingleton<WalletOfflineCache>(WalletOfflineCache.new);
 
@@ -144,7 +185,9 @@ void setupDi() {
 
   // accounts
   getIt.registerLazySingleton<AccountsRemoteDatasource>(
-    () => AccountsSupabaseDatasource(Supabase.instance.client),
+    () => DemoMode.instance.isActive
+        ? AccountsDemoDatasource(DemoMode.instance.store)
+        : AccountsSupabaseDatasource(Supabase.instance.client),
   );
   getIt.registerLazySingleton<AccountsRepository>(
     () => AccountsRepositoryImpl(
@@ -184,7 +227,9 @@ void setupDi() {
 
   // cards
   getIt.registerLazySingleton<CardsRemoteDatasource>(
-    () => CardsSupabaseDatasource(Supabase.instance.client),
+    () => DemoMode.instance.isActive
+        ? CardsDemoDatasource(DemoMode.instance.store)
+        : CardsSupabaseDatasource(Supabase.instance.client),
   );
   getIt.registerLazySingleton<CardsRepository>(
     () => CardsRepositoryImpl(
@@ -219,7 +264,9 @@ void setupDi() {
 
   // categories
   getIt.registerLazySingleton<CategoriesRemoteDatasource>(
-    () => CategoriesSupabaseDatasource(Supabase.instance.client),
+    () => DemoMode.instance.isActive
+        ? CategoriesDemoDatasource(DemoMode.instance.store)
+        : CategoriesSupabaseDatasource(Supabase.instance.client),
   );
   getIt.registerLazySingleton<CategoriesRepository>(
     () => CategoriesRepositoryImpl(
@@ -251,7 +298,9 @@ void setupDi() {
 
   // tags
   getIt.registerLazySingleton<TagsRemoteDatasource>(
-    () => TagsSupabaseDatasource(Supabase.instance.client),
+    () => DemoMode.instance.isActive
+        ? TagsDemoDatasource(DemoMode.instance.store)
+        : TagsSupabaseDatasource(Supabase.instance.client),
   );
   getIt.registerLazySingleton<TagsRepository>(
     () => TagsRepositoryImpl(
@@ -275,7 +324,9 @@ void setupDi() {
 
   // loans
   getIt.registerLazySingleton<LoansRemoteDatasource>(
-    () => LoansSupabaseDatasource(Supabase.instance.client),
+    () => DemoMode.instance.isActive
+        ? LoansDemoDatasource(DemoMode.instance.store)
+        : LoansSupabaseDatasource(Supabase.instance.client),
   );
   getIt.registerLazySingleton<LoansRepository>(
     () => LoansRepositoryImpl(
@@ -298,7 +349,9 @@ void setupDi() {
   );
 
   getIt.registerLazySingleton<LoanCapitalPaymentsRemoteDatasource>(
-    () => LoanCapitalPaymentsSupabaseDatasource(Supabase.instance.client),
+    () => DemoMode.instance.isActive
+        ? LoanCapitalPaymentsDemoDatasource(DemoMode.instance.store)
+        : LoanCapitalPaymentsSupabaseDatasource(Supabase.instance.client),
   );
   getIt.registerLazySingleton<LoanCapitalPaymentsRepository>(
     () => LoanCapitalPaymentsRepositoryImpl(
@@ -319,7 +372,9 @@ void setupDi() {
 
   // assets
   getIt.registerLazySingleton<AssetsRemoteDatasource>(
-    () => AssetsSupabaseDatasource(Supabase.instance.client),
+    () => DemoMode.instance.isActive
+        ? AssetsDemoDatasource(DemoMode.instance.store)
+        : AssetsSupabaseDatasource(Supabase.instance.client),
   );
   getIt.registerLazySingleton<AssetsRepository>(
     () => AssetsRepositoryImpl(
@@ -343,7 +398,9 @@ void setupDi() {
 
   // recurring movements
   getIt.registerLazySingleton<RecurringMovementsRemoteDatasource>(
-    () => RecurringMovementsSupabaseDatasource(Supabase.instance.client),
+    () => DemoMode.instance.isActive
+        ? RecurringMovementsDemoDatasource(DemoMode.instance.store)
+        : RecurringMovementsSupabaseDatasource(Supabase.instance.client),
   );
   getIt.registerLazySingleton<RecurringMovementsRepository>(
     () => RecurringMovementsRepositoryImpl(
@@ -375,7 +432,9 @@ void setupDi() {
 
   // transactions
   getIt.registerLazySingleton<WalletCreditsRemoteDatasource>(
-    () => WalletCreditsSupabaseDatasource(Supabase.instance.client),
+    () => DemoMode.instance.isActive
+        ? WalletCreditsDemoDatasource(DemoMode.instance.store)
+        : WalletCreditsSupabaseDatasource(Supabase.instance.client),
   );
   getIt.registerLazySingleton<WalletCreditsRepository>(
     () => WalletCreditsRepositoryImpl(
@@ -395,7 +454,9 @@ void setupDi() {
   );
 
   getIt.registerLazySingleton<TransactionsRemoteDatasource>(
-    () => TransactionsSupabaseDatasource(Supabase.instance.client),
+    () => DemoMode.instance.isActive
+        ? TransactionsDemoDatasource(DemoMode.instance.store)
+        : TransactionsSupabaseDatasource(Supabase.instance.client),
   );
   getIt.registerLazySingleton<TransactionsRepository>(
     () => TransactionsRepositoryImpl(

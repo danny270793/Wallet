@@ -532,5 +532,10 @@
     }
   },
   "yearlyDashboardCumulativeProjectionHint": "Faded bars are estimates: balance with transactions already scheduled plus your recurring movements for each coming month.",
-  "yearlyDashboardMonthlyProjectionHint": "Faded bars are estimates: transactions already scheduled plus your recurring movements."
+  "yearlyDashboardMonthlyProjectionHint": "Faded bars are estimates: transactions already scheduled plus your recurring movements.",
+  "tryDemo": "Try demo",
+  "tryDemoHint": "Explore the app with sample data. Nothing is saved.",
+  "demoModeBannerTitle": "Demo mode",
+  "demoModeBannerBody": "You are viewing fake data generated on this device. Changes are not saved and disappear when you exit.",
+  "demoModeExit": "Exit demo"
 }

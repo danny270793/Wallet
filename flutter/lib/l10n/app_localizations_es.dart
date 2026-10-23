@@ -1114,4 +1114,21 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get yearlyDashboardMonthlyProjectionHint =>
       'Las barras atenuadas son estimaciones: transacciones ya programadas más tus movimientos recurrentes.';
+
+  @override
+  String get tryDemo => 'Probar demo';
+
+  @override
+  String get tryDemoHint =>
+      'Explora la app con datos de ejemplo. No se guarda nada.';
+
+  @override
+  String get demoModeBannerTitle => 'Modo demo';
+
+  @override
+  String get demoModeBannerBody =>
+      'Estás viendo datos ficticios generados en este dispositivo. Los cambios no se guardan y desaparecen al salir.';
+
+  @override
+  String get demoModeExit => 'Salir de la demo';
 }

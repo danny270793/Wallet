@@ -2,6 +2,7 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'core/demo/demo_mode.dart';
 import 'pages/splash_page.dart';
 import 'features/auth/presentation/pages/login_page.dart';
 import 'pages/dashboard_page.dart';
@@ -28,15 +29,18 @@ final rootNavigatorKey = GlobalKey<NavigatorState>();
 final router = GoRouter(
   navigatorKey: rootNavigatorKey,
   initialLocation: '/',
+  refreshListenable: DemoMode.instance,
   redirect: (context, state) {
-    final session = Supabase.instance.client.auth.currentSession;
+    final hasSession =
+        DemoMode.instance.isActive ||
+        Supabase.instance.client.auth.currentSession != null;
     final loc = state.matchedLocation;
 
     if (loc == '/') {
-      return session != null ? '/transactions' : '/login';
+      return hasSession ? '/transactions' : '/login';
     }
 
-    if (session == null && loc != '/login') {
+    if (!hasSession && loc != '/login') {
       return '/login';
     }
 
