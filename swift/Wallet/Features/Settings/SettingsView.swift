@@ -15,15 +15,30 @@ struct SettingsView: View {
   var body: some View {
     @Bindable var prefs = prefs
     Form {
+      if model.isDemo {
+        Section {
+          Label {
+            VStack(alignment: .leading, spacing: 2) {
+              Text(L("swiftDemoBannerTitle")).font(.headline)
+              Text(L("swiftDemoBannerBody")).font(.caption).foregroundStyle(.secondary)
+            }
+          } icon: {
+            Image(systemName: "sparkles").foregroundStyle(.tint)
+          }
+        }
+      }
       Section(L("settingsProfileSection")) {
         LabeledContent(L("email"), value: model.repo?.email ?? "")
-        Button(L("settingsChangeEmail")) { changingEmail = true }
-        Button {
-          changingPassword = true
-        } label: {
-          VStack(alignment: .leading) {
-            Text(L("settingsChangePassword"))
-            Text(L("settingsChangePasswordSubtitle")).font(.caption).foregroundStyle(.secondary)
+        // A demo has no account to edit.
+        if !model.isDemo {
+          Button(L("settingsChangeEmail")) { changingEmail = true }
+          Button {
+            changingPassword = true
+          } label: {
+            VStack(alignment: .leading) {
+              Text(L("settingsChangePassword"))
+              Text(L("settingsChangePasswordSubtitle")).font(.caption).foregroundStyle(.secondary)
+            }
           }
         }
       }
@@ -48,13 +63,16 @@ struct SettingsView: View {
         }
       }
 
-      Section(L("settingsDataSection")) {
-        NavigationLink {
-          CacheView()
-        } label: {
-          VStack(alignment: .leading) {
-            Text(L("settingsOfflineCache"))
-            Text(L("settingsOfflineCacheSubtitle")).font(.caption).foregroundStyle(.secondary)
+      // The demo keeps everything in memory, so there is no offline cache to show.
+      if !model.isDemo {
+        Section(L("settingsDataSection")) {
+          NavigationLink {
+            CacheView()
+          } label: {
+            VStack(alignment: .leading) {
+              Text(L("settingsOfflineCache"))
+              Text(L("settingsOfflineCacheSubtitle")).font(.caption).foregroundStyle(.secondary)
+            }
           }
         }
       }
@@ -67,13 +85,13 @@ struct SettingsView: View {
       }
 
       Section {
-        Button(L("signOut"), role: .destructive) { confirmSignOut = true }
+        Button(L(model.isDemo ? "swiftDemoExit" : "signOut"), role: .destructive) { confirmSignOut = true }
           .frame(maxWidth: .infinity)
       }
     }
     .navigationTitle(L("settings"))
-    .confirmationDialog(L("signOut"), isPresented: $confirmSignOut) {
-      Button(L("signOut"), role: .destructive) { Task { await model.signOut() } }
+    .confirmationDialog(L(model.isDemo ? "swiftDemoExit" : "signOut"), isPresented: $confirmSignOut) {
+      Button(L(model.isDemo ? "swiftDemoExit" : "signOut"), role: .destructive) { Task { await model.signOut() } }
     }
     .sheet(isPresented: $changingEmail) { ChangeEmailSheet { notice = L("settingsChangeEmailSuccess") } }
     .sheet(isPresented: $changingPassword) { ChangePasswordSheet { notice = L("settingsChangePasswordSuccess") } }

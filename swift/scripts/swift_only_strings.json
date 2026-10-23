@@ -38,5 +38,10 @@
   "watchInAccounts": {"en": "In accounts", "es": "En cuentas"},
   "tabOverview": {"en": "Overview", "es": "Resumen"},
   "tvSpentOfIncome": {"en": "Spent of income", "es": "Gastado del ingreso"},
-  "tvBrowseOnly": {"en": "Add and edit transactions on iPhone or Apple Watch.", "es": "Agrega y edita transacciones en el iPhone o el Apple Watch."}
+  "tvBrowseOnly": {"en": "Add and edit transactions on iPhone or Apple Watch.", "es": "Agrega y edita transacciones en el iPhone o el Apple Watch."},
+  "swiftDemoTry": {"en": "Try demo", "es": "Probar demo"},
+  "swiftDemoTryHint": {"en": "Explore the app with sample data. Nothing is saved or sent.", "es": "Explora la app con datos de ejemplo. Nada se guarda ni se envía."},
+  "swiftDemoBannerTitle": {"en": "Demo mode", "es": "Modo demo"},
+  "swiftDemoBannerBody": {"en": "You are looking at sample data made up just now. Changes stay on this device and disappear when you exit.", "es": "Estás viendo datos de ejemplo generados hace un momento. Los cambios se quedan en este dispositivo y desaparecen al salir."},
+  "swiftDemoExit": {"en": "Exit demo", "es": "Salir de la demo"}
 }

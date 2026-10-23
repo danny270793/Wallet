@@ -52,6 +52,18 @@ struct LoginView: View {
         .buttonStyle(.glassProminent)
         .controlSize(.extraLarge)
         .disabled(loading || email.isEmpty || password.isEmpty)
+
+        VStack(spacing: 6) {
+          Button {
+            model.startDemo()
+          } label: {
+            Label(L("swiftDemoTry"), systemImage: "sparkles").frame(maxWidth: .infinity)
+          }
+          .buttonStyle(.glass)
+          .controlSize(.large)
+          .disabled(loading)
+          Text(L("swiftDemoTryHint")).font(.caption).foregroundStyle(.secondary).multilineTextAlignment(.center)
+        }
       }
       .padding(24)
       .frame(maxWidth: 440)
