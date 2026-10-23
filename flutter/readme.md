@@ -12,6 +12,15 @@ asdf exec flutter pub get
 asdf exec flutter run --dart-define-from-file=.env.json
 ```
 
+## Demo mode
+
+The login screen has a **Try demo** button. It opens the app on fake data that is generated on the device at that moment, relative to today (about 14 months of transactions, deferred card purchases, loans, assets, recurring movements), so every screen has something to show.
+
+- Nothing reaches Supabase, the offline cache on disk, or `wallet_actions` error reporting.
+- Edits work in memory during the session; they are gone when you exit or restart the app.
+- Settings shows `demo@wallet.app`, disables email/password changes, and **Exit demo** returns to login.
+- Code: [`lib/core/demo/`](lib/core/demo). `setupDi()` swaps each remote datasource for an in-memory one while demo mode is active. Tests: `test/demo_mode_test.dart`, `test/demo_screens_test.dart`.
+
 ## Documentation
 
 - [Run on an emulator or device](docs/getting-started.md)
