@@ -797,6 +797,49 @@ class AppLocalizationsEs extends AppLocalizations {
   String get creditsEndsNextMonthLabel => 'Termina el próximo mes';
 
   @override
+  String get creditsPayOffAction => 'Pagar hoy';
+
+  @override
+  String get creditsPayOffTitle => 'Pagar crédito';
+
+  @override
+  String creditsPayOffMessage(int credits, int count, String amount) {
+    String _temp0 = intl.Intl.pluralLogic(
+      credits,
+      locale: localeName,
+      other: '$credits créditos',
+      one: '1 crédito',
+    );
+    String _temp1 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count cuotas pendientes',
+      one: '1 cuota pendiente',
+    );
+    return '$_temp0: $_temp1 ($amount) se pagará hoy con un solo pago a la tarjeta desde la cuenta de abajo, y las cuotas pagadas desaparecen de todas las listas.';
+  }
+
+  @override
+  String get creditsPayOffAccountLabel => 'Pagar desde la cuenta';
+
+  @override
+  String get creditsPayOffTransactionDescription => 'Pago de crédito';
+
+  @override
+  String creditsSelectedCount(int count) {
+    return '$count seleccionados';
+  }
+
+  @override
+  String get creditsSelectedPendingLabel => 'Pendiente seleccionado';
+
+  @override
+  String get creditsClearSelection => 'Quitar selección';
+
+  @override
+  String get creditsPayOffDone => 'Crédito pagado';
+
+  @override
   String get creditsNewDeferredPurchase => 'Nueva compra a crédito';
 
   @override

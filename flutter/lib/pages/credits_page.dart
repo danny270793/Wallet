@@ -9,6 +9,8 @@ import '../core/di/injection.dart';
 import '../core/remote_load_failure.dart';
 import '../core/sort_by_name.dart';
 import '../core/ui/app_icons.dart';
+import '../features/accounts/domain/entities/account_entity.dart';
+import '../features/accounts/domain/usecases/get_accounts_usecase.dart';
 import '../features/cards/domain/entities/card_entity.dart';
 import '../features/cards/domain/usecases/get_cards_usecase.dart';
 import '../features/transactions/domain/entities/transaction_entity.dart';
@@ -395,6 +397,82 @@ class _CreditsPendingTotalsBarState extends State<_CreditsPendingTotalsBar> {
   }
 }
 
+/// Footer shown while credits are selected: their pending total and the pay-off action.
+class _CreditsSelectionBar extends StatelessWidget {
+  const _CreditsSelectionBar({
+    required this.l10n,
+    required this.pendingTotal,
+    required this.paying,
+    required this.onPayOff,
+  });
+
+  final AppLocalizations l10n;
+  final double pendingTotal;
+
+  /// A pay-off is running: the button is replaced by a progress indicator.
+  final bool paying;
+  final VoidCallback onPayOff;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Material(
+      color: theme.colorScheme.surfaceContainerHighest,
+      child: Padding(
+        padding: EdgeInsets.only(
+          bottom: walletBottomBarExtraBottomInset(context),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(16, 10, 12, 10),
+          child: Row(
+            children: [
+              Expanded(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      l10n.transactionAmountValue(
+                        pendingTotal.abs().toStringAsFixed(2),
+                      ),
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w700,
+                        color: theme.colorScheme.error,
+                        fontFeatures: const [FontFeature.tabularFigures()],
+                      ),
+                    ),
+                    Text(
+                      l10n.creditsSelectedPendingLabel,
+                      style: theme.textTheme.labelMedium?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              if (paying)
+                const Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 24),
+                  child: SizedBox(
+                    width: 24,
+                    height: 24,
+                    child: CircularProgressIndicator(strokeWidth: 2.5),
+                  ),
+                )
+              else
+                FilledButton(
+                  onPressed: onPayOff,
+                  child: Text(l10n.creditsPayOffAction),
+                ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 class _CreditGroupTile extends StatelessWidget {
   const _CreditGroupTile({
     required this.cubit,
@@ -408,6 +486,9 @@ class _CreditGroupTile extends StatelessWidget {
     required this.totalCreditValue,
     required this.l10n,
     required this.onSwipeEdit,
+    required this.selected,
+    required this.selectionMode,
+    required this.onToggleSelected,
   });
 
   final TransactionsCubit cubit;
@@ -437,6 +518,16 @@ class _CreditGroupTile extends StatelessWidget {
 
   /// Opens the editor for the group's first installment and reloads the page list.
   final VoidCallback onSwipeEdit;
+
+  /// Highlighted as part of the pay-off selection.
+  final bool selected;
+
+  /// A selection is in progress: taps toggle rows and swipes are off.
+  final bool selectionMode;
+
+  /// Long press (or tap while selecting) toggles this credit. Null when the credit
+  /// has nothing pending and so cannot be paid off.
+  final VoidCallback? onToggleSelected;
 
   @override
   Widget build(BuildContext context) {
@@ -592,6 +683,10 @@ class _CreditGroupTile extends StatelessWidget {
       itemKey: creditLedgerKey,
       title: titleSection(),
       trailing: trailingPrices,
+      selected: selected,
+      swipeEnabled: !selectionMode,
+      onTap: selectionMode ? onToggleSelected : null,
+      onLongPress: onToggleSelected,
       onEdit: onSwipeEdit,
       confirmDelete: () =>
           confirmDeleteCreditGroupTransactionDialog(context, l10n),
@@ -618,6 +713,12 @@ class _CreditsPageState extends State<CreditsPage> {
   /// Card whose credits are shown; null shows every card.
   String? _cardFilterId;
   bool _servedFromOfflineCache = false;
+
+  /// Credit ids picked with a long press for a joint pay-off.
+  final Set<String> _selectedIds = {};
+
+  /// A pay-off is running: a blocking loader covers the screen.
+  bool _paying = false;
 
   @override
   void initState() {
@@ -692,16 +793,129 @@ class _CreditsPageState extends State<CreditsPage> {
     if (mounted) await _load();
   }
 
+  void _toggleSelected(String creditId) => setState(() {
+    if (!_selectedIds.remove(creditId)) _selectedIds.add(creditId);
+  });
+
+  /// Asks which account pays, then records one card payment (a transfer to the
+  /// card) for the credits in [pendingByCredit] and marks their pending
+  /// installments as paid by it.
+  Future<void> _payOffSelected(
+    Map<String, List<TransactionEntity>> pendingByCredit,
+    AppLocalizations l10n,
+  ) async {
+    if (_paying) return;
+    final cubit = context.read<TransactionsCubit>();
+    final messenger = ScaffoldMessenger.of(context);
+    List<AccountEntity> accounts;
+    try {
+      accounts = sortedByName(
+        (await getIt<GetAccountsUsecase>()()).value,
+        (a) => a.name,
+      );
+    } catch (_) {
+      if (mounted) {
+        messenger.showSnackBar(SnackBar(content: Text(l10n.unexpectedError)));
+      }
+      return;
+    }
+    if (!mounted) return;
+
+    var count = 0;
+    var total = 0.0;
+    for (final rows in pendingByCredit.values) {
+      count += rows.length;
+      total += rows.fold<double>(0, (a, t) => a + t.value);
+    }
+    String? accountId;
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (context, setDialogState) => AlertDialog(
+          title: Text(l10n.creditsPayOffTitle),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                l10n.creditsPayOffMessage(
+                  pendingByCredit.length,
+                  count,
+                  total.abs().toStringAsFixed(2),
+                ),
+              ),
+              const SizedBox(height: 16),
+              DropdownButtonFormField<String>(
+                initialValue: accountId,
+                isExpanded: true,
+                decoration: InputDecoration(
+                  labelText: l10n.creditsPayOffAccountLabel,
+                ),
+                items: [
+                  for (final a in accounts)
+                    DropdownMenuItem(
+                      value: a.id,
+                      child: Text(a.name, overflow: TextOverflow.ellipsis),
+                    ),
+                ],
+                onChanged: (v) => setDialogState(() => accountId = v),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(false),
+              child: Text(l10n.cancel),
+            ),
+            FilledButton(
+              onPressed: accountId == null
+                  ? null
+                  : () => Navigator.of(dialogContext).pop(true),
+              child: Text(l10n.creditsPayOffAction),
+            ),
+          ],
+        ),
+      ),
+    );
+    final payFrom = accountId;
+    if (ok != true || payFrom == null || !mounted) return;
+
+    setState(() => _paying = true);
+    var done = false;
+    try {
+      done = await cubit.payOffCredits(
+        creditLedgerKeys: pendingByCredit.keys.toList(),
+        accountId: payFrom,
+        description: l10n.creditsPayOffTransactionDescription,
+      );
+      if (!mounted) return;
+      setState(_selectedIds.clear);
+      await _load();
+    } finally {
+      if (mounted) setState(() => _paying = false);
+    }
+    if (!mounted) return;
+    messenger.showSnackBar(
+      SnackBar(
+        content: Text(done ? l10n.creditsPayOffDone : l10n.unexpectedError),
+      ),
+    );
+  }
+
   Widget _cardFilterButton(AppLocalizations l10n) {
     final active = _cardFilterId != null;
-    return PopupMenuButton<String?>(
+    // A null item value is read as "menu dismissed" and never reaches onSelected,
+    // so "All cards" needs a real sentinel value.
+    const allCardsValue = '';
+    return PopupMenuButton<String>(
       tooltip: l10n.creditsFilterByCard,
       icon: Badge(isLabelVisible: active, child: const Icon(AppIcons.filter)),
-      initialValue: _cardFilterId,
-      onSelected: (id) => setState(() => _cardFilterId = id),
+      initialValue: _cardFilterId ?? allCardsValue,
+      onSelected: (id) =>
+          setState(() => _cardFilterId = id == allCardsValue ? null : id),
       itemBuilder: (_) => [
-        PopupMenuItem<String?>(
-          value: null,
+        PopupMenuItem<String>(
+          value: allCardsValue,
           child: ListTile(
             leading: const Icon(Icons.credit_card_outlined),
             title: Text(l10n.creditsAllCards),
@@ -710,7 +924,7 @@ class _CreditsPageState extends State<CreditsPage> {
           ),
         ),
         for (final c in _cards)
-          PopupMenuItem<String?>(
+          PopupMenuItem<String>(
             value: c.id,
             child: ListTile(
               leading: CardTypeIcon(type: c.type),
@@ -751,9 +965,19 @@ class _CreditsPageState extends State<CreditsPage> {
     return ValueListenableBuilder<DateTime>(
       valueListenable: _dueMonthNotifier,
       builder: (context, visibleMonth, _) {
-        final flat = _cardFilterId == null
+        final cardRows = _cardFilterId == null
             ? _allFlat
             : _allFlat.where((t) => t.cardId == _cardFilterId).toList();
+        // Credits with nothing left to pay (including ones just paid off) are
+        // settled, so they leave the list and every total on this screen.
+        final settledIds = settledCreditIds(cardRows);
+        final flat = cardRows
+            .where(
+              (t) =>
+                  t.creditLedgerGroupingKey != null &&
+                  !settledIds.contains(t.creditLedgerGroupingKey),
+            )
+            .toList();
         final allCreditGroups = groupedCreditLedger(flat);
         final hasAnyCredits = allCreditGroups.isNotEmpty;
         final monthInstallments = creditLedgerInstallmentsInSelectedMonth(
@@ -780,127 +1004,181 @@ class _CreditsPageState extends State<CreditsPage> {
           visibleMonth,
         );
         final fullGroupsById = {for (final fg in allCreditGroups) fg.id: fg};
+        // Installments still unpaid today, per credit; only these can be selected.
+        final pendingByCredit = <String, List<TransactionEntity>>{
+          for (final fg in allCreditGroups)
+            fg.id: fg.rows
+                .where((t) => !installmentIsPaidThroughToday(t))
+                .toList(),
+        }..removeWhere((_, rows) => rows.isEmpty);
+        final selectedPending = <String, List<TransactionEntity>>{
+          for (final id in _selectedIds)
+            if (pendingByCredit.containsKey(id)) id: pendingByCredit[id]!,
+        };
+        final selecting = selectedPending.isNotEmpty;
+        final selectedPendingTotal = selectedPending.values
+            .expand((rows) => rows)
+            .fold<double>(0, (a, t) => a + t.value);
 
-        return ShellScaffold(
-          title: l10n.creditsTitle,
-          appBarBottom: TransactionsMonthAppBarBottom(
-            notifier: _dueMonthNotifier,
-          ),
-          appBarActionsBeforeSettings: _cards.isEmpty
-              ? null
-              : [_cardFilterButton(l10n)],
-          floatingActionButton: FloatingActionButton(
-            onPressed: () => _openNewCreditPurchase(l10n),
-            child: const Icon(Icons.add),
-          ),
-          bottomNavigationBar: showPendingBar
-              ? _CreditsPendingTotalsBar(
-                  l10n: l10n,
-                  pendingTotal: pendingTotal,
-                  dueInSelectedMonthTotal: dueInMonth,
-                  endingInSelectedMonthTotal: endingInMonth,
-                  endingAfterSelectedMonthTotal: endingAfterMonth,
-                )
-              : null,
-          body: RefreshIndicator(
-            onRefresh: _load,
-            child: _loading
-                ? ListView(
-                    physics: const AlwaysScrollableScrollPhysics(),
-                    padding: const EdgeInsets.fromLTRB(0, 120, 0, 88),
-                    children: const [
-                      Center(
-                        child: SizedBox(
-                          width: 32,
-                          height: 32,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        ),
-                      ),
-                    ],
+        return PopScope(
+          canPop: !selecting && !_paying,
+          onPopInvokedWithResult: (didPop, _) {
+            if (!didPop && !_paying) setState(_selectedIds.clear);
+          },
+          child: ShellScaffold(
+            title: selecting
+                ? l10n.creditsSelectedCount(selectedPending.length)
+                : l10n.creditsTitle,
+            appBarBottom: TransactionsMonthAppBarBottom(
+              notifier: _dueMonthNotifier,
+            ),
+            appBarActionsBeforeSettings: selecting
+                ? [
+                    IconButton(
+                      tooltip: l10n.creditsClearSelection,
+                      icon: const Icon(Icons.close),
+                      onPressed: () => setState(_selectedIds.clear),
+                    ),
+                  ]
+                : _cards.isEmpty
+                ? null
+                : [_cardFilterButton(l10n)],
+            floatingActionButton: FloatingActionButton(
+              onPressed: () => _openNewCreditPurchase(l10n),
+              child: const Icon(Icons.add),
+            ),
+            bottomNavigationBar: selecting
+                ? _CreditsSelectionBar(
+                    l10n: l10n,
+                    pendingTotal: selectedPendingTotal,
+                    paying: _paying,
+                    onPayOff: () => _payOffSelected(selectedPending, l10n),
                   )
-                : !hasAnyCredits
-                ? ListView(
-                    physics: const AlwaysScrollableScrollPhysics(),
-                    padding: const EdgeInsets.fromLTRB(24, 0, 24, 88),
-                    children: [
-                      OfflineCachedDataBanner(visible: _servedFromOfflineCache),
-                      SizedBox(height: MediaQuery.paddingOf(context).top + 40),
-                      Text(
-                        l10n.creditsEmpty,
-                        textAlign: TextAlign.center,
-                        style: theme.textTheme.bodyLarge?.copyWith(
-                          color: theme.colorScheme.onSurfaceVariant,
-                        ),
-                      ),
-                    ],
+                : showPendingBar
+                ? _CreditsPendingTotalsBar(
+                    l10n: l10n,
+                    pendingTotal: pendingTotal,
+                    dueInSelectedMonthTotal: dueInMonth,
+                    endingInSelectedMonthTotal: endingInMonth,
+                    endingAfterSelectedMonthTotal: endingAfterMonth,
                   )
-                : groups.isEmpty
-                ? ListView(
-                    physics: const AlwaysScrollableScrollPhysics(),
-                    padding: const EdgeInsets.fromLTRB(24, 0, 24, 88),
-                    children: [
-                      OfflineCachedDataBanner(visible: _servedFromOfflineCache),
-                      SizedBox(height: MediaQuery.paddingOf(context).top + 40),
-                      Text(
-                        l10n.creditsEmptyForSelectedMonth,
-                        textAlign: TextAlign.center,
-                        style: theme.textTheme.bodyLarge?.copyWith(
-                          color: theme.colorScheme.onSurfaceVariant,
+                : null,
+            body: RefreshIndicator(
+              onRefresh: _load,
+              child: _loading
+                  ? ListView(
+                      physics: const AlwaysScrollableScrollPhysics(),
+                      padding: const EdgeInsets.fromLTRB(0, 120, 0, 88),
+                      children: const [
+                        Center(
+                          child: SizedBox(
+                            width: 32,
+                            height: 32,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          ),
                         ),
-                      ),
-                    ],
-                  )
-                : Builder(
-                    builder: (context) {
-                      final cubit = context.read<TransactionsCubit>();
-                      return ListView.builder(
-                        physics: const AlwaysScrollableScrollPhysics(),
-                        padding: const EdgeInsets.fromLTRB(0, 0, 0, 88),
-                        itemCount:
-                            groups.length + (_servedFromOfflineCache ? 1 : 0),
-                        itemBuilder: (context, i) {
-                          if (_servedFromOfflineCache && i == 0) {
-                            return const OfflineCachedDataBanner(visible: true);
-                          }
-                          final gi = i - (_servedFromOfflineCache ? 1 : 0);
-                          final g = groups[gi];
-                          final monthRows = g.rows;
-                          final full = fullGroupsById[g.id]!;
-                          final headerRow = monthRows.first;
-                          return _CreditGroupTile(
-                            cubit: cubit,
-                            headerRow: headerRow,
-                            monthRows: monthRows,
-                            groupLeadRow: full.rows.first,
-                            creditLedgerKey: g.id,
-                            totalInstallmentCount:
-                                creditLedgerTotalInstallmentCountForGroup(
-                                  flat,
-                                  g.id,
-                                ),
-                            pendingCountAfterSelectedMonth:
-                                creditLedgerTransactionCountAfterSelectedMonth(
-                                  flat,
-                                  g.id,
-                                  visibleMonth,
-                                ),
-                            totalCreditValue: creditLedgerTotalValueForGroup(
-                              flat,
-                              g.id,
-                            ),
-                            futureMonthsPendingTotal:
-                                creditLedgerTotalValueAfterSelectedMonth(
-                                  flat,
-                                  g.id,
-                                  visibleMonth,
-                                ),
-                            l10n: l10n,
-                            onSwipeEdit: () => _openEditor(headerRow, l10n),
-                          );
-                        },
-                      );
-                    },
-                  ),
+                      ],
+                    )
+                  : !hasAnyCredits
+                  ? ListView(
+                      physics: const AlwaysScrollableScrollPhysics(),
+                      padding: const EdgeInsets.fromLTRB(24, 0, 24, 88),
+                      children: [
+                        OfflineCachedDataBanner(
+                          visible: _servedFromOfflineCache,
+                        ),
+                        SizedBox(
+                          height: MediaQuery.paddingOf(context).top + 40,
+                        ),
+                        Text(
+                          l10n.creditsEmpty,
+                          textAlign: TextAlign.center,
+                          style: theme.textTheme.bodyLarge?.copyWith(
+                            color: theme.colorScheme.onSurfaceVariant,
+                          ),
+                        ),
+                      ],
+                    )
+                  : groups.isEmpty
+                  ? ListView(
+                      physics: const AlwaysScrollableScrollPhysics(),
+                      padding: const EdgeInsets.fromLTRB(24, 0, 24, 88),
+                      children: [
+                        OfflineCachedDataBanner(
+                          visible: _servedFromOfflineCache,
+                        ),
+                        SizedBox(
+                          height: MediaQuery.paddingOf(context).top + 40,
+                        ),
+                        Text(
+                          l10n.creditsEmptyForSelectedMonth,
+                          textAlign: TextAlign.center,
+                          style: theme.textTheme.bodyLarge?.copyWith(
+                            color: theme.colorScheme.onSurfaceVariant,
+                          ),
+                        ),
+                      ],
+                    )
+                  : Builder(
+                      builder: (context) {
+                        final cubit = context.read<TransactionsCubit>();
+                        return ListView.builder(
+                          physics: const AlwaysScrollableScrollPhysics(),
+                          padding: const EdgeInsets.fromLTRB(0, 0, 0, 88),
+                          itemCount:
+                              groups.length + (_servedFromOfflineCache ? 1 : 0),
+                          itemBuilder: (context, i) {
+                            if (_servedFromOfflineCache && i == 0) {
+                              return const OfflineCachedDataBanner(
+                                visible: true,
+                              );
+                            }
+                            final gi = i - (_servedFromOfflineCache ? 1 : 0);
+                            final g = groups[gi];
+                            final monthRows = g.rows;
+                            final full = fullGroupsById[g.id]!;
+                            final headerRow = monthRows.first;
+                            return _CreditGroupTile(
+                              cubit: cubit,
+                              headerRow: headerRow,
+                              monthRows: monthRows,
+                              groupLeadRow: full.rows.first,
+                              creditLedgerKey: g.id,
+                              totalInstallmentCount:
+                                  creditLedgerTotalInstallmentCountForGroup(
+                                    flat,
+                                    g.id,
+                                  ),
+                              pendingCountAfterSelectedMonth:
+                                  creditLedgerTransactionCountAfterSelectedMonth(
+                                    flat,
+                                    g.id,
+                                    visibleMonth,
+                                  ),
+                              totalCreditValue: creditLedgerTotalValueForGroup(
+                                flat,
+                                g.id,
+                              ),
+                              futureMonthsPendingTotal:
+                                  creditLedgerTotalValueAfterSelectedMonth(
+                                    flat,
+                                    g.id,
+                                    visibleMonth,
+                                  ),
+                              l10n: l10n,
+                              onSwipeEdit: () => _openEditor(headerRow, l10n),
+                              selected: selectedPending.containsKey(g.id),
+                              selectionMode: selecting,
+                              onToggleSelected:
+                                  pendingByCredit.containsKey(g.id)
+                                  ? () => _toggleSelected(g.id)
+                                  : null,
+                            );
+                          },
+                        );
+                      },
+                    ),
+            ),
           ),
         );
       },

@@ -97,6 +97,7 @@ import '../../features/transactions/domain/usecases/create_transaction_usecase.d
 import '../../features/transactions/domain/usecases/create_account_transfer_usecase.dart';
 import '../../features/transactions/domain/usecases/update_transaction_usecase.dart';
 import '../../features/transactions/domain/usecases/delete_transaction_usecase.dart';
+import '../../features/transactions/domain/usecases/mark_credit_installments_paid_usecase.dart';
 import '../../features/transactions/presentation/cubit/transactions_cubit.dart';
 import '../../features/transactions/presentation/cubit/yearly_dashboard_cubit.dart';
 import '../../features/wallet_credits/data/datasources/wallet_credits_remote_datasource.dart';
@@ -492,6 +493,9 @@ void setupDi() {
   getIt.registerFactory<ListTransactionsHavingCreditGroupUsecase>(
     () => ListTransactionsHavingCreditGroupUsecase(getIt()),
   );
+  getIt.registerFactory<MarkCreditInstallmentsPaidUsecase>(
+    () => MarkCreditInstallmentsPaidUsecase(getIt()),
+  );
   getIt.registerFactory<TransactionsCubit>(
     () => TransactionsCubit(
       getTransactions: getIt(),
@@ -504,6 +508,7 @@ void setupDi() {
       getCards: getIt(),
       getWalletCredit: getIt(),
       updateWalletCredit: getIt(),
+      markCreditInstallmentsPaid: getIt(),
     ),
   );
   getIt.registerFactory<YearlyDashboardCubit>(

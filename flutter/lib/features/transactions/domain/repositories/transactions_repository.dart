@@ -19,7 +19,7 @@ abstract class TransactionsRepository {
   getTransactionsByCreditGroupId(String creditId);
 
   Future<OfflineServedBundle<List<TransactionEntity>>>
-  listTransactionsHavingCreditGroup();
+  listTransactionsHavingCreditGroup({bool includePaid = false});
 
   Future<TransactionEntity> createTransaction({
     String? accountId,
@@ -49,4 +49,9 @@ abstract class TransactionsRepository {
     String? creditId,
   });
   Future<void> deleteTransaction({required String id});
+
+  Future<void> markCreditInstallmentsPaid({
+    required List<String> ids,
+    required String paidByTransactionId,
+  });
 }

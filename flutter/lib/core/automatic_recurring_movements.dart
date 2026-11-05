@@ -104,6 +104,11 @@ class AutomaticMovementsSource {
     final now = today ?? DateTime.now();
     final todayDate = DateTime(now.year, now.month, now.day);
     final credits = creditTotalsByCard(creditInstallments);
+    final isPast = monthEnd.isBefore(todayDate);
+    // Credits with nothing left to pay (e.g. just paid off) no longer count as
+    // deferred spending for the current and future months; past months keep
+    // their history. The balance below still uses every posted installment.
+    final settledIds = settledCreditIds(creditInstallments);
     final deferred = <String, double>{};
     final postedBeforeMonth = <String, double>{};
     for (final t in creditInstallments) {
@@ -112,12 +117,13 @@ class AutomaticMovementsSource {
       final local = t.transactedAt.toLocal();
       final day = DateTime(local.year, local.month, local.day);
       if (!day.isBefore(monthStart) && !day.isAfter(monthEnd)) {
+        if (t.paidByTransactionId != null) continue;
+        if (!isPast && settledIds.contains(t.creditLedgerGroupingKey)) continue;
         deferred[cardId] = (deferred[cardId] ?? 0) + t.value;
       } else if (day.isAfter(todayDate) && day.isBefore(monthStart)) {
         postedBeforeMonth[cardId] = (postedBeforeMonth[cardId] ?? 0) + t.value;
       }
     }
-    final isPast = monthEnd.isBefore(todayDate);
     for (final card in cards) {
       final revolving =
           cardPostedBalance(card.balance, credits[card.id]) +
@@ -162,7 +168,9 @@ Future<AutomaticMovementsSource> loadAutomaticMovementsSource() async {
   }
   try {
     installments =
-        (await getIt<ListTransactionsHavingCreditGroupUsecase>()()).value;
+        (await getIt<ListTransactionsHavingCreditGroupUsecase>()(
+          includePaid: true,
+        )).value;
   } catch (e, s) {
     AppLogger.error('automatic movements: card credits load failed', e, s);
   }

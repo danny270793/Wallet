@@ -114,7 +114,9 @@ class _CardEditorSheetState extends State<CardEditorSheet> {
 
   Future<void> _resolvePostedBalance(CardEntity card) async {
     try {
-      final bundle = await getIt<ListTransactionsHavingCreditGroupUsecase>()();
+      final bundle = await getIt<ListTransactionsHavingCreditGroupUsecase>()(
+        includePaid: true,
+      );
       final credits = creditTotalsByCard(bundle.value)[card.id];
       final posted = cardPostedBalance(card.balance, credits);
       if (!mounted || _balanceController == null) return;

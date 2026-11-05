@@ -7,6 +7,9 @@ class ListTransactionsHavingCreditGroupUsecase {
 
   const ListTransactionsHavingCreditGroupUsecase(this._repository);
 
-  Future<OfflineServedBundle<List<TransactionEntity>>> call() =>
-      _repository.listTransactionsHavingCreditGroup();
+  /// [includePaid] also returns installments paid early (they stay on the card's
+  /// balance); lists and credit totals leave them out.
+  Future<OfflineServedBundle<List<TransactionEntity>>> call({
+    bool includePaid = false,
+  }) => _repository.listTransactionsHavingCreditGroup(includePaid: includePaid);
 }
