@@ -7,10 +7,6 @@ import '../../features/cards/domain/entities/card_entity.dart';
 import '../../features/cards/domain/entities/card_type.dart';
 import '../../features/categories/data/datasources/categories_remote_datasource.dart';
 import '../../features/categories/domain/entities/category_entity.dart';
-import '../../features/loans/data/datasources/loan_capital_payments_remote_datasource.dart';
-import '../../features/loans/data/datasources/loans_remote_datasource.dart';
-import '../../features/loans/domain/entities/loan_capital_payment_entity.dart';
-import '../../features/loans/domain/entities/loan_entity.dart';
 import '../../features/recurring_movements/data/datasources/recurring_movements_remote_datasource.dart';
 import '../../features/recurring_movements/domain/entities/recurring_movement_entity.dart';
 import '../../features/tags/data/datasources/tags_remote_datasource.dart';
@@ -146,81 +142,6 @@ class TagsDemoDatasource implements TagsRemoteDatasource {
 
   @override
   Future<void> deleteTag({required String id}) async => _store.deleteTag(id);
-}
-
-class LoansDemoDatasource implements LoansRemoteDatasource {
-  const LoansDemoDatasource(this._store);
-
-  final DemoStore _store;
-
-  @override
-  Future<List<LoanEntity>> getLoans() async => _store.loans();
-
-  @override
-  Future<LoanEntity> createLoan({
-    required String accountId,
-    required String name,
-    required double value,
-    double? nominalInterestRate,
-    required int termMonths,
-    required int paymentDay,
-    required DateTime firstPaymentDate,
-  }) async => _store.addLoan(
-    accountId: accountId,
-    name: name,
-    value: value,
-    nominalInterestRate: nominalInterestRate,
-    termMonths: termMonths,
-    paymentDay: paymentDay,
-    firstPaymentDate: firstPaymentDate,
-  );
-
-  @override
-  Future<LoanEntity> updateLoan({
-    required String id,
-    required String accountId,
-    required String name,
-    required double value,
-    double? nominalInterestRate,
-    required int termMonths,
-    required int paymentDay,
-    required DateTime firstPaymentDate,
-  }) async => _store.updateLoan(
-    id: id,
-    accountId: accountId,
-    name: name,
-    value: value,
-    nominalInterestRate: nominalInterestRate,
-    termMonths: termMonths,
-    paymentDay: paymentDay,
-    firstPaymentDate: firstPaymentDate,
-  );
-
-  @override
-  Future<void> deleteLoan({required String id}) async => _store.deleteLoan(id);
-}
-
-class LoanCapitalPaymentsDemoDatasource
-    implements LoanCapitalPaymentsRemoteDatasource {
-  const LoanCapitalPaymentsDemoDatasource(this._store);
-
-  final DemoStore _store;
-
-  @override
-  Future<List<LoanCapitalPaymentEntity>> getCapitalPayments() async =>
-      _store.capitalPayments();
-
-  @override
-  Future<LoanCapitalPaymentEntity> createCapitalPayment({
-    required String loanId,
-    required double value,
-    required DateTime paidAt,
-  }) async =>
-      _store.addCapitalPayment(loanId: loanId, value: value, paidAt: paidAt);
-
-  @override
-  Future<void> deleteCapitalPayment({required String id}) async =>
-      _store.deleteCapitalPayment(id);
 }
 
 class AssetsDemoDatasource implements AssetsRemoteDatasource {
