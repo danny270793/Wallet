@@ -102,8 +102,6 @@ public actor OfflineCache {
 public enum CacheKey {
   public static let accounts = "accounts"
   public static let cards = "cards"
-  public static let loans = "loans"
-  public static let loanCapitalPayments = "loan_capital_payments"
   public static let categories = "categories"
   public static let tags = "tags"
   public static let assets = "assets"
