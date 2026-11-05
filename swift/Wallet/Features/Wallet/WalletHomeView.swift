@@ -4,7 +4,7 @@ import WalletData
 
 /// The Wallet tab: one place for everything that used to live in the
 /// Flutter drawer. Accounts and cards show their balances inline; the rest
-/// are grouped as Money (loans, recurring, assets) and Organize (categories, tags).
+/// are grouped as Money (recurring, assets) and Organize (categories, tags).
 struct WalletHomeView: View {
   @Environment(AppModel.self) private var model
   @State private var accounts = Loadable<[Account]>()
@@ -28,7 +28,6 @@ struct WalletHomeView: View {
           }
         }
         Section(L("walletMoneySection")) {
-          NavigationLink { LoansView() } label: { SummaryRow(title: L("loans"), symbol: "banknote.fill", color: .orange) }
           NavigationLink { RecurringMovementsView() } label: {
             SummaryRow(title: L("recurringMovements"), symbol: "repeat", color: .teal)
           }
