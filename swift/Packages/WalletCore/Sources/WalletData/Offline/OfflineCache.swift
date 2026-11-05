@@ -109,6 +109,8 @@ public enum CacheKey {
   public static let assets = "assets"
   public static let recurringMovements = "recurring_movements"
   public static let creditGroups = "tx_credit_groups_flat"
+  /// Same list including installments paid early, for card balances.
+  public static let creditTotals = "tx_card_credit_totals"
 
   public static func month(_ m: Date) -> String {
     String(format: "tx_month_%d_%02d", WalletCalendar.year(m), WalletCalendar.month(m))

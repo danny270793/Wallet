@@ -264,33 +264,44 @@ public actor DemoStore {
   }
 
   func listTransactions(from start: Date, to end: Date) -> [Transaction] {
-    newestFirst(transactions.filter { $0.transactedAt >= start && $0.transactedAt < end })
+    newestFirst(transactions.filter { $0.paidByTransactionId == nil && $0.transactedAt >= start && $0.transactedAt < end })
   }
 
   func listTransactions(before end: Date) -> [Transaction] {
-    newestFirst(transactions.filter { $0.transactedAt < end })
+    newestFirst(transactions.filter { $0.paidByTransactionId == nil && $0.transactedAt < end })
   }
 
   func search(_ query: String, limit: Int) -> [Transaction] {
     let needle = query.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
     guard !needle.isEmpty else { return [] }
-    return Array(newestFirst(transactions.filter { ($0.description ?? "").lowercased().contains(needle) }).prefix(limit))
+    return Array(newestFirst(transactions.filter { $0.paidByTransactionId == nil && ($0.description ?? "").lowercased().contains(needle) }).prefix(limit))
   }
 
-  func listCreditInstallments() -> [Transaction] { newestFirst(transactions.filter { $0.creditKey != nil }) }
+  func listCreditInstallments(includePaid: Bool = false) -> [Transaction] {
+    newestFirst(transactions.filter { $0.creditKey != nil && (includePaid || $0.paidByTransactionId == nil) })
+  }
 
   func installments(credit: String) -> [Transaction] {
     transactions.filter { $0.creditId == credit }.map(resolved).sorted { $0.transactedAt < $1.transactedAt }
   }
 
-  func createTransaction(_ d: WalletRepository.TransactionDraft) {
+  @discardableResult
+  func createTransaction(_ d: WalletRepository.TransactionDraft) -> String {
     let now = Date.now
+    let id = newId()
     transactions.append(
       Transaction(
-        id: newId(), userId: userId, accountId: d.accountId, cardId: d.cardId, categoryId: d.categoryId,
+        id: id, userId: userId, accountId: d.accountId, cardId: d.cardId, categoryId: d.categoryId,
         tagId: d.tagId, description: d.description, transactedAt: d.transactedAt, value: d.value, ignore: d.ignore,
         percentage: d.percentage, transferGroupId: d.transferGroupId, creditId: d.creditId, createdAt: now,
         updatedAt: now))
+    return id
+  }
+
+  func markInstallmentsPaid(ids: [String], by paymentId: String) {
+    for i in transactions.indices where ids.contains(transactions[i].id) {
+      transactions[i].paidByTransactionId = paymentId
+    }
   }
 
   func updateTransaction(id: String, _ d: WalletRepository.TransactionDraft) {
@@ -317,6 +328,10 @@ public actor DemoStore {
   func deleteTransaction(id: String) throws {
     guard transactions.contains(where: { $0.id == id }) else { throw missing("soft_delete_wallet_transaction") }
     transactions.removeAll { $0.id == id }
+    // Installments the removed payment had settled are owed again.
+    for i in transactions.indices where transactions[i].paidByTransactionId == id {
+      transactions[i].paidByTransactionId = nil
+    }
   }
 
   // MARK: Wallet credits

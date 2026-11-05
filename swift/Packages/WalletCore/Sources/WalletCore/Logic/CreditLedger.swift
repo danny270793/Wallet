@@ -46,6 +46,29 @@ public enum CreditLedger {
     return out
   }
 
+  /// Ids of the credits in [flat] with nothing left to pay: every installment is
+  /// dated today or earlier, or was paid early.
+  public static func settledIds(_ flat: [Transaction], today: Date = .now) -> Set<String> {
+    var all = Set<String>()
+    var outstanding = Set<String>()
+    for t in flat {
+      guard let k = t.creditKey else { continue }
+      all.insert(k)
+      if t.paidByTransactionId == nil && !isPaidThroughToday(t, today: today) { outstanding.insert(k) }
+    }
+    return all.subtracting(outstanding)
+  }
+
+  /// Unpaid installments (due after today) per credit; credits with none are absent.
+  public static func pendingRows(_ flat: [Transaction], today: Date = .now) -> [String: [Transaction]] {
+    var out: [String: [Transaction]] = [:]
+    for t in flat {
+      guard let k = t.creditKey, t.paidByTransactionId == nil, !isPaidThroughToday(t, today: today) else { continue }
+      out[k, default: []].append(t)
+    }
+    return out.mapValues { $0.sorted { $0.transactedAt < $1.transactedAt } }
+  }
+
   /// Card ledger plus installments already posted (the main card amount).
   public static func postedBalance(_ ledgerBalance: Double, _ credits: CardCreditTotals?) -> Double {
     ledgerBalance + (credits?.billed ?? 0)

@@ -66,7 +66,7 @@ struct WalletHomeView: View {
     guard let repo = model.repo else { return }
     accounts = await accounts.loaded { try await repo.accounts() }
     cards = await cards.loaded { try await repo.cards() }
-    credits = CreditLedger.totalsByCard((try? await repo.creditInstallments().value) ?? [])
+    credits = CreditLedger.totalsByCard((try? await repo.creditInstallments(includePaid: true).value) ?? [])
   }
 }
 
@@ -316,7 +316,7 @@ struct CardsView: View {
   private func load() async {
     guard let repo = model.repo else { return }
     state = await state.loaded { try await repo.cards() }
-    credits = CreditLedger.totalsByCard((try? await repo.creditInstallments().value) ?? [])
+    credits = CreditLedger.totalsByCard((try? await repo.creditInstallments(includePaid: true).value) ?? [])
   }
 }
 

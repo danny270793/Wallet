@@ -118,7 +118,7 @@ struct CardEditor: View {
       return await model.perform("failed to update card") { repo in
         try await repo.updateCard(id: card.id, name: trimmed, type: type, rate: r, cutDay: cutDay!, payDay: payDay!)
         // Recompute the posted balance now so the adjustment uses fresh numbers.
-        let credits = CreditLedger.totalsByCard((try? await repo.creditInstallments().value) ?? [])
+        let credits = CreditLedger.totalsByCard((try? await repo.creditInstallments(includePaid: true).value) ?? [])
         let current = CreditLedger.postedBalance(card.balance, credits[card.id])
         try await repo.adjustBalance(.card(card.id), delta: (AmountInput.parse(balance) ?? current) - current)
       }
@@ -158,7 +158,7 @@ struct CardEditor: View {
 
   private func loadBalances() async {
     guard let card, let repo = model.repo else { return }
-    let credits = CreditLedger.totalsByCard((try? await repo.creditInstallments().value) ?? [])[card.id]
+    let credits = CreditLedger.totalsByCard((try? await repo.creditInstallments(includePaid: true).value) ?? [])[card.id]
     let p = CreditLedger.postedBalance(card.balance, credits)
     posted = p
     deferred = credits?.pending ?? 0

@@ -53,7 +53,7 @@ class CardsCubit extends Cubit<CardsState> {
   /// A failure here only blanks the credit column; the cards themselves still render.
   Future<Map<String, CardCreditTotals>> _creditTotals() async {
     try {
-      final bundle = await _listCreditInstallments();
+      final bundle = await _listCreditInstallments(includePaid: true);
       return creditTotalsByCard(bundle.value);
     } catch (e, s) {
       AppLogger.error('failed to load card credit installments', e, s);

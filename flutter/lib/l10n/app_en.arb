@@ -404,6 +404,35 @@
   "creditsDueThisMonthLabel": "Due this month",
   "creditsEndsThisMonthLabel": "Ends this month",
   "creditsEndsNextMonthLabel": "Ends next month",
+  "creditsPayOffAction": "Pay off today",
+  "creditsPayOffTitle": "Pay off credit",
+  "creditsPayOffMessage": "{credits, plural, =1{1 credit} other{{credits} credits}}: {count, plural, =1{1 pending installment} other{{count} pending installments}} ({amount}) will be paid today with a single card payment from the account below, and the paid installments disappear from every list.",
+  "@creditsPayOffMessage": {
+    "placeholders": {
+      "credits": {
+        "type": "int"
+      },
+      "count": {
+        "type": "int"
+      },
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "creditsPayOffAccountLabel": "Pay from account",
+  "creditsPayOffTransactionDescription": "Credit payoff",
+  "creditsSelectedCount": "{count} selected",
+  "@creditsSelectedCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "creditsSelectedPendingLabel": "Selected pending",
+  "creditsClearSelection": "Clear selection",
+  "creditsPayOffDone": "Credit paid off",
   "creditsNewDeferredPurchase": "New credit purchase",
   "creditsWalletCreditTransactedAt": "{when}",
   "@creditsWalletCreditTransactedAt": {

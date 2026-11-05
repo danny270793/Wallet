@@ -60,14 +60,19 @@ class TransactionsRepositoryImpl implements TransactionsRepository {
 
   @override
   Future<OfflineServedBundle<List<TransactionEntity>>>
-  listTransactionsHavingCreditGroup() => fetchListWithOfflineCache(
-    session: _offlineSession,
-    cache: _offlineCache,
-    cacheKey: WalletOfflineCacheKeys.transactionsHavingCreditGroup,
-    remote: _datasource.listTransactionsHavingCreditGroup,
-    fromJson: TransactionEntity.fromJson,
-    toJson: (e) => e.toJson(),
-  );
+  listTransactionsHavingCreditGroup({bool includePaid = false}) =>
+      fetchListWithOfflineCache(
+        session: _offlineSession,
+        cache: _offlineCache,
+        cacheKey: includePaid
+            ? WalletOfflineCacheKeys.transactionsHavingCreditGroupWithPaid
+            : WalletOfflineCacheKeys.transactionsHavingCreditGroup,
+        remote: () => _datasource.listTransactionsHavingCreditGroup(
+          includePaid: includePaid,
+        ),
+        fromJson: TransactionEntity.fromJson,
+        toJson: (e) => e.toJson(),
+      );
 
   @override
   Future<TransactionEntity> createTransaction({
@@ -128,4 +133,13 @@ class TransactionsRepositoryImpl implements TransactionsRepository {
   @override
   Future<void> deleteTransaction({required String id}) =>
       _datasource.deleteTransaction(id: id);
+
+  @override
+  Future<void> markCreditInstallmentsPaid({
+    required List<String> ids,
+    required String paidByTransactionId,
+  }) => _datasource.markCreditInstallmentsPaid(
+    ids: ids,
+    paidByTransactionId: paidByTransactionId,
+  );
 }

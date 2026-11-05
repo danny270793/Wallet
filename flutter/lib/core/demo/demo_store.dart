@@ -626,6 +626,7 @@ class DemoStore {
       percentage: percentage,
       transferGroupId: transferGroupId,
       creditId: creditId,
+      paidByTransactionId: old.paidByTransactionId,
       createdAt: old.createdAt,
       updatedAt: _stamp(),
     );
@@ -634,7 +635,45 @@ class DemoStore {
 
   void deleteTransaction(String id) {
     _transactions.removeAt(_indexOf(_transactions, id, (e) => e.id));
+    // Installments paid by the removed transaction are owed again.
+    for (var i = 0; i < _transactions.length; i++) {
+      final t = _transactions[i];
+      if (t.paidByTransactionId == id) {
+        _transactions[i] = _withPaidBy(t, null);
+      }
+    }
   }
+
+  void markCreditInstallmentsPaid(
+    List<String> ids,
+    String paidByTransactionId,
+  ) {
+    for (var i = 0; i < _transactions.length; i++) {
+      if (ids.contains(_transactions[i].id)) {
+        _transactions[i] = _withPaidBy(_transactions[i], paidByTransactionId);
+      }
+    }
+  }
+
+  TransactionEntity _withPaidBy(TransactionEntity t, String? paidBy) =>
+      TransactionEntity(
+        id: t.id,
+        userId: t.userId,
+        accountId: t.accountId,
+        cardId: t.cardId,
+        categoryId: t.categoryId,
+        tagId: t.tagId,
+        description: t.description,
+        transactedAt: t.transactedAt,
+        value: t.value,
+        ignore: t.ignore,
+        percentage: t.percentage,
+        transferGroupId: t.transferGroupId,
+        creditId: t.creditId,
+        paidByTransactionId: paidBy,
+        createdAt: t.createdAt,
+        updatedAt: _stamp(),
+      );
 
   /// Rows with [transactedAt] in [monthStartLocal]'s calendar month, newest first.
   List<TransactionEntity> transactionsForMonth(DateTime monthStartLocal) {
@@ -642,7 +681,10 @@ class DemoStore {
     final end = DateTime(monthStartLocal.year, monthStartLocal.month + 1, 1);
     return _newestFirst(
       _transactions.where(
-        (t) => !t.transactedAt.isBefore(start) && t.transactedAt.isBefore(end),
+        (t) =>
+            t.paidByTransactionId == null &&
+            !t.transactedAt.isBefore(start) &&
+            t.transactedAt.isBefore(end),
       ),
     );
   }
@@ -650,7 +692,11 @@ class DemoStore {
   /// Full history through the end of [yearStartLocal]'s year, newest first.
   List<TransactionEntity> transactionsForYear(DateTime yearStartLocal) {
     final end = DateTime(yearStartLocal.year + 1, 1, 1);
-    return _newestFirst(_transactions.where((t) => t.transactedAt.isBefore(end)));
+    return _newestFirst(
+      _transactions.where(
+        (t) => t.paidByTransactionId == null && t.transactedAt.isBefore(end),
+      ),
+    );
   }
 
   List<TransactionEntity> searchTransactions(String query, {int limit = 200}) {
@@ -658,13 +704,21 @@ class DemoStore {
     if (q.isEmpty) return const [];
     return _newestFirst(
       _transactions.where(
-        (t) => (t.description ?? '').toLowerCase().contains(q),
+        (t) =>
+            t.paidByTransactionId == null &&
+            (t.description ?? '').toLowerCase().contains(q),
       ),
     ).take(limit).toList();
   }
 
-  List<TransactionEntity> transactionsHavingCreditGroup() =>
-      _newestFirst(_transactions.where((t) => t.creditId != null));
+  List<TransactionEntity> transactionsHavingCreditGroup({
+    bool includePaid = false,
+  }) => _newestFirst(
+    _transactions.where(
+      (t) =>
+          t.creditId != null && (includePaid || t.paidByTransactionId == null),
+    ),
+  );
 
   /// Installments of one credit, oldest first.
   List<TransactionEntity> transactionsByCreditId(String creditId) {
@@ -701,7 +755,10 @@ class DemoStore {
     percentage: t.percentage,
     transferGroupId: t.transferGroupId,
     creditId: t.creditId,
-    creditTransactedAt: t.creditId == null ? null : credit(t.creditId!)?.transactedAt,
+    paidByTransactionId: t.paidByTransactionId,
+    creditTransactedAt: t.creditId == null
+        ? null
+        : credit(t.creditId!)?.transactedAt,
     createdAt: t.createdAt,
     updatedAt: t.updatedAt,
   );

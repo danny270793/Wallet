@@ -69,7 +69,8 @@ final class TVModel {
       loadedYear = y
     }
     credits = (try? await repo.creditInstallments().value) ?? credits
-    cardCredits = CreditLedger.totalsByCard(credits)
+    // Early-paid installments are off the lists but still count on the card.
+    cardCredits = CreditLedger.totalsByCard((try? await repo.creditInstallments(includePaid: true).value) ?? credits)
     accounts = Sorting.byName((try? await repo.accounts().value) ?? accounts, \.name)
     cards = Sorting.byName((try? await repo.cards().value) ?? cards, \.name)
   }

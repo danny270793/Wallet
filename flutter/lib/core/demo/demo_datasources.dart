@@ -381,8 +381,9 @@ class TransactionsDemoDatasource implements TransactionsRemoteDatasource {
   }) async => _store.searchTransactions(query, limit: limit);
 
   @override
-  Future<List<TransactionEntity>> listTransactionsHavingCreditGroup() async =>
-      _store.transactionsHavingCreditGroup();
+  Future<List<TransactionEntity>> listTransactionsHavingCreditGroup({
+    bool includePaid = false,
+  }) async => _store.transactionsHavingCreditGroup(includePaid: includePaid);
 
   @override
   Future<List<TransactionEntity>> getTransactionsByCreditGroupId(
@@ -448,4 +449,10 @@ class TransactionsDemoDatasource implements TransactionsRemoteDatasource {
   @override
   Future<void> deleteTransaction({required String id}) async =>
       _store.deleteTransaction(id);
+
+  @override
+  Future<void> markCreditInstallmentsPaid({
+    required List<String> ids,
+    required String paidByTransactionId,
+  }) async => _store.markCreditInstallmentsPaid(ids, paidByTransactionId);
 }

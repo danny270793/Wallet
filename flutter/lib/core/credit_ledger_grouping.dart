@@ -84,3 +84,19 @@ List<TransactionEntity> creditLedgerInstallmentsInSelectedMonth(
   }
   return out;
 }
+
+/// Ids of the credits in [flat] with nothing left to pay: every installment is
+/// dated today or earlier (see [installmentIsPaidThroughToday]) or was paid early.
+Set<String> settledCreditIds(List<TransactionEntity> flat) {
+  final all = <String>{};
+  final outstanding = <String>{};
+  for (final t in flat) {
+    final g = t.creditLedgerGroupingKey;
+    if (g == null || g.isEmpty) continue;
+    all.add(g);
+    if (t.paidByTransactionId == null && !installmentIsPaidThroughToday(t)) {
+      outstanding.add(g);
+    }
+  }
+  return all.difference(outstanding);
+}

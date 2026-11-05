@@ -183,13 +183,59 @@ extension WalletRepository {
         transactedAt: .now, value: delta))
   }
 
+  /// Pays off the credits [creditKeys] ahead of time with a card payment: one
+  /// transfer from [accountId] to the card for everything still pending
+  /// (installments due after today). Each of those installments is flagged with
+  /// the id of the transfer's outflow leg, so they leave every list; deleting the
+  /// transfer makes them owed again. Credits on different cards produce one
+  /// transfer per card. Returns false when nothing is pending. If a transfer
+  /// cannot be completed its legs are removed again so no money is recorded twice.
+  @discardableResult
+  public func payOffCredits(
+    _ creditKeys: [String], fromAccount accountId: String, description: String, at date: Date = .now
+  ) async throws -> Bool {
+    var pendingByCard: [String: [Transaction]] = [:]
+    for key in creditKeys {
+      for t in try await installments(credit: key) {
+        guard let card = t.cardId, t.paidByTransactionId == nil, !CreditLedger.isPaidThroughToday(t, today: date)
+        else { continue }
+        pendingByCard[card, default: []].append(t)
+      }
+    }
+    var paidAny = false
+    for (cardId, rows) in pendingByCard.sorted(by: { $0.key < $1.key }) {
+      let amount = (-rows.reduce(0) { $0 + $1.value } * 100).rounded() / 100
+      guard amount > 0 else { continue }
+      let group = UUID().uuidString.lowercased()
+      var created: [String] = []
+      do {
+        let outflow = try await insertTransaction(
+          TransactionDraft(
+            accountId: accountId, description: description, transactedAt: date, value: -amount,
+            transferGroupId: group))
+        created.append(outflow)
+        created.append(
+          try await insertTransaction(
+            TransactionDraft(
+              cardId: cardId, description: description, transactedAt: date, value: amount, transferGroupId: group)))
+        try await markInstallmentsPaid(ids: rows.map(\.id), by: outflow)
+      } catch {
+        for id in created.reversed() { try? await deleteTransaction(id: id) }
+        throw error
+      }
+      paidAny = true
+      AppLog.info("credits paid off: \(rows.count) installments by \(created[0])")
+    }
+    return paidAny
+  }
+
   /// Loads loans, capital payments, cards and installments for automatic rows.
   /// Each source is optional: a failure leaves its rows out.
   public func automaticSource() async -> AutomaticMovementsSource {
     async let loans = try? self.loans().value
     async let capital = try? self.capitalPayments().value
     async let cards = try? self.cards().value
-    async let installments = try? self.creditInstallments().value
+    async let installments = try? self.creditInstallments(includePaid: true).value
     return await AutomaticMovementsSource(
       loans: loans ?? [], capitalPayments: capital ?? [], cards: cards ?? [], creditInstallments: installments ?? [])
   }

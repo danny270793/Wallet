@@ -936,6 +936,23 @@
         }
       }
     },
+    "creditsClearSelection": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Clear selection"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quitar selección"
+          }
+        }
+      }
+    },
     "creditsDueThisMonthLabel": {
       "extractionState": "manual",
       "localizations": {
@@ -1106,6 +1123,91 @@
         }
       }
     },
+    "creditsPayOffAccountLabel": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pay from account"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pagar desde la cuenta"
+          }
+        }
+      }
+    },
+    "creditsPayOffAction": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pay off today"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pagar hoy"
+          }
+        }
+      }
+    },
+    "creditsPayOffMessage": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ pending installment(s) of %2$@ credit(s) (%3$@) will be paid today with a single card payment from the account below, and the paid installments disappear from every list."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ cuota(s) pendiente(s) de %2$@ crédito(s) (%3$@) se pagará(n) hoy con un solo pago a la tarjeta desde la cuenta de abajo, y las cuotas pagadas desaparecen de todas las listas."
+          }
+        }
+      }
+    },
+    "creditsPayOffTitle": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pay off credit"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pagar crédito"
+          }
+        }
+      }
+    },
+    "creditsPayOffTransactionDescription": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Credit payoff"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pago de crédito"
+          }
+        }
+      }
+    },
     "creditsPendingTotalsLabel": {
       "extractionState": "manual",
       "localizations": {
@@ -1153,6 +1255,40 @@
           "stringUnit": {
             "state": "translated",
             "value": "Restante"
+          }
+        }
+      }
+    },
+    "creditsSelectedCount": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ selected"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ seleccionados"
+          }
+        }
+      }
+    },
+    "creditsSelectedPendingLabel": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Selected pending"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pendiente seleccionado"
           }
         }
       }

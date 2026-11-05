@@ -1,4 +1,5 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
+
 import '../../../../core/logger/app_logger.dart';
 import '../../domain/entities/transaction_entity.dart';
 
@@ -22,7 +23,11 @@ abstract class TransactionsRemoteDatasource {
   });
 
   /// Rows with deferred-installment linkage (creditId set), deleted excluded.
-  Future<List<TransactionEntity>> listTransactionsHavingCreditGroup();
+  /// Installments paid early are left out unless [includePaid] (card balances
+  /// still need them).
+  Future<List<TransactionEntity>> listTransactionsHavingCreditGroup({
+    bool includePaid = false,
+  });
 
   /// All installments with the given wallet_credits row id ([creditId]).
   Future<List<TransactionEntity>> getTransactionsByCreditGroupId(
@@ -56,6 +61,12 @@ abstract class TransactionsRemoteDatasource {
     String? creditId,
   });
   Future<void> deleteTransaction({required String id});
+
+  /// Marks [ids] (credit installments) as paid by the transaction [paidByTransactionId].
+  Future<void> markCreditInstallmentsPaid({
+    required List<String> ids,
+    required String paidByTransactionId,
+  });
 }
 
 class TransactionsSupabaseDatasource implements TransactionsRemoteDatasource {
@@ -87,6 +98,7 @@ wallet_credits(transactedAt)
         .from('wallet_transactions')
         .select(_transactionSelectEmbedded)
         .isFilter('deletedAt', null)
+        .isFilter('paidByTransactionId', null)
         .gte('transactedAt', startUtc)
         .lt('transactedAt', endUtc)
         .order('transactedAt', ascending: false);
@@ -113,14 +125,19 @@ wallet_credits(transactedAt)
   }
 
   @override
-  Future<List<TransactionEntity>> listTransactionsHavingCreditGroup() async {
+  Future<List<TransactionEntity>> listTransactionsHavingCreditGroup({
+    bool includePaid = false,
+  }) async {
     AppLogger.debug('listTransactionsHavingCreditGroup');
-    final data = await _client
+    var query = _client
         .from('wallet_transactions')
         .select(_transactionSelectEmbedded)
         .not('creditId', 'is', 'null')
-        .isFilter('deletedAt', null)
-        .order('transactedAt', ascending: false);
+        .isFilter('deletedAt', null);
+    if (!includePaid) {
+      query = query.isFilter('paidByTransactionId', null);
+    }
+    final data = await query.order('transactedAt', ascending: false);
     return (data as List)
         .map((e) => TransactionEntity.fromJson(e as Map<String, dynamic>))
         .toList();
@@ -142,6 +159,7 @@ wallet_credits(transactedAt)
           .from('wallet_transactions')
           .select(_transactionSelectEmbedded)
           .isFilter('deletedAt', null)
+          .isFilter('paidByTransactionId', null)
           .lt('transactedAt', endUtc)
           .order('transactedAt', ascending: false)
           .range(from, from + pageSize - 1);
@@ -172,6 +190,7 @@ wallet_credits(transactedAt)
         .from('wallet_transactions')
         .select(_transactionSelectEmbedded)
         .isFilter('deletedAt', null)
+        .isFilter('paidByTransactionId', null)
         .ilike('description', pattern)
         .order('transactedAt', ascending: false)
         .limit(limit);
@@ -264,5 +283,18 @@ wallet_credits(transactedAt)
     if (ok != true) {
       throw Exception('soft_delete_wallet_transaction: no row updated for $id');
     }
+  }
+
+  @override
+  Future<void> markCreditInstallmentsPaid({
+    required List<String> ids,
+    required String paidByTransactionId,
+  }) async {
+    if (ids.isEmpty) return;
+    AppLogger.debug('markCreditInstallmentsPaid: ${ids.length} rows');
+    await _client
+        .from('wallet_transactions')
+        .update({'paidByTransactionId': paidByTransactionId})
+        .inFilter('id', ids);
   }
 }

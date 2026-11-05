@@ -174,5 +174,8 @@ abstract final class WalletOfflineCacheKeys {
 
   static const transactionsHavingCreditGroup = 'tx_credit_groups_flat';
 
+  /// Same list but including installments paid early, for card balances.
+  static const transactionsHavingCreditGroupWithPaid = 'tx_card_credit_totals';
+
   static String walletCredit(String id) => 'wallet_credit_$id';
 }

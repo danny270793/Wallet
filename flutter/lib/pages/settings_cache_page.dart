@@ -35,6 +35,7 @@ String _cacheEntryTitle(String key, AppLocalizations l10n) {
     case WalletOfflineCacheKeys.recurringMovements:
       return l10n.recurringMovements;
     case WalletOfflineCacheKeys.transactionsHavingCreditGroup:
+    case WalletOfflineCacheKeys.transactionsHavingCreditGroupWithPaid:
       return l10n.settingsCacheKeyTxCreditGroups;
   }
   final month = RegExp(r'^tx_month_(\d{4})_(\d{2})$').firstMatch(key);

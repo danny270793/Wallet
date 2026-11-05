@@ -4,6 +4,10 @@ import WalletData
 
 /// Deferred card purchases with installments due in the selected month.
 ///
+/// Long press selects credits to pay off early: the footer then shows what is
+/// still pending on the selection, and paying records one card payment from the
+/// chosen account and takes those installments off every list.
+///
 /// Groups ending this month come first (green), then the ones with one
 /// installment left (amber), then the rest. The summary card pages through
 /// pending/due, "ends this month" and "ends next month".
@@ -15,10 +19,21 @@ struct CreditsView: View {
   @State private var cardFilter: String?
   @State private var editor: EditorRoute?
   @State private var deleting: CreditGroup?
+  /// Credits picked with a long press for a joint pay-off.
+  @State private var selected = Set<String>()
+  @State private var payOff: PayOffRequest?
 
   var body: some View {
     NavigationStack {
-      let flat = (state.value ?? []).filter { cardFilter == nil || $0.cardId == cardFilter }
+      let cardRows = (state.value ?? []).filter { cardFilter == nil || $0.cardId == cardFilter }
+      // Credits with nothing left to pay (including ones just paid off) are settled:
+      // they leave the list and every total on this screen.
+      let settled = CreditLedger.settledIds(cardRows)
+      let flat = cardRows.filter { $0.creditKey != nil && !settled.contains($0.creditKey!) }
+      // Only credits with unpaid installments can be selected.
+      let pendingById = CreditLedger.pendingRows(flat)
+      let selectedPending = selected.filter { pendingById[$0] != nil }
+      let selecting = !selectedPending.isEmpty
       let allGroups = CreditLedger.grouped(flat)
       let monthGroups = CreditLedger.sortedByPending(
         CreditLedger.grouped(CreditLedger.installments(inMonth: month, flat)), flat, month: month)
@@ -31,16 +46,22 @@ struct CreditsView: View {
             ContentUnavailableView(L("creditsEmptyForSelectedMonth"), systemImage: "calendar").listRowBackground(Color.clear)
           }
           ForEach(monthGroups) { g in
-            Button {
-              if let first = g.rows.first { editor = .editTransaction(first) }
-            } label: {
-              CreditGroupRow(
-                group: g, flat: flat, month: month, cardType: cards.first { $0.id == g.rows.first?.cardId }?.type
-              )
-              .frame(maxWidth: .infinity, alignment: .leading)
-              .contentShape(.rect)
+            CreditGroupRow(
+              group: g, flat: flat, month: month, cardType: cards.first { $0.id == g.rows.first?.cardId }?.type,
+              selection: selecting ? selectedPending.contains(g.id) : nil
+            )
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .contentShape(.rect)
+            .onTapGesture {
+              if selecting {
+                toggle(g.id, pendingById)
+              } else if let first = g.rows.first {
+                editor = .editTransaction(first)
+              }
             }
-            .tint(.primary)
+            .onLongPressGesture { toggle(g.id, pendingById) }
+            .accessibilityAddTraits(.isButton)
+            .listRowBackground(selectedPending.contains(g.id) ? Color.accentColor.opacity(0.15) : nil)
             .swipeActions(edge: .trailing) {
               Button(L("delete"), systemImage: "trash", role: .destructive) { deleting = fullById[g.id] }
               Button(L("edit"), systemImage: "pencil") { if let first = g.rows.first { editor = .editTransaction(first) } }
@@ -52,11 +73,15 @@ struct CreditsView: View {
       // On the list itself, so the floating summary's pager doesn't inherit it.
       .refreshable { await load() }
       .offlineBanner(state.fromCache)
-      .navigationTitle(L("creditsTitle"))
+      .navigationTitle(selecting ? L("creditsSelectedCount", selectedPending.count) : L("creditsTitle"))
       .navigationBarTitleDisplayMode(.inline)
       .toolbar {
         ToolbarItem(placement: .principal) { MonthSwitcher(month: $month) }
-        if !cards.isEmpty {
+        if selecting {
+          ToolbarItem(placement: .topBarLeading) {
+            Button(L("creditsClearSelection"), systemImage: "xmark") { selected.removeAll() }
+          }
+        } else if !cards.isEmpty {
           ToolbarItem(placement: .topBarLeading) { cardFilterMenu }
         }
         ToolbarItem(placement: .primaryAction) {
@@ -66,7 +91,14 @@ struct CreditsView: View {
         }
       }
       .safeAreaInset(edge: .bottom) {
-        if state.value != nil && !allGroups.isEmpty { summary(flat) }
+        if selecting {
+          selectionBar(selectedPending, pendingById)
+        } else if state.value != nil && !allGroups.isEmpty {
+          summary(flat)
+        }
+      }
+      .sheet(item: $payOff) { request in
+        CreditPayOffSheet(request: request) { selected.removeAll() }
       }
       .task(id: model.dataVersion) { await load() }
       .ledgerEditors($editor)
@@ -84,6 +116,31 @@ struct CreditsView: View {
         Text(L("confirmDeleteCreditGroupTransaction"))
       }
     }
+  }
+
+  private func toggle(_ id: String, _ pendingById: [String: [Transaction]]) {
+    guard pendingById[id] != nil else { return }
+    if selected.contains(id) { selected.remove(id) } else { selected.insert(id) }
+  }
+
+  /// Footer while credits are selected: what is still pending on them and the pay action.
+  private func selectionBar(_ ids: Set<String>, _ pendingById: [String: [Transaction]]) -> some View {
+    let rows = ids.flatMap { pendingById[$0] ?? [] }
+    let total = rows.reduce(0) { $0 + $1.value }
+    return HStack {
+      VStack(alignment: .leading, spacing: 2) {
+        AmountText(value: abs(total), font: .title3.weight(.bold), neutral: .secondary, colored: false)
+          .foregroundStyle(.red)
+        Text(L("creditsSelectedPendingLabel")).font(.caption).foregroundStyle(.secondary)
+      }
+      Spacer()
+      Button(L("creditsPayOffAction")) {
+        payOff = PayOffRequest(keys: ids.sorted(), installments: rows.count, total: total)
+      }
+      .buttonStyle(.borderedProminent)
+    }
+    .padding(.horizontal, 20).padding(.vertical, 12)
+    .background(.bar)
   }
 
   private var cardFilterMenu: some View {
@@ -132,6 +189,8 @@ struct CreditGroupRow: View {
   let flat: [Transaction]
   let month: Date
   let cardType: CardType?
+  /// nil outside selection mode; otherwise whether this credit is selected.
+  var selection: Bool?
 
   var body: some View {
     let first = group.rows[0]
@@ -142,6 +201,11 @@ struct CreditGroupRow: View {
     let accent: Color = pendingAfter == 0 ? Money.income : pendingAfter == 1 ? Money.endsNextMonth : .secondary
     let title = CreditDescription.strip(first.description).trimmingCharacters(in: .whitespaces)
     HStack(alignment: .top, spacing: 12) {
+      if let selection {
+        Image(systemName: selection ? "checkmark.circle.fill" : "circle")
+          .foregroundStyle(selection ? Color.accentColor : .secondary)
+          .imageScale(.large)
+      }
       CardBadge(type: cardType, size: 30)
       VStack(alignment: .leading, spacing: 3) {
         Text(title.isEmpty ? L("creditsUntitledGroup") : title).font(.body.weight(.medium)).lineLimit(2)
@@ -161,6 +225,77 @@ struct CreditGroupRow: View {
         AmountText(value: remaining, font: .callout.weight(.semibold), neutral: .secondary)
         AmountText(value: totalValue, font: .caption, neutral: .secondary, colored: false)
       }
+    }
+  }
+}
+
+/// Credits chosen for an early pay-off.
+struct PayOffRequest: Identifiable {
+  let id = UUID()
+  var keys: [String]
+  var installments: Int
+  var total: Double
+}
+
+/// Asks which account pays, then records the card payment.
+struct CreditPayOffSheet: View {
+  let request: PayOffRequest
+  let onPaid: () -> Void
+  @Environment(AppModel.self) private var model
+  @Environment(\.dismiss) private var dismiss
+  @State private var accounts: [Account] = []
+  @State private var accountId: String?
+  @State private var paying = false
+
+  var body: some View {
+    NavigationStack {
+      Form {
+        Section {
+          Text(
+            L(
+              "creditsPayOffMessage", request.installments, request.keys.count,
+              abs(request.total).formatted(.number.precision(.fractionLength(2))))
+          )
+        }
+        Section {
+          Picker(L("creditsPayOffAccountLabel"), selection: $accountId) {
+            Text("—").tag(String?.none)
+            ForEach(accounts) { a in Text(a.name).tag(String?.some(a.id)) }
+          }
+        }
+      }
+      .navigationTitle(L("creditsPayOffTitle"))
+      .navigationBarTitleDisplayMode(.inline)
+      .toolbar {
+        ToolbarItem(placement: .cancellationAction) { Button(role: .cancel) { dismiss() } }
+        ToolbarItem(placement: .confirmationAction) {
+          Button {
+            Task { await pay() }
+          } label: {
+            if paying { ProgressView() } else { Text(L("creditsPayOffAction")) }
+          }
+          .disabled(accountId == nil || paying)
+        }
+      }
+      .task {
+        accounts = Sorting.byName((try? await model.repo?.accounts().value) ?? [], \.name)
+      }
+    }
+    .interactiveDismissDisabled(paying)
+    .presentationDetents([.medium])
+  }
+
+  private func pay() async {
+    guard let accountId else { return }
+    paying = true
+    let ok = await model.perform("failed to pay off credits") {
+      try await $0.payOffCredits(
+        request.keys, fromAccount: accountId, description: L("creditsPayOffTransactionDescription"))
+    }
+    paying = false
+    if ok {
+      onPaid()
+      dismiss()
     }
   }
 }

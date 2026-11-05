@@ -1512,6 +1512,60 @@ abstract class AppLocalizations {
   /// **'Ends next month'**
   String get creditsEndsNextMonthLabel;
 
+  /// No description provided for @creditsPayOffAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Pay off today'**
+  String get creditsPayOffAction;
+
+  /// No description provided for @creditsPayOffTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Pay off credit'**
+  String get creditsPayOffTitle;
+
+  /// No description provided for @creditsPayOffMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'{credits, plural, =1{1 credit} other{{credits} credits}}: {count, plural, =1{1 pending installment} other{{count} pending installments}} ({amount}) will be paid today with a single card payment from the account below, and the paid installments disappear from every list.'**
+  String creditsPayOffMessage(int credits, int count, String amount);
+
+  /// No description provided for @creditsPayOffAccountLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Pay from account'**
+  String get creditsPayOffAccountLabel;
+
+  /// No description provided for @creditsPayOffTransactionDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Credit payoff'**
+  String get creditsPayOffTransactionDescription;
+
+  /// No description provided for @creditsSelectedCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} selected'**
+  String creditsSelectedCount(int count);
+
+  /// No description provided for @creditsSelectedPendingLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Selected pending'**
+  String get creditsSelectedPendingLabel;
+
+  /// No description provided for @creditsClearSelection.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear selection'**
+  String get creditsClearSelection;
+
+  /// No description provided for @creditsPayOffDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Credit paid off'**
+  String get creditsPayOffDone;
+
   /// No description provided for @creditsNewDeferredPurchase.
   ///
   /// In en, this message translates to:

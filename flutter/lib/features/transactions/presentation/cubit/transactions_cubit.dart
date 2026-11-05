@@ -1,5 +1,8 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:uuid/uuid.dart';
+
 import '../../../../core/credit_group_description.dart';
+import '../../../../core/credit_ledger_grouping.dart';
 import '../../../../core/deferred_credit_installment_schedule.dart';
 import '../../../../core/logger/app_logger.dart';
 import '../../../../core/remote_load_failure.dart';
@@ -15,6 +18,7 @@ import '../../domain/usecases/update_transaction_usecase.dart';
 import '../../domain/usecases/delete_transaction_usecase.dart';
 import '../../domain/usecases/create_account_transfer_usecase.dart';
 import '../../domain/usecases/get_transactions_by_credit_group_id_usecase.dart';
+import '../../domain/usecases/mark_credit_installments_paid_usecase.dart';
 import 'transactions_state.dart';
 
 class TransactionsCubit extends Cubit<TransactionsState> {
@@ -28,6 +32,7 @@ class TransactionsCubit extends Cubit<TransactionsState> {
   final GetCardsUsecase _getCards;
   final GetWalletCreditUsecase _getWalletCredit;
   final UpdateWalletCreditUsecase _updateWalletCredit;
+  final MarkCreditInstallmentsPaidUsecase _markCreditInstallmentsPaid;
 
   TransactionsCubit({
     required GetTransactionsUsecase getTransactions,
@@ -41,6 +46,7 @@ class TransactionsCubit extends Cubit<TransactionsState> {
     required GetCardsUsecase getCards,
     required GetWalletCreditUsecase getWalletCredit,
     required UpdateWalletCreditUsecase updateWalletCredit,
+    required MarkCreditInstallmentsPaidUsecase markCreditInstallmentsPaid,
   }) : _getTransactions = getTransactions,
        _createTransaction = createTransaction,
        _updateTransaction = updateTransaction,
@@ -51,6 +57,7 @@ class TransactionsCubit extends Cubit<TransactionsState> {
        _getCards = getCards,
        _getWalletCredit = getWalletCredit,
        _updateWalletCredit = updateWalletCredit,
+       _markCreditInstallmentsPaid = markCreditInstallmentsPaid,
        super(const TransactionsInitial());
 
   bool _transactionsOfflineFlag() => switch (state) {
@@ -537,9 +544,8 @@ class TransactionsCubit extends Cubit<TransactionsState> {
       final idsToDelete = <String>{};
       idsToDelete.add(id);
       if (creditLedgerKey != null && creditLedgerKey.isNotEmpty) {
-        final group = (await _getTransactionsByCreditGroupId(
-          creditLedgerKey,
-        )).value;
+        final group = (await _getTransactionsByCreditGroupId(creditLedgerKey))
+            .value;
         for (final t in group) {
           idsToDelete.add(t.id);
         }
@@ -552,6 +558,99 @@ class TransactionsCubit extends Cubit<TransactionsState> {
       return true;
     } catch (e, s) {
       AppLogger.error('failed to delete transaction', e, s);
+      emit(
+        TransactionsActionError(
+          current,
+          servedFromOfflineCache: _transactionsOfflineFlag(),
+        ),
+      );
+      return false;
+    }
+  }
+
+  /// Pays off the credits [creditLedgerKeys] ahead of time with a card payment:
+  /// one transfer from [accountId] to the card for everything still pending
+  /// (installments due after today), and each of those installments is flagged
+  /// with the id of the transfer's outflow leg. Flagged installments are left out
+  /// of every list; deleting the transfer makes them owed again. Credits on
+  /// different cards produce one transfer per card.
+  ///
+  /// Returns false when nothing is pending or when any step fails. If a transfer
+  /// cannot be completed its legs are removed again so no money is recorded twice.
+  Future<bool> payOffCredits({
+    required List<String> creditLedgerKeys,
+    required String accountId,
+    required String description,
+  }) async {
+    final current = _currentTransactions();
+    AppLogger.debug('paying off credits: $creditLedgerKeys');
+    try {
+      final pendingByCard = <String, List<TransactionEntity>>{};
+      for (final key in creditLedgerKeys) {
+        for (final t in (await _getTransactionsByCreditGroupId(key)).value) {
+          final cardId = t.cardId;
+          if (cardId == null ||
+              t.paidByTransactionId != null ||
+              installmentIsPaidThroughToday(t)) {
+            continue;
+          }
+          pendingByCard.putIfAbsent(cardId, () => []).add(t);
+        }
+      }
+      var paidAny = false;
+      for (final entry in pendingByCard.entries) {
+        final amount =
+            (-entry.value.fold<double>(0, (a, t) => a + t.value) * 100)
+                .round() /
+            100;
+        if (amount <= 0) continue;
+        final now = DateTime.now();
+        final group = const Uuid().v4();
+        String? outflowId;
+        String? inflowId;
+        try {
+          outflowId = (await _createTransaction(
+            accountId: accountId,
+            description: description,
+            transactedAt: now,
+            value: -amount,
+            ignore: false,
+            percentage: 100,
+            transferGroupId: group,
+          )).id;
+          inflowId = (await _createTransaction(
+            cardId: entry.key,
+            description: description,
+            transactedAt: now,
+            value: amount,
+            ignore: false,
+            percentage: 100,
+            transferGroupId: group,
+          )).id;
+          await _markCreditInstallmentsPaid(
+            ids: [for (final t in entry.value) t.id],
+            paidByTransactionId: outflowId,
+          );
+        } catch (_) {
+          for (final id in [inflowId, outflowId]) {
+            if (id == null) continue;
+            try {
+              await _deleteTransaction(id: id);
+            } catch (e, s) {
+              AppLogger.error('failed to undo credit payment leg', e, s);
+            }
+          }
+          rethrow;
+        }
+        paidAny = true;
+        AppLogger.info(
+          'credits paid off: ${entry.value.length} installments by $outflowId',
+        );
+      }
+      await _refetchCurrentMonthQuietly();
+      return paidAny;
+    } catch (e, s) {
+      AppLogger.error('failed to pay off credits', e, s);
       emit(
         TransactionsActionError(
           current,

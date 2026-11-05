@@ -23,6 +23,10 @@ class TransactionEntity extends Equatable {
   /// FK to wallet_credits when this row is a deferred installment.
   final String? creditId;
 
+  /// Transaction that paid this installment early; null while it is still owed.
+  /// Paid installments are excluded from every list and total.
+  final String? paidByTransactionId;
+
   /// [wallet_credits.transactedAt] when the credit group row is embedded in the query.
   final DateTime? creditTransactedAt;
   final DateTime createdAt;
@@ -46,6 +50,7 @@ class TransactionEntity extends Equatable {
     required this.percentage,
     this.transferGroupId,
     this.creditId,
+    this.paidByTransactionId,
     this.creditTransactedAt,
     required this.createdAt,
     required this.updatedAt,
@@ -72,6 +77,7 @@ class TransactionEntity extends Equatable {
       percentage: asDouble(json['percentage']),
       transferGroupId: json['transferGroupId'] as String?,
       creditId: json['creditId'] as String?,
+      paidByTransactionId: json['paidByTransactionId'] as String?,
       creditTransactedAt: _embeddedCreditTransactedAt(json),
       createdAt: DateTime.parse(json['createdAt'] as String),
       updatedAt: DateTime.parse(json['updatedAt'] as String),
@@ -93,6 +99,7 @@ class TransactionEntity extends Equatable {
       'percentage': percentage,
       'transferGroupId': transferGroupId,
       'creditId': creditId,
+      'paidByTransactionId': paidByTransactionId,
       'createdAt': createdAt.toUtc().toIso8601String(),
       'updatedAt': updatedAt.toUtc().toIso8601String(),
     };
@@ -170,6 +177,7 @@ class TransactionEntity extends Equatable {
     percentage,
     transferGroupId,
     creditId,
+    paidByTransactionId,
     creditTransactedAt,
     createdAt,
     updatedAt,
