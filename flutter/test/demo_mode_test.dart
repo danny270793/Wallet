@@ -14,11 +14,7 @@ final _now = DateTime(2026, 10, 22, 12);
 
 DemoStore _populated({int seed = 1, DateTime? now}) {
   final store = DemoStore();
-  DemoDataGenerator(
-    store,
-    now: now ?? _now,
-    random: Random(seed),
-  ).populate();
+  DemoDataGenerator(store, now: now ?? _now, random: Random(seed)).populate();
   return store;
 }
 
@@ -33,8 +29,6 @@ void main() {
       expect(s.cards().length, greaterThanOrEqualTo(2));
       expect(s.categories(), isNotEmpty);
       expect(s.tags(), isNotEmpty);
-      expect(s.loans(), isNotEmpty);
-      expect(s.capitalPayments(), isNotEmpty);
       expect(s.assets(), isNotEmpty);
       expect(s.recurringMovements(), isNotEmpty);
       expect(s.transactionsHavingCreditGroup(), isNotEmpty);
@@ -101,13 +95,6 @@ void main() {
           expect(t.creditTransactedAt, isNotNull);
         }
       }
-      for (final l in s.loans()) {
-        expect(accounts, contains(l.accountId));
-      }
-      final loans = {for (final l in s.loans()) l.id};
-      for (final p in s.capitalPayments()) {
-        expect(loans, contains(p.loanId));
-      }
       for (final r in s.recurringMovements()) {
         expect(categories, contains(r.categoryId));
         expect(tags, contains(r.tagId));
@@ -141,16 +128,15 @@ void main() {
         expect(rows.length, credit.termMonths);
         expect(s.transactionsByCreditId(id).length, credit.termMonths);
         expect(rows.every((r) => r.ignore && r.cardId != null), isTrue);
-        expect(
-          rows.fold<double>(0, (sum, r) => sum + r.value),
-          lessThan(0),
-        );
+        expect(rows.fold<double>(0, (sum, r) => sum + r.value), lessThan(0));
         final first = s.transactionsByCreditId(id).first;
         expect(first.description, startsWith('(1/${credit.termMonths})'));
       });
       // At least one purchase still has installments to pay.
       expect(
-        s.transactionsHavingCreditGroup().any((t) => t.transactedAt.isAfter(_now)),
+        s.transactionsHavingCreditGroup().any(
+          (t) => t.transactedAt.isAfter(_now),
+        ),
         isTrue,
       );
     });
@@ -263,27 +249,6 @@ void main() {
       expect(s.searchTransactions('pizza').length, 1);
       expect(s.searchTransactions('   '), isEmpty);
       expect(s.searchTransactions('sushi'), isEmpty);
-    });
-
-    test('deleting a loan removes its capital payments', () {
-      final s = DemoStore();
-      final a = s.addAccount('A');
-      final loan = s.addLoan(
-        accountId: a.id,
-        name: 'L',
-        value: 100,
-        termMonths: 4,
-        paymentDay: 5,
-        firstPaymentDate: DateTime(2026, 1, 5),
-      );
-      s.addCapitalPayment(
-        loanId: loan.id,
-        value: 10,
-        paidAt: DateTime(2026, 2, 1, 15),
-      );
-      expect(s.capitalPayments().single.paidAt, DateTime(2026, 2, 1));
-      s.deleteLoan(loan.id);
-      expect(s.capitalPayments(), isEmpty);
     });
 
     test('unknown ids fail loudly instead of silently doing nothing', () {

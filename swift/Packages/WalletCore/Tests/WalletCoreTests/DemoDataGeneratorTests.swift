@@ -15,8 +15,6 @@ private func demo(seed: UInt64 = 7, now: Date = .now) -> DemoDataSet { DemoDataG
     #expect(d.tags.contains { $0.hidden })
     #expect(d.assets.count >= 3)
     #expect(d.assets.contains { $0.isEnded })
-    #expect(!d.loans.isEmpty)
-    #expect(!d.capitalPayments.isEmpty)
     #expect(d.recurringMovements.contains { $0.yearlyPayment })
     #expect(d.recurringMovements.contains { $0.value > 0 })
     #expect(d.recurringMovements.contains { $0.value < 0 })
@@ -71,8 +69,6 @@ private func demo(seed: UInt64 = 7, now: Date = .now) -> DemoDataSet { DemoDataG
       if let id = t.categoryId { #expect(t.categoryName == d.categories.first { $0.id == id }?.name) }
       if let id = t.tagId { #expect(t.tagName == d.tags.first { $0.id == id }?.name) }
     }
-    for l in d.loans { #expect(accounts.contains(l.accountId)) }
-    for p in d.capitalPayments { #expect(d.loans.contains { $0.id == p.loanId }) }
     for m in d.recurringMovements {
       #expect(m.categoryId.map(categories.contains) == true)
       #expect(m.tagId.map(tags.contains) == true)
@@ -130,25 +126,6 @@ private func demo(seed: UInt64 = 7, now: Date = .now) -> DemoDataSet { DemoDataG
     let totals = CreditLedger.totalsByCard(d.transactions.filter(\.isCreditInstallment))
     #expect(totals.values.contains { $0.billed < 0 })
     #expect(totals.values.contains { $0.pending < 0 })
-  }
-
-  @Test func loansHaveSchedulesAndPaidInstallments() {
-    let now = Date.now
-    let d = demo(now: now)
-    for loan in d.loans {
-      let payments = d.capitalPayments.filter { $0.loanId == loan.id }
-      let schedule = LoanMath.schedule(loan, capitalPayments: payments)
-      #expect(!schedule.isEmpty)
-      #expect(schedule.contains { $0.isPaid(today: now) })
-      #expect(schedule.contains { !$0.isPaid(today: now) })
-      #expect(LoanMath.listAmounts(loan, capitalPayments: payments, today: now).pending > 0)
-    }
-    let loansWithExtra = Set(d.capitalPayments.map(\.loanId))
-    #expect(d.loans.contains { loansWithExtra.contains($0.id) })
-    // Paid installments are in the ledger, drawn from the loan's account.
-    let loanRows = d.transactions.filter { $0.categoryName == "Loans" }
-    #expect(!loanRows.isEmpty)
-    #expect(loanRows.allSatisfy { $0.accountId == d.loans[0].accountId && $0.value < 0 })
   }
 
   @Test func dashboardsHaveSomethingToShow() {

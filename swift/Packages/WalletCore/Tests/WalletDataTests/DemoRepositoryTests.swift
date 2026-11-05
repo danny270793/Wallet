@@ -40,8 +40,6 @@ private func repo(seed: UInt64 = 11) -> WalletRepository {
     let categories = try await r.categories().value
     let tags = try await r.tags().value
     let assets = try await r.assets().value
-    let loans = try await r.loans().value
-    let capital = try await r.capitalPayments().value
     let recurring = try await r.recurringMovements().value
     let credits = try await r.creditInstallments().value
     let thisMonth = try await r.transactions(month: now).value
@@ -52,7 +50,7 @@ private func repo(seed: UInt64 = 11) -> WalletRepository {
     let blank = try await r.searchTransactions("   ")
     #expect(!accounts.fromCache)
     #expect(!accounts.value.isEmpty && !cards.isEmpty && !categories.isEmpty && !tags.isEmpty)
-    #expect(!assets.isEmpty && !loans.isEmpty && !capital.isEmpty && !recurring.isEmpty && !credits.isEmpty)
+    #expect(!assets.isEmpty && !recurring.isEmpty && !credits.isEmpty)
     #expect(!thisMonth.isEmpty && !lastMonth.isEmpty)
     #expect(throughYear.count >= inYear.count)
     #expect(!found.isEmpty)
@@ -167,7 +165,7 @@ private func repo(seed: UInt64 = 11) -> WalletRepository {
     #expect(abs(updated.balance - (account.balance + 6)) < 0.005)
   }
 
-  @Test func cardsLoansAssetsRecurringTagsAndCategoriesCanBeEdited() async throws {
+  @Test func cardsAssetsRecurringTagsAndCategoriesCanBeEdited() async throws {
     let r = repo()
     try await r.createCard(name: "Amex", type: .amex, rate: 20, cutDay: 10, payDay: 25)
     let card = try #require(try await r.cards().value.first { $0.name == "Amex" })
@@ -176,18 +174,6 @@ private func repo(seed: UInt64 = 11) -> WalletRepository {
     #expect(edited?.nominalInterestRate == nil)
     #expect(edited?.name == "Amex Blue")
     try await r.deleteCard(id: card.id)
-
-    let account = try #require(try await r.accounts().value.first)
-    try await r.saveLoan(
-      id: nil, accountId: account.id, name: "Bike", value: 600, rate: nil, termMonths: 6, paymentDay: 10,
-      firstPaymentDate: .now)
-    let loan = try #require(try await r.loans().value.first { $0.name == "Bike" })
-    try await r.createCapitalPayment(loanId: loan.id, value: 100, paidAt: .now)
-    let payment = try #require(try await r.capitalPayments().value.first { $0.loanId == loan.id })
-    try await r.deleteCapitalPayment(id: payment.id)
-    try await r.deleteLoan(id: loan.id)
-    let loans = try await r.loans().value
-    #expect(!loans.contains { $0.id == loan.id })
 
     try await r.saveAsset(id: nil, name: "Watch", provider: "Casio", value: 90, boughtAt: .now, endedAt: nil, soldValue: nil)
     let asset = try #require(try await r.assets().value.first { $0.name == "Watch" })

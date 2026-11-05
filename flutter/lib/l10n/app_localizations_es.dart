@@ -579,80 +579,6 @@ class AppLocalizationsEs extends AppLocalizations {
       'Las etiquetas ocultas no aparecerán al elegir una etiqueta para una transacción';
 
   @override
-  String get loans => 'Préstamos';
-
-  @override
-  String get noLoans => 'No hay préstamos aún';
-
-  @override
-  String get newLoan => 'Nuevo préstamo';
-
-  @override
-  String get editLoan => 'Editar préstamo';
-
-  @override
-  String get deleteLoan => 'Eliminar préstamo';
-
-  @override
-  String get loanAccount => 'Cuenta';
-
-  @override
-  String get loanValue => 'Valor';
-
-  @override
-  String get loanTotalToPay => 'Total a pagar';
-
-  @override
-  String get loanValueInvalid => 'Ingresa un monto mayor a 0';
-
-  @override
-  String get loanTermInvalid => 'Ingresa al menos 1 mes';
-
-  @override
-  String get loanFirstPaymentDate => 'Primer pago';
-
-  @override
-  String get loanPaymentDay => 'Día de pago';
-
-  @override
-  String get loanMonthlyPayment => 'Cuota mensual';
-
-  @override
-  String get loanSchedule => 'Tabla de pagos';
-
-  @override
-  String get loanCapitalPayment => 'Abono a capital';
-
-  @override
-  String get loanCapitalPaymentDate => 'Pagado el';
-
-  @override
-  String get loanDeleteCapitalPayment => 'Eliminar abono a capital';
-
-  @override
-  String get loanConfirmDeleteCapitalPayment =>
-      'Las cuotas posteriores se recalcularán sin él.';
-
-  @override
-  String get loanPaidInstallments => 'Pagado en cuotas';
-
-  @override
-  String get loanPaidToCapital => 'Abonado a capital';
-
-  @override
-  String get loanPending => 'Pendiente';
-
-  @override
-  String loanCapitalPaymentLeft(String remaining) {
-    return 'Saldo $remaining';
-  }
-
-  @override
-  String loanCapitalPaymentMax(String max) {
-    return 'Máximo $max';
-  }
-
-  @override
   String get errorSeeMore => 'Ver más';
 
   @override
@@ -660,34 +586,6 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get errorCopy => 'Copiar';
-
-  @override
-  String get loanInterestToPay => 'Intereses a pagar';
-
-  @override
-  String get loanTotalInterest => 'Interés';
-
-  @override
-  String get loanNotFound => 'Este préstamo ya no existe';
-
-  @override
-  String confirmDeleteLoan(String name) {
-    return '¿Seguro que quieres eliminar «$name»?';
-  }
-
-  @override
-  String loanTermMonths(int months) {
-    return '$months meses';
-  }
-
-  @override
-  String loanInstallmentBreakdown(
-    String principal,
-    String interest,
-    String remaining,
-  ) {
-    return 'Capital $principal · Interés $interest · Saldo $remaining';
-  }
 
   @override
   String get assets => 'Activos';
@@ -1134,9 +1032,6 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get recurringMovementsSortByValue => 'Valor';
-
-  @override
-  String get recurringAutomaticLoan => 'Cuota de préstamo · automático';
 
   @override
   String get recurringAutomaticCardInterest =>

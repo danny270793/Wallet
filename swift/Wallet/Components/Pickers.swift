@@ -141,7 +141,7 @@ struct PickerField: View {
   }
 }
 
-/// Day-of-month (1–30) menu, as cards and loans store it.
+/// Day-of-month (1–30) menu, as cards store it.
 struct DayOfMonthPicker: View {
   let label: String
   @Binding var day: Int?

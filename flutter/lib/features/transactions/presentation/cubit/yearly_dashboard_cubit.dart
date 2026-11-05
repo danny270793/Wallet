@@ -37,10 +37,10 @@ final class YearlyDashboardLoaded extends YearlyDashboardState {
   /// the user's own movements).
   final double recurringMonthlyOutcome;
 
-  /// Loans and cards, for the estimates that change month to month.
+  /// Cards, for the estimates that change month to month.
   final AutomaticMovementsSource automaticSource;
 
-  /// Loan installments and card interest due in [month] (positive). Card
+  /// Card interest due in [month] (positive). Card
   /// deferred installments are left out: they are already transactions dated
   /// in their months.
   double automaticOutcomeFor(DateTime month) => automaticSource
@@ -48,7 +48,7 @@ final class YearlyDashboardLoaded extends YearlyDashboardState {
       .where((a) => a is! CardDeferredRecurringMovement)
       .fold(0, (s, a) => s - a.monthlyAmount);
 
-  /// Estimated outcome of [month]: recurring movements plus loans and cards.
+  /// Estimated outcome of [month]: recurring movements plus cards.
   double outcomeFor(DateTime month) =>
       recurringMonthlyOutcome + automaticOutcomeFor(month);
 

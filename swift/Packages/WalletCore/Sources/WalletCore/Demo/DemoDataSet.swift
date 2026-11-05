@@ -9,15 +9,13 @@ public struct DemoDataSet: Sendable {
   public var categories: [Category]
   public var tags: [Tag]
   public var assets: [Asset]
-  public var loans: [Loan]
-  public var capitalPayments: [LoanCapitalPayment]
   public var recurringMovements: [RecurringMovement]
   public var credits: [WalletCredit]
   public var transactions: [Transaction]
 
   public init(
-    accounts: [Account], cards: [Card], categories: [Category], tags: [Tag], assets: [Asset], loans: [Loan],
-    capitalPayments: [LoanCapitalPayment], recurringMovements: [RecurringMovement], credits: [WalletCredit],
+    accounts: [Account], cards: [Card], categories: [Category], tags: [Tag], assets: [Asset],
+    recurringMovements: [RecurringMovement], credits: [WalletCredit],
     transactions: [Transaction]
   ) {
     self.accounts = accounts
@@ -25,8 +23,6 @@ public struct DemoDataSet: Sendable {
     self.categories = categories
     self.tags = tags
     self.assets = assets
-    self.loans = loans
-    self.capitalPayments = capitalPayments
     self.recurringMovements = recurringMovements
     self.credits = credits
     self.transactions = transactions
