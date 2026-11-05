@@ -151,7 +151,7 @@ int _firstEstimatedMonthIndex(int year, DateTime today) {
 ///
 /// When [netForMonth] is given it replaces [recurringMonthlyNet] for each
 /// estimated month (it receives the month's first day), so amounts that
-/// change month to month (loan installments, card interest) are followed.
+/// change month to month (card interest) are followed.
 ({List<double> monthly, int projectedFromIndex})
 cumulativeAccountsBalanceWithProjection(
   List<TransactionEntity> txs,
