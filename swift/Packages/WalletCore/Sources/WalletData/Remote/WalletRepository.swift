@@ -556,6 +556,7 @@ public final class WalletRepository: Sendable {
     if let demo { return Served(await demo.listTransactions(from: start, to: end), fromCache: false) }
     return try await cached(CacheKey.month(start)) {
       try await client.from("wallet_transactions").select(Self.txSelect).is("deletedAt", value: nil)
+        .is("paidByTransactionId", value: nil)
         .gte("transactedAt", value: WalletJSON.formatTimestamp(start))
         .lt("transactedAt", value: WalletJSON.formatTimestamp(end))
         .order("transactedAt", ascending: false).execute().value
@@ -576,7 +577,7 @@ public final class WalletRepository: Sendable {
       var from = 0
       while true {
         let rows: [Transaction] = try await client.from("wallet_transactions").select(Self.txSelect)
-          .is("deletedAt", value: nil).lt("transactedAt", value: end)
+          .is("deletedAt", value: nil).is("paidByTransactionId", value: nil).lt("transactedAt", value: end)
           .order("transactedAt", ascending: false).range(from: from, to: from + page - 1).execute().value
         out += rows
         if rows.count < page { break }
@@ -602,7 +603,8 @@ public final class WalletRepository: Sendable {
       var from = 0
       while true {
         let rows: [Transaction] = try await client.from("wallet_transactions").select(Self.txSelect)
-          .is("deletedAt", value: nil).gte("transactedAt", value: start).lt("transactedAt", value: end)
+          .is("deletedAt", value: nil).is("paidByTransactionId", value: nil)
+          .gte("transactedAt", value: start).lt("transactedAt", value: end)
           .order("transactedAt", ascending: false).range(from: from, to: from + page - 1).execute().value
         out += rows
         if rows.count < page { break }
@@ -620,19 +622,26 @@ public final class WalletRepository: Sendable {
     let escaped = q.replacingOccurrences(of: "\\", with: "\\\\").replacingOccurrences(of: "%", with: "\\%")
       .replacingOccurrences(of: "_", with: "\\_")
     return try await client.from("wallet_transactions").select(Self.txSelect).is("deletedAt", value: nil)
+      .is("paidByTransactionId", value: nil)
       .ilike("description", pattern: "%\(escaped)%").order("transactedAt", ascending: false).limit(limit)
       .execute().value
   }
 
-  /// Every deferred installment (rows with a credit id).
-  public func creditInstallments() async throws -> Served<[Transaction]> {
-    if let demo { return Served(await demo.listCreditInstallments(), fromCache: false) }
-    return try await cached(CacheKey.creditGroups) {
-      try await client.from("wallet_transactions").select(Self.txSelect).not("creditId", operator: .is, value: "null")
-        .is("deletedAt", value: nil).order("transactedAt", ascending: false).execute().value
+  /// Every deferred installment (rows with a credit id) that is still owed:
+  /// installments paid early by a payment transaction are left out.
+  /// With [includePaid] the early-paid ones come back too: card balances still
+  /// need them, because the payment was credited to the card.
+  public func creditInstallments(includePaid: Bool = false) async throws -> Served<[Transaction]> {
+    if let demo { return Served(await demo.listCreditInstallments(includePaid: includePaid), fromCache: false) }
+    return try await cached(includePaid ? CacheKey.creditTotals : CacheKey.creditGroups) {
+      var query = client.from("wallet_transactions").select(Self.txSelect).not("creditId", operator: .is, value: "null")
+        .is("deletedAt", value: nil)
+      if !includePaid { query = query.is("paidByTransactionId", value: nil) }
+      return try await query.order("transactedAt", ascending: false).execute().value
     }
   }
 
+  /// Every installment of [credit], paid early or not (used to edit or delete the whole credit).
   public func installments(credit: String) async throws -> [Transaction] {
     guard !credit.isEmpty else { return [] }
     if let demo { return await demo.installments(credit: credit) }
@@ -705,8 +714,30 @@ public final class WalletRepository: Sendable {
   }
 
   public func createTransaction(_ d: TransactionDraft) async throws {
-    if let demo { return await demo.createTransaction(d) }
+    if let demo {
+      await demo.createTransaction(d)
+      return
+    }
     try await client.from("wallet_transactions").insert(TxRow(draft: d, userId: requireUser())).execute()
+  }
+
+  /// Inserts [d] and returns the new row's id.
+  @discardableResult
+  public func insertTransaction(_ d: TransactionDraft) async throws -> String {
+    if let demo { return await demo.createTransaction(d) }
+    struct IdRow: Decodable { var id: String }
+    let row: IdRow = try await client.from("wallet_transactions").insert(TxRow(draft: d, userId: requireUser()))
+      .select("id").single().execute().value
+    return row.id
+  }
+
+  /// Flags [ids] (credit installments) as paid by the transaction [paymentId].
+  public func markInstallmentsPaid(ids: [String], by paymentId: String) async throws {
+    guard !ids.isEmpty else { return }
+    if let demo { return await demo.markInstallmentsPaid(ids: ids, by: paymentId) }
+    struct Row: Encodable { var paidByTransactionId: String }
+    try await client.from("wallet_transactions").update(Row(paidByTransactionId: paymentId))
+      .in("id", values: ids).execute()
   }
 
   public func updateTransaction(id: String, _ d: TransactionDraft) async throws {

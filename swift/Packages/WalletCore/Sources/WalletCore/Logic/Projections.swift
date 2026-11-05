@@ -78,18 +78,24 @@ public struct AutomaticMovementsSource: Sendable {
 
     let todayDay = WalletCalendar.startOfDay(today)
     let credits = CreditLedger.totalsByCard(creditInstallments, today: today)
+    let isPast = nextMonth <= todayDay
+    // Credits with nothing left to pay no longer count as deferred spending for the
+    // current and future months; past months keep their history. The balance below
+    // still uses every posted installment.
+    let settled = CreditLedger.settledIds(creditInstallments, today: today)
     var deferred: [String: Double] = [:]
     var postedBeforeMonth: [String: Double] = [:]
     for t in creditInstallments {
       guard let card = t.cardId else { continue }
       let day = WalletCalendar.startOfDay(t.transactedAt)
       if day >= monthStart && day < nextMonth {
+        if t.paidByTransactionId != nil { continue }
+        if !isPast, let k = t.creditKey, settled.contains(k) { continue }
         deferred[card, default: 0] += t.value
       } else if day > todayDay && day < monthStart {
         postedBeforeMonth[card, default: 0] += t.value
       }
     }
-    let isPast = nextMonth <= todayDay
     for card in cards {
       let revolving =
         CreditLedger.postedBalance(card.balance, credits[card.id]) + (isPast ? 0 : postedBeforeMonth[card.id] ?? 0)

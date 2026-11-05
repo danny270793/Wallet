@@ -412,6 +412,9 @@ public struct Transaction: Codable, Identifiable, Hashable, Sendable {
   public var transferGroupId: String?
   /// Links a deferred installment to its `wallet_credits` row.
   public var creditId: String?
+  /// Transaction that paid this installment early; nil while it is still owed.
+  /// Paid installments are left out of every list and total.
+  public var paidByTransactionId: String?
   /// `wallet_credits.transactedAt` (the purchase), when embedded.
   public var creditTransactedAt: Date?
   public var createdAt: Date
@@ -422,7 +425,7 @@ public struct Transaction: Codable, Identifiable, Hashable, Sendable {
     tagId: String? = nil, accountName: String? = nil, cardName: String? = nil, categoryName: String? = nil,
     tagName: String? = nil, description: String? = nil, transactedAt: Date, value: Double,
     ignore: Bool = false, percentage: Double = 100, transferGroupId: String? = nil, creditId: String? = nil,
-    creditTransactedAt: Date? = nil, createdAt: Date, updatedAt: Date
+    paidByTransactionId: String? = nil, creditTransactedAt: Date? = nil, createdAt: Date, updatedAt: Date
   ) {
     self.id = id
     self.userId = userId
@@ -441,6 +444,7 @@ public struct Transaction: Codable, Identifiable, Hashable, Sendable {
     self.percentage = percentage
     self.transferGroupId = transferGroupId
     self.creditId = creditId
+    self.paidByTransactionId = paidByTransactionId
     self.creditTransactedAt = creditTransactedAt
     self.createdAt = createdAt
     self.updatedAt = updatedAt
@@ -469,7 +473,7 @@ public struct Transaction: Codable, Identifiable, Hashable, Sendable {
 
   enum CodingKeys: String, CodingKey {
     case id, userId, accountId, cardId, categoryId, tagId, description, transactedAt, value, ignore
-    case percentage, transferGroupId, creditId, createdAt, updatedAt
+    case percentage, transferGroupId, creditId, paidByTransactionId, createdAt, updatedAt
     case accounts = "wallet_accounts"
     case cards = "wallet_cards"
     case categories = "wallet_categories"
@@ -498,6 +502,7 @@ public struct Transaction: Codable, Identifiable, Hashable, Sendable {
     percentage = try c.flexibleDoubleIfPresent(.percentage) ?? 100
     transferGroupId = try c.decodeIfPresent(String.self, forKey: .transferGroupId)
     creditId = try c.decodeIfPresent(String.self, forKey: .creditId)
+    paidByTransactionId = try c.decodeIfPresent(String.self, forKey: .paidByTransactionId)
     if let one = try? c.decodeIfPresent(EmbeddedCredit.self, forKey: .credits) {
       creditTransactedAt = one.transactedAt
     } else if let many = try? c.decodeIfPresent([EmbeddedCredit].self, forKey: .credits) {
@@ -524,6 +529,7 @@ public struct Transaction: Codable, Identifiable, Hashable, Sendable {
     try c.encode(percentage, forKey: .percentage)
     try c.encodeIfPresent(transferGroupId, forKey: .transferGroupId)
     try c.encodeIfPresent(creditId, forKey: .creditId)
+    try c.encodeIfPresent(paidByTransactionId, forKey: .paidByTransactionId)
     try c.encode(createdAt, forKey: .createdAt)
     try c.encode(updatedAt, forKey: .updatedAt)
     if let accountName { try c.encode(EmbeddedName(name: accountName), forKey: .accounts) }

@@ -233,7 +233,7 @@ struct CacheView: View {
   private func label(_ key: String) -> String {
     if let m = key.wholeMatch(of: /tx_month_(\d+)_(\d+)/) { return L("settingsCacheKeyTxMonth", m.1, m.2) }
     if let m = key.wholeMatch(of: /tx_year_(\d+)/) { return L("settingsCacheKeyTxYear", m.1) }
-    if key == CacheKey.creditGroups { return L("settingsCacheKeyTxCreditGroups") }
+    if key == CacheKey.creditGroups || key == CacheKey.creditTotals { return L("settingsCacheKeyTxCreditGroups") }
     if let m = key.wholeMatch(of: /tx_credit_(.+)/) { return L("settingsCacheKeyTxCredit", m.1.prefix(8)) }
     if let m = key.wholeMatch(of: /wallet_credit_(.+)/) { return L("settingsCacheKeyWalletCredit", m.1.prefix(8)) }
     let known = [
