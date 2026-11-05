@@ -380,8 +380,8 @@ class _RecurringMovementTile extends StatelessWidget {
   }
 }
 
-/// Bottom summary: income (sum of positive values) and outcome (sum of negative values)
-/// over [movements] (all rows, or only the selected ones in select mode).
+/// Bottom summary: income (sum of positive values), outcome (sum of negative values)
+/// and their balance over [movements] (all rows, or only the selected ones in select mode).
 class _RecurringMovementsTotalsBar extends StatelessWidget {
   const _RecurringMovementsTotalsBar({required this.l10n, required this.rows});
 
@@ -449,6 +449,11 @@ class _RecurringMovementsTotalsBar extends StatelessWidget {
                 outcome,
                 l10n.transactionsTotalOutcome,
                 walletListBalanceColor(theme, outcome),
+              ),
+              column(
+                income + outcome,
+                l10n.transactionsTotalBalance,
+                walletListBalanceColor(theme, income + outcome),
               ),
             ],
           ),
