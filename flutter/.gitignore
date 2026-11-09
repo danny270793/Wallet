@@ -59,3 +59,6 @@ assets/certs/*.pem
 .env.*.local
 # Migrations live in danny270793/supabase, the source of truth for the schema.
 /supabase/
+
+# Firebase App Distribution config (app IDs, tester groups)
+scripts/.env.deploy
