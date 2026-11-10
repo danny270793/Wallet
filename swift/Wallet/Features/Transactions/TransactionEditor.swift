@@ -11,7 +11,7 @@ import WalletData
 /// - editing an installment edits the whole purchase (total amount, grace,
 ///   term; changing grace/term reschedules every installment);
 /// - typing a description suggests past transactions; picking one fills the
-///   empty fields.
+///   empty fields (when editing: replaces description, category and tag).
 struct TransactionEditor: View {
   @Environment(AppModel.self) private var model
   @Environment(\.dismiss) private var dismiss
@@ -60,7 +60,8 @@ struct TransactionEditor: View {
     let t = transaction
     let isCredit = t?.isCreditInstallment ?? false
     _date = State(initialValue: (isCredit ? t?.creditTransactedAt : nil) ?? t?.transactedAt ?? .now)
-    _description = State(initialValue: isCredit ? CreditDescription.strip(t?.description) : t?.description ?? "")
+    let initialDescription = isCredit ? CreditDescription.strip(t?.description) : t?.description ?? ""
+    _description = State(initialValue: initialDescription)
     _amount = State(initialValue: t.map { $0.value.fixed2 } ?? "")
     _percentage = State(initialValue: t.map { String(format: "%g", $0.percentage) } ?? "100")
     _ignore = State(initialValue: t?.ignore ?? preset.deferred)
@@ -71,6 +72,8 @@ struct TransactionEditor: View {
     _deferred = State(initialValue: isCredit || (t == nil && preset.deferred))
     _graceMonths = State(initialValue: t == nil && preset.deferred ? "0" : "")
     _loadingCreditTotal = State(initialValue: isCredit)
+    // Editing opens with the saved description: suggest only once it changes.
+    _suppressedSuggestionFor = State(initialValue: t == nil ? nil : initialDescription)
   }
 
   private var isEdit: Bool { transaction != nil }
@@ -211,7 +214,7 @@ struct TransactionEditor: View {
   // MARK: Suggestions
 
   private var showSuggestions: Bool {
-    !isEdit && !description.trimmingCharacters(in: .whitespaces).isEmpty && suppressedSuggestionFor != description
+    !description.trimmingCharacters(in: .whitespaces).isEmpty && suppressedSuggestionFor != description
   }
 
   @ViewBuilder private var suggestionRows: some View {
@@ -239,12 +242,25 @@ struct TransactionEditor: View {
     guard !Task.isCancelled else { return }
     let remote = (try? await repo.searchTransactions(q, limit: 80)) ?? []
     guard !Task.isCancelled, q == description else { return }
-    suggestions = remote
+    // Leave out the row being edited and the other installments of its purchase.
+    suggestions = remote.filter { t in
+      t.id != transaction?.id && (transaction?.creditKey == nil || t.creditKey != transaction?.creditKey)
+    }
     suggestionsLoading = false
   }
 
-  /// Fills the empty fields from a past transaction.
+  /// Fills the empty fields from a past transaction. When editing, every field
+  /// is already set, so it takes the description, category and tag and keeps
+  /// the amount, payment method and date.
   private func apply(_ t: Transaction) {
+    if isEdit {
+      categoryId = t.categoryId ?? categoryId
+      tagId = t.tagId ?? tagId
+      description = isCreditEdit ? CreditDescription.strip(t.description) : t.description ?? ""
+      suppressedSuggestionFor = description
+      suggestions = []
+      return
+    }
     if accountId == nil && cardId == nil {
       accountId = cardsOnly ? nil : t.accountId
       cardId = accountId == nil ? t.cardId : nil
