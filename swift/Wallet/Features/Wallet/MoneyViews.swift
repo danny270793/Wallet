@@ -225,7 +225,7 @@ struct AssetRow: View {
       Spacer()
       VStack(alignment: .trailing, spacing: 2) {
         if let perMonth {
-          Text(L("assetValuePerApproximateMonth", Money.text(perMonth)))
+          Text(Money.text(perMonth))
             .font(.callout.weight(.semibold)).monospacedDigit().foregroundStyle(a.isEnded ? AnyShapeStyle(.secondary) : AnyShapeStyle(.tint))
           Text(Money.text(a.value)).font(.caption).monospacedDigit().foregroundStyle(.secondary)
         } else {
