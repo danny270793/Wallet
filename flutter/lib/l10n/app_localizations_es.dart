@@ -965,15 +965,15 @@ class AppLocalizationsEs extends AppLocalizations {
   String get transactionsTotalBalance => 'Saldo';
 
   @override
-  String get transactionsTotalsWeightedHint => 'Ponderado';
+  String get transactionsTotalsWeightedHint => 'Saldo';
 
   @override
   String get transactionsTotalsWeightedExcludingCreditHint =>
-      'Ponderado excluyendo crédito';
+      'Saldo excluyendo crédito';
 
   @override
   String get transactionsTotalsWeightedExcludingIgnoredHint =>
-      'Ponderado excluyendo ignoradas';
+      'Saldo excluyendo ignoradas';
 
   @override
   String get transactionsTotalsNotWeightedHint => 'Sin ponderar';
