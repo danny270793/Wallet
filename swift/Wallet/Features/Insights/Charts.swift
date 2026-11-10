@@ -48,6 +48,11 @@ struct ExpenseDonut: View {
             .foregroundStyle(SlicePalette.color(i))
             .opacity(filter == nil || filter?.contains(s.key) == true ? 1 : 0.35)
         }
+        // No animation between data sets: Charts interpolates new sectors up
+        // from a zero angle, and a rounded zero-angle sector computes NaN and
+        // crashes (SIGTRAP in Path.addArchimedeanSpiral). Happened when
+        // clearing a filter, which swaps both donuts at once.
+        .transaction { $0.animation = nil }
         .chartAngleSelection(value: $selectedAngle)
         .chartBackground { _ in
           VStack(spacing: 0) {
