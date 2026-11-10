@@ -40,16 +40,6 @@
         }
       }
     },
-    "%@/%@ · %@" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "%1$@/%2$@ · %3$@"
-          }
-        }
-      }
-    },
     "%@%%" : {
 
     },
@@ -5380,13 +5370,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Weighted excluding credit"
+            "value" : "Balance excluding credit"
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Ponderado excluyendo crédito"
+            "value" : "Saldo excluyendo crédito"
           }
         }
       }
@@ -5397,13 +5387,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Weighted excluding ignored"
+            "value" : "Balance excluding ignored"
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Ponderado excluyendo ignoradas"
+            "value" : "Saldo excluyendo ignoradas"
           }
         }
       }
@@ -5414,13 +5404,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Weighted"
+            "value" : "Balance"
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Ponderado"
+            "value" : "Saldo"
           }
         }
       }
