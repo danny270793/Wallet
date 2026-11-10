@@ -98,14 +98,14 @@ extension SummaryCard {
       ])
   }
 
-  /// The five totals modes of the transactions list.
+  /// The weighted totals modes of the transactions list.
   static func ledgerModes(_ txs: [Transaction]) -> [Page] {
-    let captions = [
-      "transactionsTotalsWeightedHint", "transactionsTotalsWeightedExcludingCreditHint",
-      "transactionsTotalsWeightedExcludingIgnoredHint", "transactionsTotalsNotWeightedHint",
-      "transactionsTotalsNotWeightedExcludingIgnoredHint",
+    let pages: [(TotalsMode, String)] = [
+      (.weighted, "transactionsTotalsWeightedHint"),
+      (.weightedExcludingCredit, "transactionsTotalsWeightedExcludingCreditHint"),
+      (.weightedExcludingIgnored, "transactionsTotalsWeightedExcludingIgnoredHint"),
     ]
-    return TotalsMode.allCases.map { totals($0.totals(txs), caption: L(captions[$0.rawValue])) }
+    return pages.map { mode, caption in totals(mode.totals(txs), caption: L(caption)) }
   }
 
   /// Single "Total" figure for list screens.

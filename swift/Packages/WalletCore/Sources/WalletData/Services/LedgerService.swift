@@ -229,14 +229,12 @@ extension WalletRepository {
     return paidAny
   }
 
-  /// Loads loans, capital payments, cards and installments for automatic rows.
+  /// Loads cards and installments for automatic rows.
   /// Each source is optional: a failure leaves its rows out.
   public func automaticSource() async -> AutomaticMovementsSource {
-    async let loans = try? self.loans().value
-    async let capital = try? self.capitalPayments().value
     async let cards = try? self.cards().value
     async let installments = try? self.creditInstallments(includePaid: true).value
     return await AutomaticMovementsSource(
-      loans: loans ?? [], capitalPayments: capital ?? [], cards: cards ?? [], creditInstallments: installments ?? [])
+      cards: cards ?? [], creditInstallments: installments ?? [])
   }
 }

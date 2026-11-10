@@ -47,7 +47,7 @@ struct CreditsView: View {
           }
           ForEach(monthGroups) { g in
             CreditGroupRow(
-              group: g, flat: flat, month: month, cardType: cards.first { $0.id == g.rows.first?.cardId }?.type,
+              group: g, flat: flat, month: month,
               selection: selecting ? selectedPending.contains(g.id) : nil
             )
             .frame(maxWidth: .infinity, alignment: .leading)
@@ -183,12 +183,12 @@ struct CreditsView: View {
 }
 
 /// One deferred purchase: title, relations, purchase date, progress, and
-/// the remaining / total amounts.
+/// this month's installment, the remaining debt and the total.
 struct CreditGroupRow: View {
+  /// The credit's installments in [month] (normally one).
   let group: CreditGroup
   let flat: [Transaction]
   let month: Date
-  let cardType: CardType?
   /// nil outside selection mode; otherwise whether this credit is selected.
   var selection: Bool?
 
@@ -198,6 +198,7 @@ struct CreditGroupRow: View {
     let pendingAfter = CreditLedger.countAfter(month: month, group: group.id, flat)
     let remaining = CreditLedger.valueAfter(month: month, group: group.id, flat)
     let totalValue = CreditLedger.totalValue(group: group.id, flat)
+    let monthly = group.rows.reduce(0) { $0 + $1.value }
     let accent: Color = pendingAfter == 0 ? Money.income : pendingAfter == 1 ? Money.endsNextMonth : .secondary
     let title = CreditDescription.strip(first.description).trimmingCharacters(in: .whitespaces)
     HStack(alignment: .top, spacing: 12) {
@@ -206,7 +207,6 @@ struct CreditGroupRow: View {
           .foregroundStyle(selection ? Color.accentColor : .secondary)
           .imageScale(.large)
       }
-      CardBadge(type: cardType, size: 30)
       VStack(alignment: .leading, spacing: 3) {
         Text(title.isEmpty ? L("creditsUntitledGroup") : title).font(.body.weight(.medium)).lineLimit(2)
         if !first.relationNames.isEmpty {
@@ -222,7 +222,8 @@ struct CreditGroupRow: View {
       }
       Spacer(minLength: 8)
       VStack(alignment: .trailing, spacing: 2) {
-        AmountText(value: remaining, font: .callout.weight(.semibold), neutral: .secondary)
+        AmountText(value: monthly, font: .callout.weight(.semibold), neutral: .secondary)
+        AmountText(value: remaining, font: .caption.weight(.medium), neutral: .secondary)
         AmountText(value: totalValue, font: .caption, neutral: .secondary, colored: false)
       }
     }

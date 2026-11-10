@@ -1,18 +1,13 @@
 import '../features/cards/domain/entities/card_entity.dart';
 import '../features/cards/domain/entities/card_type.dart';
 import '../features/cards/domain/usecases/get_cards_usecase.dart';
-import '../features/loans/domain/entities/loan_capital_payment_entity.dart';
-import '../features/loans/domain/entities/loan_entity.dart';
-import '../features/loans/domain/entities/loan_schedule.dart';
-import '../features/loans/domain/usecases/get_loan_capital_payments_usecase.dart';
-import '../features/loans/domain/usecases/get_loans_usecase.dart';
 import '../features/transactions/domain/entities/transaction_entity.dart';
 import '../features/transactions/domain/usecases/list_transactions_having_credit_group_usecase.dart';
 import 'credit_ledger_grouping.dart';
 import 'di/injection.dart';
 import 'logger/app_logger.dart';
 
-/// Read-only monthly amount derived from a loan or a card, shown next to the
+/// Read-only monthly amount derived from a card, shown next to the
 /// user's recurring movements and counted in their totals and estimates.
 sealed class AutomaticRecurringMovement {
   const AutomaticRecurringMovement({required this.id, required this.name});
@@ -23,18 +18,6 @@ sealed class AutomaticRecurringMovement {
 
   /// Signed monthly amount (negative = outcome).
   double get monthlyAmount;
-}
-
-/// Current installment of a loan that still has installments to pay.
-class LoanRecurringMovement extends AutomaticRecurringMovement {
-  LoanRecurringMovement(this.loan, {required this.installment})
-    : super(id: 'loan:${loan.id}', name: loan.name);
-
-  final LoanEntity loan;
-  final double installment;
-
-  @override
-  double get monthlyAmount => -installment;
 }
 
 /// Interest a card's revolving balance generates in a month
@@ -72,19 +55,14 @@ class CardDeferredRecurringMovement extends AutomaticRecurringMovement {
 /// without reloading.
 class AutomaticMovementsSource {
   const AutomaticMovementsSource({
-    this.loans = const [],
-    this.capitalPayments = const [],
     this.cards = const [],
     this.creditInstallments = const [],
   });
 
-  final List<LoanEntity> loans;
-  final List<LoanCapitalPaymentEntity> capitalPayments;
   final List<CardEntity> cards;
   final List<TransactionEntity> creditInstallments;
 
   /// Rows for the calendar month of [month]:
-  /// - loans: the installment due that month, if any;
   /// - cards: that month's deferred installments, and the interest of the
   ///   revolving balance. Future spending is unknown, so the balance is
   ///   assumed to stay as it is today; it only grows by the deferred
@@ -93,14 +71,6 @@ class AutomaticMovementsSource {
     final out = <AutomaticRecurringMovement>[];
     final monthStart = DateTime(month.year, month.month);
     final monthEnd = DateTime(month.year, month.month + 1, 0);
-    for (final loan in loans) {
-      for (final e in loanSchedule(loan, capitalPayments: capitalPayments)) {
-        if (e is! LoanInstallmentEntry) continue;
-        if (e.date.isBefore(monthStart) || e.date.isAfter(monthEnd)) continue;
-        out.add(LoanRecurringMovement(loan, installment: e.payment));
-      }
-    }
-
     final now = today ?? DateTime.now();
     final todayDate = DateTime(now.year, now.month, now.day);
     final credits = creditTotalsByCard(creditInstallments);
@@ -147,36 +117,21 @@ class AutomaticMovementsSource {
 /// Loads everything [AutomaticMovementsSource.forMonth] needs. Each source is
 /// optional: a failed load just leaves its rows out.
 Future<AutomaticMovementsSource> loadAutomaticMovementsSource() async {
-  var loans = const <LoanEntity>[];
-  var capital = const <LoanCapitalPaymentEntity>[];
   var cards = const <CardEntity>[];
   var installments = const <TransactionEntity>[];
-  try {
-    loans = (await getIt<GetLoansUsecase>()()).value;
-  } catch (e, s) {
-    AppLogger.error('automatic movements: loans load failed', e, s);
-  }
-  try {
-    capital = (await getIt<GetLoanCapitalPaymentsUsecase>()()).value;
-  } catch (e, s) {
-    AppLogger.error('automatic movements: capital payments load failed', e, s);
-  }
   try {
     cards = (await getIt<GetCardsUsecase>()()).value;
   } catch (e, s) {
     AppLogger.error('automatic movements: cards load failed', e, s);
   }
   try {
-    installments =
-        (await getIt<ListTransactionsHavingCreditGroupUsecase>()(
-          includePaid: true,
-        )).value;
+    installments = (await getIt<ListTransactionsHavingCreditGroupUsecase>()(
+      includePaid: true,
+    )).value;
   } catch (e, s) {
     AppLogger.error('automatic movements: card credits load failed', e, s);
   }
   return AutomaticMovementsSource(
-    loans: loans,
-    capitalPayments: capital,
     cards: cards,
     creditInstallments: installments,
   );

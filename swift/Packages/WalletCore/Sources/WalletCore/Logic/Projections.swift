@@ -2,11 +2,9 @@ import Foundation
 
 // MARK: - Automatic recurring movements
 
-/// Read-only monthly amount derived from a loan or a card, shown with the
+/// Read-only monthly amount derived from a card, shown with the
 /// user's recurring movements and counted in totals and estimates.
 public enum AutomaticMovement: Hashable, Sendable, Identifiable {
-  /// The installment of a loan due that month.
-  case loan(Loan, installment: Double)
   /// Interest of a card's revolving balance (balance × rate / 12). Positive.
   case cardInterest(Card, interest: Double)
   /// Deferred installments of a card due that month. Negative.
@@ -15,7 +13,6 @@ public enum AutomaticMovement: Hashable, Sendable, Identifiable {
   /// Prefixed with the kind so it never collides with a movement id.
   public var id: String {
     switch self {
-    case .loan(let l, _): "loan:\(l.id)"
     case .cardInterest(let c, _): "card-interest:\(c.id)"
     case .cardDeferred(let c, _): "card-deferred:\(c.id)"
     }
@@ -23,7 +20,6 @@ public enum AutomaticMovement: Hashable, Sendable, Identifiable {
 
   public var name: String {
     switch self {
-    case .loan(let l, _): l.name
     case .cardInterest(let c, _), .cardDeferred(let c, _): c.name
     }
   }
@@ -31,7 +27,6 @@ public enum AutomaticMovement: Hashable, Sendable, Identifiable {
   /// Signed (negative = outcome).
   public var monthlyAmount: Double {
     switch self {
-    case .loan(_, let i): -i
     case .cardInterest(_, let i): -i
     case .cardDeferred(_, let a): a
     }
@@ -39,7 +34,6 @@ public enum AutomaticMovement: Hashable, Sendable, Identifiable {
 
   public var cardType: CardType? {
     switch self {
-    case .loan: nil
     case .cardInterest(let c, _), .cardDeferred(let c, _): c.type
     }
   }
@@ -47,17 +41,13 @@ public enum AutomaticMovement: Hashable, Sendable, Identifiable {
 
 /// Data behind the automatic rows, loaded once so any month can be computed.
 public struct AutomaticMovementsSource: Sendable {
-  public var loans: [Loan] = []
-  public var capitalPayments: [LoanCapitalPayment] = []
   public var cards: [Card] = []
   public var creditInstallments: [Transaction] = []
 
   public init(
-    loans: [Loan] = [], capitalPayments: [LoanCapitalPayment] = [], cards: [Card] = [],
+    cards: [Card] = [],
     creditInstallments: [Transaction] = []
   ) {
-    self.loans = loans
-    self.capitalPayments = capitalPayments
     self.cards = cards
     self.creditInstallments = creditInstallments
   }
@@ -69,12 +59,6 @@ public struct AutomaticMovementsSource: Sendable {
     let monthStart = WalletCalendar.startOfMonth(month)
     let nextMonth = WalletCalendar.monthStart(month, offset: 1)
     var out: [AutomaticMovement] = []
-    for loan in loans {
-      for case .installment(let i) in LoanMath.schedule(loan, capitalPayments: capitalPayments)
-      where i.date >= monthStart && i.date < nextMonth {
-        out.append(.loan(loan, installment: i.payment))
-      }
-    }
 
     let todayDay = WalletCalendar.startOfDay(today)
     let credits = CreditLedger.totalsByCard(creditInstallments, today: today)
@@ -117,7 +101,7 @@ public struct YearSeries: Hashable, Sendable {
   public var projectedFromIndex: Int
 }
 
-/// Recurring movement totals and loans/cards behind the yearly estimates.
+/// Recurring movement totals and cards behind the yearly estimates.
 public struct YearlyEstimates: Sendable {
   /// Sum of positive recurring monthly amounts.
   public var recurringIncome: Double = 0
@@ -132,7 +116,7 @@ public struct YearlyEstimates: Sendable {
     self.automatic = automatic
   }
 
-  /// Loan installments and card interest due in [month]. Deferred installments
+  /// Card interest due in [month]. Deferred installments
   /// are left out: they are already transactions dated in their months.
   public func automaticOutcome(_ month: Date, today: Date = .now) -> Double {
     automatic.forMonth(month, today: today).reduce(0) {

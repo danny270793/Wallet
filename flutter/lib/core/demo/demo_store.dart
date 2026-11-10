@@ -5,8 +5,6 @@ import '../../features/assets/domain/entities/asset_entity.dart';
 import '../../features/cards/domain/entities/card_entity.dart';
 import '../../features/cards/domain/entities/card_type.dart';
 import '../../features/categories/domain/entities/category_entity.dart';
-import '../../features/loans/domain/entities/loan_capital_payment_entity.dart';
-import '../../features/loans/domain/entities/loan_entity.dart';
 import '../../features/recurring_movements/domain/entities/recurring_movement_entity.dart';
 import '../../features/tags/domain/entities/tag_entity.dart';
 import '../../features/transactions/domain/entities/transaction_entity.dart';
@@ -28,8 +26,6 @@ class DemoStore {
   final _cards = <CardEntity>[];
   final _categories = <CategoryEntity>[];
   final _tags = <TagEntity>[];
-  final _loans = <LoanEntity>[];
-  final _capitalPayments = <LoanCapitalPaymentEntity>[];
   final _assets = <AssetEntity>[];
   final _recurring = <RecurringMovementEntity>[];
   final _credits = <WalletCreditEntity>[];
@@ -271,98 +267,6 @@ class DemoStore {
   String? _blankToNull(String? s) {
     final t = s?.trim();
     return (t == null || t.isEmpty) ? null : t;
-  }
-
-  // loans
-
-  List<LoanEntity> loans() => List.unmodifiable(_loans);
-
-  LoanEntity addLoan({
-    required String accountId,
-    required String name,
-    required double value,
-    double? nominalInterestRate,
-    required int termMonths,
-    required int paymentDay,
-    required DateTime firstPaymentDate,
-    DateTime? createdAt,
-  }) {
-    final at = (createdAt ?? _stamp()).toUtc();
-    final l = LoanEntity(
-      id: newId(),
-      userId: userId,
-      accountId: accountId,
-      name: name,
-      value: value,
-      nominalInterestRate: nominalInterestRate,
-      termMonths: termMonths,
-      paymentDay: paymentDay,
-      firstPaymentDate: firstPaymentDate,
-      createdAt: at,
-      updatedAt: at,
-    );
-    _loans.add(l);
-    return l;
-  }
-
-  LoanEntity updateLoan({
-    required String id,
-    required String accountId,
-    required String name,
-    required double value,
-    double? nominalInterestRate,
-    required int termMonths,
-    required int paymentDay,
-    required DateTime firstPaymentDate,
-  }) {
-    final i = _indexOf(_loans, id, (e) => e.id);
-    final old = _loans[i];
-    _loans[i] = LoanEntity(
-      id: old.id,
-      userId: old.userId,
-      accountId: accountId,
-      name: name,
-      value: value,
-      nominalInterestRate: nominalInterestRate,
-      termMonths: termMonths,
-      paymentDay: paymentDay,
-      firstPaymentDate: firstPaymentDate,
-      createdAt: old.createdAt,
-      updatedAt: _stamp(),
-    );
-    return _loans[i];
-  }
-
-  void deleteLoan(String id) {
-    _loans.removeAt(_indexOf(_loans, id, (e) => e.id));
-    _capitalPayments.removeWhere((p) => p.loanId == id);
-  }
-
-  List<LoanCapitalPaymentEntity> capitalPayments() {
-    final out = [..._capitalPayments];
-    out.sort((a, b) => a.paidAt.compareTo(b.paidAt));
-    return out;
-  }
-
-  LoanCapitalPaymentEntity addCapitalPayment({
-    required String loanId,
-    required double value,
-    required DateTime paidAt,
-  }) {
-    final p = LoanCapitalPaymentEntity(
-      id: newId(),
-      userId: userId,
-      loanId: loanId,
-      value: value,
-      paidAt: DateTime(paidAt.year, paidAt.month, paidAt.day),
-      createdAt: _stamp(),
-    );
-    _capitalPayments.add(p);
-    return p;
-  }
-
-  void deleteCapitalPayment(String id) {
-    _capitalPayments.removeAt(_indexOf(_capitalPayments, id, (e) => e.id));
   }
 
   // assets (newest purchase first, like the real query)

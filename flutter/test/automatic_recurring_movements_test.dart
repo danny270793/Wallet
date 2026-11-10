@@ -1,7 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:wallet/core/automatic_recurring_movements.dart';
 import 'package:wallet/features/cards/domain/entities/card_entity.dart';
-import 'package:wallet/features/loans/domain/entities/loan_entity.dart';
 import 'package:wallet/features/transactions/domain/entities/transaction_entity.dart';
 
 final _today = DateTime(2026, 10, 14);
@@ -31,21 +30,7 @@ final _card = CardEntity(
   updatedAt: DateTime.utc(2026),
 );
 
-final _loan = LoanEntity(
-  id: 'l',
-  userId: 'u',
-  accountId: 'a',
-  name: 'Loan',
-  value: 1200,
-  termMonths: 12,
-  paymentDay: 30,
-  firstPaymentDate: DateTime(2026, 1, 30),
-  createdAt: DateTime.utc(2026),
-  updatedAt: DateTime.utc(2026),
-);
-
 final _source = AutomaticMovementsSource(
-  loans: [_loan],
   cards: [_card],
   creditInstallments: [
     _installment(DateTime(2026, 10, 5), -100), // posted
@@ -72,12 +57,5 @@ void main() {
     final dec = _source.forMonth(DateTime(2026, 12), today: _today);
     // -1100 today, plus November's -100 posted before December.
     expect(_amountOf<CardInterestRecurringMovement>(dec), closeTo(-12, 1e-9));
-  });
-
-  test('loan row only in months with an installment', () {
-    final oct = _source.forMonth(DateTime(2026, 10), today: _today);
-    expect(_amountOf<LoanRecurringMovement>(oct), closeTo(-100, 1e-9));
-    final next = _source.forMonth(DateTime(2027, 1), today: _today);
-    expect(next.whereType<LoanRecurringMovement>(), isEmpty);
   });
 }

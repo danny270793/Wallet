@@ -2,6 +2,7 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+
 import 'core/demo/demo_mode.dart';
 import 'pages/splash_page.dart';
 import 'features/auth/presentation/pages/login_page.dart';
@@ -9,9 +10,6 @@ import 'pages/dashboard_page.dart';
 import 'pages/yearly_dashboard_page.dart';
 import 'pages/accounts_page.dart';
 import 'pages/cards_page.dart';
-import 'pages/loan_detail_page.dart';
-import 'pages/loans_page.dart';
-import 'features/loans/domain/entities/loan_entity.dart';
 import 'pages/categories_page.dart';
 import 'pages/recurring_movements_page.dart';
 import 'pages/tags_page.dart';
@@ -97,21 +95,6 @@ final router = GoRouter(
           builder: (context, state) => const AccountsPage(),
         ),
         GoRoute(path: '/cards', builder: (context, state) => const CardsPage()),
-        GoRoute(
-          path: '/loans',
-          builder: (context, state) => const LoansPage(),
-          routes: [
-            GoRoute(
-              path: ':id',
-              builder: (context, state) => LoanDetailPage(
-                loanId: state.pathParameters['id']!,
-                initialLoan: state.extra is LoanEntity
-                    ? state.extra as LoanEntity
-                    : null,
-              ),
-            ),
-          ],
-        ),
         GoRoute(
           path: '/recurring-movements',
           builder: (context, state) => const RecurringMovementsPage(),

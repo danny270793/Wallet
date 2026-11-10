@@ -14,8 +14,6 @@ public actor DemoStore {
   private var categories: [WalletCore.Category]
   private var tags: [Tag]
   private var assets: [Asset]
-  private var loans: [Loan]
-  private var capitalPayments: [LoanCapitalPayment]
   private var recurring: [RecurringMovement]
   private var credits: [WalletCredit]
   private var transactions: [Transaction]
@@ -28,8 +26,6 @@ public actor DemoStore {
     categories = data.categories
     tags = data.tags
     assets = data.assets
-    loans = data.loans
-    capitalPayments = data.capitalPayments
     recurring = data.recurringMovements
     credits = data.credits
     transactions = data.transactions
@@ -163,53 +159,6 @@ public actor DemoStore {
   func deleteAsset(id: String) throws {
     guard assets.contains(where: { $0.id == id }) else { throw missing("soft_delete_wallet_asset") }
     assets.removeAll { $0.id == id }
-  }
-
-  // MARK: Loans
-
-  func listLoans() -> [Loan] { loans }
-
-  func saveLoan(
-    id: String?, accountId: String, name: String, value: Double, rate: Double?, termMonths: Int, paymentDay: Int,
-    firstPaymentDate: Date
-  ) {
-    let now = Date.now
-    if let id, let i = loans.firstIndex(where: { $0.id == id }) {
-      loans[i].accountId = accountId
-      loans[i].name = name
-      loans[i].value = value
-      loans[i].nominalInterestRate = rate
-      loans[i].termMonths = termMonths
-      loans[i].paymentDay = paymentDay
-      loans[i].firstPaymentDate = firstPaymentDate
-      loans[i].updatedAt = now
-    } else {
-      loans.append(
-        Loan(
-          id: newId(), userId: userId, accountId: accountId, name: name, value: value, nominalInterestRate: rate,
-          termMonths: termMonths, paymentDay: paymentDay, firstPaymentDate: firstPaymentDate, createdAt: now,
-          updatedAt: now))
-    }
-  }
-
-  func deleteLoan(id: String) throws {
-    guard loans.contains(where: { $0.id == id }) else { throw missing("soft_delete_wallet_loan") }
-    loans.removeAll { $0.id == id }
-    capitalPayments.removeAll { $0.loanId == id }
-  }
-
-  func listCapitalPayments() -> [LoanCapitalPayment] { capitalPayments.sorted { $0.paidAt < $1.paidAt } }
-
-  func createCapitalPayment(loanId: String, value: Double, paidAt: Date) {
-    capitalPayments.append(
-      LoanCapitalPayment(id: newId(), userId: userId, loanId: loanId, value: value, paidAt: paidAt, createdAt: .now))
-  }
-
-  func deleteCapitalPayment(id: String) throws {
-    guard capitalPayments.contains(where: { $0.id == id }) else {
-      throw missing("soft_delete_wallet_loan_capital_payment")
-    }
-    capitalPayments.removeAll { $0.id == id }
   }
 
   // MARK: Recurring movements

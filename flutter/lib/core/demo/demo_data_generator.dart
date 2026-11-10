@@ -46,7 +46,6 @@ class DemoDataGenerator {
     }
     _cardPayments();
     _deferredPurchases();
-    _loans();
     _assets();
     _recurringMovements();
   }
@@ -547,37 +546,6 @@ class DemoDataGenerator {
   }
 
   // other features
-
-  void _loans() {
-    final car = _store.addLoan(
-      accountId: _checking,
-      name: 'Car loan',
-      value: 12000,
-      nominalInterestRate: 8.9,
-      termMonths: 48,
-      paymentDay: 15,
-      firstPaymentDate: addCalendarMonths(
-        DateTime(_now.year, _now.month, 15),
-        -10,
-      ),
-    );
-    _store.addCapitalPayment(
-      loanId: car.id,
-      value: 1000,
-      paidAt: addCalendarMonths(DateTime(_now.year, _now.month, 20), -4),
-    );
-    _store.addLoan(
-      accountId: _checking,
-      name: 'Home improvement',
-      value: 3000,
-      termMonths: 18,
-      paymentDay: 28,
-      firstPaymentDate: addCalendarMonths(
-        DateTime(_now.year, _now.month, 28),
-        -5,
-      ),
-    );
-  }
 
   void _assets() {
     _store.addAsset(
