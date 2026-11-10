@@ -16,18 +16,61 @@
 		C1B2C3D4E5F600000000000E /* WalletData in Frameworks */ = {isa = PBXBuildFile; productRef = C1B2C3D4E5F600000000000C /* WalletData */; };
 /* End PBXBuildFile section */
 
+/* Begin PBXContainerItemProxy section */
+		B1B2C3D4E5F6000000000012 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = A1B2C3D4E5F6000000000001 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = B1B2C3D4E5F6000000000004;
+			remoteInfo = WalletWatch;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		B1B2C3D4E5F600000000000F /* Embed Watch Content */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "$(CONTENTS_FOLDER_PATH)/Watch";
+			dstSubfolderSpec = 16;
+			files = (
+				B1B2C3D4E5F6000000000010 /* WalletWatch.app in Embed Watch Content */,
+			);
+			name = "Embed Watch Content";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
 /* Begin PBXFileReference section */
-		A1B2C3D4E5F6000000000005 /* Wallet.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Wallet.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		A0830A2230A2C2A600CB6B0A /* WalletTV.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = WalletTV.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		A1B2C3D4E5F6000000000005 /* DannyWallet.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = DannyWallet.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		B1B2C3D4E5F6000000000001 /* WalletWatch.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = WalletWatch.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		C1B2C3D4E5F6000000000001 /* WalletTV.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = WalletTV.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
+
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		B1B2C3D4E5F6000000000003 /* Exceptions for "Wallet" folder in "WalletWatch" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Resources/Localizable.xcstrings,
+				Resources/WalletConfig.plist,
+			);
+			target = B1B2C3D4E5F6000000000004 /* WalletWatch */;
+		};
+		C1B2C3D4E5F6000000000003 /* Exceptions for "Wallet" folder in "WalletTV" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Resources/Localizable.xcstrings,
+				Resources/WalletConfig.plist,
+			);
+			target = C1B2C3D4E5F6000000000004 /* WalletTV */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		A1B2C3D4E5F6000000000006 /* Wallet */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
-				C1B2C3D4E5F6000000000003 /* Exceptions for "Wallet" folder in "WalletTV" target */,
 				B1B2C3D4E5F6000000000003 /* Exceptions for "Wallet" folder in "WalletWatch" target */,
+				C1B2C3D4E5F6000000000003 /* Exceptions for "Wallet" folder in "WalletTV" target */,
 			);
 			path = Wallet;
 			sourceTree = "<group>";
@@ -75,6 +118,14 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		A0830A2130A2C2A600CB6B0A /* Recovered References */ = {
+			isa = PBXGroup;
+			children = (
+				B1B2C3D4E5F6000000000001 /* WalletWatch.app */,
+			);
+			name = "Recovered References";
+			sourceTree = "<group>";
+		};
 		A1B2C3D4E5F6000000000002 = {
 			isa = PBXGroup;
 			children = (
@@ -82,13 +133,15 @@
 				C1B2C3D4E5F6000000000002 /* WalletTV */,
 				B1B2C3D4E5F6000000000002 /* WalletWatch */,
 				A1B2C3D4E5F6000000000003 /* Products */,
+				A0830A2130A2C2A600CB6B0A /* Recovered References */,
 			);
 			sourceTree = "<group>";
 		};
 		A1B2C3D4E5F6000000000003 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				A1B2C3D4E5F6000000000005 /* Wallet.app */,
+				A1B2C3D4E5F6000000000005 /* DannyWallet.app */,
+				A0830A2230A2C2A600CB6B0A /* WalletTV.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -119,7 +172,7 @@
 				A1B2C3D4E5F6000000000013 /* WalletData */,
 			);
 			productName = Wallet;
-			productReference = A1B2C3D4E5F6000000000005 /* Wallet.app */;
+			productReference = A1B2C3D4E5F6000000000005 /* DannyWallet.app */;
 			productType = "com.apple.product-type.application";
 		};
 		B1B2C3D4E5F6000000000004 /* WalletWatch */ = {
@@ -167,7 +220,7 @@
 				C1B2C3D4E5F600000000000C /* WalletData */,
 			);
 			productName = WalletTV;
-			productReference = C1B2C3D4E5F6000000000001 /* WalletTV.app */;
+			productReference = A0830A2230A2C2A600CB6B0A /* WalletTV.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
@@ -253,49 +306,6 @@
 		};
 /* End PBXSourcesBuildPhase section */
 
-/* Begin PBXContainerItemProxy section */
-		B1B2C3D4E5F6000000000012 /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = A1B2C3D4E5F6000000000001 /* Project object */;
-			proxyType = 1;
-			remoteGlobalIDString = B1B2C3D4E5F6000000000004;
-			remoteInfo = WalletWatch;
-		};
-/* End PBXContainerItemProxy section */
-
-/* Begin PBXCopyFilesBuildPhase section */
-		B1B2C3D4E5F600000000000F /* Embed Watch Content */ = {
-			isa = PBXCopyFilesBuildPhase;
-			buildActionMask = 2147483647;
-			dstPath = "$(CONTENTS_FOLDER_PATH)/Watch";
-			dstSubfolderSpec = 16;
-			files = (
-				B1B2C3D4E5F6000000000010 /* WalletWatch.app in Embed Watch Content */,
-			);
-			name = "Embed Watch Content";
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-/* End PBXCopyFilesBuildPhase section */
-
-/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
-		B1B2C3D4E5F6000000000003 /* Exceptions for "Wallet" folder in "WalletWatch" target */ = {
-			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
-			membershipExceptions = (
-				Resources/Localizable.xcstrings,
-				Resources/WalletConfig.plist,
-			);
-			target = B1B2C3D4E5F6000000000004 /* WalletWatch */;
-		};
-		C1B2C3D4E5F6000000000003 /* Exceptions for "Wallet" folder in "WalletTV" target */ = {
-			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
-			membershipExceptions = (
-				Resources/Localizable.xcstrings,
-				Resources/WalletConfig.plist,
-			);
-			target = C1B2C3D4E5F6000000000004 /* WalletTV */;
-		};
-/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
-
 /* Begin PBXTargetDependency section */
 		B1B2C3D4E5F6000000000011 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
@@ -338,11 +348,11 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 17;
+				CURRENT_PROJECT_VERSION = 19;
 				DEVELOPMENT_TEAM = 8TGP3K3MLX;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_CFBundleDisplayName = "Danny's Wallet";
+				INFOPLIST_KEY_CFBundleDisplayName = "Danny Wallet";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.finance";
 				INFOPLIST_KEY_NSFaceIDUsageDescription = "Unlock the app with Face ID when you enable this option.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
@@ -356,8 +366,9 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0.16;
-				PRODUCT_BUNDLE_IDENTIFIER = io.github.danny270793.wallet;
-				PRODUCT_NAME = Wallet;
+				PRODUCT_BUNDLE_IDENTIFIER = io.github.danny270793.apps.wallet;
+				PRODUCT_NAME = DannyWallet;
+				PRODUCT_MODULE_NAME = Wallet;
 				SDKROOT = iphoneos;
 				STRING_CATALOG_GENERATE_SYMBOLS = NO;
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
@@ -375,11 +386,11 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 17;
+				CURRENT_PROJECT_VERSION = 19;
 				DEVELOPMENT_TEAM = 8TGP3K3MLX;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_CFBundleDisplayName = "Danny's Wallet";
+				INFOPLIST_KEY_CFBundleDisplayName = "Danny Wallet";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.finance";
 				INFOPLIST_KEY_NSFaceIDUsageDescription = "Unlock the app with Face ID when you enable this option.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
@@ -393,8 +404,9 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0.16;
-				PRODUCT_BUNDLE_IDENTIFIER = io.github.danny270793.wallet;
-				PRODUCT_NAME = Wallet;
+				PRODUCT_BUNDLE_IDENTIFIER = io.github.danny270793.apps.wallet;
+				PRODUCT_NAME = DannyWallet;
+				PRODUCT_MODULE_NAME = Wallet;
 				SDKROOT = iphoneos;
 				STRING_CATALOG_GENERATE_SYMBOLS = NO;
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
@@ -412,19 +424,19 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 17;
+				CURRENT_PROJECT_VERSION = 19;
 				DEVELOPMENT_TEAM = 8TGP3K3MLX;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_CFBundleDisplayName = Wallet;
+				INFOPLIST_KEY_CFBundleDisplayName = "Danny Wallet";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
-				INFOPLIST_KEY_WKCompanionAppBundleIdentifier = io.github.danny270793.wallet;
+				INFOPLIST_KEY_WKCompanionAppBundleIdentifier = io.github.danny270793.apps.wallet;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0.16;
-				PRODUCT_BUNDLE_IDENTIFIER = io.github.danny270793.wallet.watchkitapp;
+				PRODUCT_BUNDLE_IDENTIFIER = io.github.danny270793.apps.wallet.watchkitapp;
 				PRODUCT_NAME = WalletWatch;
 				SDKROOT = watchos;
 				SKIP_INSTALL = YES;
@@ -444,19 +456,19 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 17;
+				CURRENT_PROJECT_VERSION = 19;
 				DEVELOPMENT_TEAM = 8TGP3K3MLX;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_CFBundleDisplayName = Wallet;
+				INFOPLIST_KEY_CFBundleDisplayName = "Danny Wallet";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
-				INFOPLIST_KEY_WKCompanionAppBundleIdentifier = io.github.danny270793.wallet;
+				INFOPLIST_KEY_WKCompanionAppBundleIdentifier = io.github.danny270793.apps.wallet;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0.16;
-				PRODUCT_BUNDLE_IDENTIFIER = io.github.danny270793.wallet.watchkitapp;
+				PRODUCT_BUNDLE_IDENTIFIER = io.github.danny270793.apps.wallet.watchkitapp;
 				PRODUCT_NAME = WalletWatch;
 				SDKROOT = watchos;
 				SKIP_INSTALL = YES;
@@ -476,11 +488,11 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = "App Icon & Top Shelf Image";
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 17;
+				CURRENT_PROJECT_VERSION = 19;
 				DEVELOPMENT_TEAM = 8TGP3K3MLX;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_CFBundleDisplayName = Wallet;
+				INFOPLIST_KEY_CFBundleDisplayName = "Danny Wallet";
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UIUserInterfaceStyle = Automatic;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -488,7 +500,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0.16;
-				PRODUCT_BUNDLE_IDENTIFIER = io.github.danny270793.wallet;
+				PRODUCT_BUNDLE_IDENTIFIER = io.github.danny270793.apps.wallet;
 				PRODUCT_NAME = WalletTV;
 				SDKROOT = appletvos;
 				STRING_CATALOG_GENERATE_SYMBOLS = NO;
@@ -507,11 +519,11 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = "App Icon & Top Shelf Image";
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 17;
+				CURRENT_PROJECT_VERSION = 19;
 				DEVELOPMENT_TEAM = 8TGP3K3MLX;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_CFBundleDisplayName = Wallet;
+				INFOPLIST_KEY_CFBundleDisplayName = "Danny Wallet";
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UIUserInterfaceStyle = Automatic;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -519,7 +531,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0.16;
-				PRODUCT_BUNDLE_IDENTIFIER = io.github.danny270793.wallet;
+				PRODUCT_BUNDLE_IDENTIFIER = io.github.danny270793.apps.wallet;
 				PRODUCT_NAME = WalletTV;
 				SDKROOT = appletvos;
 				STRING_CATALOG_GENERATE_SYMBOLS = NO;
