@@ -1799,19 +1799,19 @@ abstract class AppLocalizations {
   /// No description provided for @transactionsTotalsWeightedHint.
   ///
   /// In en, this message translates to:
-  /// **'Weighted'**
+  /// **'Balance'**
   String get transactionsTotalsWeightedHint;
 
   /// No description provided for @transactionsTotalsWeightedExcludingCreditHint.
   ///
   /// In en, this message translates to:
-  /// **'Weighted excluding credit'**
+  /// **'Balance excluding credit'**
   String get transactionsTotalsWeightedExcludingCreditHint;
 
   /// No description provided for @transactionsTotalsWeightedExcludingIgnoredHint.
   ///
   /// In en, this message translates to:
-  /// **'Weighted excluding ignored'**
+  /// **'Balance excluding ignored'**
   String get transactionsTotalsWeightedExcludingIgnoredHint;
 
   /// No description provided for @transactionsTotalsNotWeightedHint.
