@@ -959,15 +959,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get transactionsTotalBalance => 'Balance';
 
   @override
-  String get transactionsTotalsWeightedHint => 'Weighted';
+  String get transactionsTotalsWeightedHint => 'Balance';
 
   @override
   String get transactionsTotalsWeightedExcludingCreditHint =>
-      'Weighted excluding credit';
+      'Balance excluding credit';
 
   @override
   String get transactionsTotalsWeightedExcludingIgnoredHint =>
-      'Weighted excluding ignored';
+      'Balance excluding ignored';
 
   @override
   String get transactionsTotalsNotWeightedHint => 'Not weighted';
