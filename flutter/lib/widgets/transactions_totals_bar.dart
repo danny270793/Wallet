@@ -232,17 +232,15 @@ class TransactionsTotalsBarHost extends StatefulWidget {
 }
 
 class _TransactionsTotalsBarHostState extends State<TransactionsTotalsBarHost> {
-  static const _kTotalsModeCount = 5;
+  static const _kTotalsModeCount = 3;
 
   final _controller = PageController();
   int _page = 0;
 
-  /// Page order (`_page` 0…4):
+  /// Page order (`_page` 0…2):
   /// * Weighted — `value * percentage / 100` for **all** non–transfer-leg rows (including ignored).
   /// * Weighted excluding credit — weighted for rows without [TransactionEntity.creditId].
   /// * Weighted excluding ignored — weighted formula only for rows with `ignore == false`.
-  /// * Not weighted — raw `value` for **all** such rows (including ignored).
-  /// * Not weighted excluding ignored — raw `value` only for rows with `ignore == false`.
 
   @override
   void dispose() {
@@ -268,20 +266,10 @@ class _TransactionsTotalsBarHostState extends State<TransactionsTotalsBarHost> {
       include: (t) => t.creditId == null || t.creditId!.isEmpty,
       amount: weightedAmount,
     );
-    final totalsRawValueAll = transactionMonthTotalsBreakdown(
-      txs,
-      include: (_) => true,
-      amount: (t) => t.value,
-    );
     final totalsWeightedNonIgnoredOnly = transactionMonthTotalsBreakdown(
       txs,
       include: (t) => !t.ignore,
       amount: weightedAmount,
-    );
-    final totalsRawValueNonIgnoredOnly = transactionMonthTotalsBreakdown(
-      txs,
-      include: (t) => !t.ignore,
-      amount: (t) => t.value,
     );
 
     _TotalsBarPage page({
@@ -314,14 +302,6 @@ class _TransactionsTotalsBarHostState extends State<TransactionsTotalsBarHost> {
       page(
         subtitle: l10n.transactionsTotalsWeightedExcludingIgnoredHint,
         totals: totalsWeightedNonIgnoredOnly,
-      ),
-      page(
-        subtitle: l10n.transactionsTotalsNotWeightedHint,
-        totals: totalsRawValueAll,
-      ),
-      page(
-        subtitle: l10n.transactionsTotalsNotWeightedExcludingIgnoredHint,
-        totals: totalsRawValueNonIgnoredOnly,
       ),
     ];
 
