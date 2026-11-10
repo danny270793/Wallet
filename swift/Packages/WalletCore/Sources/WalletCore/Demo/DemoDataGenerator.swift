@@ -4,7 +4,7 @@ import Foundation
 ///
 /// Everything is generated at the moment demo starts and is relative to [now]:
 /// 13 full months of history plus the current one, deferred card purchases
-/// (finished, ongoing and just started), two loans with extra payments,
+/// (finished, ongoing and just started),
 /// recurring movements and assets. Amounts are randomized; the same [seed]
 /// and [now] always give the same data.
 public enum DemoDataGenerator {
@@ -132,7 +132,7 @@ private struct DemoBuilder {
     let categoryList: [(String, String?)] = [
       ("Salary", "Income and bonuses"), ("Housing", nil), ("Utilities", nil), ("Groceries", nil), ("Dining", nil),
       ("Transport", nil), ("Health", nil), ("Shopping", nil), ("Entertainment", nil), ("Subscriptions", nil),
-      ("Travel", nil), ("Loans", "Installments and extra payments"), ("Interest", nil),
+      ("Travel", nil), ("Interest", nil),
       (DemoDataGenerator.adjustmentLabel, "Balance corrections"),
     ]
     for (name, note) in categoryList { category(name, note) }
@@ -143,8 +143,6 @@ private struct DemoBuilder {
     ]
     for (name, note, hidden) in tagList { tag(name, note, hidden: hidden) }
 
-    let loans = makeLoans(account: checking)
-    let capital = makeCapitalPayments(loans)
     makeCredits(visa: visa, mastercard: mastercard)
 
     for offset in -DemoDataGenerator.historyMonths...0 {
@@ -155,7 +153,6 @@ private struct DemoBuilder {
       spending(m, checking: checking, cash: cash, visa: visa, mastercard: mastercard)
       transfer(at: day(m, 4, hour: 10), 300, from: .account(checking), to: .account(savings))
       transfer(at: day(m, 6, hour: 18), 100, from: .account(checking), to: .account(cash))
-      loanPayments(m, loans: loans, capital: capital, from: checking)
       if offset > -DemoDataGenerator.historyMonths { payCards(m, from: checking, cards: [visa, mastercard]) }
     }
 
@@ -164,7 +161,7 @@ private struct DemoBuilder {
       cards: DemoBalances.cards(cards, transactions),
       categories: categories.values.sorted { $0.name < $1.name },
       tags: tags.values.sorted { $0.name < $1.name },
-      assets: makeAssets(), loans: loans, capitalPayments: capital, recurringMovements: makeRecurring(),
+      assets: makeAssets(), recurringMovements: makeRecurring(),
       credits: credits, transactions: transactions.sorted { $0.transactedAt > $1.transactedAt })
   }
 
@@ -261,21 +258,6 @@ private struct DemoBuilder {
     day(m, rng.int(1...28), hour: rng.int(8...21), minute: rng.int(0...59))
   }
 
-  /// Installments and extra payments of each loan that fall in [m].
-  mutating func loanPayments(_ m: Date, loans: [Loan], capital: [LoanCapitalPayment], from account: Account) {
-    for loan in loans {
-      for case .installment(let i) in LoanMath.schedule(loan, capitalPayments: capital)
-      where WalletCalendar.isSameMonth(i.date, m) {
-        add(at: i.date.addingTimeInterval(9 * 3600), -i.payment, "\(loan.name) installment", account: account,
-          category: "Loans", tag: "Monthly")
-      }
-      for p in capital where p.loanId == loan.id && WalletCalendar.isSameMonth(p.paidAt, m) {
-        add(at: p.paidAt.addingTimeInterval(10 * 3600), -p.value, "\(loan.name) extra payment", account: account,
-          category: "Loans", tag: "Work")
-      }
-    }
-  }
-
   /// On a card's pay day, the previous month's spending (deferred installments
   /// included) is paid from [from]. Skipped while the pay day is still ahead,
   /// so a card can show a balance to pay.
@@ -291,31 +273,9 @@ private struct DemoBuilder {
   }
 }
 
-// MARK: - Loans, deferred purchases, assets, recurring movements
+// MARK: - Deferred purchases, assets, recurring movements
 
 extension DemoBuilder {
-  /// A car loan with ten installments already paid and a shorter personal loan.
-  mutating func makeLoans(account: Account) -> [Loan] {
-    let car = Loan(
-      id: id(), userId: user, accountId: account.id, name: "Car loan", value: 12_000, nominalInterestRate: 9.5,
-      termMonths: 48, paymentDay: 15, firstPaymentDate: day(WalletCalendar.monthStart(now, offset: -10), 15),
-      createdAt: origin, updatedAt: origin)
-    let personal = Loan(
-      id: id(), userId: user, accountId: account.id, name: "Personal loan", value: 3_000, nominalInterestRate: 7.5,
-      termMonths: 18, paymentDay: 5, firstPaymentDate: day(WalletCalendar.monthStart(now, offset: -4), 5),
-      createdAt: origin, updatedAt: origin)
-    return [car, personal]
-  }
-
-  mutating func makeCapitalPayments(_ loans: [Loan]) -> [LoanCapitalPayment] {
-    let car = day(WalletCalendar.monthStart(now, offset: -3), 20)
-    let personal = day(WalletCalendar.monthStart(now, offset: -1), 18)
-    return [
-      LoanCapitalPayment(id: id(), userId: user, loanId: loans[0].id, value: 1_000, paidAt: car, createdAt: car),
-      LoanCapitalPayment(id: id(), userId: user, loanId: loans[1].id, value: 250, paidAt: personal, createdAt: personal),
-    ]
-  }
-
   /// Deferred card purchases: a `wallet_credits` header plus one ignored
   /// installment row per month, the way the app saves them.
   mutating func makeCredits(visa: Card, mastercard: Card) {

@@ -38,7 +38,6 @@ void main() {
     '/credits',
     '/accounts',
     '/cards',
-    '/loans',
     '/recurring-movements',
     '/categories',
     '/tags',
@@ -98,11 +97,6 @@ void main() {
     router.go('/cards');
     await tester.pumpAndSettle(const Duration(milliseconds: 100));
     expect(find.textContaining('Visa Platinum'), findsOneWidget);
-
-    router.go('/loans');
-    await tester.pumpAndSettle(const Duration(milliseconds: 100));
-    expect(find.textContaining('Car loan'), findsOneWidget);
-    expect(find.textContaining('Home improvement'), findsOneWidget);
 
     router.go('/categories');
     await tester.pumpAndSettle(const Duration(milliseconds: 100));

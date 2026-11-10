@@ -77,11 +77,8 @@ private func tx(
   var source: AutomaticMovementsSource {
     let card = Card(
       id: "c", userId: "u", name: "Card", createdAt: epoch, updatedAt: epoch, nominalInterestRate: 12, balance: -1000)
-    let loan = Loan(
-      id: "l", userId: "u", accountId: "a", name: "Loan", value: 1200, termMonths: 12, paymentDay: 30,
-      firstPaymentDate: d(2026, 1, 30), createdAt: epoch, updatedAt: epoch)
     return AutomaticMovementsSource(
-      loans: [loan], cards: [card],
+      cards: [card],
       creditInstallments: [
         tx(d(2026, 10, 5), -100, account: nil, card: "c", credit: "credit"),
         tx(d(2026, 11, 5), -100, account: nil, card: "c", credit: "credit"),
@@ -95,7 +92,6 @@ private func tx(
 
   func isDeferred(_ a: AutomaticMovement) -> Bool { if case .cardDeferred = a { true } else { false } }
   func isInterest(_ a: AutomaticMovement) -> Bool { if case .cardInterest = a { true } else { false } }
-  func isLoan(_ a: AutomaticMovement) -> Bool { if case .loan = a { true } else { false } }
 
   @Test func deferredFollowsMonth() {
     #expect(amount(source.forMonth(d(2026, 11), today: today), isDeferred) == -100)
@@ -107,10 +103,6 @@ private func tx(
     #expect(abs(amount(source.forMonth(d(2026, 12), today: today), isInterest) + 12) < 1e-9)
   }
 
-  @Test func loanOnlyInMonthsWithInstallment() {
-    #expect(abs(amount(source.forMonth(d(2026, 10), today: today), isLoan) + 100) < 1e-9)
-    #expect(source.forMonth(d(2027, 1), today: today).filter(isLoan).isEmpty)
-  }
 }
 
 @Suite struct LedgerTests {

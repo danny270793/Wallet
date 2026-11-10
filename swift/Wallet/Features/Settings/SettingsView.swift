@@ -237,8 +237,8 @@ struct CacheView: View {
     if let m = key.wholeMatch(of: /tx_credit_(.+)/) { return L("settingsCacheKeyTxCredit", m.1.prefix(8)) }
     if let m = key.wholeMatch(of: /wallet_credit_(.+)/) { return L("settingsCacheKeyWalletCredit", m.1.prefix(8)) }
     let known = [
-      "accounts": "accounts", "cards": "cards", "loans": "loans", "categories": "categories", "tags": "tags",
-      "assets": "assets", "recurring_movements": "recurringMovements", "loan_capital_payments": "loanCapitalPayment",
+      "accounts": "accounts", "cards": "cards", "categories": "categories", "tags": "tags",
+      "assets": "assets", "recurring_movements": "recurringMovements",
     ]
     return known[key].map { L($0) } ?? key
   }

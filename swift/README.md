@@ -36,7 +36,7 @@ General → About → Certificate Trust Settings).
 
 | Path | What |
 |---|---|
-| `Packages/WalletCore/Sources/WalletCore` | Entities and all money math (loan amortization, deferred credit schedules, credit ledger, totals, yearly projections, automatic recurring movements). No I/O. |
+| `Packages/WalletCore/Sources/WalletCore` | Entities and all money math (deferred credit schedules, credit ledger, totals, yearly projections, automatic recurring movements). No I/O. |
 | `Packages/WalletCore/Sources/WalletData` | Supabase repository, offline JSON cache, multi-row ledger operations (deferred purchases, credit rescheduling, transfers, balance adjustments), error reporting to `wallet_actions`. |
 | `Packages/WalletCore/Tests` | Swift Testing suites; the Flutter `test/` cases are ported here. |
 | `Wallet/App` | App entry, session model, preferences (language, theme, Face ID lock), tab shell. |
@@ -52,8 +52,7 @@ up by Xcode automatically.
 **Try demo** on the login screen opens the app with made-up data, no account
 and no network. The ledger is generated when you tap it, relative to today:
 14 months of income, bills and spending, transfers between accounts, deferred
-card purchases (finished, ongoing and just started), two loans with extra
-payments, recurring movements, assets, categories and tags. Amounts are random,
+card purchases (finished, ongoing and just started), recurring movements, assets, categories and tags. Amounts are random,
 so each session looks different.
 
 - It works through `WalletRepository(demo:)`, which answers every read and
@@ -94,7 +93,7 @@ The Flutter drawer is replaced by a floating glass tab bar that minimizes on scr
 - **Credits** — deferred card purchases for the month, filterable by card.
 - **Insights** — monthly and yearly dashboards (Swift Charts) behind one
   segmented control, sharing the view options sheet.
-- **Wallet** — accounts and cards with live totals, then loans, recurring
+- **Wallet** — accounts and cards with live totals, then recurring
   movements, assets, categories, tags and Settings.
 - **Search** — the system search tab (bottom search field).
 

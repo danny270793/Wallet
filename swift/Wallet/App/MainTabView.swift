@@ -5,7 +5,7 @@ import SwiftUI
 /// - Activity: the month's transactions (new / transfer / pay from the toolbar);
 /// - Credits: deferred card purchases;
 /// - Insights: monthly and yearly dashboards;
-/// - Wallet: accounts, cards, loans, recurring, assets, categories, tags, settings;
+/// - Wallet: accounts, cards, recurring, assets, categories, tags, settings;
 /// - Search: all-time description search, at the bottom like Apple's apps.
 struct MainTabView: View {
   @State private var tab = MainTabView.initialTab

@@ -255,79 +255,9 @@
       }
     }
   },
-  "loans": "Loans",
-  "noLoans": "No loans yet",
-  "newLoan": "New loan",
-  "editLoan": "Edit loan",
-  "deleteLoan": "Delete loan",
-  "loanAccount": "Account",
-  "loanValue": "Value",
-  "loanTotalToPay": "Total to pay",
-  "loanValueInvalid": "Enter an amount greater than 0",
-  "loanTermInvalid": "Enter at least 1 month",
-  "loanFirstPaymentDate": "First payment",
-  "loanPaymentDay": "Payment day",
-  "loanMonthlyPayment": "Monthly payment",
-  "loanSchedule": "Payment schedule",
-  "loanCapitalPayment": "Payment to capital",
-  "loanCapitalPaymentDate": "Paid on",
-  "loanDeleteCapitalPayment": "Delete payment to capital",
-  "loanConfirmDeleteCapitalPayment": "The installments after it will be recomputed without it.",
-  "loanPaidInstallments": "Paid monthly",
-  "loanPaidToCapital": "Paid to capital",
-  "loanPending": "Pending",
-  "loanCapitalPaymentLeft": "Left {remaining}",
-  "@loanCapitalPaymentLeft": {
-    "placeholders": {
-      "remaining": {
-        "type": "String"
-      }
-    }
-  },
-  "loanCapitalPaymentMax": "At most {max}",
-  "@loanCapitalPaymentMax": {
-    "placeholders": {
-      "max": {
-        "type": "String"
-      }
-    }
-  },
   "errorSeeMore": "See more",
   "errorDetailsTitle": "Error details",
   "errorCopy": "Copy",
-  "loanInterestToPay": "Interest to pay",
-  "loanTotalInterest": "Interest",
-  "loanNotFound": "This loan no longer exists",
-  "confirmDeleteLoan": "Are you sure you want to delete \"{name}\"?",
-  "@confirmDeleteLoan": {
-    "placeholders": {
-      "name": {
-        "type": "String"
-      }
-    }
-  },
-  "loanTermMonths": "{months} months",
-  "@loanTermMonths": {
-    "placeholders": {
-      "months": {
-        "type": "int"
-      }
-    }
-  },
-  "loanInstallmentBreakdown": "Principal {principal} · Interest {interest} · Left {remaining}",
-  "@loanInstallmentBreakdown": {
-    "placeholders": {
-      "principal": {
-        "type": "String"
-      },
-      "interest": {
-        "type": "String"
-      },
-      "remaining": {
-        "type": "String"
-      }
-    }
-  },
   "assets": "Assets",
   "noAssets": "No assets yet",
   "assetSold": "Sold",
@@ -549,7 +479,6 @@
   },
   "recurringMovementValueHint": "Use a negative amount for outcomes",
   "recurringMovementsSortByValue": "Value",
-  "recurringAutomaticLoan": "Loan installment · automatic",
   "recurringAutomaticCardInterest": "Card interest · automatic",
   "recurringAutomaticCardDeferred": "Deferred this month · automatic",
   "recurringMovementsSelectedCount": "{count} selected",

@@ -57,7 +57,7 @@ class _RecurringMovementsViewState extends State<_RecurringMovementsView> {
   /// Month the automatic rows are computed for; starts on the current one.
   late final ValueNotifier<DateTime> _monthNotifier;
 
-  /// Data for the read-only loan and card rows of any month.
+  /// Data for the read-only card rows of any month.
   AutomaticMovementsSource _automaticSource = const AutomaticMovementsSource();
   List<AutomaticRecurringMovement> _automatic = const [];
 
@@ -380,8 +380,8 @@ class _RecurringMovementTile extends StatelessWidget {
   }
 }
 
-/// Bottom summary: income (sum of positive values) and outcome (sum of negative values)
-/// over [movements] (all rows, or only the selected ones in select mode).
+/// Bottom summary: income (sum of positive values), outcome (sum of negative values)
+/// and their balance over [movements] (all rows, or only the selected ones in select mode).
 class _RecurringMovementsTotalsBar extends StatelessWidget {
   const _RecurringMovementsTotalsBar({required this.l10n, required this.rows});
 
@@ -450,6 +450,11 @@ class _RecurringMovementsTotalsBar extends StatelessWidget {
                 l10n.transactionsTotalOutcome,
                 walletListBalanceColor(theme, outcome),
               ),
+              column(
+                income + outcome,
+                l10n.transactionsTotalBalance,
+                walletListBalanceColor(theme, income + outcome),
+              ),
             ],
           ),
         ),
@@ -488,7 +493,7 @@ class _AutomaticRow extends _Row {
   double get monthlyAmount => automatic.monthlyAmount;
 }
 
-/// Loan installment or card revolving balance: selectable, not editable.
+/// Card interest or deferred installments: selectable, not editable.
 class _AutomaticMovementTile extends StatelessWidget {
   const _AutomaticMovementTile({
     required this.automatic,
@@ -509,10 +514,6 @@ class _AutomaticMovementTile extends StatelessWidget {
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
     final (leading, subtitle) = switch (automatic) {
-      LoanRecurringMovement() => (
-        Icon(Icons.request_quote_outlined, color: theme.colorScheme.primary),
-        l10n.recurringAutomaticLoan,
-      ),
       CardInterestRecurringMovement(:final type) => (
         CardTypeIcon(type: type),
         l10n.recurringAutomaticCardInterest,
