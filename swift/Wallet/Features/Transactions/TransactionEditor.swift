@@ -92,7 +92,7 @@ struct TransactionEditor: View {
   }
 
   private var percentageError: String? {
-    guard let p = Double(percentage.trimmingCharacters(in: .whitespaces)) else { return L("fieldRequired") }
+    guard let p = AmountInput.parse(percentage) else { return L("fieldRequired") }
     return p < 0 || p > 100 ? L("transactionPercentageInvalidRange") : nil
   }
 
@@ -181,6 +181,10 @@ struct TransactionEditor: View {
           LabeledContent(L("transactionPercentage")) {
             TextField("100", text: $percentage)
               .keyboardType(.decimalPad).multilineTextAlignment(.trailing).monospacedDigit()
+              .onChange(of: percentage) { _, v in
+                let f = AmountInput.filter(v, allowNegative: false)
+                if f != v { percentage = f }
+              }
           }
           if showErrors, let e = percentageError { Text(e).font(.caption).foregroundStyle(.red) }
           Toggle(L("transactionIgnore"), isOn: Binding(get: { creatingInstallments || ignore }, set: { ignore = $0 }))
@@ -317,7 +321,7 @@ struct TransactionEditor: View {
 
   private func save() async {
     showErrors = true
-    guard isValid, let value = AmountInput.parse(amount), let pct = Double(percentage) else { return }
+    guard isValid, let value = AmountInput.parse(amount), let pct = AmountInput.parse(percentage) else { return }
     saving = true
     let note = description.trimmingCharacters(in: .whitespacesAndNewlines)
     let draft = WalletRepository.TransactionDraft(
